@@ -6,6 +6,7 @@ GERVA Capital — comando unico.
     python firm.py portal       # portale su http://127.0.0.1:8765 (solo locale)
     python firm.py heartbeat    # un battito: controlla condizioni e sveglia solo gli agenti necessari
     python firm.py run          # battito ogni N minuti (impostazione firm.heartbeat_minutes)
+    python firm.py data         # (sul Mac) scarica i prezzi reali per la ricerca
     python firm.py status       # budget, rischio, catena di hash, prove
     python firm.py verify       # verifica la catena di hash dell'audit log
     python firm.py release      # elenca i rilasci di GERVA-Q in coda e chiede la scelta ad Andrea
@@ -99,6 +100,27 @@ def cmd_release(a):
     print(release.apply(a.apply, cap))
 
 
+def cmd_data(_):
+    """Sul Mac: scarica i prezzi reali dei proxy ETF (gli stessi di GERVA-Q) per la ricerca su dati veri.
+    Senza questo file la pipeline di ricerca usa dati SINTETICI e i risultati valgono solo come collaudo."""
+    import pandas as pd
+    from firm import paths
+    from quantlab import data as QD
+    try:
+        import yfinance as yf
+    except ImportError:
+        sys.exit("serve yfinance: pip install yfinance")
+    tk = ["SPY", "QQQ", "IWM", "VGK", "EWJ", "EEM", "IEF", "TLT", "TIP", "LQD", "EMB", "GLD", "SLV", "DBC", "VNQ"]
+    raw = yf.download(tk, start="2004-01-01", auto_adjust=True, progress=False, group_by="column")
+    close = raw["Close"].dropna(how="all")
+    rep = QD.quality_check(close)
+    os.makedirs(os.path.join(paths.VAR, "data"), exist_ok=True)
+    close.to_pickle(os.path.join(paths.VAR, "data", "etf_close.pkl"))
+    print(f"{close.shape[0]} giorni x {close.shape[1]} ETF, impronta {QD.fingerprint(close)}, qualita' ok={rep.ok}")
+    for pr in rep.problems[:10]:
+        print("  ", pr)
+
+
 def cmd_demo(_):
     from firm import demo
     print(json.dumps(demo.run(), ensure_ascii=False, indent=1, default=str))
@@ -108,7 +130,7 @@ def main():
     _load_env()
     ap = argparse.ArgumentParser(description="GERVA Capital")
     sub = ap.add_subparsers(dest="cmd", required=True)
-    for name in ["init", "portal", "heartbeat", "run", "status", "verify", "demo", "release"]:
+    for name in ["init", "portal", "heartbeat", "run", "status", "verify", "demo", "release", "data"]:
         sp = sub.add_parser(name)
         sp.add_argument("--demo", action="store_true", help="usa il database dimostrativo var/demo/")
         if name == "release":

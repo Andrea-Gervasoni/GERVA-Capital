@@ -14,7 +14,7 @@ KILL_FILE = os.path.join(ROOT, "KILL")
 ANDREA_TOKEN = os.path.join(VAR, "andrea.token")
 
 # GERVA-Q (Pod Zero): sul Mac di Andrea e' ~/Documents/GERVA-Q; qui si puo' puntare allo snapshot
-GERVA_Q = os.environ.get("GERVA_Q_PATH") or next(
+GERVA_Q = os.path.expanduser(os.environ.get("GERVA_Q_PATH", "")) or next(
     (p for p in (os.path.expanduser("~/Documents/GERVA-Q"),
                  os.path.join(ROOT, "_incoming", "quant_engine")) if os.path.isdir(p)),
     os.path.expanduser("~/Documents/GERVA-Q"))
