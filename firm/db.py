@@ -122,6 +122,10 @@ CREATE TABLE IF NOT EXISTS nav_marks (
   id INTEGER PRIMARY KEY AUTOINCREMENT, day TEXT, pod TEXT, nav REAL, capital REAL,
   gross REAL, UNIQUE(day, pod)
 );
+CREATE TABLE IF NOT EXISTS meetings (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, kind TEXT, title TEXT, reason TEXT, participants TEXT,
+  options TEXT, status TEXT, decision TEXT, transcript TEXT, resolve_after TEXT, outcome TEXT, context TEXT
+);
 CREATE TABLE IF NOT EXISTS gc_ledger (
   id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, agent_id TEXT, pod TEXT,
   amount REAL, kind TEXT, memo TEXT

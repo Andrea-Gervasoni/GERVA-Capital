@@ -14,7 +14,7 @@ tools:
 - submit_order
 - register_forecast
 provider: anthropic
-prompt_version: 1
+prompt_version: 2
 pod: reversal
 philosophy: 'Fornisce liquidita'' quando gli altri la ritirano: compra l''ipervenduto
   di qualita'', poco e per poco.'

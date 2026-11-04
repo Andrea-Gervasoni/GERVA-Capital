@@ -15,4 +15,4 @@ tools:
 - write_research_doc
 - register_forecast
 provider: anthropic
-prompt_version: 1
+prompt_version: 2

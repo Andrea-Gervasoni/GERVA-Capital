@@ -44,18 +44,18 @@ def run(W: pd.DataFrame, close: pd.DataFrame, open_: pd.DataFrame | None = None,
     c = np.broadcast_to(np.asarray(pd.Series(cost_rate, index=cols) if np.ndim(cost_rate) == 0
                                    else pd.Series(cost_rate).reindex(cols).fillna(0.0)), (len(cols),))
     C = close.values
+    Wv = W.values.astype(float)          # una volta sola: W.values dentro il ciclo costava O(T^2)
     O = opn.values if opn is not None else None
     T, N = C.shape
     mask = np.ones(T, bool) if rebalance_mask is None else rebalance_mask.reindex(close.index).fillna(False).values
     w = np.zeros(N)                      # pesi a fine giornata t (dopo la deriva)
-    target_prev = np.zeros(N)
     out = np.zeros((T, 4))
     wout = np.zeros((T, N))
     for t in range(1, T):
         prev_c, cur_c = C[t - 1], C[t]
         valid = np.isfinite(prev_c) & np.isfinite(cur_c) & (prev_c > 0)
         # 1) decisione di ieri sera, eseguita oggi
-        tgt = W.values[t - 1]
+        tgt = Wv[t - 1]
         tgt = np.where(np.isfinite(tgt), tgt, 0.0)
         if mask[t - 1]:
             move = (np.abs(tgt - w) > band) | ((tgt == 0) & (w != 0))
@@ -87,7 +87,6 @@ def run(W: pd.DataFrame, close: pd.DataFrame, open_: pd.DataFrame | None = None,
             w_end = new_target * (1 + ret) / base if base != 0 else new_target
         # la liquidita' (1 - somma pesi) rende 0: la normalizzazione sopra lo tiene in conto
         w = w_end
-        target_prev = new_target
         out[t] = (r, new_target.sum(), turn.sum(), cost)
         wout[t] = w
     daily = pd.DataFrame(out, index=close.index, columns=["ret", "gross", "turnover", "cost"])

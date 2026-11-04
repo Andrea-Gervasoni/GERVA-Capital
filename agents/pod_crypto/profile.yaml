@@ -14,7 +14,7 @@ tools:
 - submit_order
 - register_forecast
 provider: anthropic
-prompt_version: 1
+prompt_version: 2
 pod: crypto
 philosophy: 'Trend crypto con freno sul rischio di crash: riduce quando il carry e
   la leva altrui sono estremi.'

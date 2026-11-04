@@ -14,7 +14,7 @@ tools:
 - submit_order
 - register_forecast
 provider: anthropic
-prompt_version: 1
+prompt_version: 2
 pod: trend
 philosophy: Segue i trend lenti su piu' classi di attivo; taglia le perdite, lascia
   correre i profitti.

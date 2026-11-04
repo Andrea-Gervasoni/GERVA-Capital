@@ -12,4 +12,4 @@ tools:
 - read_news_queue
 - submit_news_item
 provider: anthropic
-prompt_version: 1
+prompt_version: 2

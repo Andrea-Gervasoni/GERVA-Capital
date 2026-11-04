@@ -28,7 +28,14 @@ TD = 252
 # Gerva-Coin
 # ---------------------------------------------------------------------------
 def gc_balance(agent_id: str) -> float:
-    return float(db.one("SELECT COALESCE(SUM(amount),0) s FROM gc_ledger WHERE agent_id=?", (agent_id,))["s"])
+    """Saldo MATURATO: il bonus differito (kind='differito') non e' ancora dell'agente."""
+    return float(db.one("SELECT COALESCE(SUM(amount),0) s FROM gc_ledger WHERE agent_id=? AND kind!='differito'",
+                        (agent_id,))["s"])
+
+
+def gc_unvested(agent_id: str) -> float:
+    return float(db.one("SELECT COALESCE(SUM(amount),0) s FROM gc_ledger WHERE agent_id=? AND kind='differito'",
+                        (agent_id,))["s"])
 
 
 def gc_move(agent_id: str, amount: float, kind: str, memo: str, pod: str | None = None):
@@ -41,7 +48,7 @@ def gc_move(agent_id: str, amount: float, kind: str, memo: str, pod: str | None 
 
 def gc_history(agent_id: str) -> dict:
     rows = db.q("SELECT kind, SUM(amount) s FROM gc_ledger WHERE agent_id=? GROUP BY kind", (agent_id,))
-    return {r["kind"]: r["s"] for r in rows} | {"saldo": gc_balance(agent_id)}
+    return {r["kind"]: r["s"] for r in rows} | {"saldo": gc_balance(agent_id), "differito": gc_unvested(agent_id)}
 
 
 # ---------------------------------------------------------------------------
@@ -144,11 +151,12 @@ def distribute_bonus(pid: str) -> dict:
     contrib = {m: max(0.0, float(db.one("SELECT COALESCE(SUM(value),0) s FROM evaluations WHERE agent_id=? "
                                        "AND metric='contributo_alpha'", (m,))["s"])) for m in members if m != head}
     head_share = float(S.get("economy.head_share")) if contrib and sum(contrib.values()) > 0 else 1.0
-    gc_move(head, pool_gc * head_share, "bonus", f"bonus pool del pod {pid}", pid)
+    from . import compensation
+    compensation.award_bonus(head, pool_gc * head_share, f"bonus pool del pod {pid}", pid)
     tot = sum(contrib.values())
     for m, c in contrib.items():
         if tot > 0 and c > 0:
-            gc_move(m, pool_gc * (1 - head_share) * c / tot, "bonus", f"bonus per contributo nel pod {pid}", pid)
+            compensation.award_bonus(m, pool_gc * (1 - head_share) * c / tot, f"bonus per contributo nel pod {pid}", pid)
     return dict(pod=pid, bonus_gc=pool_gc, capo_pod=head, quota_capo=head_share)
 
 
@@ -167,5 +175,6 @@ def leaderboard() -> dict:
                          drawdown=book["drawdown"] if book else None,
                          alpha_netto_eur=net_alpha(p["id"])["alpha_netto_eur"] if p["id"] != "pod_zero" else None))
     people = [dict(agente=r["agent_id"], gc=r["s"]) for r in
-              db.q("SELECT agent_id, SUM(amount) s FROM gc_ledger GROUP BY agent_id ORDER BY s DESC LIMIT 20")]
+              db.q("SELECT agent_id, SUM(amount) s FROM gc_ledger WHERE kind!='differito' GROUP BY agent_id "
+                   "ORDER BY s DESC LIMIT 20")]
     return dict(pod=rows, persone=people)

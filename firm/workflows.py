@@ -323,6 +323,10 @@ def research_cycle() -> dict:
     val = None
     if g["passa"] or synthetic:
         val = validate(rid, dossier)
+    if g["passa"] and not synthetic:                    # un fascicolo vero che passa il cancello merita una riunione
+        from . import meetings
+        meetings.hold("ricerca", cand["titolo"], "il fascicolo ha passato il cancello automatico",
+                      ["head_research", "senior_trend", "senior_validator"], data=dossier, context=dict(ricerca=rid))
     SK.add_eval("senior_trend", "tasso_validazione", 1.0 if (val and val.get("esito") == "approva") else 0.0)
     return dict(id=rid, prova=trial, sharpe=round(perf["Sharpe"], 3), dsr=round(defl["dsr"], 3),
                 cancello=g["passa"], sintetico=synthetic, validazione=val)
@@ -348,6 +352,9 @@ def validate(rid: str, dossier: dict, canary_rate: float = 0.3) -> dict:
         found = any(x["tipo"] == "look_ahead" for x in out["difetti"]) and out["esito"] != "approva"
         SK.add_eval("senior_validator", "canarino", 1.0 if found else 0.0, details=dict(ricerca=rid))
         SK.add_eval("senior_validator", "canarini_individuati", 1.0 if found else 0.0)
+        if found:
+            from . import compensation
+            compensation.award_bonus("senior_validator", 5.0, f"canarino individuato ({rid})")
         if not found:
             _postmortem("senior_validator", 3, "Canarino non individuato",
                         "Fascicolo con Sharpe 4,8 e shift(-1) dichiarato non segnalato come look-ahead",
@@ -445,6 +452,9 @@ def _postmortem(agent_id: str, severity: int, what: str, why: str, change: str, 
           (db.now_iso(), agent_id, severity, what, why, change, lesson))
     registry.add_lesson(agent_id, f"{lesson} (errore: {what})")
     events.publish("postmortem", "talent", dict(agente=agent_id, cosa=what, lezione=lesson, gravita=severity))
+    if severity >= 4:                                   # errore grave: il bonus differito si perde
+        from . import compensation
+        compensation.clawback(agent_id, f"post-mortem grave: {what}")
 
 
 def talent_cycle() -> dict:
@@ -465,5 +475,14 @@ def talent_cycle() -> dict:
         elif dem and a["grade"] > 0:
             registry.change_grade(a["id"], a["grade"] - 1, "retrocessione", "; ".join(dem))
             action = "retrocesso"
-        out.append(dict(agente=a["id"], punteggio=comp["punteggio"], azione=action, promozione=prom.get("motivo")))
+        out.append(dict(agente=a["id"], punteggio=comp["punteggio"], azione=action, promozione=prom.get("motivo"),
+                        grado=a["grade"]))
+    # il migliore di ogni grado (con almeno 10 valutazioni) prende un bonus differito: la competizione paga
+    from . import compensation
+    for g in {o["grado"] for o in out}:
+        same = [o for o in out if o["grado"] == g and o["punteggio"] is not None
+                and SK.composite(o["agente"], registry.get(o["agente"])["dept"])["n_valutazioni"] >= 10]
+        if len(same) >= 2:
+            top = max(same, key=lambda o: o["punteggio"])
+            compensation.award_bonus(top["agente"], 10.0, "migliore del grado questa settimana")
     return dict(valutati=len(out), azioni=[o for o in out if o["azione"]])

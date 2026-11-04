@@ -69,6 +69,8 @@ def apply_drawdown_rules() -> list[dict]:
             set_capital(p["id"], 0.0, f"drawdown {dd:.1%} oltre {lim['dd_close']:.1%}: pod chiuso")
             db.ex("UPDATE pods SET status='chiuso' WHERE id=?", (p["id"],))
             actions.append(dict(pod=p["id"], azione="chiuso", drawdown=dd))
+            from . import compensation
+            compensation.clawback(p["head"], f"pod {p['id']} chiuso per drawdown {dd:.1%}")
         elif dd <= -lim["dd_cut"] and p["status"] == "attivo":
             set_capital(p["id"], p["capital_frac"] / 2, f"drawdown {dd:.1%} oltre {lim['dd_cut']:.1%}: capitale dimezzato")
             db.ex("UPDATE pods SET status='ridotto' WHERE id=?", (p["id"],))

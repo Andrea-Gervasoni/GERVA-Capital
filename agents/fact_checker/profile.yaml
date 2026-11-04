@@ -13,4 +13,4 @@ tools:
 - find_second_source
 - verify_news_item
 provider: anthropic
-prompt_version: 1
+prompt_version: 2

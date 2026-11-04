@@ -15,4 +15,4 @@ tools:
 - register_forecast
 - mailbox_propose
 provider: anthropic
-prompt_version: 1
+prompt_version: 2

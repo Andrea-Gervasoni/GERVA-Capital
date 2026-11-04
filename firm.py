@@ -7,6 +7,8 @@ GERVA Capital — comando unico.
     python firm.py heartbeat    # un battito: controlla condizioni e sveglia solo gli agenti necessari
     python firm.py run          # battito ogni N minuti (impostazione firm.heartbeat_minutes)
     python firm.py data         # (sul Mac) scarica i prezzi reali per la ricerca
+    python firm.py research gervaq4   # (sul Mac) banco di prova dei miglioramenti contro la v3
+    python firm.py report       # report del giorno con correzioni proposte
     python firm.py status       # budget, rischio, catena di hash, prove
     python firm.py verify       # verifica la catena di hash dell'audit log
     python firm.py release      # elenca i rilasci di GERVA-Q in coda e chiede la scelta ad Andrea
@@ -110,15 +112,57 @@ def cmd_data(_):
         import yfinance as yf
     except ImportError:
         sys.exit("serve yfinance: pip install yfinance")
-    tk = ["SPY", "QQQ", "IWM", "VGK", "EWJ", "EEM", "IEF", "TLT", "TIP", "LQD", "EMB", "GLD", "SLV", "DBC", "VNQ"]
+    from quantlab import gervaq4 as G4
+    tk = sorted(set(G4.TREND_SET + G4.SECTORS + G4.STOCKS + ["^VIX", "^IRX"]))
     raw = yf.download(tk, start="2004-01-01", auto_adjust=True, progress=False, group_by="column")
-    close = raw["Close"].dropna(how="all")
+    close = raw["Close"].dropna(how="all").ffill(limit=5)
+    os.makedirs(os.path.join(paths.VAR, "data"), exist_ok=True)
+    close.to_pickle(os.path.join(paths.VAR, "data", "gq4_close.pkl"))      # universo completo per gervaq4
+    close = close[[c for c in G4.TREND_SET if c in close]]
     rep = QD.quality_check(close)
     os.makedirs(os.path.join(paths.VAR, "data"), exist_ok=True)
     close.to_pickle(os.path.join(paths.VAR, "data", "etf_close.pkl"))
     print(f"{close.shape[0]} giorni x {close.shape[1]} ETF, impronta {QD.fingerprint(close)}, qualita' ok={rep.ok}")
     for pr in rep.problems[:10]:
         print("  ", pr)
+
+
+def cmd_research(a):
+    """python firm.py research gervaq4 : banco di prova dei miglioramenti contro la v3 (dati reali del Mac)."""
+    import pandas as pd
+    from firm import paths, trials, db, events, release
+    from quantlab import gervaq4 as G4, data as QD
+    p = os.path.join(paths.VAR, "data", "gq4_close.pkl")
+    if not os.path.exists(p):
+        sys.exit("mancano i dati reali: lancia prima `python firm.py data` sul Mac")
+    close = pd.read_pickle(p)
+    fp = QD.fingerprint(close)
+    hyp = {"v3_riferimento": "Riferimento: GERVA-Q v3 riespressa nel motore quantlab (stessi segnali, deriva dei pesi).",
+           "cash": "La quota non investita rende il tasso a breve via ETF UCITS monetario: premio quasi senza rischio.",
+           "dyn": "Il momentum crolla nei rimbalzi dopo i bear market con vol alta (Daniel-Moskowitz 2016): frenarlo li.",
+           "vix": "Il premio della fornitura di liquidita' cresce col VIX (Nagel 2012): dimensionare il reversal col VIX.",
+           "erc": "Contributi di rischio uguali tra sleeve con covarianza ristretta: meno peso al rischio azionario comune.",
+           "hrp": "HRP tra sleeve: diversificazione gerarchica senza invertire la covarianza (Lopez de Prado 2016).",
+           "band5": "Banda di non intervento piu' larga: meno turnover e meno costi a parita' di esposizione.",
+           "vt": "Vol target con stima di crisi: meno esposizione quando le correlazioni salgono (Longin-Solnik 2001).",
+           "tutto": "Combinazione di tutti i miglioramenti: verifica che i guadagni si sommino e non si annullino."}
+    reg = lambda v: trials.register("head_research", f"gervaq4:{v.name}", "gervaq4", v.params(), hyp[v.name])
+    dsr = lambda tid, r: trials.record_result(tid, r, fp)["dsr"]
+    res = G4.bench(dict(close=close, stocks=[s for s in G4.STOCKS if s in close]), register=reg, dsr_fn=dsr)
+    out = os.path.join(paths.RESEARCH, "gervaq4")
+    os.makedirs(out, exist_ok=True)
+    md = res.to_markdown() + f"\n\nImpronta dei dati: {fp}\n"
+    open(os.path.join(out, f"{db.today()}.md"), "w").write(md)
+    events.publish("research.gervaq4", "head_research", dict(scelta=res.scelta, motivo=res.motivo, pbo=res.pbo["pbo"]))
+    print(md)
+
+
+def cmd_report(_):
+    from firm import reports
+    r = reports.daily()
+    print(f"Report del {r['giorno']}: NAV {r['societa']['nav']:,.0f} EUR, {len(r['correzioni'])} correzioni proposte")
+    for c in r["correzioni"]:
+        print(f"  [{c['gravita']}] {c['cosa']} -> {c['azione']} ({c['chi']})")
 
 
 def cmd_demo(_):
@@ -130,9 +174,11 @@ def main():
     _load_env()
     ap = argparse.ArgumentParser(description="GERVA Capital")
     sub = ap.add_subparsers(dest="cmd", required=True)
-    for name in ["init", "portal", "heartbeat", "run", "status", "verify", "demo", "release", "data"]:
+    for name in ["init", "portal", "heartbeat", "run", "status", "verify", "demo", "release", "data", "research", "report"]:
         sp = sub.add_parser(name)
         sp.add_argument("--demo", action="store_true", help="usa il database dimostrativo var/demo/")
+        if name == "research":
+            sp.add_argument("what", nargs="?", default="gervaq4")
         if name == "release":
             sp.add_argument("--apply", metavar="ID", help="applica il rilascio (solo nella finestra, con la scelta di Andrea)")
     a = ap.parse_args()
