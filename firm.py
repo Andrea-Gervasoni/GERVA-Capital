@@ -8,7 +8,8 @@ GERVA Capital — comando unico.
     python firm.py run          # battito ogni N minuti (impostazione firm.heartbeat_minutes)
     python firm.py status       # budget, rischio, catena di hash, prove
     python firm.py verify       # verifica la catena di hash dell'audit log
-    python firm.py demo         # popola la societa' con una giornata simulata (dati finti, dichiarati)
+    python firm.py demo         # 45 giorni SINTETICI in var/demo/ (mai nel DB vero)
+    python firm.py portal --demo  # portale sul database dimostrativo
 
 Solo paper. Non esiste un comando per la modalita' live.
 """
@@ -92,8 +93,12 @@ def main():
     ap = argparse.ArgumentParser(description="GERVA Capital")
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name in ["init", "portal", "heartbeat", "run", "status", "verify", "demo"]:
-        sub.add_parser(name)
+        sp = sub.add_parser(name)
+        sp.add_argument("--demo", action="store_true", help="usa il database dimostrativo var/demo/")
     a = ap.parse_args()
+    if a.cmd == "demo" or a.demo:
+        # il demo non tocca MAI il database vero: tutto in var/demo/
+        os.environ["GERVA_VAR"] = os.path.join(ROOT, "var", "demo")
     if a.cmd not in ("init",):
         from firm import db, paths
         if not os.path.exists(paths.DB_PATH):

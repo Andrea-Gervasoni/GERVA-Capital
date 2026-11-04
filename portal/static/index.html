@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="andrea-token" content="{{ANDREA_TOKEN}}">
+<title>GERVA Capital</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header id="topbar">
+  <div class="brand">GERVA<span>CAPITAL</span></div>
+  <div class="cell mode"><span class="badge paper">PAPER</span><span class="badge live" title="LIVE bloccato: servono i cancelli 13-15 della sfida e la firma dei titolari del conto"><canvas id="lock" width="8" height="8"></canvas> LIVE</span></div>
+  <div class="cell"><label>NAV paper</label><b id="nav">—</b></div>
+  <div class="cell"><label>P&amp;L</label><b id="pnl">—</b></div>
+  <div class="cell"><label>Rischio</label><b><i id="light" class="light verde"></i><span id="lighttxt">—</span></b></div>
+  <div class="cell"><label>API oggi</label><b id="bud">—</b></div>
+  <div class="cell"><label>API totale</label><b id="budtot">—</b></div>
+  <div class="cell"><label>Autonomia</label><b id="days">—</b></div>
+  <div class="cell"><label>Sfida vs Kimi</label><b id="ledger">—</b></div>
+  <div class="cell"><label>Audit</label><b id="chain">—</b></div>
+  <div id="demobanner" class="sim demo hidden">DEMO — database var/demo/: mercato SINTETICO e attività dimostrativa, nessun dato reale</div>
+  <div id="simbanner" class="sim hidden">SIMULAZIONE — nessuna chiave API: gli agenti danno risposte finte e prudenti</div>
+</header>
+
+<main>
+  <div id="officewrap"><canvas id="office" width="480" height="344"></canvas></div>
+  <nav id="side">
+    <button data-panel="org">Organigramma</button>
+    <button data-panel="tasks">Albero compiti</button>
+    <button data-panel="mail">Posta del Capo <em id="mailn"></em></button>
+    <button data-panel="pods">Classifica pod</button>
+    <button data-panel="research">Ricerca</button>
+    <button data-panel="gateway">Gateway</button>
+    <button data-panel="settings">Impostazioni</button>
+    <button id="sound">Suoni: OFF</button>
+    <div class="legend">
+      <p><b>Fumetti</b></p>
+      <p>… pensa · ✎ scrive · Zz dorme</p>
+      <p>⚑ riunione · ✓ verifica · ! errore</p>
+      <p>Scrivania vuota = posizione aperta</p>
+      <p>Robot = automa (codice)</p>
+    </div>
+  </nav>
+</main>
+
+<footer>
+  <form id="cmd"><span class="prompt">▶ Parla al Capo</span><input id="cmdtext" autocomplete="off" maxlength="2000" placeholder="es. «Fammi un riepilogo del rischio di oggi»"><button>Invia</button></form>
+  <div id="ticker"><div id="tickertext">Benvenuto in GERVA Capital.</div></div>
+</footer>
+
+<div id="dialog" class="rpg hidden">
+  <div class="rpg-head"><span id="dlgtitle"></span><button class="x" data-close="dialog">✕</button></div>
+  <div class="tabs" id="dlgtabs"></div>
+  <div class="rpg-body" id="dlgbody"></div>
+</div>
+
+<div id="panel" class="rpg hidden">
+  <div class="rpg-head"><span id="pnltitle"></span><button class="x" data-close="panel">✕</button></div>
+  <div class="rpg-body" id="pnlbody"></div>
+</div>
+
+<script src="/static/sprites.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>
