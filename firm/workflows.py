@@ -429,7 +429,10 @@ def pod_cycle(pid: str, signal_weights: dict[str, float], now=None) -> dict:
         target_qty = mult * w * cap / q["price"]
         cur = book["posizioni"].get(instr, {}).get("qty", 0.0)
         delta = target_qty - cur
-        if abs(delta * q["price"]) < S.risk_limits()["order"]["min_notional_eur"]:
+        from quantlab import costs as QC
+        floor = max(S.risk_limits()["order"]["min_notional_eur"],
+                    QC.min_efficient_notional(gateway.COST_BY_KIND.get(q["kind"], QC.UCITS_ETF)))
+        if abs(delta * q["price"]) < floor:            # ordine troppo piccolo: la commissione minima mangerebbe il guadagno
             continue
         side = "BUY" if delta > 0 else "SELL"
         if not tools.allowed(head, "submit_order"):

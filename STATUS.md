@@ -1,6 +1,6 @@
 # STATUS — GERVA Capital (4/11/2026)
 
-Test: **72 verdi** (`python -m pytest`). Branch `claude/gifted-ramanujan-n3a5gg`.
+Test: **84 verdi** (`python -m pytest`). Branch `claude/gifted-ramanujan-n3a5gg`.
 Costo di sviluppo: non leggibile da me in questa sessione (`/cost` non è disponibile all'agente); Andrea lo legge con `/cost` dal suo terminale. Costo di esecuzione finora: **0,00 €** (nessuna chiave API: tutto in simulazione).
 
 ## M0 — Ricerca ✅
@@ -36,3 +36,23 @@ Costo di sviluppo: non leggibile da me in questa sessione (`/cost` non è dispon
 1. **Credenziali (cat. 4)**: mettere `ANTHROPIC_API_KEY` in `.env` per accendere gli agenti veri. *Default sicuro:* la società resta in simulazione a costo zero.
 2. **Modifica di file fuori dal progetto (cat. 5)**: applicare domenica 8/11 il rilascio `research/releases/2026-11-08` (R1, R2, R5, R9) con `python firm.py release --apply 2026-11-08`. *Default sicuro:* GERVA-Q resta com'è e le correzioni restano proposte.
 3. **Pubblicazione**: il repository è pubblico. Il brief (`docs/FIRM_BRIEF.md`) l'ho tenuto fuori da git perché contiene dettagli personali; lo snapshot di GERVA-Q (`_incoming/`) è escluso. *Default sicuro:* restano entrambi solo in locale.
+
+## v2 — richiesta di Andrea: grafica, uffici, edificio, riunioni, incentivi, motore, report ✅
+- **Portale riscritto** ad alta risoluzione (72×45 tessere, persone 16×24 con 4 direzioni e passo, robot per gli automi), telecamera con zoom e spostamento, insegna con stemma e font pixel, cielo e skyline che seguono l'ora reale. Verificato nel browser, senza errori.
+- **Uffici per grado** con arredo crescente; **edificio** a 6 livelli legato al massimo storico del NAV (non scende mai), con servizi che si sbloccano per tutti. Nel demo: livello 3 (palestra aperta).
+- **Sala riunioni** (`firm/meetings.py`): convocate da allarmi, allocazione mensile, fascicoli che passano il cancello. Posizione indipendente → una replica → decide il codice pesando per calibrazione → alla scadenza i fatti risolvono e si paga con una regola di Brier **propria**.
+- **Incentivi** (`firm/compensation.py`): stipendio per grado, bonus sempre differito 4 settimane, clawback automatico (errore grave, pod chiuso). Prompt v2 con un carattere per agente e le regole di guadagno (`agents/PROMPTS_CHANGELOG.md`).
+- **Motore:** banco `quantlab/gervaq4.py` con 9 varianti contro la v3. Vincoli: PBO, bootstrap appaiato, holdout di 2 anni mai usato per scegliere; se nessuna supera i cancelli si tiene la v3. Ordine minimo efficiente (costo ≤ 0,5%).
+- **Report** giornalieri con correzioni automatiche (`firm/reports.py`, pannello Report).
+
+### Analisi e correzioni di questo giro (errori trovati e corretti)
+1. Regola di ricompensa delle riunioni: la prima versione pagava anche chi sbagliava al 60% di fiducia. Ora vale zero per chi dichiara 50%, ed è sempre una regola propria (test).
+2. Il demo scriveva promozioni e lezioni nei file versionati di `agents/`: ora usa una copia in `var/demo/agents` e ho ripulito una lezione "[DEMO]" finita in un commit.
+3. La diagnostica ha trovato che i pod del demo mandavano ordini da 120–300 € con commissione minima > 1%: introdotto l'ordine minimo efficiente. Lo stesso problema esiste in GERVA-Q (`live.py`, ordini da 200 €): **rilievo R11**, da verificare con la tariffa reale.
+4. Grafica: strisce "in costruzione" che sbordavano nella palestra; indice di palette negativo per hash sopra 2³¹; nome `table` in conflitto. Tutti corretti.
+5. Backtester: `W.values` letto dentro il ciclo (costo quadratico) → letto una volta sola.
+
+### Cosa è ancora finto o da verificare
+- Agenti in simulazione senza chiave; banco v4 testato solo su dati sintetici (sul Mac: `firm.py data` e poi `firm.py research gervaq4`).
+- Le tariffe UCITS (minimo 3 €) sono stime: vanno lette sul listino IBKR prima di cambiare R11.
+- Il livello dell'edificio e gli arredi sono rappresentazione: non cambiano nessuna regola di rischio.

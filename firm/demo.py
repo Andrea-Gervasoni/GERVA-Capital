@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 
 from . import (db, org_seed, registry, pods, gateway, trials, events, tasks, scorekeeper as SK,
-               mailbox, settings as S, economy)
+               mailbox, settings as S, economy, compensation, reports, building)
 from quantlab import strategies as ST
 
 INSTR = {"CSPX": ("etf_ucits", 600), "IGLN": ("etf_ucits", 45), "IBTM": ("etf_ucits", 120),
@@ -71,8 +71,9 @@ def run(days: int = 45, seed: int = 3) -> dict:
                 target = float(w.get(instr, 0.0)) * book["capitale_ammesso"] / px_
                 cur = book["posizioni"].get(instr, {}).get("qty", 0.0)
                 delta = target - cur
-                if abs(delta * px_) < 120:
-                    continue
+                from quantlab import costs as QC
+                if abs(delta * px_) < QC.min_efficient_notional(gateway.COST_BY_KIND[INSTR[instr][0]]):
+                    continue                              # sotto la soglia efficiente non conviene ribilanciare
                 r = gateway.submit_order(pid, p["head"], instr, "BUY" if delta > 0 else "SELL", round(abs(delta), 6),
                                          "[DEMO] segue il segnale del codice", "giorni", now=now)
                 accepted += r["status"] == "accettato"
@@ -82,12 +83,13 @@ def run(days: int = 45, seed: int = 3) -> dict:
             gateway.submit_order("trend", "pod_trend", "CSPX", "BUY", 500, "[DEMO] fat-finger simulato", "giorni", now=now)
             rejected += 1
         gateway.flush()
-        pz_nav *= 1 + rng.normal(0.0004, 0.008)
+        pz_nav *= 1 + rng.normal(0.0007, 0.006)
         db.ex("INSERT OR REPLACE INTO nav_marks(day,pod,nav,capital,gross) VALUES(?,?,?,?,?)",
               (day.strftime("%Y-%m-%d"), "pod_zero", pz_nav, pods.get("pod_zero")["capital_frac"], 0.0))
         gateway.mark_day(day.strftime("%Y-%m-%d"))
         pods.apply_drawdown_rules()
     _demo_org_activity()
+    _demo_v2()
     return dict(giorni=days, ordini_accettati=accepted, ordini_respinti=rejected,
                 classifica=economy.leaderboard()["pod"], nota="Dati SINTETICI e decisioni del codice: solo dimostrazione")
 
@@ -145,3 +147,55 @@ def _demo_org_activity():
                         ["Aggiungere MOONSHOT_API_KEY", "Non collegare AI esterne per ora"],
                         "Rimandare finche' i pod Claude non hanno 60 giorni di dati",
                         "Nessuna AI esterna collegata", dedup_key="demo-kimi")
+
+
+def _meeting(kind, title, reason, rows, decision, ctx):
+    """Riunione dimostrativa scritta (nessun LLM): stessa struttura e stessi eventi di quelle vere."""
+    import json
+    parts = [r[0] for r in rows]
+    opts = {"rischio": ["riduci", "mantieni"], "allocazione": ["riduci", "mantieni", "aumenta"]}[kind]
+    mid = db.ex("INSERT INTO meetings(ts,kind,title,reason,participants,options,status,context) VALUES(?,?,?,?,?,?,?,?)",
+                (db.now_iso(), kind, title, reason, db.dumps(parts), db.dumps(opts), "in_corso", db.dumps(ctx)))
+    events.publish("meeting.start", "sala_riunioni", dict(id=mid, tipo=kind, titolo=title, motivo=reason, partecipanti=parts))
+    first, final = {}, {}
+    for aid, pos, arg, fid, rep, fin, fid2 in rows:
+        first[aid] = dict(posizione=pos, argomento=arg, evidenza=["[DEMO]"], fiducia=fid, cambierei_idea_se="[DEMO]")
+        events.publish("meeting.statement", aid, dict(id=mid, fase="posizione", posizione=pos, testo=arg, fiducia=fid))
+    for aid, pos, arg, fid, rep, fin, fid2 in rows:
+        final[aid] = dict(replica=rep, posizione_finale=fin, fiducia=fid2)
+        events.publish("meeting.statement", aid, dict(id=mid, fase="replica", posizione=fin, testo=rep, fiducia=fid2,
+                                                      cambia=fin != pos))
+    tr = dict(posizioni=first, repliche=final, pesi={a: 0.5 for a in parts}, punteggi={}, previsioni={})
+    db.ex("UPDATE meetings SET status='decisa', decision=?, transcript=?, resolve_after=? WHERE id=?",
+          (decision, json.dumps(tr), "2026-12-31", mid))
+    events.publish("meeting.end", "sala_riunioni", dict(id=mid, decisione=decision, punteggi={}))
+
+
+def _demo_v2():
+    # promozioni: la promozione cambia ufficio e arredo
+    registry.change_grade("senior_trend", 5, "promozione", "[DEMO] 3 idee su 4 hanno superato la Validazione")
+    registry.change_grade("news_analyst", 2, "promozione", "[DEMO] precisione sopra la media del grado per 30 valutazioni")
+    compensation.pay_salaries(db.today())
+    compensation.award_bonus("pod_crypto", 60, "[DEMO] bonus pool del pod crypto", "crypto", today="2026-10-01")
+    compensation.award_bonus("pod_trend", 35, "[DEMO] bonus pool del pod trend", "trend")
+    compensation.award_bonus("senior_validator", 15, "[DEMO] tre canarini individuati")
+    compensation.vest(db.today())
+    economy.gc_move("pod_crypto", 120, "maturato", "[DEMO] bonus maturati precedenti")
+    _meeting("rischio", "Pod crypto: ridurre l'esposizione?", "[DEMO] drawdown vicino al taglio del 5%", [
+        ("cro", "riduci", "[DEMO] Il drawdown e' a -4,2% con il taglio a -5%: un'altra giornata come ieri chiude il pod.", 0.75,
+         "[DEMO] Il Capo Pod parla di trend intatto, ma il rischio di coda non e' nel segnale. Confermo.", "riduci", 0.75),
+        ("pod_crypto", "mantieni", "[DEMO] Il breakout e' ancora valido e il carry non e' estremo: ridurre ora vende sul minimo.", 0.65,
+         "[DEMO] L'argomento del CRO sul taglio e' solido: riduco la fiducia ma resto sulla mia.", "mantieni", 0.55),
+        ("capo", "riduci", "[DEMO] Odio perdere soldi: meta' esposizione ci tiene in gioco senza rischiare la chiusura.", 0.6,
+         "[DEMO] D'accordo con il CRO.", "riduci", 0.65)], "riduci", dict(pod="crypto"))
+    _meeting("allocazione", "Capitale del pod trend", "[DEMO] riallocazione mensile", [
+        ("pod_trend", "aumenta", "[DEMO] Alpha netto positivo da 44 giorni: datemi il capitale e batto il Pod Zero.", 0.7,
+         "[DEMO] Lo shrinkage dice che 44 giorni sono pochi: abbasso la fiducia.", "aumenta", 0.55),
+        ("cro", "mantieni", "[DEMO] 44 giorni non distinguono Sharpe 1 da Sharpe 0: serve il campione minimo di 60.", 0.7,
+         "[DEMO] Resto: l'intervallo di confidenza dello Sharpe va da 0,5 a 7,7.", "mantieni", 0.7),
+        ("capo", "mantieni", "[DEMO] Prima il campione minimo, poi il capitale.", 0.6, "[DEMO] Confermo.", "mantieni", 0.6)],
+        "mantieni", dict(pod="trend"))
+    for aid, st in [("senior_trend", "scrive"), ("news_analyst", "legge")]:
+        events.publish("agent.status", aid, dict(stato=st, compito="[DEMO]"), audit_it=False)
+    reports.daily()
+    building.level()

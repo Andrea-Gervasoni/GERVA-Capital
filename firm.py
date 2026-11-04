@@ -185,6 +185,12 @@ def main():
     if a.cmd == "demo" or a.demo:
         # il demo non tocca MAI il database vero: tutto in var/demo/
         os.environ["GERVA_VAR"] = os.path.join(ROOT, "var", "demo")
+        # anche i profili: le promozioni del demo non devono toccare i file versionati in agents/
+        import shutil
+        demo_agents = os.path.join(ROOT, "var", "demo", "agents")
+        if not os.path.isdir(demo_agents):
+            shutil.copytree(os.path.join(ROOT, "agents"), demo_agents)
+        os.environ["GERVA_AGENTS"] = demo_agents
     if a.cmd not in ("init",):
         from firm import db, paths
         if not os.path.exists(paths.DB_PATH):

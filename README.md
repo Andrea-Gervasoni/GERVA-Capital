@@ -38,8 +38,25 @@ Per vedere il portale pieno senza toccare il database vero: `python firm.py demo
 | `firm.py status` · `verify` | budget, rischio, prove · verifica della catena di hash |
 | `firm.py data` | (sul Mac) prezzi reali per la ricerca; senza, la ricerca usa dati sintetici e vale solo come collaudo |
 | `firm.py release` · `release --apply ID` | rilasci di GERVA-Q in coda · applicazione di domenica con backup e changelog |
+| `firm.py research gervaq4` | (sul Mac) banco di prova dei miglioramenti del motore contro la v3 |
+| `firm.py report` | report del giorno con le correzioni proposte dalla diagnostica |
 | `python -m llm.evals [agente]` | eval dei prompt (senza chiave: solo validità dello schema) |
-| `python -m pytest` | 72 test |
+| `python -m pytest` | 84 test |
+
+## Il portale
+
+L'edificio di GERVA Capital visto dall'alto, con l'insegna sul tetto e lo skyline che segue l'ora reale.
+**Rotella** = zoom verso il cursore, **trascina** = sposta, **doppio clic** = zoom sulla stanza, ⤢ = tutto l'edificio.
+Clic su una persona → scheda con ritratto, indicatori, grafici, previsioni, carriera, errori, costi, memoria.
+
+- **Uffici per grado:** suite d'angolo con vista panoramica per il Capo; uffici privati con finestra per Manager e Head;
+  uffici a vetri per i Senior; open space per Analisti e Stagisti. La promozione porta un trasloco (con scatola) e più arredi;
+  i Gerva-Coin maturati aggiungono trofei, acquario, quadro d'oro.
+- **Edificio che cresce:** il livello dipende dal massimo storico del valore della società e non scende mai.
+  Servizi per tutti: caffè → lounge → mensa → palestra → biblioteca → sala giochi.
+- **Vita d'ufficio:** deleghe (il superiore chiama, il subordinato va e torna con la cartella), consegne, riunioni in sala
+  con le posizioni di ciascuno, promozioni, bonus, allarmi del CRO e rifiuti del Gateway seguono gli **eventi veri** con il loro
+  testo. Pause e chiacchiere sono animazioni d'ambiente.
 
 ## Com'è fatta
 

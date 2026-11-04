@@ -36,6 +36,14 @@ class CostModel:
         return self.cost(q, sigma_daily, adv_notional) / q if q else 0.0
 
 
+def min_efficient_notional(m: CostModel, max_rate: float = 0.005) -> float:
+    """Controvalore minimo perche' il costo di un ordine resti sotto `max_rate`.
+    Sotto questa soglia la commissione minima mangia il rendimento: meglio non ribilanciare.
+    Esempio: minimo 3 EUR, tasso 0,05%, meta' spread 0,03% -> 3 / (0,005 - 0,0008) = ~714 EUR."""
+    room = max_rate - m.commission_rate - m.half_spread
+    return float("inf") if room <= 0 else m.commission_min / room
+
+
 # Tariffe di partenza (verificate o dichiarate come stime nel commento)
 IBKR_CRYPTO = CostModel(commission_rate=0.0018, commission_min=1.75, commission_cap_rate=0.01,
                         half_spread=0.0005)          # tariffa IBKR (fonte A); spread: stima

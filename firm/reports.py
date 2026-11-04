@@ -70,6 +70,13 @@ def diagnostics() -> list[dict]:
             out.append(_fix(2, f"Pod Zero: {1 - g:.0%} del NAV in liquidita' che non rende", f"lorda target {g:.0%}",
                             "Candidato di ricerca: sleeve di liquidita' in un ETF UCITS sul tasso overnight (€STR); rilascio di domenica",
                             "Andrea (rilascio GERVA-Q, cat. 5)"))
+        from quantlab import costs as QC
+        thr = QC.min_efficient_notional(QC.UCITS_ETF)
+        out.append(_fix(2, "Pod Zero: ordini minimi da 200 EUR (live.py) sotto la soglia efficiente",
+                        f"con una commissione minima stimata di {QC.UCITS_ETF.commission_min:.0f} EUR un ordine da 200 EUR costa "
+                        f"{QC.UCITS_ETF.cost(200) / 200:.1%}; soglia per restare sotto lo 0,5%: ~{thr:,.0f} EUR",
+                        "Rilievo R11: alzare MIN_ORDER_EUR o allargare la banda (variante band5 del banco v4) dopo aver verificato la tariffa reale",
+                        "Andrea (rilascio GERVA-Q, cat. 5)"))
         eq = pod_zero.equity_model()
         if eq and eq.get("asof"):
             age = (dt.date.today() - dt.date.fromisoformat(eq["asof"])).days

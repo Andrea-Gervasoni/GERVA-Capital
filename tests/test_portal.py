@@ -51,3 +51,17 @@ def test_portal_code_never_calls_the_gateway_order_functions():
     calls = {f"{n.func.value.id}.{n.func.attr}" for n in ast.walk(tree)
              if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and isinstance(n.func.value, ast.Name)}
     assert not {"gateway.submit_order", "gateway.flush", "gateway.broker"} & calls
+
+
+def test_v2_endpoints(client):
+    c, tok = client
+    w = c.get("/api/world").json()
+    assert w["edificio"]["livello"] == 0 and any(o["tier"] == "ceo" for o in w["uffici"])
+    assert "capo" in w["agenti"]
+    people = c.get("/api/people").json()
+    assert people and all("rank_grado" in p for p in people)
+    assert c.get("/api/meetings").status_code == 200
+    r = c.get("/api/report/oggi").json()
+    assert "correzioni" in r
+    a = c.get("/api/agent/capo").json()
+    assert a["ufficio"]["tier"] == "ceo" and "serie" in a

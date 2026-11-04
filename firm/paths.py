@@ -5,7 +5,7 @@ import os
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONFIG = os.path.join(ROOT, "config")
-AGENTS = os.path.join(ROOT, "agents")
+AGENTS = os.environ.get("GERVA_AGENTS", os.path.join(ROOT, "agents"))   # il demo usa una copia in var/demo/agents
 EVALS = os.path.join(ROOT, "evals")
 RESEARCH = os.path.join(ROOT, "research")
 VAR = os.environ.get("GERVA_VAR", os.path.join(ROOT, "var"))

@@ -21,7 +21,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from firm import (db, events, registry, budget, risk, pods, gateway, economy, mailbox, tasks, trials,
-                  scorekeeper as SK, pod_zero, audit, settings as S)
+                  scorekeeper as SK, pod_zero, audit, settings as S, building, meetings, reports, compensation)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ALLOWED_HOSTS = {"127.0.0.1:8765", "localhost:8765", "127.0.0.1", "localhost", "testserver"}
@@ -125,7 +125,81 @@ def agent(aid: str):
         errori=db.q("SELECT * FROM postmortems WHERE agent_id=? ORDER BY id DESC", (aid,)),
         carriera=registry.career(aid),
         costi=dict(oggi=llm_today, totale=llm_all, gc=economy.gc_history(aid)),
-        memoria=registry.memory(aid)))
+        memoria=registry.memory(aid),
+        serie=_series(aid),
+        previsioni_lista=db.q("SELECT statement, prob, deadline, outcome FROM forecasts WHERE agent_id=? ORDER BY ts DESC LIMIT 15", (aid,)),
+        persona=_people_row(a) if a["kind"] == "llm" else None,
+        ufficio=next((o for o in building.offices() if o["agent_id"] == aid), None)))
+
+
+def _series(aid):
+    ev = db.q("SELECT substr(ts,1,10) d, AVG(CASE WHEN metric='brier' THEN 1 - value/0.25 ELSE value END) v FROM evaluations "
+              "WHERE agent_id=? GROUP BY d ORDER BY d", (aid,))
+    gc = db.q("SELECT substr(ts,1,10) d, SUM(amount) v FROM gc_ledger WHERE agent_id=? AND kind!='differito' GROUP BY d ORDER BY d", (aid,))
+    run, cum = 0.0, []
+    for r in gc:
+        run += r["v"]
+        cum.append(dict(d=r["d"], v=run))
+    cost = db.q("SELECT day d, SUM(cost_eur) v FROM llm_calls WHERE agent_id=? GROUP BY day ORDER BY day", (aid,))
+    return dict(punteggio=ev, gc=cum, costo=cost)
+
+
+@app.get("/api/world")
+def world():
+    """Tutto cio' che serve alla scena: edificio, uffici e arredi per grado, agenti e cosa fanno."""
+    lv = building.level()
+    strike = budget.on_strike()[0]
+    agents = {}
+    for a in registry.all_agents():
+        act = _activity(a["id"]) if a["kind"] == "llm" else dict(stato="automa", compito="", ts=None)
+        if strike and a["kind"] == "llm":
+            act["stato"] = "dorme"
+        agents[a["id"]] = dict(id=a["id"], name=a["name"], role=a["role"], dept=a["dept"], kind=a["kind"],
+                               status=a["status"], grade=a["grade"], grade_name=a["grade_name"], superior=a["superior"],
+                               gc=economy.gc_balance(a["id"]) if a["kind"] == "llm" else 0, **act)
+    meet = meetings.history(1)
+    return _json(dict(edificio=lv, uffici=building.offices(), agenti=agents, sciopero=strike,
+                      riunione_in_corso=meet[0] if meet and meet[0]["status"] == "in_corso" else None,
+                      ultima_riunione=meet[0] if meet else None))
+
+
+def _people_row(a):
+    comp = SK.composite(a["id"], a["dept"])
+    f = SK.agent_forecasts(a["id"])
+    c = db.one("SELECT COALESCE(SUM(cost_eur),0) c, COUNT(*) n FROM llm_calls WHERE agent_id=?", (a["id"],))
+    errs = db.one("SELECT COUNT(*) n FROM postmortems WHERE agent_id=?", (a["id"],))["n"]
+    off = next((o for o in building.offices() if o["agent_id"] == a["id"]), {})
+    return dict(id=a["id"], nome=a["name"], ruolo=a["role"], reparto=a["dept"], grado=a["grade"], grado_nome=a["grade_name"],
+                ufficio=off.get("tier"), stato=a["status"], punteggio=comp["punteggio"], valutazioni=comp["n_valutazioni"],
+                brier=f["brier"], previsioni=f["risolte"], giuste=f["giuste"], gc=economy.gc_balance(a["id"]),
+                differito=economy.gc_unvested(a["id"]), costo=c["c"], chiamate=c["n"], errori=errs,
+                stipendio=compensation.BASE_WEEKLY_GC[a["grade"]])
+
+
+@app.get("/api/people")
+def people():
+    rows = [_people_row(a) for a in registry.all_agents() if a["kind"] == "llm"]
+    for g in {r["grado"] for r in rows}:
+        same = sorted([r for r in rows if r["grado"] == g], key=lambda r: -(r["punteggio"] or -1))
+        for i, r in enumerate(same):
+            r["rank_grado"] = f"{i + 1}/{len(same)}"
+    return _json(rows)
+
+
+@app.get("/api/meetings")
+def meetings_list():
+    return _json(meetings.history(30))
+
+
+@app.get("/api/reports")
+def reports_list():
+    return _json(reports.listing())
+
+
+@app.get("/api/report/{day}")
+def report_day(day: str):
+    r = reports.load(day) if day != "oggi" else None
+    return _json(r or reports.daily(save=False))
 
 
 @app.get("/api/org")
