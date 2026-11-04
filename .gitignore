@@ -13,3 +13,5 @@ __pycache__/
 .pytest_cache/
 *.pyc
 KILL
+# brief personale di Andrea: non pubblicato (repo pubblico)
+docs/FIRM_BRIEF.md

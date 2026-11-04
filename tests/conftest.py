@@ -19,6 +19,11 @@ def firm_env(tmp_path, monkeypatch):
     monkeypatch.setattr(paths, "ANDREA_TOKEN", str(var / "andrea.token"))
     monkeypatch.setattr(paths, "KILL_FILE", str(tmp_path / "KILL"))
     monkeypatch.setattr(paths, "GERVA_Q", str(tmp_path / "gerva_q_assente"))
+    # copia dei profili: i test (post-mortem, promozioni) non devono scrivere nei file versionati
+    agents = tmp_path / "agents"
+    shutil.copytree(paths.AGENTS, agents)
+    monkeypatch.setattr(paths, "AGENTS", str(agents))
+    monkeypatch.setattr(paths, "RESEARCH", str(tmp_path / "research"))
     risk = tmp_path / "risk_limits.yaml"
     shutil.copy(settings.RISK_FILE, risk)
     monkeypatch.setattr(settings, "RISK_FILE", str(risk))
