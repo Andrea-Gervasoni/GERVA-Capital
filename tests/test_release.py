@@ -9,6 +9,7 @@ import pytest
 SUN = dt.datetime(2026, 11, 8, 10, tzinfo=dt.timezone.utc)
 WED = dt.datetime(2026, 11, 4, 10, tzinfo=dt.timezone.utc)
 SNAP = os.path.join(os.path.dirname(__file__), "..", "_incoming", "quant_engine")
+REPO_RELEASES = os.path.join(os.path.dirname(__file__), "..", "research", "releases")
 
 
 @pytest.mark.skipif(not os.path.isdir(SNAP) or not shutil.which("patch"), reason="serve lo snapshot di GERVA-Q")
@@ -22,7 +23,7 @@ def test_release_applies_only_on_sunday_with_backup_and_changelog(firm_env, tmp_
     assert not release.apply("2026-11-08", cap, now=WED, gerva_q=str(gq))["ok"]
     # non tocca il file APPLIED vero del repository: si lavora su una copia della cartella del rilascio
     rel_copy = tmp_path / "releases"
-    shutil.copytree(release.RELEASES, rel_copy)
+    shutil.copytree(REPO_RELEASES, rel_copy)
     old = release.RELEASES
     release.RELEASES = str(rel_copy)
     try:
