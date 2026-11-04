@@ -17,4 +17,8 @@
 
 - **GERVA-Q non è raggiungibile dal cloud.** Il brief indica `~/Documents/GERVA-Q`; l'ambiente di sviluppo è un container cloud senza accesso al Mac. Soluzione: adattatore di sola lettura configurato da `GERVA_Q_PATH`. Lo snapshot caricato da Andrea è in `_incoming/` ed è **escluso da git**: il repository GERVA-Capital è pubblico e pubblicare il codice delle strategie è una scelta di Andrea, non mia.
 - **Dati di mercato bloccati dalla rete del cloud.** Il motore è testato su dati sintetici con risultati noti; i backtest reali si lanciano dal Mac.
-- **`/cost` non è disponibile per me in questa sessione.** Il contatore di sviluppo in STATUS.md riporta quindi una stima dichiarata come tale, non il valore di `/cost`; Andrea può leggere il valore vero con `/cost` dal suo terminale.
+- **Agenti a flusso, non a ciclo di strumenti aperto.** Il codice raccoglie i numeri, l'agente restituisce un JSON a schema, il codice esegue solo le azioni consentite al ruolo. Costa meno (una chiamata per compito) ed è più robusto contro l'injection (D1, D5, D9). Il registro `llm/tools.py` resta la fonte dei permessi.
+- **Le prove di collaudo su dati sintetici** restano nel registro ma non entrano nel contatore del DSR: verificano la pipeline, non una strategia, e falserebbero la varianza degli Sharpe.
+- **Organico:** 8 agenti iniziali come da brief, più i 3 Capi Pod richiesti da M5 con budget minimo (0,03 €/giorno ciascuno, sveglia settimanale).
+- **Il brief non è pubblicato** (repo pubblico, contiene dettagli personali): è escluso da git e resta solo in locale.
+- **`/cost` non è disponibile per me in questa sessione.** STATUS.md lo dichiara e non riporta stime inventate; Andrea legge il valore vero con `/cost` dal suo terminale.
