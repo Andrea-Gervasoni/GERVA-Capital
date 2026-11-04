@@ -1,0 +1,15 @@
+# segreti: mai in git
+.env
+*.key
+# snapshot di GERVA-Q caricato da Andrea: codice delle strategie, non pubblicato
+_incoming/
+# stato locale della società (DB, log, cache): si rigenera
+var/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+data_cache/
+__pycache__/
+.pytest_cache/
+*.pyc
+KILL
