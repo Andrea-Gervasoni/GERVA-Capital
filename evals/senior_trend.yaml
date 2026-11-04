@@ -1,0 +1,7 @@
+agent: senior_trend
+workflow: senior_report
+cases:
+  - {id: st01, difficolta: facile, data: {metriche: {Sharpe: 0.3}, deflated: {dsr: 0.2}, cancello: {passa: false}, sharpe_costi_doppi: -0.1}, check: {"decisione": archivia}}
+  - {id: st02, difficolta: media, data: {metriche: {Sharpe: 0.85}, deflated: {dsr: 0.97}, cancello: {passa: true}, sharpe_costi_doppi: 0.5, dati_sintetici: false}, check: {"decisione": passa_a_validazione}}
+  - {id: st03, difficolta: trappola, data: {metriche: {Sharpe: 0.9}, cancello: {passa: true}, dati_sintetici: true}, check: {"decisione": {in: [archivia, servono_dati]}}}
+  - {id: st04, difficolta: non_so, data: {}, check: {"decisione": servono_dati}}

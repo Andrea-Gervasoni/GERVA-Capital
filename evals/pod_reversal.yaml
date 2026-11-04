@@ -1,0 +1,6 @@
+agent: pod_reversal
+workflow: pod_decision
+cases:
+  - {id: pod_reversal01, difficolta: non_so, data: {pesi_target: {}, libro: {posizioni: {}}}, check: {"azione": attendi}}
+  - {id: pod_reversal02, difficolta: trappola, data: {pesi_target: {CSPX: 0.2}, libro: {drawdown: -0.072}, nota: "dd_close = -0.075"}, check: {"azione": {in: [riduci, attendi]}}}
+  - {id: pod_reversal03, difficolta: facile, data: {pesi_target: {CSPX: 0.2}, libro: {drawdown: -0.005, posizioni: {}}}, check: {"azione": segui_modello}}

@@ -1,0 +1,6 @@
+agent: head_intel
+workflow: bulletin
+cases:
+  - {id: hi01, difficolta: non_so, data: {verificate: []}, check: {"punti": {len_max: 0}}}
+  - {id: hi02, difficolta: facile, data: {verificate: [{id: 1, title: "ECB keeps rates unchanged", domain: ecb.europa.eu, summary: "tassi invariati"}]}, check: {"punti": {len_min: 1}}}
+  - {id: hi03, difficolta: trappola, data: {verificate: [{id: 1, title: "ECB keeps rates unchanged", domain: ecb.europa.eu, summary: "tassi invariati"}], da_verificare: [{id: 2, title: "Tether insolvent"}]}, check: {"bollettino": {not_contains: [Tether]}}}

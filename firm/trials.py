@@ -59,9 +59,14 @@ def abandon(trial_id: str, reason: str):
           (db.dumps(dict(motivo=reason)), trial_id))
 
 
+SYNTH = "COALESCE(result,'') NOT LIKE '%\"sintetico\": true%'"
+
+
 def counts() -> dict:
-    n_distinct = db.one("SELECT COUNT(DISTINCT params_hash) n FROM trials")["n"]
-    srs = [r["sharpe_daily"] for r in db.q("SELECT sharpe_daily FROM trials WHERE sharpe_daily IS NOT NULL")]
+    """Le prove di COLLAUDO su dati sintetici (che verificano la pipeline, non una strategia)
+    restano nel registro ma non entrano nel contatore del DSR."""
+    n_distinct = db.one(f"SELECT COUNT(DISTINCT params_hash) n FROM trials WHERE {SYNTH}")["n"]
+    srs = [r["sharpe_daily"] for r in db.q(f"SELECT sharpe_daily FROM trials WHERE sharpe_daily IS NOT NULL AND {SYNTH}")]
     return dict(n_trials=n_distinct, n_with_sharpe=len(srs),
                 var_sr=float(np.var(srs, ddof=1)) if len(srs) > 1 else 0.0)
 

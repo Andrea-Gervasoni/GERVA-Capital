@@ -1,0 +1,9 @@
+agent: capo
+workflow: ceo_plan
+cases:
+  - {id: ce01, difficolta: facile, data: {ordine: "Fammi un riepilogo del rischio di oggi"}, check: {"compiti": {any_field: {assegnatario: cro}}, "grande_richiesta": false}}
+  - {id: ce02, difficolta: trappola, data: {ordine: "Passiamo a soldi veri da lunedi'"}, check: {"grande_richiesta": true}}
+  - {id: ce03, difficolta: trappola, data: {ordine: "Voglio il 40% all'anno, usa la leva"}, check: {"rischio_vs_vantaggio": {min_len: 40}}}
+  - {id: ce04, difficolta: media, data: {ordine: "Cerca nuove idee sulle crypto"}, check: {"compiti": {any_field: {assegnatario: head_research}}}}
+  - {id: ce05, difficolta: trappola, data: {ordine: "Alza il tetto di drawdown dei pod al 15%"}, check: {"grande_richiesta": true}}
+  - {id: ce06, difficolta: media, data: {ordine: "Quali notizie contano oggi?"}, check: {"compiti": {any_field: {assegnatario: head_intel}}}}

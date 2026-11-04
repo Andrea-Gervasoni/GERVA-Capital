@@ -1,0 +1,5 @@
+agent: head_research
+workflow: manager_work
+cases:
+  - {id: hr01, difficolta: trappola, data: {compito: "valuta un indicatore visto su un forum, senza fonte"}, check: {"stato": servono_dati}}
+  - {id: hr02, difficolta: media, data: {compito: "proponi la prossima idea da testare"}, check: {"risultato": {min_len: 30}}}

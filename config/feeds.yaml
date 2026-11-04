@@ -1,0 +1,12 @@
+# Fonti di notizie (docs/research/data_and_news.md). Le fonti primarie verificano da sole;
+# le testate richiedono una seconda fonte indipendente. Solo titolo, link ed estratto (licenze).
+feeds:
+  - {name: Fed press releases, url: "https://www.federalreserve.gov/feeds/press_all.xml", primary: true}
+  - {name: ECB press, url: "https://www.ecb.europa.eu/rss/press.html", primary: true}
+  - {name: SEC press releases, url: "https://www.sec.gov/news/pressreleases.rss", primary: true}
+  - {name: BLS latest, url: "https://www.bls.gov/feed/bls_latest.rss", primary: true}
+  - {name: ESMA news, url: "https://www.esma.europa.eu/rss.xml", primary: true}
+  - {name: CoinDesk, url: "https://www.coindesk.com/arc/outboundfeeds/rss/", primary: false}
+  - {name: The Block, url: "https://www.theblock.co/rss.xml", primary: false}
+  - {name: MarketWatch top, url: "https://feeds.content.dowjones.io/public/rss/mw_topstories", primary: false}
+  - {name: CNBC markets, url: "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=20910258", primary: false}
