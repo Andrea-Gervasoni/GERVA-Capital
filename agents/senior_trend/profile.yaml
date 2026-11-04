@@ -1,0 +1,18 @@
+id: senior_trend
+name: Marco Ferri
+role: Senior Researcher — Trend/Momentum
+dept: ricerca
+grade: 4
+superior: head_research
+kind: llm
+room: ricerca
+desk: 1
+daily_budget_eur: 0.06
+tools:
+- trial_register
+- run_backtest
+- trial_gate
+- write_research_doc
+- register_forecast
+provider: anthropic
+prompt_version: 1

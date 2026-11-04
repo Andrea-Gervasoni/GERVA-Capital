@@ -1,0 +1,28 @@
+# Routing dei modelli e prezzi (USD per milione di token).
+# Fonte prezzi Anthropic: documentazione ufficiale (cache del 6/10/2026), docs/research/llm_agents_in_finance.md §8.
+# cache_write = 1,25 x input (TTL 5 minuti); cache_read come da listino dove indicato.
+
+tiers: [claude-haiku-5-5, claude-sonnet-5-5, claude-opus-5-5]   # ordine per la scala verso il basso
+
+prices_usd_per_mtok:
+  claude-opus-5-5:   {input: 4.00, output: 20.00, cache_read: 0.20, cache_write: 5.00}
+  claude-sonnet-5-5: {input: 2.00, output: 10.00, cache_read: 0.20, cache_write: 2.50}
+  claude-haiku-5-5:  {input: 0.10, output: 0.50,  cache_read: 0.01, cache_write: 0.125}   # cache_read Haiku: stima 10% (da verificare)
+  # provider esterni (consulenti / Capi Pod ospiti): prezzi da verificare sulle piattaforme ufficiali
+  kimi:              {input: 3.00, output: 15.00, cache_read: 0.30, cache_write: 3.00}
+  gemini:            {input: 1.25, output: 10.00, cache_read: 0.31, cache_write: 1.25}
+  dry-run:           {input: 0.0,  output: 0.0,   cache_read: 0.0,  cache_write: 0.0}
+
+providers:
+  anthropic: {kind: anthropic, env_key: ANTHROPIC_API_KEY}
+  kimi:      {kind: openai_compatible, base_url: "https://api.moonshot.ai/v1", env_key: MOONSHOT_API_KEY, model_env: KIMI_MODEL}
+  gemini:    {kind: openai_compatible, base_url: "https://generativelanguage.googleapis.com/v1beta/openai/", env_key: GEMINI_API_KEY, model_env: GEMINI_MODEL}
+
+max_output_tokens_by_grade:
+  "0": 600
+  "1": 800
+  "2": 1000
+  "3": 1500
+  "4": 2000
+  "5": 2500
+  "6": 3000

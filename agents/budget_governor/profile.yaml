@@ -1,0 +1,13 @@
+id: budget_governor
+name: Automa BG-1
+role: Budget Governor
+dept: dati
+grade: 3
+superior: capo
+kind: code
+room: dati
+desk: 2
+daily_budget_eur: 0.0
+tools: []
+provider: null
+prompt_version: 1

@@ -1,0 +1,18 @@
+id: capo
+name: Lorenzo Bassi
+role: Capo (CEO)
+dept: direzione
+grade: 6
+superior: null
+kind: llm
+room: capo
+desk: 0
+daily_budget_eur: 0.12
+tools:
+- delegate_task
+- read_task_results
+- firm_snapshot
+- register_forecast
+- mailbox_propose
+provider: anthropic
+prompt_version: 1

@@ -1,0 +1,13 @@
+id: talent_manager
+name: —
+role: Talent Manager
+dept: talent
+grade: 4
+superior: capo
+kind: open
+room: hr
+desk: 2
+daily_budget_eur: 0.0
+tools: []
+provider: null
+prompt_version: 1

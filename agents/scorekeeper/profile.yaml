@@ -1,0 +1,13 @@
+id: scorekeeper
+name: Automa SK-1
+role: Scorekeeper
+dept: talent
+grade: 3
+superior: capo
+kind: code
+room: hr
+desk: 0
+daily_budget_eur: 0.0
+tools: []
+provider: null
+prompt_version: 1

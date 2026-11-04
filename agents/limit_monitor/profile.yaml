@@ -1,0 +1,13 @@
+id: limit_monitor
+name: Automa LM-1
+role: Limit Monitor
+dept: rischio
+grade: 1
+superior: cro
+kind: code
+room: rischio
+desk: 2
+daily_budget_eur: 0.0
+tools: []
+provider: null
+prompt_version: 1

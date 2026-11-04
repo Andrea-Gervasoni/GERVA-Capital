@@ -1,0 +1,13 @@
+id: research_analyst
+name: —
+role: Research Analyst
+dept: ricerca
+grade: 1
+superior: senior_trend
+kind: open
+room: ricerca
+desk: 6
+daily_budget_eur: 0.0
+tools: []
+provider: null
+prompt_version: 1

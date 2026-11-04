@@ -1,0 +1,32 @@
+# LIMITI DI RISCHIO — li imposta Andrea dal pannello Impostazioni, non gli agenti.
+# Il motore di rischio (firm/risk.py) e il Gateway (firm/gateway.py) li leggono in sola lettura.
+# Valori iniziali prudenti; motivazioni in docs/research/risk_and_execution.md §1.
+
+order:
+  max_notional_frac_nav: 0.05      # fat-finger: nessun ordine sopra il 5% del NAV di societa'
+  max_price_deviation: 0.02        # prezzo di riferimento entro +-2% dall'ultimo prezzo noto
+  min_notional_eur: 50
+
+pod:
+  max_capital_frac: 0.05           # capitale massimo per pod (frazione del NAV)
+  max_gross: 1.0                   # niente leva (REGOLE_SFIDA regola 3)
+  allow_short: false               # niente vendite allo scoperto
+  max_position_frac: 0.25          # concentrazione: max 25% del capitale del pod per strumento
+  dd_cut: 0.05
+  dd_close: 0.075
+
+firm:
+  max_gross: 1.0
+  kill_drawdown: 0.15              # KILL automatico prima della squalifica al -20% (regola 10)
+  max_crypto_frac: 0.50            # esposizione crypto per controparte
+  max_pod_correlation: 0.5
+
+instruments:
+  allowed_kinds: [etf_ucits, stock, etc, crypto]
+  crypto_allowed: [BTC, ETH, SOL, XRP, ADA, DOGE, LTC, LINK, AVAX, BCH, SUI]
+  forbidden_kinds: [etf_us, cfd, option, future, forex_speculative]
+
+hours_utc:                         # orari ammessi per l'invio al broker paper
+  stock: [13, 21]
+  etf_ucits: [7, 16]
+  crypto: [0, 24]

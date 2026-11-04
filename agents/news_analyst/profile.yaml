@@ -1,0 +1,15 @@
+id: news_analyst
+name: Sara Colombo
+role: News Analyst
+dept: redazione
+grade: 1
+superior: head_intel
+kind: llm
+room: redazione
+desk: 1
+daily_budget_eur: 0.05
+tools:
+- read_news_queue
+- submit_news_item
+provider: anthropic
+prompt_version: 1

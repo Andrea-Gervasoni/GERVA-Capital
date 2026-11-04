@@ -1,0 +1,13 @@
+id: data_engineer
+name: Automa DE-1
+role: Data Engineer
+dept: dati
+grade: 2
+superior: capo
+kind: code
+room: dati
+desk: 0
+daily_budget_eur: 0.0
+tools: []
+provider: null
+prompt_version: 1

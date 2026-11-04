@@ -1,0 +1,16 @@
+id: fact_checker
+name: Davide Greco
+role: Fact-Checker
+dept: redazione
+grade: 2
+superior: head_intel
+kind: llm
+room: redazione
+desk: 2
+daily_budget_eur: 0.04
+tools:
+- read_news_queue
+- find_second_source
+- verify_news_item
+provider: anthropic
+prompt_version: 1

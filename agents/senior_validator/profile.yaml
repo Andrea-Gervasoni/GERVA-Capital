@@ -1,0 +1,19 @@
+id: senior_validator
+name: Chiara Romano
+role: Senior Validator (Red Team)
+dept: validazione
+grade: 4
+superior: capo
+kind: llm
+room: validazione
+desk: 0
+daily_budget_eur: 0.06
+tools:
+- read_research_doc
+- run_backtest
+- lookahead_test
+- trial_registry_view
+- write_validation_report
+- register_forecast
+provider: anthropic
+prompt_version: 1

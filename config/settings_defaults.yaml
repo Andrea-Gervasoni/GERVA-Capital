@@ -1,0 +1,64 @@
+# Valori iniziali delle impostazioni. Li cambia SOLO Andrea dal pannello Impostazioni del portale:
+# le modifiche vanno nella tabella `settings` (e nell'audit log), questo file resta il default.
+
+budget:
+  daily_eur: 0.60            # tetto giornaliero di esecuzione degli agenti
+  total_eur: 24.0            # 40 EUR di credito - 40% riservato allo sviluppo = 24 EUR per far vivere la societa'
+  downgrade_at: 0.80         # oltre l'80% del tetto giornaliero il Governor scala i modelli verso il basso
+  alert_days_left: 7         # sotto 7 giorni di autonomia il Capo bussa ad Andrea (grande richiesta n.3)
+  usd_eur: 0.894             # cambio per convertire i prezzi in USD (EURUSD 1,1183 in GERVA-Q state/ al 30/10/2026)
+  per_dept_daily_eur_map:    # tetti per reparto (somma > daily_eur di proposito: e' il tetto globale a vincolare)
+    direzione: 0.20
+    rischio: 0.10
+    ricerca: 0.20
+    validazione: 0.15
+    redazione: 0.20
+    pod: 0.15
+    talent: 0.05
+
+firm:
+  strike: false              # Sciopero: agenti fermi, codice deterministico attivo
+  mode: paper                # unico valore ammesso: paper (LIVE e' bloccato)
+  heartbeat_minutes: 15
+
+release:
+  weekday: 6                 # 0 = lunedi' ... 6 = domenica (REGOLE_SFIDA regola 7)
+  start_hour_utc: 8
+  end_hour_utc: 20
+
+models:
+  by_grade_map:              # livello di modello per grado (la promozione cambia il livello)
+    "0": claude-haiku-5-5    # Stagista
+    "1": claude-haiku-5-5    # Analista
+    "2": claude-haiku-5-5    # Analista Senior
+    "3": claude-sonnet-5-5   # Ricercatore
+    "4": claude-sonnet-5-5   # Senior
+    "5": claude-sonnet-5-5   # Manager
+    "6": claude-sonnet-5-5   # Head
+  ceo_committee: claude-opus-5-5
+  deep_validation: claude-opus-5-5
+
+gate:                        # cancello automatico prima della Validazione (DECISIONS D3)
+  dsr_min: 0.95
+  pbo_max: 0.30
+  min_years: 3.0
+
+pods:
+  initial_capital_frac: 0.05
+  dd_cut: 0.05               # drawdown del pod: capitale dimezzato
+  dd_close: 0.075            # drawdown del pod: pod chiuso
+  capital_tax_annual: 0.02   # tassa sul capitale usato (costo opportunita')
+  max_corr: 0.5
+
+economy:
+  gc_per_eur: 100            # 1 GC = 1 centesimo di budget reale
+  bonus_share: 0.10          # quota dell'alpha netto positivo che diventa bonus pool
+  head_share: 0.25           # parte del bonus al Capo Pod
+  prior_alpha_sd_annual: 0.05
+  min_days_for_realloc: 60
+  max_monthly_shift: 0.02
+
+talent:
+  min_evals_promotion: 30
+  probation_days: 14
+  p_value: 0.05

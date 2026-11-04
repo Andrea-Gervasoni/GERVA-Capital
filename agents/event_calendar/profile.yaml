@@ -1,0 +1,13 @@
+id: event_calendar
+name: —
+role: Event Calendar Analyst
+dept: redazione
+grade: 1
+superior: head_intel
+kind: open
+room: redazione
+desk: 3
+daily_budget_eur: 0.0
+tools: []
+provider: null
+prompt_version: 1

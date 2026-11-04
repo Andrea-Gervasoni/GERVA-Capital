@@ -1,0 +1,13 @@
+id: validation_analyst
+name: —
+role: Validation Analyst
+dept: validazione
+grade: 1
+superior: senior_validator
+kind: open
+room: validazione
+desk: 1
+daily_budget_eur: 0.0
+tools: []
+provider: null
+prompt_version: 1

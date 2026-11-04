@@ -1,0 +1,13 @@
+id: senior_crypto
+name: —
+role: Senior Researcher — Crypto/on-chain
+dept: ricerca
+grade: 4
+superior: head_research
+kind: open
+room: ricerca
+desk: 3
+daily_budget_eur: 0.0
+tools: []
+provider: null
+prompt_version: 1

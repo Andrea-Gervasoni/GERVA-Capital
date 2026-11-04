@@ -1,0 +1,13 @@
+id: risk_analyst
+name: —
+role: Risk Analyst
+dept: rischio
+grade: 2
+superior: cro
+kind: open
+room: rischio
+desk: 1
+daily_budget_eur: 0.0
+tools: []
+provider: null
+prompt_version: 1

@@ -1,0 +1,20 @@
+id: pod_trend
+name: Federico Marino
+role: Capo Pod Trend/Macro
+dept: pod
+grade: 4
+superior: capo
+kind: llm
+room: trading
+desk: 2
+daily_budget_eur: 0.03
+tools:
+- pod_snapshot
+- strategy_library
+- submit_order
+- register_forecast
+provider: anthropic
+prompt_version: 1
+pod: trend
+philosophy: Segue i trend lenti su piu' classi di attivo; taglia le perdite, lascia
+  correre i profitti.

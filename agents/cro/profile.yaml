@@ -1,0 +1,19 @@
+id: cro
+name: Elena Conti
+role: Chief Risk Officer
+dept: rischio
+grade: 5
+superior: capo
+kind: llm
+room: rischio
+desk: 0
+daily_budget_eur: 0.08
+tools:
+- risk_snapshot
+- stress_test
+- recommend_kill
+- register_forecast
+- mailbox_propose
+provider: anthropic
+prompt_version: 1
+reports_also_to: andrea

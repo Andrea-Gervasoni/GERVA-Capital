@@ -1,0 +1,18 @@
+id: head_research
+name: Giulia Moretti
+role: Head of Research
+dept: ricerca
+grade: 5
+superior: capo
+kind: llm
+room: ricerca
+desk: 0
+daily_budget_eur: 0.06
+tools:
+- delegate_task
+- read_task_results
+- trial_registry_view
+- research_queue
+- register_forecast
+provider: anthropic
+prompt_version: 1
