@@ -52,6 +52,9 @@ KINDS = {
                         criterion="Rendimento del pod meno Pod Zero nei 30 giorni: < -0,5% riduci, > +0,5% aumenta, altrimenti mantieni."),
     "ricerca": dict(options=["respingi", "approva"], days=60,
                     criterion="Sharpe in avanti della strategia in paper a 60 giorni > 0 -> 'approva' era giusto."),
+    # quota di lungo periodo: il primo elemento e' la scelta prudente (in caso di pareggio vince "rinvia")
+    "lungo": dict(options=["rinvia", "compra"], days=90,
+                  criterion="Il paniere della rata (pesi uguali) rende piu' di 0 nei 90 giorni -> 'compra' era giusto."),
 }
 
 
@@ -156,6 +159,12 @@ def correct_option(m: dict) -> str | None:
             return None
         d = r - z
         return "riduci" if d < -0.005 else "aumenta" if d > 0.005 else "mantieni"
+    if m["kind"] == "lungo" and ctx.get("prezzi"):
+        now = db.runtime_get("lt.prezzi") or {}
+        r = [now[s] / p - 1 for s, p in ctx["prezzi"].items() if s in now and p]
+        if len(r) < max(1, len(ctx["prezzi"]) // 2):
+            return None
+        return "compra" if float(np.mean(r)) > 0 else "rinvia"
     if m["kind"] == "ricerca" and ctx.get("rendimenti_paper"):
         x = np.asarray(ctx["rendimenti_paper"], float)
         return "approva" if len(x) > 20 and x.mean() > 0 else "respingi"

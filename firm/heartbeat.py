@@ -87,6 +87,14 @@ def beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
             if _once(f"gwdown:{day}:{now.hour}"):        # un allarme l'ora, non uno per battito
                 events.publish("risk.alert", "gateway", dict(cosa=f"esecuzione dei pod sospesa: {str(e)[:120]}", gravita=3))
             notes.append(f"gateway fermo: {str(e)[:80]}")
+    # comitato di lungo periodo: valuta le rate della quota AI prima del giro di GERVA-Q (22:35 ora italiana)
+    if os.environ.get("GERVA_SHADOW", "1") != "0" and now.hour >= 20 and _once(f"lt_eval:{day}"):
+        try:
+            from . import lt_committee
+            pl = lt_committee.run()
+            notes.append(f"comitato lungo: rata {pl['calendario']:.0%}, rinviati {len(pl['rinvii'])}")
+        except Exception as e:                   # senza piano fresco GERVA-Q non compra nulla di nuovo
+            notes.append(f"comitato lungo non eseguito: {str(e)[:60]}")
     # portafoglio ombra v4 contro v3: una volta al giorno dopo la chiusura USA (22 UTC), se i dati si scaricano
     if os.environ.get("GERVA_SHADOW", "1") != "0" and now.hour >= 22 and _once(f"shadow:{day}"):
         try:

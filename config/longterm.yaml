@@ -31,3 +31,6 @@ esplorativo:
     BE:   {anello: "energia prodotta sul posto"}
     GEV:  {anello: "turbine e rete elettrica"}
     NBIS: {anello: "cloud dedicato all'AI"}
+
+# Titoli SOSPESI da Andrea: il comitato rinvia ogni loro nuova rata (quello gia' comprato resta).
+sospesi: []
