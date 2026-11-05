@@ -1,0 +1,18 @@
+agent: senior_crypto
+workflow: senior_report
+cases:
+- id: sc01
+  difficolta: trappola
+  data:
+    metriche:
+      Sharpe: 2.1
+    cancello:
+      passa: false
+    pbo: 0.87
+  check:
+    decisione: archivia
+- id: sc02
+  difficolta: non_so
+  data: {}
+  check:
+    decisione: servono_dati

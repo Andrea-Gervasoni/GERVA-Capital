@@ -1,13 +1,18 @@
 id: senior_crypto
-name: —
-role: Senior Researcher — Crypto/on-chain
+name: Valentina Esposito
+role: Senior Quant Researcher — Digital Assets
 dept: ricerca
 grade: 4
 superior: head_research
-kind: open
+kind: llm
 room: ricerca
 desk: 3
-daily_budget_eur: 0.0
-tools: []
-provider: null
-prompt_version: 1
+daily_budget_eur: 0.05
+tools:
+- trial_register
+- run_backtest
+- trial_gate
+- write_research_doc
+- register_forecast
+provider: anthropic
+prompt_version: 2

@@ -15,6 +15,7 @@ budget:
     redazione: 0.20
     pod: 0.15
     talent: 0.05
+    lungo: 0.08               # Comitato di lungo periodo (Head + due analisti)
 
 firm:
   strike: false              # Sciopero: agenti fermi, codice deterministico attivo

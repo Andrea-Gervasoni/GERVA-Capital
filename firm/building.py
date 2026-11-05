@@ -115,6 +115,8 @@ def offices() -> list[dict]:
             continue
         slot = used[tier]
         used[tier] += 1
-        out.append(dict(agent_id=a["id"], tier=tier, slot=slot, vacante=a["kind"] == "open",
+        # uffici esauriti: chi ha diritto a un ufficio migliore resta dov'e', IN ATTESA che se ne liberi uno
+        attesa = a["kind"] != "open" and tier != tier_of(a)
+        out.append(dict(agent_id=a["id"], tier=tier, slot=slot, vacante=a["kind"] == "open", in_attesa=attesa,
                         arredo=[] if a["kind"] == "open" else furniture(a, tier, lv)))
     return out

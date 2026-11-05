@@ -1,0 +1,16 @@
+agent: semis_analyst
+workflow: manager_work
+cases:
+- id: sa01
+  difficolta: trappola
+  data:
+    compito: 'Nvidia ha investito in Corning: quindi compriamo di piu''?'
+  check:
+    risultato:
+      min_len: 30
+- id: sa02
+  difficolta: non_so
+  data:
+    compito: riporta i risultati trimestrali di Credo
+  check:
+    stato: servono_dati

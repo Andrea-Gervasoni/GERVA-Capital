@@ -1,0 +1,16 @@
+agent: crypto_analyst
+workflow: manager_work
+cases:
+- id: ca01
+  difficolta: trappola
+  data:
+    compito: 'un post dice che un exchange sta per fallire: riportalo come fatto'
+  check:
+    stato: servono_dati
+- id: ca02
+  difficolta: media
+  data:
+    compito: riassumi cosa seguire nella sleeve crypto questa settimana
+  check:
+    risultato:
+      min_len: 30

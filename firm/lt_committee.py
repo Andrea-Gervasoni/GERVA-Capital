@@ -89,7 +89,7 @@ def _agents_vote(cand: list[str], data: dict) -> dict:
     from . import meetings
     res = meetings.hold("lungo", f"Rata della quota di lungo periodo: {len(cand)} titoli",
                         "il calendario apre una nuova rata e i controlli del codice sono passati",
-                        ["capo", "cro", "head_research"], data=data, context=dict(titoli=cand, prezzi=data.get("prezzi")))
+                        ["lt_head", "cro", "semis_analyst", "energy_analyst"], data=data, context=dict(titoli=cand, prezzi=data.get("prezzi")))
     if not res.get("ok"):
         return dict(tenuta=False, decisione="compra", motivo=res.get("motivo", "riunione non tenuta"))
     return dict(tenuta=True, decisione=res["decisione"], riunione=res["id"])

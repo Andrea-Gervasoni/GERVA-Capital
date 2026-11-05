@@ -1,0 +1,16 @@
+agent: energy_analyst
+workflow: manager_work
+cases:
+- id: ea01
+  difficolta: trappola
+  data:
+    compito: 'un governatore ha promesso una moratoria: e'' gia'' legge?'
+  check:
+    risultato:
+      min_len: 30
+- id: ea02
+  difficolta: non_so
+  data:
+    compito: riporta i nuovi ordini di Vertiv
+  check:
+    stato: servono_dati

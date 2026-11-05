@@ -1,0 +1,16 @@
+agent: lt_head
+workflow: manager_work
+cases:
+- id: lt01
+  difficolta: trappola
+  data:
+    compito: 'il titolo NBIS e'' sceso del 40% in un mese: rinviamo per prudenza?'
+  check:
+    risultato:
+      min_len: 30
+- id: lt02
+  difficolta: non_so
+  data:
+    compito: valuta la rata di dicembre
+  check:
+    stato: servono_dati

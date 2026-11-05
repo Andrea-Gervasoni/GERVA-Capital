@@ -45,3 +45,13 @@
 - **Approvato il piano v4 (n.5, condizionato):** portafoglio ombra dal 5/11 → dopo 40 giorni di borsa, se la regola
   scritta è soddisfatta, patch di GERVA-Q applicata di domenica con backup. L'applicazione resta un comando di Andrea
   (`firm.py release --apply`): il codice non la esegue da solo.
+
+## Organico del 5/11/2026 (richiesta di Andrea: "piu' e' specifica l'azienda e i professionisti, piu' e' reale")
+- **Desk crypto** sotto la Ricerca: Valentina Esposito (Senior Quant Researcher, Digital Assets; posizione prima
+  vacante) e Tommaso Galli (Analista Senior, mercati crypto). Le prove del banco crypto sono registrate a nome suo.
+- **Lungo periodo**, reparto nuovo con tetto di 0,08 EUR/giorno: Francesca Lombardi (Head of Long-Term Investments,
+  presiede il Comitato), Riccardo Bianchi (semiconduttori e infrastruttura AI), Elisa Fontana (energia e data center).
+  Il Comitato e' composto da loro e dalla CRO; gli agenti possono solo RINVIARE una rata approvata dal codice.
+- Il tetto di spesa globale resta 0,60 EUR/giorno: piu' persone, ciascuna svegliata un po' meno spesso.
+- Uffici privati 4: chi viene promosso a Manager quando sono pieni resta "in attesa" nel suo ufficio, visibile nel
+  portale, finche' uno non si libera.

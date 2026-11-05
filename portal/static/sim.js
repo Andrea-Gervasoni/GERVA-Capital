@@ -152,7 +152,7 @@ function buildWorld(w) {
     if (!lay) continue;
     objs.push(...lay.objects);
     if (o.tier === "privato") OFFICE_LABEL["p" + o.slot] = o.vacante ? "UFFICIO LIBERO" : (a.name + " · " + a.grade_name).toUpperCase();
-    if (o.tier === "vetro") OFFICE_LABEL["g" + o.slot] = o.vacante ? "UFFICIO LIBERO" : a.name.toUpperCase();
+    if (o.tier === "vetro") OFFICE_LABEL["g" + o.slot] = o.vacante ? "UFFICIO LIBERO" : a.name.toUpperCase() + (o.in_attesa ? " · IN ATTESA" : "");
     if (o.vacante) continue;
     seen.add(a.id);
     const e = ENT[a.id];

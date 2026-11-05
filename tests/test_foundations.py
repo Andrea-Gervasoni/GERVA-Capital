@@ -68,7 +68,7 @@ def test_registry_sync_and_org_tree(firm_env):
     ids = {c["id"] for c in tree["children"]}
     assert {"cro", "head_research", "head_intel"} <= ids
     llm = [a for a in registry.all_agents() if a["kind"] == "llm"]
-    assert 8 <= len(llm) <= 11
+    assert 8 <= len(llm) <= 16           # 5/11/2026: Andrea ha chiesto il desk crypto e il comitato di lungo periodo
     assert any(a["status"] == "posizione_aperta" for a in registry.all_agents())
     assert registry.model_for(registry.get("news_analyst")) == "claude-haiku-5-5"
     assert registry.model_for(registry.get("capo"), "committee") == "claude-opus-5-5"

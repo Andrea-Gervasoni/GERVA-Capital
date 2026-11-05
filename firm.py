@@ -148,7 +148,7 @@ def _research_crypto():
            "vt": "Vol target sulla sleeve intera (40%): meno esposizione quando la volatilita' esplode.",
            "erc": "Trend e breakout a contributi di rischio uguali invece di 50/50.",
            "tutto": "Combinazione: verifica che i guadagni si sommino e non si annullino."}
-    reg = lambda v: trials.register("head_research", f"crypto4:{v.name}", "crypto4", v.params(), hyp[v.name])
+    reg = lambda v: trials.register("senior_crypto", f"crypto4:{v.name}", "crypto4", v.params(), hyp[v.name])
     dsr = lambda tid, r: trials.record_result(tid, r, fp)["dsr"]
     res = C4.bench(dict(close=close), register=reg, dsr_fn=dsr, start_skip=200)
     chosen = next(v for v in C4.VARIANTS if v.name == res.scelta)

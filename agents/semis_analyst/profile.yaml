@@ -1,0 +1,15 @@
+id: semis_analyst
+name: Riccardo Bianchi
+role: Analista Senior — Semiconduttori e infrastruttura AI
+dept: lungo
+grade: 2
+superior: lt_head
+kind: llm
+room: lungo
+desk: 1
+daily_budget_eur: 0.02
+tools:
+- read_task_results
+- register_forecast
+provider: anthropic
+prompt_version: 2

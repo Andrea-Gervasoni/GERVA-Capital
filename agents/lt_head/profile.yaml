@@ -1,0 +1,18 @@
+id: lt_head
+name: Francesca Lombardi
+role: Head of Long-Term Investments
+dept: lungo
+grade: 5
+superior: capo
+kind: llm
+room: lungo
+desk: 0
+daily_budget_eur: 0.04
+tools:
+- delegate_task
+- read_task_results
+- firm_snapshot
+- register_forecast
+- mailbox_propose
+provider: anthropic
+prompt_version: 2

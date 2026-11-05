@@ -19,7 +19,7 @@ const P = {
 const DEPT = {
   direzione: ["#b8332a", "#7a1f18"], rischio: ["#d99a2b", "#8a5c12"], ricerca: ["#3d9e5c", "#22603a"],
   validazione: ["#8a5cc0", "#563880"], redazione: ["#3c70c8", "#244a8a"], dati: ["#36a2ac", "#1f646c"],
-  talent: ["#c27a3e", "#7a4820"], pod: ["#d9d9e2", "#8e8ea0"],
+  talent: ["#c27a3e", "#7a4820"], pod: ["#d9d9e2", "#8e8ea0"], lungo: ["#2e6f73", "#1b4447"],
 };
 const HAIR = ["#2a1a10", "#4a2c16", "#8a5a2a", "#caa25a", "#151515", "#7a2a18", "#b9b9c2", "#3a2a52", "#d8c88a"];
 const SKIN = [["#f1c9a2", "#d9a87e"], ["#dcae80", "#c08e62"], ["#b47a52", "#94603c"], ["#8a5a3a", "#6c4228"], ["#f7dcc4", "#e2bea0"]];

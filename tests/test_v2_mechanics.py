@@ -64,7 +64,12 @@ def test_building_level_is_monotonic_and_offices_follow_grade(org):
     assert off["gateway"]["tier"] == "ops" and off["pod_zero"]["tier"] == "trading"
     registry.change_grade("news_analyst", 5, "promozione", "test")
     off = {o["agent_id"]: o for o in building.offices()}
-    assert off["news_analyst"]["tier"] == "privato"        # promossa: ufficio privato
+    # i 4 uffici privati sono occupati (CRO, Intelligence, Ricerca, Lungo periodo): la promossa sale di un livello e
+    # resta IN ATTESA del privato finche' uno non si libera
+    assert off["news_analyst"]["tier"] == "vetro" and off["news_analyst"]["in_attesa"]
+    registry.change_grade("lt_head", 4, "retrocessione", "test")
+    off = {o["agent_id"]: o for o in building.offices()}
+    assert off["news_analyst"]["tier"] == "privato" and not off["news_analyst"]["in_attesa"]
     assert len(off["capo"]["arredo"]) > len(off["cro"]["arredo"]) > len(off["fact_checker"]["arredo"])
 
 

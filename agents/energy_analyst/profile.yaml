@@ -1,0 +1,15 @@
+id: energy_analyst
+name: Elisa Fontana
+role: Analista Senior — Energia e data center
+dept: lungo
+grade: 2
+superior: lt_head
+kind: llm
+room: lungo
+desk: 2
+daily_budget_eur: 0.02
+tools:
+- read_task_results
+- register_forecast
+provider: anthropic
+prompt_version: 2

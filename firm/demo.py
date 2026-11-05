@@ -153,7 +153,7 @@ def _meeting(kind, title, reason, rows, decision, ctx):
     """Riunione dimostrativa scritta (nessun LLM): stessa struttura e stessi eventi di quelle vere."""
     import json
     parts = [r[0] for r in rows]
-    opts = {"rischio": ["riduci", "mantieni"], "allocazione": ["riduci", "mantieni", "aumenta"]}[kind]
+    opts = {"rischio": ["riduci", "mantieni"], "allocazione": ["riduci", "mantieni", "aumenta"], "lungo": ["rinvia", "compra"]}[kind]
     mid = db.ex("INSERT INTO meetings(ts,kind,title,reason,participants,options,status,context) VALUES(?,?,?,?,?,?,?,?)",
                 (db.now_iso(), kind, title, reason, db.dumps(parts), db.dumps(opts), "in_corso", db.dumps(ctx)))
     events.publish("meeting.start", "sala_riunioni", dict(id=mid, tipo=kind, titolo=title, motivo=reason, partecipanti=parts))
@@ -195,6 +195,23 @@ def _demo_v2():
          "[DEMO] Resto: l'intervallo di confidenza dello Sharpe va da 0,5 a 7,7.", "mantieni", 0.7),
         ("capo", "mantieni", "[DEMO] Prima il campione minimo, poi il capitale.", 0.6, "[DEMO] Confermo.", "mantieni", 0.6)],
         "mantieni", dict(pod="trend"))
+    _meeting("lungo", "Rata 1 della quota AI: 19 titoli", "[DEMO] il calendario apre la prima rata, i controlli del codice sono passati", [
+        ("lt_head", "compra", "[DEMO] Nessun titolo ha un fatto specifico che giustifichi il rinvio. Il calo di novembre non e' un motivo: "
+         "aspettare la media a 200 giorni rendeva meno nei nostri test.", 0.6,
+         "[DEMO] Riccardo ha ragione su Lumentum, ma non e' nel paniere. Confermo.", "compra", 0.6),
+        ("cro", "rinvia", "[DEMO] Infrastruttura AI a -46% in cinque settimane: preferisco aspettare che la volatilita' si calmi.", 0.55,
+         "[DEMO] La regola di ingresso testata da' torto al rinvio. Abbasso la fiducia ma resto prudente.", "rinvia", 0.5),
+        ("semis_analyst", "compra", "[DEMO] Nessun fatto nuovo sui 19 nomi; l'unico evento societario e' Marvell-Lumentum, fuori paniere.", 0.6,
+         "[DEMO] Confermo.", "compra", 0.6),
+        ("energy_analyst", "compra", "[DEMO] Le moratorie sui data center sono promesse, non leggi: Vertiv e GE Vernova restano nella tesi.", 0.55,
+         "[DEMO] Seguo i testi delle delibere: se diventano legge lo riporto subito.", "compra", 0.55)],
+        "compra", dict(titoli=["NVDA", "VRT", "GEV"], prezzi={"NVDA": 182.6, "VRT": 176.6, "GEV": 775.5}))
+    events.publish("task.handoff", "senior_crypto", dict(da="senior_crypto", a="crypto_analyst",
+                                                        titolo="[DEMO] funding e leva dei derivati BTC questa settimana"))
+    events.publish("postmortem", "senior_crypto", dict(agente="senior_crypto",
+                   lezione="[DEMO] Banco crypto: PBO 0,87, nessuna variante promossa. La v3 resta; si studia il carry estremo."))
+    for aid, st in [("senior_crypto", "scrive"), ("crypto_analyst", "legge"), ("semis_analyst", "legge"), ("energy_analyst", "legge")]:
+        events.publish("agent.status", aid, dict(stato=st, compito="[DEMO]"), audit_it=False)
     for aid, st in [("senior_trend", "scrive"), ("news_analyst", "legge")]:
         events.publish("agent.status", aid, dict(stato=st, compito="[DEMO]"), audit_it=False)
     reports.daily()

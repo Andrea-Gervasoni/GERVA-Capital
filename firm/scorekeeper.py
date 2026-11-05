@@ -32,6 +32,7 @@ ROLE_METRICS = {
     "pod": [("contributo_alpha", +1), ("disciplina_rischio", +1)],
     "esecuzione": [("slippage_vs_modello", -1)],
     "direzione": [("brier", -1)],
+    "lungo": [("brier", -1)],
 }
 
 
