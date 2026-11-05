@@ -7,11 +7,13 @@ esecuzioni sono codice deterministico e testato; gli agenti leggono, verificano,
 > Non c'è nessuna promessa di rendimento. La società massimizza il rendimento **corretto per il rischio**
 > e registra i risultati negativi come quelli positivi.
 
+**Per cominciare: [`docs/INIZIA_QUI.md`](docs/INIZIA_QUI.md)**, cinque fasi spiegate passo per passo.
+
 ## Avvio sul Mac (una volta)
 
 ```bash
 cd ~/Documents
-git clone https://github.com/Andrea-Gervasoni/GERVA-Capital
+git clone -b claude/gifted-ramanujan-n3a5gg https://github.com/Andrea-Gervasoni/GERVA-Capital
 cd GERVA-Capital
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt yfinance
 cp .env.example .env        # GERVA_Q_PATH=~/Documents/GERVA-Q (gia' impostato)
