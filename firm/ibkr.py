@@ -176,6 +176,17 @@ def observe_challenge(factory=_default_factory, timeout: float = 15) -> dict:
             pass
     db.runtime_set("ibkr.challenge", snap)
     if snap["ok"]:
+        from .gateway import START_KEY
+        # il capitale iniziale e' la prima lettura riuscita: si scrive UNA volta (INSERT OR IGNORE), mai a mano
+        db.connect().execute("INSERT OR IGNORE INTO runtime(key,value,updated_ts) VALUES(?,?,?)",
+                             (START_KEY, db.dumps(dict(nav=snap["nav_eur"], giorno=db.today())), db.now_iso()))
+        prev = db.one("SELECT nav FROM nav_marks WHERE pod='pod_zero' AND day<? ORDER BY day DESC LIMIT 1", (db.today(),))
+        if prev and prev["nav"] > 0 and abs(snap["nav_eur"] / prev["nav"] - 1) > 0.20:
+            # IBKR non distingue un versamento (o un reset del paper) da un guadagno: non lo si conta in silenzio
+            events.publish("risk.alert", "ibkr", dict(
+                cosa=f"il valore del conto e' passato da {prev['nav']:,.0f} a {snap['nav_eur']:,.0f} EUR in un giorno: "
+                     "versamento, prelievo o reset del conto paper? Da verificare prima di leggerlo come risultato",
+                gravita=4))
         db.ex("INSERT OR REPLACE INTO nav_marks(day,pod,nav,capital,gross) VALUES(?,?,?,?,?)",
               (db.today(), "pod_zero", snap["nav_eur"], 1.0, 0.0))
     return snap

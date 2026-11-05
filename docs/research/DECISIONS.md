@@ -25,3 +25,23 @@
 - **Server: difesa in profondità invece di fiducia nel codice (v3).** Gli agenti LLM leggono testo dal web, quindi il loro container non raggiunge il gateway della sfida, non vede le chiavi del portale e non può scrivere i limiti di rischio. Il portale è raggiungibile solo dal tunnel SSH, con password.
 - **La patch di rilascio per GERVA-Q esce da git (v3).** Conteneva righe del codice privato di GERVA-Q; il branch non era mai stato pubblicato, quindi l'ho tolta anche dalla storia locale. Resta su disco.
 - **`/cost` non è disponibile per me in questa sessione.** STATUS.md lo dichiara e non riporta stime inventate; Andrea legge il valore vero con `/cost` dal suo terminale.
+
+## Decisioni di Andrea del 5/11/2026 (grandi richieste n.6 e n.5)
+- **Cambio di direzione (n.6): non è più una sfida.** L'obiettivo della società diventa la **crescita massima del
+  capitale** nel lungo periodo, non lo Sharpe di un confronto a tre mesi. Il capitale passerà poi a essere vero, dei
+  genitori di Andrea.
+- **Cosa resta uguale, perché protegge proprio quei soldi:**
+  - solo paper finché non sono superati i cancelli (backtest al netto dei costi, DSR, almeno 2 mesi di paper senza
+    errori) e c'è la firma dei titolari del conto in `approvals/`;
+  - i limiti di rischio, la leva compresa, li decide solo Andrea;
+  - si parte con il 20-25% del capitale previsto.
+- **Crescita massima, in pratica:** si massimizza la crescita composta (il logaritmo della ricchezza, criterio di
+  Kelly), non il rendimento atteso. Oltre il punto di Kelly più rischio fa crescere MENO e avvicina la rovina. Con
+  stime incerte si sta sotto quel punto (frazione di Kelly). Senza leva, il punto più alto raggiungibile è usare tutto
+  il capitale fermo: la scala del rischio del banco v4 lo misura.
+- **Il capitale lo legge IBKR:** il capitale iniziale è la prima lettura riuscita del conto, scritta una volta. Il
+  valore di ogni giorno arriva da IBKR. Un balzo di oltre il 20% in un giorno (versamento, prelievo, reset del paper)
+  fa scattare un allarme invece di essere contato come profitto.
+- **Approvato il piano v4 (n.5, condizionato):** portafoglio ombra dal 5/11 → dopo 40 giorni di borsa, se la regola
+  scritta è soddisfatta, patch di GERVA-Q applicata di domenica con backup. L'applicazione resta un comando di Andrea
+  (`firm.py release --apply`): il codice non la esegue da solo.

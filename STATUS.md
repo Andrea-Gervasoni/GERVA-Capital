@@ -134,3 +134,9 @@ Dal 5/11/2026 `firm/shadow.py` registra ogni sera, senza ordini, il rendimento i
 scritto una volta sola). Dopo **40 giorni di borsa** (meta' gennaio 2027): se P(Sharpe v4 > v3) >= 0,80 e il drawdown
 della v4 non e' peggiore, la societa' propone ad Andrea di adottarla (grande richiesta n.5, finestra della domenica,
 dichiarata in REGOLE_SFIDA come modifica decisa dopo aver visto i risultati). Altrimenti si resta sulla v3.
+
+## 5/11/2026: nuova direzione (Andrea)
+Non più sfida: crescita massima del capitale, poi soldi veri dei genitori (dettagli e limiti in `docs/research/DECISIONS.md`).
+- Capitale letto da IBKR (prima osservazione, scritta una volta); nel portale il valore del conto dice "prova" finché
+  IBKR non è collegato. Corretto il doppio conteggio tra conto IBKR e capitale virtuale dei pod.
+- Piano v4 approvato in modo condizionato: ombra fino a metà gennaio, poi patch nella finestra della domenica.

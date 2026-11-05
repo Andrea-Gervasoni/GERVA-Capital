@@ -31,9 +31,9 @@ TRADING_CODE = ("pod_zero", "execution_monitor")
 def value() -> dict:
     fb = gateway.firm_book()
     marks = [r["nav"] for r in db.q("SELECT nav FROM nav_marks WHERE pod='firm'")]
-    hwm = max(marks + [fb["nav"], gateway.START_NAV_EUR])
-    return dict(nav=fb["nav"], massimo=hwm, rendimento=fb["nav"] / gateway.START_NAV_EUR - 1,
-                rendimento_massimo=hwm / gateway.START_NAV_EUR - 1)
+    hwm = max(marks + [fb["nav"], gateway.firm_start()])
+    return dict(nav=fb["nav"], massimo=hwm, rendimento=fb["nav"] / gateway.firm_start() - 1,
+                rendimento_massimo=hwm / gateway.firm_start() - 1)
 
 
 def level() -> dict:

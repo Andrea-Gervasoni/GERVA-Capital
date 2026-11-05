@@ -168,3 +168,29 @@ def test_band_rebalancing_never_creates_leverage():
     res = BT.run(W, close, band=0.05)
     assert res.daily["gross"].max() <= 1 + 1e-9
     assert res.weights.sum(axis=1).max() <= 1 + 1e-9
+
+
+def test_capital_is_read_from_ibkr_once_and_jumps_are_flagged(firm_env, monkeypatch):
+    """Conto paper da ~984.000 EUR: il capitale iniziale e' la prima lettura di IBKR, mai una cifra scritta a mano."""
+    import types
+    from firm import gateway, ibkr, db, org_seed, registry, pods
+    org_seed.seed(); registry.sync(); pods.ensure_pods()
+    monkeypatch.setenv("IBKR_CHALLENGE_ACCOUNT", "DU999999")
+    assert gateway.capital_source()["fonte"] != "IBKR"                       # prima del collegamento: dichiarato
+
+    class IB:
+        def __init__(self, nav): self.nav = nav
+        def connect(self, *a, **k): pass
+        def disconnect(self): pass
+        def managedAccounts(self): return ["DU999999"]
+        def accountValues(self, a): return [types.SimpleNamespace(tag="NetLiquidation", currency="EUR", value=str(self.nav))]
+        def positions(self, a=""): return []
+        def fills(self): return []
+    ibkr.observe_challenge(factory=lambda: IB(984_000.0))
+    assert gateway.start_nav() == 984_000.0 and gateway.capital_source()["fonte"] == "IBKR"
+    assert abs(gateway.firm_book()["pnl"]) < 50_000                           # niente guadagno fantasma
+    ibkr.observe_challenge(factory=lambda: IB(990_000.0))
+    assert gateway.start_nav() == 984_000.0                                   # scritto una volta sola
+    db.ex("UPDATE nav_marks SET day='2026-01-01' WHERE pod='pod_zero'")
+    ibkr.observe_challenge(factory=lambda: IB(1_500_000.0))                  # balzo: versamento o reset?
+    assert any("versamento" in e["payload"] for e in db.q("SELECT payload FROM events WHERE kind='risk.alert'"))

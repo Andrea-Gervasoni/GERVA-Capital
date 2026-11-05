@@ -116,7 +116,8 @@ def daily(day: str | None = None, save: bool = True) -> dict:
     orders = db.q("SELECT status, COUNT(*) n FROM gateway_orders WHERE ts>=? GROUP BY status", (day,))
     rep = dict(
         giorno=day, tipo="giornaliero",
-        societa=dict(nav=fb["nav"], pnl=fb["pnl"], rendimento=fb["nav"] / gateway.START_NAV_EUR - 1, lorda=fb["gross"]),
+        societa=dict(nav=fb["nav"], pnl=fb["pnl"], rendimento=fb["nav"] / gateway.firm_start() - 1, lorda=fb["gross"],
+                     capitale=gateway.capital_source()),
         rischio=risk.snapshot(), budget=budget.status(), edificio=building.level(),
         pod=lb["pod"], persone=people, gateway={r["status"]: r["n"] for r in orders},
         ricerca=dict(prove=trials.counts(), fascicoli=db.q("SELECT id,title,stage FROM research ORDER BY ts DESC LIMIT 5")),

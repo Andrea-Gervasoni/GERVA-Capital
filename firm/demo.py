@@ -53,7 +53,7 @@ def run(days: int = 45, seed: int = 3) -> dict:
     for k, (_, p0) in INSTR.items():
         close[k] = close[k] / close[k].iloc[n_hist - 1] * p0
     W = {pid: _signals(close, pid) for pid in POD_UNIVERSE}
-    pz_nav = gateway.START_NAV_EUR * pods.get("pod_zero")["capital_frac"]
+    pz_nav = gateway.start_nav() * pods.get("pod_zero")["capital_frac"]
     accepted = rejected = 0
     for t in range(n_hist, n_hist + days):
         day = close.index[t]

@@ -24,7 +24,31 @@ from . import db, events, risk, pods
 from . import settings as S
 from quantlab import costs as QC
 
-START_NAV_EUR = 100_000.0          # REGOLE_SFIDA §1: capitale iniziale del conto paper
+START_NAV_DEFAULT = 100_000.0      # solo finche' IBKR non e' collegato (demo, test): dichiarato nel portale
+START_KEY = "ibkr.start_nav"       # {nav, giorno}: la PRIMA lettura riuscita del conto, scritta una volta sola
+
+
+def start_nav() -> float:
+    """Capitale iniziale della societa': quello che IBKR ha mostrato alla prima osservazione del conto. Nessuno lo
+    imposta a mano. Prima del collegamento vale START_NAV_DEFAULT e capital_source() lo dichiara."""
+    s = db.runtime_get(START_KEY)
+    return float(s["nav"]) if s and s.get("nav") else START_NAV_DEFAULT
+
+
+def firm_start() -> float:
+    """Capitale iniziale della SOCIETA': il conto osservato su IBKR (Pod Zero) piu' il capitale dichiarato dei pod.
+    Senza IBKR (demo, test) il Pod Zero vale la quota rimasta di START_NAV_DEFAULT, e il totale torna a quello."""
+    n = len(db.q("SELECT id FROM pods WHERE id!='pod_zero'"))
+    base = start_nav() * float(S.get("pods.initial_capital_frac"))
+    zero = start_nav() if db.runtime_get(START_KEY) else start_nav() - n * base
+    return zero + n * base
+
+
+def capital_source() -> dict:
+    s = db.runtime_get(START_KEY)
+    if s:
+        return dict(fonte="IBKR", capitale=float(s["nav"]), dal=s.get("giorno"))
+    return dict(fonte="non ancora letto da IBKR", capitale=START_NAV_DEFAULT, dal=None)
 
 COST_BY_KIND = {"crypto": QC.IBKR_CRYPTO, "etf_ucits": QC.UCITS_ETF, "etc": QC.UCITS_ETF,
                 "stock": QC.US_LARGE_CAP}
@@ -78,7 +102,7 @@ def positions(pid: str) -> dict[str, float]:
 
 def pod_book(pid: str) -> dict:
     p = pods.get(pid)
-    base = START_NAV_EUR * float(S.get("pods.initial_capital_frac"))
+    base = start_nav() * float(S.get("pods.initial_capital_frac"))
     cash_flow, fees = 0.0, 0.0
     for f in db.q("SELECT side, qty, price, fee FROM fills WHERE pod=?", (pid,)):
         cash_flow += (-1 if f["side"] == "BUY" else 1) * f["qty"] * f["price"]
@@ -102,13 +126,13 @@ def pod_zero_nav() -> float:
     if r:
         return r["nav"]
     p = pods.get("pod_zero")
-    return START_NAV_EUR * (p["capital_frac"] if p else 0.85)
+    return start_nav() * (p["capital_frac"] if p else 0.85)
 
 
 def firm_nav_estimate() -> float:
     navs = [pod_zero_nav()]
     for p in db.q("SELECT id FROM pods WHERE id!='pod_zero'"):
-        base = START_NAV_EUR * float(S.get("pods.initial_capital_frac"))
+        base = start_nav() * float(S.get("pods.initial_capital_frac"))
         cash = sum((-1 if f["side"] == "BUY" else 1) * f["qty"] * f["price"] - f["fee"]
                    for f in db.q("SELECT side,qty,price,fee FROM fills WHERE pod=?", (p["id"],)))
         mv = sum(q * (quote(k) or {"price": 0})["price"] for k, q in positions(p["id"]).items())
@@ -122,8 +146,9 @@ def firm_book() -> dict:
     pz_gross = pod_zero.gross_fraction() * pod_zero_nav()
     gross = pz_gross + sum(pod_book(p["id"])["lorda_eur"] for p in pods.all_pods() if p["id"] != "pod_zero")
     marks = [r["nav"] for r in db.q("SELECT nav FROM nav_marks WHERE pod='firm'")]
-    return dict(nav=nav, peak=max(marks + [nav, START_NAV_EUR]), gross=gross / nav if nav > 0 else 0.0,
-                pnl=nav - START_NAV_EUR)
+    start = firm_start()
+    return dict(nav=nav, peak=max(marks + [nav, start]), gross=gross / nav if nav > 0 else 0.0,
+                pnl=nav - start, capitale_iniziale=start, fonte_capitale=capital_source()["fonte"])
 
 
 def mark_day(day: str | None = None):

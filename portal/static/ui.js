@@ -40,8 +40,10 @@ function kpi(id, v, cls = "") { const el = document.getElementById(id); el.inner
 async function refreshState() {
   try {
     const s = STATE = await api("/api/state");
-    kpi("k-nav", eur(s.nav));
-    kpi("k-pnl", (s.pnl >= 0 ? "+" : "") + eur(s.pnl) + ` <small>${pct(s.pnl / 100000, 2)}</small>`, s.pnl >= 0 ? "pos" : "neg");
+    const fromIb = s.capitale && s.capitale.fonte === "IBKR";
+    kpi("k-nav", eur(s.nav) + (fromIb ? "" : ` <small title="Capitale non ancora letto da IBKR: cifra di prova">prova</small>`));
+    document.getElementById("k-nav").title = fromIb ? `Capitale letto da IBKR il ${s.capitale.dal}` : "Capitale non ancora letto da IBKR";
+    kpi("k-pnl", (s.pnl >= 0 ? "+" : "") + eur(s.pnl) + ` <small>${pct(s.pnl / (s.capitale_iniziale || 100000), 2)}</small>`, s.pnl >= 0 ? "pos" : "neg");
     kpi("k-risk", `<i class="light ${s.semaforo}"></i>${s.kill ? "KILL" : s.semaforo}`);
     kpi("k-bud", `${num(s.budget_oggi, 3)} / ${num(s.tetto_oggi, 2)} €`);
     kpi("k-days", s.sciopero ? "SCIOPERO" : s.giorni_residui == null ? "∞" : num(s.giorni_residui, 1) + " gg");
