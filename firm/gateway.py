@@ -16,6 +16,7 @@ Il Pod Zero NON passa di qui: continua a usare live.py e crypto_live.py di GERVA
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
 import os
 from collections import defaultdict
 
@@ -32,8 +33,33 @@ COST_BY_KIND = {"crypto": QC.IBKR_CRYPTO, "etf_ucits": QC.UCITS_ETF, "etc": QC.U
 # ---------------------------------------------------------------------------
 # Prezzi e anagrafica (aggiornati dal Data Engineer o, nel demo, dal simulatore)
 # ---------------------------------------------------------------------------
-def set_price(instrument: str, price: float, kind: str, ts: str | None = None):
-    db.runtime_set(f"px:{instrument}", dict(price=float(price), kind=kind, ts=ts or db.now_iso()))
+MAX_QUOTE_AGE_MIN = 30             # un prezzo piu' vecchio non si usa per eseguire
+ORDER_TTL_HOURS = 20               # un ordine accettato e mai eseguito scade (niente raffiche il giorno dopo)
+OPEN_STATES = ("accettato", "inviato")
+
+
+def set_price(instrument: str, price: float, kind: str, ts: str | None = None, currency: str = "EUR"):
+    """Il prezzo e' nella valuta indicata; i controlli di rischio lo trattano come EUR, quindi un feed reale
+    di strumenti in USD deve convertire prima di chiamare set_price (l'esecutore IBKR rifiuta valute diverse)."""
+    db.runtime_set(f"px:{instrument}", dict(price=float(price), kind=kind, ts=ts or db.now_iso(), currency=currency))
+
+
+def _age_min(ts: str) -> float:
+    try:
+        t = dt.datetime.fromisoformat(ts)
+        if t.tzinfo is None:
+            t = t.replace(tzinfo=dt.timezone.utc)
+        return (dt.datetime.now(dt.timezone.utc) - t).total_seconds() / 60
+    except (TypeError, ValueError):
+        return float("inf")
+
+
+def pending_qty(pid: str) -> dict[str, float]:
+    """Ordini accettati e non ancora eseguiti: contano nei controlli come se lo fossero."""
+    out = defaultdict(float)
+    for o in db.q(f"SELECT instrument, side, qty FROM gateway_orders WHERE pod=? AND status IN {OPEN_STATES}", (pid,)):
+        out[o["instrument"]] += o["qty"] if o["side"] == "BUY" else -o["qty"]
+    return dict(out)
 
 
 def quote(instrument: str) -> dict | None:
@@ -158,7 +184,8 @@ def _checks(pod: str, agent: str, instrument: str, side: str, qty: float, ref_pr
         why.append(f"prezzo di riferimento {px} lontano dall'ultimo {last} oltre {lim['order']['max_price_deviation']:.0%}")
     notional = qty * px
     book = pod_book(pod)
-    held = book["posizioni"].get(instrument, {}).get("qty", 0.0)
+    pend = pending_qty(pod)
+    held = book["posizioni"].get(instrument, {}).get("qty", 0.0) + pend.get(instrument, 0.0)
     if side == "SELL" and not lim["pod"]["allow_short"] and qty > held + 1e-9:
         why.append(f"vendita allo scoperto vietata (in portafoglio {held:g})")
     if notional < lim["order"]["min_notional_eur"]:
@@ -172,15 +199,21 @@ def _checks(pod: str, agent: str, instrument: str, side: str, qty: float, ref_pr
     if book["drawdown"] <= -lim["pod"]["dd_close"]:
         why.append(f"drawdown del pod {book['drawdown']:.1%} oltre il limite di chiusura")
     signed = notional if side == "BUY" else -notional
-    cur_val = book["posizioni"].get(instrument, {}).get("valore", 0.0)
-    new_gross = book["lorda_eur"] - abs(cur_val) + abs(cur_val + signed)
+    pend_val = {k: q_ * ((quote(k) or {}).get("price") or 0.0) for k, q_ in pend.items()}
+    eff = {k: v["valore"] for k, v in book["posizioni"].items()}
+    for k, v in pend_val.items():
+        eff[k] = eff.get(k, 0.0) + v
+    cur_val = eff.get(instrument, 0.0)
+    new_gross = sum(abs(v) for v in eff.values()) - abs(cur_val) + abs(cur_val + signed)
     cap = book["capitale_ammesso"]
     if cap <= 0 or new_gross > lim["pod"]["max_gross"] * cap + 1e-6:
         why.append(f"lorda del pod {new_gross:,.0f} EUR oltre {lim['pod']['max_gross']:.0%} del capitale {cap:,.0f}")
     if abs(cur_val + signed) > lim["pod"]["max_position_frac"] * cap + 1e-6 and side == "BUY":
         why.append(f"concentrazione su {instrument} oltre {lim['pod']['max_position_frac']:.0%} del capitale del pod")
     fb = firm_book()
-    if side == "BUY" and (fb["gross"] * firm_nav + notional) > lim["firm"]["max_gross"] * firm_nav + 1e-6:
+    pend_buys = sum(o["qty"] * ((quote(o["instrument"]) or {}).get("price") or 0.0) for o in db.q(
+        f"SELECT instrument, qty FROM gateway_orders WHERE side='BUY' AND status IN {OPEN_STATES}"))
+    if side == "BUY" and (fb["gross"] * firm_nav + pend_buys + notional) > lim["firm"]["max_gross"] * firm_nav + 1e-6:
         why.append("lorda di societa' oltre il 100% del NAV")
     if kind == "crypto" and side == "BUY":
         crypto_eur = sum(v["valore"] for pp in pods.all_pods() if pp["id"] != "pod_zero"
@@ -229,7 +262,8 @@ class SimulatedPaperBroker:
     """Broker paper simulato: fill al prezzo +- meta' spread, commissione dal modello dei costi."""
     venue = "paper-simulato"
 
-    def execute(self, instrument: str, kind: str, side: str, qty: float, price: float, ref: str | None = None):
+    def execute(self, instrument: str, kind: str, side: str, qty: float, price: float, ref: str | None = None,
+                currency: str | None = None):
         m = COST_BY_KIND.get(kind, QC.UCITS_ETF)
         fill = price * (1 + m.half_spread if side == "BUY" else 1 - m.half_spread)
         fee = max(m.commission_rate * qty * fill, min(m.commission_min, m.commission_cap_rate * qty * fill))
@@ -237,81 +271,154 @@ class SimulatedPaperBroker:
 
 
 def broker():
-    """IBKR paper solo su un SECONDO conto paper (firm/ibkr.py spiega perche'); altrimenti broker simulato."""
+    """IBKR paper solo su un SECONDO conto paper (firm/ibkr.py spiega perche'); altrimenti broker simulato.
+    Se IBKR e' configurato ma non raggiungibile si FERMA (eccezione): eseguire sul simulato fills che il conto
+    reale non ha creerebbe posizioni fantasma e, alla vendita, uno short al broker."""
     if os.environ.get("GATEWAY_BROKER") == "ibkr_paper":
         from .ibkr import IBKRPaperBroker
-        try:
-            return IBKRPaperBroker()
-        except Exception as e:                 # conto mancante, gateway spento, conto della sfida: si resta simulati
-            events.publish("risk.alert", "gateway", dict(cosa=f"broker IBKR non disponibile, uso il simulato: {str(e)[:120]}",
-                                                         gravita=2))
+        return IBKRPaperBroker()
     return SimulatedPaperBroker()
 
 
+def order_ref(instr: str, ids) -> str:
+    """Stabile: dipende solo dagli ordini del gruppo (non dal lato ne' dall'ora)."""
+    h = hashlib.sha1(f"{instr}:{','.join(str(i) for i in sorted(ids))}".encode()).hexdigest()[:16]
+    return f"GERVA-CAP-{h}"
+
+
+def expire_stale(hours: float = ORDER_TTL_HOURS) -> int:
+    old = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=hours)).isoformat()
+    rows = db.q("SELECT id FROM gateway_orders WHERE status='accettato' AND ts < ?", (old,))
+    for r in rows:
+        db.ex("UPDATE gateway_orders SET status='scaduto' WHERE id=?", (r["id"],))
+    if rows:
+        events.publish("gateway.expired", "gateway", dict(n=len(rows)))
+    return len(rows)
+
+
+class _Tx:
+    def __enter__(self):
+        self.c = db.connect()
+        self.c.execute("BEGIN IMMEDIATE")
+        return self.c
+
+    def __exit__(self, et, ev, tb):
+        self.c.execute("ROLLBACK" if et else "COMMIT")
+        return False
+
+
+def _inflight() -> list[tuple[str, dict]]:
+    return [(r["key"][9:], db.runtime_get(r["key"])) for r in db.q("SELECT key FROM runtime WHERE key LIKE 'inflight:%'")]
+
+
 def flush(b=None) -> dict:
-    """Compensazione interna tra pod e invio del netto al broker."""
+    """Compensazione interna tra pod e invio del netto al broker. Ogni invio e' preceduto dalla sua
+    registrazione (stato 'inviato' + voce inflight, in transazione): dopo un crash si RECUPERA dal broker,
+    non si reinvia."""
     own = b is None
     pending = db.q("SELECT * FROM gateway_orders WHERE status='accettato' ORDER BY id")
-    if not pending:
+    inflight = _inflight()
+    if not pending and not inflight:
         return dict(interni=0, al_broker=0, risparmio_eur=0.0)
     b = b or broker()
     try:
-        return _flush(b, pending)
+        report = dict(interni=0, al_broker=0, risparmio_eur=0.0)
+        for ref, entry in inflight:
+            _recover(b, ref, entry, report)
+        if pending:
+            _flush(b, pending, report)
+        return report
     finally:
         if own and hasattr(b, "close"):
             b.close()
 
 
-def _flush(b, pending) -> dict:
+def _settle(ref: str, e: dict, fill: float, fee: float, done: float, venue: str, report: dict):
+    ratio = min(1.0, done / e["qty"]) if e["qty"] > 0 else 0.0
+    with _Tx():
+        for oid, rest_full in e["rest"].items():
+            rest = rest_full * ratio
+            if rest > 1e-12:
+                frac = rest / max(done, 1e-12)
+                o = db.one("SELECT pod FROM gateway_orders WHERE id=?", (int(oid),))
+                db.ex("INSERT INTO fills(ts,order_id,pod,instrument,side,qty,price,fee,venue,model_cost)"
+                      " VALUES(?,?,?,?,?,?,?,?,?,?)",
+                      (db.now_iso(), int(oid), o["pod"], e["instr"], e["side"], rest, fill, fee * frac, venue,
+                       e["model_cost"] * frac * ratio))
+            db.ex("UPDATE gateway_orders SET status=? WHERE id=?",
+                  ("eseguito" if ratio >= 1 - 1e-9 else "eseguito_parziale", int(oid)))
+        db.ex("DELETE FROM runtime WHERE key=?", (f"inflight:{ref}",))
+    report["al_broker"] += 1
+    if ratio < 1 - 1e-9:
+        report.setdefault("parziali", []).append(dict(strumento=e["instr"], richiesto=e["qty"], eseguito=done))
+
+
+def _recover(b, ref: str, e: dict, report: dict):
+    r = b.recover(ref) if hasattr(b, "recover") else None
+    if r is None:                                  # nessuna traccia al broker: si verifica a mano, mai alla cieca
+        with _Tx():
+            for oid in e["rest"]:
+                db.ex("UPDATE gateway_orders SET status='da_verificare' WHERE id=?", (int(oid),))
+            db.ex("DELETE FROM runtime WHERE key=?", (f"inflight:{ref}",))
+        events.publish("risk.alert", "gateway", dict(cosa=f"ordine {ref} ({e['instr']}) interrotto senza traccia al broker: "
+                                                     "da verificare con la riconciliazione", gravita=4))
+        return
+    fill, fee, done = r
+    _settle(ref, e, fill or e["mid"], fee, done, getattr(b, "venue", "broker"), report)
+
+
+def _flush(b, pending, report) -> dict:
+    from .ibkr import NotSent
     by_instr = defaultdict(list)
     for o in pending:
         by_instr[o["instrument"]].append(o)
-    report = dict(interni=0, al_broker=0, risparmio_eur=0.0)
     for instr, orders in by_instr.items():
         q = quote(instr)
+        if not q or _age_min(q.get("ts")) > MAX_QUOTE_AGE_MIN:
+            report.setdefault("in_attesa", []).append(dict(strumento=instr, motivo="prezzo assente o vecchio"))
+            continue                                # restano accettati; scadono dopo ORDER_TTL_HOURS
         kind, mid = q["kind"], q["price"]
+        if hasattr(b, "can_trade") and not b.can_trade(instr, kind):
+            report.setdefault("in_attesa", []).append(dict(strumento=instr, motivo="mercato chiuso"))
+            continue
         buys = [o for o in orders if o["side"] == "BUY"]
         sells = [o for o in orders if o["side"] == "SELL"]
         tb, ts = sum(o["qty"] for o in buys), sum(o["qty"] for o in sells)
         matched = min(tb, ts)
-        # 1) incrocio interno pro-quota al prezzo medio: nessuna commissione, nessuno spread
-        for group, tot in ((buys, tb), (sells, ts)):
-            for o in group:
-                share = o["qty"] / tot * matched if tot else 0.0
-                if share > 0:
-                    db.ex("INSERT INTO fills(ts,order_id,pod,instrument,side,qty,price,fee,venue,model_cost)"
-                          " VALUES(?,?,?,?,?,?,?,?,?,?)",
-                          (db.now_iso(), o["id"], o["pod"], instr, o["side"], share, mid, 0.0, "interno", 0.0))
-                    report["interni"] += 1
-        if matched > 0:
-            m = COST_BY_KIND.get(kind, QC.UCITS_ETF)
-            report["risparmio_eur"] += 2 * m.cost(matched * mid)
-        # 2) il netto va al broker
         net = tb - ts
-        partial = set()
-        if abs(net) > 1e-12:
-            side = "BUY" if net > 0 else "SELL"
-            group, tot = (buys, tb) if net > 0 else (sells, ts)
-            ref = f"GERVA-CAP-{min(o['id'] for o in group)}-{instr}"
-            fill, fee, done = b.execute(instr, kind, side, abs(net), mid, ref=ref)
-            ratio = min(1.0, done / abs(net)) if abs(net) > 0 else 0.0      # eseguito parziale: si alloca pro quota
-            model_cost = COST_BY_KIND.get(kind, QC.UCITS_ETF).cost(abs(net) * mid)
-            for o in group:
-                rest = (o["qty"] - o["qty"] / tot * matched) * ratio
-                if ratio < 1 - 1e-9:
-                    partial.add(o["id"])
-                if rest > 1e-12:
-                    frac = rest / max(done, 1e-12)
-                    db.ex("INSERT INTO fills(ts,order_id,pod,instrument,side,qty,price,fee,venue,model_cost)"
-                          " VALUES(?,?,?,?,?,?,?,?,?,?)",
-                          (db.now_iso(), o["id"], o["pod"], instr, side, rest, fill, fee * frac, b.venue,
-                           model_cost * frac * ratio))
-            report["al_broker"] += 1
-            if ratio < 1 - 1e-9:
-                report.setdefault("parziali", []).append(dict(strumento=instr, richiesto=abs(net), eseguito=done))
-        for o in orders:
-            db.ex("UPDATE gateway_orders SET status=? WHERE id=?",
-                  ("eseguito_parziale" if o["id"] in partial else "eseguito", o["id"]))
+        m = COST_BY_KIND.get(kind, QC.UCITS_ETF)
+        side = "BUY" if net > 0 else "SELL"
+        group, tot = (buys, tb) if net > 0 else (sells, ts)
+        ref, entry = None, None
+        with _Tx():
+            # 1) incrocio interno pro-quota al prezzo medio: nessuna commissione, nessuno spread
+            for grp, t in ((buys, tb), (sells, ts)):
+                for o in grp:
+                    share = o["qty"] / t * matched if t else 0.0
+                    if share > 0:
+                        db.ex("INSERT INTO fills(ts,order_id,pod,instrument,side,qty,price,fee,venue,model_cost)"
+                              " VALUES(?,?,?,?,?,?,?,?,?,?)",
+                              (db.now_iso(), o["id"], o["pod"], instr, o["side"], share, mid, 0.0, "interno", 0.0))
+                        report["interni"] += 1
+            if matched > 0:
+                report["risparmio_eur"] += 2 * m.cost(matched * mid)
+            # 2) il netto: registrato PRIMA dell'invio
+            if abs(net) > 1e-12:
+                ref = order_ref(instr, [o["id"] for o in group])
+                entry = dict(instr=instr, kind=kind, side=side, qty=abs(net), mid=mid,
+                             model_cost=m.cost(abs(net) * mid), ts=db.now_iso(),
+                             rest={str(o["id"]): o["qty"] - o["qty"] / tot * matched for o in group})
+                db.runtime_set(f"inflight:{ref}", entry)
+            for o in orders:
+                st = "inviato" if entry and str(o["id"]) in entry["rest"] else "eseguito"
+                db.ex("UPDATE gateway_orders SET status=? WHERE id=?", (st, o["id"]))
+        if entry:
+            try:
+                fill, fee, done = b.execute(instr, kind, side, abs(net), mid, ref=ref, currency=q.get("currency"))
+            except NotSent as e:                     # nulla e' partito: si chiude a zero, il pod puo' ripresentare
+                events.publish("gateway.rejected", "gateway", dict(id=None, pod="-", strumento=instr, motivi=[str(e)]))
+                fill, fee, done = mid, 0.0, 0.0
+            _settle(ref, entry, fill, fee, done, b.venue, report)
     if pending:
         events.publish("gateway.fill", "gateway", report)
     return report

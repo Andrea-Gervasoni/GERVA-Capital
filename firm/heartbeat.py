@@ -16,15 +16,15 @@ from __future__ import annotations
 import datetime as dt
 import re
 
-from . import db, events, risk, pods, budget, audit, gateway, news_feed, workflows, economy, compensation, meetings, reports
+from . import db, events, risk, pods, budget, audit, gateway, news_feed, mailbox, workflows, economy, compensation, meetings, reports
 
 
 def _once(key: str) -> bool:
     """True la prima volta che `key` viene chiesto (per giorno/settimana)."""
-    if db.runtime_get(f"once:{key}"):
-        return False
-    db.runtime_set(f"once:{key}", db.now_iso())
-    return True
+    # atomico: due battiti concorrenti (run + heartbeat manuale) non pagano due volte
+    cur = db.connect().execute("INSERT OR IGNORE INTO runtime(key,value,updated_ts) VALUES(?,?,?)",
+                               (f"once:{key}", db.dumps(db.now_iso()), db.now_iso()))
+    return cur.rowcount == 1
 
 
 def beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
@@ -47,20 +47,45 @@ def beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
     if os.environ.get("IBKR_OBSERVE") == "1":
         from . import ibkr
         ibkr.observe_challenge()
-        if os.environ.get("GATEWAY_BROKER") == "ibkr_paper" and (risk.kill_active() or (now.hour == 21 and _once(f"reconcile:{day}"))):
+        if not os.environ.get("IBKR_FIRM_ACCOUNT"):
+            # i pod non possono usare il conto della sfida (live.py vende tutto cio' che non e' nel suo target):
+            # serve un secondo conto paper, cioe' una nuova credenziale -> grande richiesta n.4
+            mailbox.big_request(
+                4, "Secondo conto paper IBKR per i pod?",
+                "I pod della societa' oggi eseguono sul broker simulato. Per eseguire su IBKR serve un SECONDO conto paper "
+                "(DU...) distinto da quello della sfida: GERVA-Q vende ogni posizione che non e' nel suo target, quindi "
+                "ordini dei pod sullo stesso conto verrebbero liquidati la sera stessa e violerebbero REGOLE_SFIDA §1.",
+                ["Aprire un secondo conto paper (gratuito) e mettere il login in secrets/ibgw-firm.env",
+                 "Restare sul broker simulato"],
+                "Restare sul simulato finche' i pod non hanno 3 mesi di track record forward: il secondo conto aggiunge "
+                "realismo di esecuzione, non rendimento",
+                "Pod sul broker simulato; GERVA-Q invariato sul suo conto", dedup_key="ibkr-second-paper-account")
+    if os.environ.get("GATEWAY_BROKER") == "ibkr_paper" and (risk.kill_active() or (now.hour == 21 and _once(f"reconcile:{day}"))):
+        from . import ibkr
+        try:
+            br = ibkr.IBKRPaperBroker()
             try:
-                br = ibkr.IBKRPaperBroker()
-                try:
-                    if risk.kill_active():
-                        n = br.cancel_open()
-                        if n:
-                            events.publish("risk.kill", "gateway", dict(motivo=f"KILL: annullati {n} ordini aperti dei pod"))
-                    else:
-                        ibkr.reconcile(br)
-                finally:
-                    br.close()
-            except Exception as e:
-                notes.append(f"ibkr pod: {str(e)[:80]}")
+                if risk.kill_active():
+                    n = br.cancel_open()
+                    if n:
+                        events.publish("risk.kill", "gateway", dict(motivo=f"KILL: annullati {n} ordini aperti dei pod"))
+                else:
+                    ibkr.reconcile(br)
+            finally:
+                br.close()
+        except Exception as e:
+            notes.append(f"ibkr pod: {str(e)[:80]}")
+    # ordini dei pod: scadenza dei vecchi e invio del netto (fermo con KILL; fermo se IBKR configurato ma assente)
+    gateway.expire_stale()
+    if not risk.kill_active():
+        try:
+            fr = gateway.flush()
+            if fr.get("al_broker") or fr.get("interni"):
+                notes.append(f"gateway: {fr['al_broker']} al broker, {fr['interni']} incroci interni")
+        except Exception as e:
+            if _once(f"gwdown:{day}:{now.hour}"):        # un allarme l'ora, non uno per battito
+                events.publish("risk.alert", "gateway", dict(cosa=f"esecuzione dei pod sospesa: {str(e)[:120]}", gravita=3))
+            notes.append(f"gateway fermo: {str(e)[:80]}")
     nf = news_feed.fetch_all()
     if nf["errori"] and not nf["nuove"]:
         notes.append("notizie: rete non disponibile o feed in errore")

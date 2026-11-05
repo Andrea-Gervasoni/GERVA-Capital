@@ -10,7 +10,7 @@ EVALS = os.path.join(ROOT, "evals")
 RESEARCH = os.environ.get("GERVA_RESEARCH", os.path.join(ROOT, "research"))   # sul server: volume scrivibile
 VAR = os.environ.get("GERVA_VAR", os.path.join(ROOT, "var"))
 DB_PATH = os.path.join(VAR, "firm.sqlite")
-KILL_FILE = os.path.join(ROOT, "KILL")
+KILL_FILE = os.environ.get("GERVA_KILL_FILE", os.path.join(ROOT, "KILL"))   # sul server: nel volume (il codice e' in sola lettura)
 ANDREA_TOKEN = os.path.join(VAR, "andrea.token")
 
 # GERVA-Q (Pod Zero): sul Mac di Andrea e' ~/Documents/GERVA-Q; qui si puo' puntare allo snapshot

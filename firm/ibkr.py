@@ -1,8 +1,10 @@
 """
 Collegamento a Interactive Brokers (IB Gateway) — SOLO PAPER, con due ruoli separati.
 
-1. OSSERVATORE del conto della sfida (GERVA-Q / Pod Zero): connessione `readonly=True` (a livello di
-   API IBKR non puo' inviare ordini), legge NAV, posizioni ed eseguiti per il portale e il Rischio.
+1. OSSERVATORE del conto della sfida (GERVA-Q / Pod Zero): legge NAV, posizioni ed eseguiti per il portale
+   e il Rischio. `readonly=True` in ib_async evita solo la sincronizzazione degli ordini, NON impedisce
+   placeOrder: per questo l'osservatore riceve un involucro (_ReadOnlyIB) che espone solo letture e
+   solleva PermissionError su qualsiasi altro metodo.
    Gli ordini del Pod Zero restano di live.py / crypto_live.py di GERVA-Q.
 
 2. ESECUTORE dei pod (usato solo dal Gateway): opera su un SECONDO conto paper, diverso da quello della
@@ -22,16 +24,26 @@ solo host, porta, clientId e numero di conto, e scrive il numero di conto nel DB
 """
 from __future__ import annotations
 
+import datetime as dt
 import math
 import os
 import time
 from dataclasses import dataclass
+from zoneinfo import ZoneInfo
 
 import yaml
 
 from . import db, events, paths, risk
 
 ORDER_PREFIX = "GERVA-CAP-"
+# contrattazione continua, ora LOCALE della borsa (segue l'ora legale; le festivita' non sono gestite:
+# un ordine DAY in un giorno di chiusura non si esegue e si annulla allo scadere)
+EXCHANGE_HOURS = {"LSEETF": ("Europe/London", (8, 0), (16, 30)), "IBIS": ("Europe/Berlin", (9, 0), (17, 30)),
+                  "SMART": ("America/New_York", (9, 30), (16, 0))}
+
+
+class NotSent(Exception):
+    """L'ordine NON e' stato inviato al broker (KILL, contratto o valuta non validi): niente da recuperare."""
 PACING_S = 0.25                    # <= 4 ordini al secondo, molto sotto i limiti di messaggi di IBKR
 FILL_TIMEOUT_S = 30.0
 
@@ -91,35 +103,70 @@ def round_qty(kind: str, qty: float) -> float:
     return float(math.floor(qty + 1e-9))
 
 
-def limit_price(side: str, ref: float, kind: str) -> float:
-    """Prezzo limite protetto: al massimo meta' della deviazione ammessa dal Gateway."""
+def limit_price(side: str, ref: float, kind: str, tick: float | None = None) -> float:
+    """Prezzo limite protetto: al massimo meta' della deviazione ammessa dal Gateway, sul tick del contratto
+    (arrotondato verso il prezzo di riferimento, quindi mai oltre la protezione)."""
     from . import settings as S
     dev = float(S.risk_limits()["order"]["max_price_deviation"]) / 2
     p = ref * (1 + dev) if side == "BUY" else ref * (1 - dev)
-    return round(p, 2)
+    t = tick if tick and tick > 0 else 0.01
+    n = math.floor(p / t + 1e-9) if side == "BUY" else math.ceil(p / t - 1e-9)
+    return round(n * t, 10)
+
+
+def market_open(symbol: str, kind: str, now: dt.datetime | None = None) -> bool:
+    if kind == "crypto":
+        return True
+    exch = "SMART" if kind == "stock" else instruments().get(symbol, {}).get("exchange", "SMART")
+    tz, a, b = EXCHANGE_HOURS.get(exch, EXCHANGE_HOURS["SMART"])
+    t = (now or dt.datetime.now(dt.timezone.utc)).astimezone(ZoneInfo(tz))
+    return t.weekday() < 5 and a <= (t.hour, t.minute) < b
 
 
 # ---------------------------------------------------------------------------
 # Osservatore del conto della sfida (sola lettura)
 # ---------------------------------------------------------------------------
+class _ReadOnlyIB:
+    """Involucro dell'osservatore: solo letture. placeOrder/cancelOrder e tutto il resto sono vietati."""
+    _ALLOWED = frozenset({"connect", "disconnect", "managedAccounts", "accountValues", "positions", "fills", "sleep"})
+
+    def __init__(self, ib):
+        object.__setattr__(self, "_ib", ib)
+
+    def __getattr__(self, name):
+        if name not in _ReadOnlyIB._ALLOWED:
+            raise PermissionError(f"osservatore in sola lettura: {name} non consentito")
+        return getattr(object.__getattribute__(self, "_ib"), name)
+
+
 def observe_challenge(factory=_default_factory, timeout: float = 15) -> dict:
     ep = challenge_endpoint()
-    ib = factory()
+    ib = _ReadOnlyIB(factory())
     snap = dict(ok=False, ts=db.now_iso())
     try:
         ib.connect(ep.host, ep.port, clientId=ep.client_id, timeout=timeout, readonly=True)
-        accts = ib.managedAccounts()
-        acct = ep.account if ep.account in accts else (accts[0] if accts else None)
-        if not acct or not acct.startswith("DU"):
+        accts = list(ib.managedAccounts())
+        if ep.account:
+            acct = ep.account if ep.account in accts else None
+            if not acct:
+                snap.update(errore=f"il gateway osservato non gestisce il conto configurato {mask(ep.account)}")
+        else:
+            acct = accts[0] if len(accts) == 1 else None
+            if not acct:
+                snap.update(errore="IBKR_CHALLENGE_ACCOUNT non impostato e il gateway gestisce piu' conti")
+        if acct and not acct.startswith("DU"):
             snap.update(errore="il conto della sfida non e' un conto paper (DU...): osservazione interrotta")
             events.publish("risk.alert", "ibkr", dict(cosa=snap["errore"], gravita=5))
-            return snap
-        vals = {(v.tag, v.currency): v.value for v in ib.accountValues(acct)}
-        nav = float(vals.get(("NetLiquidation", "EUR")) or vals.get(("NetLiquidation", "BASE")) or 0)
-        pos = [dict(simbolo=p.contract.localSymbol or p.contract.symbol, tipo=p.contract.secType,
-                    qty=float(p.position), costo_medio=float(p.avgCost)) for p in ib.positions(acct)]
-        snap.update(ok=True, conto=mask(acct), nav_eur=nav, posizioni=pos,
-                    eseguiti_oggi=len(ib.fills()))
+            acct = None
+        if acct:
+            vals = {(v.tag, v.currency): v.value for v in ib.accountValues(acct)}
+            nav = float(vals.get(("NetLiquidation", "EUR")) or vals.get(("NetLiquidation", "BASE")) or 0)
+            if nav <= 0:                       # valuta base non EUR o dati non ancora arrivati: MAI un NAV a zero
+                snap.update(errore="NAV non disponibile (valuta base non EUR o dati di conto non ancora ricevuti)")
+            else:
+                pos = [dict(simbolo=p.contract.localSymbol or p.contract.symbol, tipo=p.contract.secType,
+                            qty=float(p.position), costo_medio=float(p.avgCost)) for p in ib.positions(acct)]
+                snap.update(ok=True, conto=mask(acct), nav_eur=nav, posizioni=pos, eseguiti_oggi=len(ib.fills()))
     except Exception as e:                       # gateway spento, rete, login: si registra, non si crasha
         snap.update(errore=f"{type(e).__name__}: {str(e)[:160]}")
     finally:
@@ -141,12 +188,16 @@ class IBKRPaperBroker:
     venue = "ibkr-paper"
 
     def __init__(self, factory=_default_factory, timeout: float = 20):
-        ep = firm_endpoint()
-        challenge = challenge_endpoint().account
+        ep, ch = firm_endpoint(), challenge_endpoint()
+        challenge = ch.account
         if not ep.account or not ep.account.startswith("DU"):
             raise PermissionError("IBKR_FIRM_ACCOUNT mancante o non paper (DU...): i pod restano sul broker simulato")
-        if challenge and ep.account == challenge:
+        if not challenge or not challenge.startswith("DU"):
+            raise PermissionError("IBKR_CHALLENGE_ACCOUNT mancante: senza il conto della sfida l'esecutore non puo' escluderlo")
+        if ep.account == challenge:
             raise PermissionError("il conto dei pod coincide con quello della sfida: vietato (REGOLE_SFIDA §1)")
+        if (ep.host, ep.port) == (ch.host, ch.port):
+            raise PermissionError("l'esecutore dei pod punta al gateway della sfida: serve il gateway del secondo conto")
         self.ep = ep
         self.ib = factory()
         self.ib.connect(ep.host, ep.port, clientId=ep.client_id, timeout=timeout)
@@ -154,7 +205,7 @@ class IBKRPaperBroker:
         if ep.account not in accts:
             self.ib.disconnect()
             raise PermissionError(f"il gateway non gestisce il conto {mask(ep.account)}")
-        if challenge and challenge in accts:
+        if challenge in accts:
             self.ib.disconnect()
             raise PermissionError("il gateway dei pod vede anche il conto della sfida: usare login separati")
         self._last = 0.0
@@ -165,55 +216,108 @@ class IBKRPaperBroker:
         except Exception:
             pass
 
-    def _already_sent(self, ref: str):
-        for t in self.ib.openTrades():
-            if getattr(t.order, "orderRef", "") == ref:
-                return t
-        for f in self.ib.fills():
-            if getattr(f.execution, "orderRef", "") == ref:
-                return f
-        return None
+    # ---------------------------------------------------------------- stato di un ordine dal suo orderRef
+    def _open_trade(self, ref: str):
+        return next((t for t in self.ib.openTrades() if getattr(t.order, "orderRef", "") == ref), None)
 
-    def execute(self, instrument: str, kind: str, side: str, qty: float, price: float, ref: str | None = None):
+    def _fills_for(self, ref: str, refresh: bool = False) -> list:
+        src = self.ib.reqExecutions() if refresh and hasattr(self.ib, "reqExecutions") else self.ib.fills()
+        seen, out = set(), []
+        for f in src:
+            if getattr(f.execution, "orderRef", "") != ref:
+                continue
+            key = getattr(f.execution, "execId", None) or id(f)
+            if key not in seen:
+                seen.add(key)
+                out.append(f)
+        return out
+
+    def _totals(self, ref: str, refresh: bool = False):
+        fills = self._fills_for(ref, refresh)
+        filled = sum(float(f.execution.shares) for f in fills)
+        if filled <= 0:
+            return None, 0.0, 0.0
+        avg = sum(float(f.execution.shares) * float(f.execution.price) for f in fills) / filled
+        fee = 0.0
+        for f in fills:
+            c = float(getattr(getattr(f, "commissionReport", None), "commission", 0) or 0)
+            fee += c if c < 1e9 else 0.0             # IBKR usa un valore enorme per "commissione non ancora nota"
+        return avg, fee, filled
+
+    def _finish(self, trade, ref: str):
+        """Attende la fine; allo scadere annulla il residuo e aspetta che l'annullamento sia CONFERMATO
+        (gli eseguiti arrivati durante PendingCancel restano nel conto e nel registro)."""
+        t0 = time.monotonic()
+        while not trade.isDone() and time.monotonic() - t0 < FILL_TIMEOUT_S:
+            self.ib.sleep(0.5)
+        if not trade.isDone():
+            self.ib.cancelOrder(trade.order)
+            t1 = time.monotonic()
+            while not trade.isDone() and time.monotonic() - t1 < 15:
+                self.ib.sleep(0.5)
+            if not trade.isDone():
+                raise RuntimeError(f"annullamento di {ref} non confermato: si recupera al prossimo giro")
+        t2 = time.monotonic()                        # le commissioni arrivano dopo l'eseguito
+        while any(float(getattr(getattr(f, "commissionReport", None), "commission", 0) or 0) == 0
+                  for f in self._fills_for(ref)) and time.monotonic() - t2 < 3:
+            self.ib.sleep(0.5)
+
+    def can_trade(self, instrument: str, kind: str) -> bool:
+        return market_open(instrument, kind)
+
+    def recover(self, ref: str):
+        """Dopo un crash tra l'invio e la registrazione: (prezzo, commissioni, qty) se l'ordine esiste, None se
+        il broker non ne ha traccia (si marca da verificare: MAI reinviare alla cieca)."""
+        t = self._open_trade(ref)
+        if t is not None:
+            self._finish(t, ref)
+        avg, fee, filled = self._totals(ref, refresh=True)
+        if filled > 0:
+            return avg, fee, filled
+        return (0.0, 0.0, 0.0) if t is not None else None
+
+    def execute(self, instrument: str, kind: str, side: str, qty: float, price: float, ref: str | None = None,
+                currency: str | None = None):
         """Ritorna (prezzo medio, commissioni, quantita' eseguita). Quantita' 0 = niente eseguito."""
         from ib_async import LimitOrder
         if risk.kill_active():
-            raise PermissionError("KILL attivo")
-        q = round_qty(kind, qty)
-        if q <= 0:
-            return price, 0.0, 0.0
+            raise NotSent("KILL attivo")
         ref = ref or f"{ORDER_PREFIX}{int(time.time() * 1000)}"
-        prev = self._already_sent(ref)
-        if prev is not None:                        # idempotenza: dopo una riconnessione non si reinvia
+        if self._open_trade(ref) is not None or self._fills_for(ref):   # idempotenza: mai un secondo invio
             events.publish("gateway.duplicate_blocked", "gateway", dict(ref=ref, strumento=instrument))
-            return price, 0.0, 0.0
+            r = self.recover(ref)
+            return r if r else (price, 0.0, 0.0)
         c = contract_for(instrument, kind)
+        if currency and currency != c.currency:
+            raise NotSent(f"{instrument}: prezzo in {currency} ma il contratto e' in {c.currency}")
         qualified = self.ib.qualifyContracts(c)
-        if not qualified:
-            raise ValueError(f"contratto IBKR non trovato: {instrument}")
+        if not qualified or qualified[0] is None:     # ib_async restituisce [None] se il contratto e' ambiguo
+            raise NotSent(f"contratto IBKR non trovato o ambiguo: {instrument}")
         c = qualified[0]
+        tick, step, min_size = None, None, None
+        try:
+            det = self.ib.reqContractDetails(c)
+            if det:
+                tick = float(det[0].minTick or 0) or None
+                step = float(det[0].sizeIncrement or 0) or None
+                min_size = float(det[0].minSize or 0) or None
+        except Exception:
+            pass
+        q = round_qty(kind, qty)
+        if step and step > 0:
+            q = round(math.floor(q / step + 1e-9) * step, 10)
+        if q <= 0 or (min_size and q < min_size):
+            return price, 0.0, 0.0
         wait = PACING_S - (time.monotonic() - self._last)
         if wait > 0:
             self.ib.sleep(wait)
-        o = LimitOrder(side, q, limit_price(side, price, kind), tif="IOC" if kind == "crypto" else "DAY",
+        o = LimitOrder(side, q, limit_price(side, price, kind, tick), tif="IOC" if kind == "crypto" else "DAY",
                        orderRef=ref, account=self.ep.account)
         trade = self.ib.placeOrder(c, o)
         self._last = time.monotonic()
-        t0 = time.monotonic()
-        while trade.orderStatus.status not in ("Filled", "Cancelled", "ApiCancelled", "Inactive") \
-                and time.monotonic() - t0 < FILL_TIMEOUT_S:
-            self.ib.sleep(0.5)
-        if trade.orderStatus.status not in ("Filled", "Cancelled", "ApiCancelled", "Inactive"):
-            self.ib.cancelOrder(trade.order)          # niente ordini appesi: il residuo si annulla
-            self.ib.sleep(1.0)
-        filled = sum(float(f.execution.shares) for f in trade.fills)
-        if filled <= 0:
-            return price, 0.0, 0.0
-        avg = sum(float(f.execution.shares) * float(f.execution.price) for f in trade.fills) / filled
-        fee = sum(float(getattr(f.commissionReport, "commission", 0) or 0) for f in trade.fills)
-        if fee > 1e9:                                 # IBKR usa un valore enorme per "commissione non ancora nota"
-            fee = 0.0
-        return avg, fee, filled
+        self._finish(trade, ref)
+        avg, fee, filled = self._totals(ref)
+        return (avg, fee, filled) if filled > 0 else (price, 0.0, 0.0)
 
     def cancel_open(self) -> int:
         n = 0
@@ -227,6 +331,7 @@ class IBKRPaperBroker:
         out = {}
         for p in self.ib.positions(self.ep.account):
             k = p.contract.symbol if p.contract.secType == "CRYPTO" else (p.contract.localSymbol or p.contract.symbol)
+            k = k.replace(" ", "-")                    # BRK B (IBKR) = BRK-B (registro)
             out[k] = out.get(k, 0.0) + float(p.position)
         return out
 

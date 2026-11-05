@@ -1,5 +1,5 @@
 # GERVA Capital sul server — solo PAPER.
-#   docker compose -f deploy/docker-compose.yml --env-file deploy/server.env up -d --build
+#   docker compose -f deploy/docker-compose.yml --env-file deploy/server.env up -d --build   (oppure deploy/update.sh)
 # Il conto dei pod (secondo conto paper) si accende con:  --profile pods-ibkr
 #
 # Rete:
@@ -9,6 +9,8 @@
 #   ibgw-firm    IB Gateway del SECONDO conto paper (solo pod). Profilo pods-ibkr.
 #   heartbeat    battito della societa' (agenti, rischio, osservazione IBKR in sola lettura).
 #   portal       portale: pubblicato SOLO su 127.0.0.1:8765 del server -> tunnel SSH; password obbligatoria.
+
+name: gerva                               # volume = gerva_firmdata (lo usa backup.sh)
 
 x-hardening: &hardening
   read_only: true
@@ -25,6 +27,7 @@ x-firm-env: &firm-env
   GERVA_AGENTS: /data/var/agents
   GERVA_RESEARCH: /data/research
   GERVA_RISK_FILE: /data/var/risk_limits.yaml
+  GERVA_KILL_FILE: /data/var/KILL
   GERVA_Q_PATH: /gervaq
 
 services:

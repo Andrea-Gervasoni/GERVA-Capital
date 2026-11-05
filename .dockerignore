@@ -8,3 +8,4 @@ docs/FIRM_BRIEF.md
 **/__pycache__
 .pytest_cache
 KILL
+deploy/.wheels/

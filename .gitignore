@@ -19,3 +19,6 @@ docs/FIRM_BRIEF.md
 # segreti del server (file 600, solo sul server)
 secrets/
 deploy/.wheels/
+
+# le patch di GERVA-Q contengono righe del suo codice privato: restano solo in locale (DEPLOY.md §3)
+research/releases/*/*.patch
