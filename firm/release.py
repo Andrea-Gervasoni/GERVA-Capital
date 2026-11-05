@@ -88,12 +88,12 @@ def pending() -> list[dict]:
 
 def request_permission(rel: dict):
     return mailbox.big_request(
-        5, f"Rilascio GERVA-Q {rel['id']}: applicare le correzioni dell'audit?",
-        "Le patch modificano file nella cartella di GERVA-Q (fuori da questo progetto). Correggono il DSR della v3 "
-        "calcolato su Sharpe inventati (R1), la cache dei prezzi mai riusata (R2), l'approvazione live crypto statica (R5) "
-        "e i pesi non scalati del primo anno di S1 (R9). Dettagli in research/releases/" + rel["id"] + "/RELEASE.md.",
+        5, f"Rilascio GERVA-Q {rel['id']}: applicare le patch?",
+        "Le patch modificano file nella cartella di GERVA-Q (fuori da questo progetto). Le " + str(len(rel.get("patches", []))) +
+        " patch sono descritte una per una in research/releases/" + rel["id"] + "/RELEASE.md: quali correggono l'audit senza "
+        "toccare i segnali e quali CAMBIANO gli ordini (per esempio la quota di lungo periodo).",
         ["Applicare domenica nella finestra di rilascio", "Non applicare: restano proposte"],
-        "Applicare: nessuna cambia i segnali correnti di trading; R1 rende il DSR verificabile, R5 chiude un varco per i soldi veri",
+        "Leggere RELEASE.md: applicare le correzioni dell'audit; la parte che cambia gli ordini solo se la vuoi davvero",
         "Nessuna modifica a GERVA-Q: le correzioni restano proposte documentate",
         dedup_key=f"release-{rel['id']}")
 

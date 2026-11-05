@@ -46,3 +46,31 @@ def test_diff_applier_is_strict(tmp_path):
     assert (tmp_path / "a.py").read_text() == "x = 1\ny = 20\nz = 3\n"
     with pytest.raises(ValueError):                        # il contesto non coincide piu': niente scrittura
         apply_unified_diff(patch, str(tmp_path))
+
+
+@pytest.mark.skipif(not os.path.isdir(SNAP), reason="serve lo snapshot di GERVA-Q")
+def test_release_patches_apply_in_sequence_and_longterm_matches_config(tmp_path):
+    """Le patch del rilascio si applicano in ordine su una copia di GERVA-Q; la quota di lungo periodo di config.py
+    coincide con config/longterm.yaml della societa' (stessi titoli, stesso 3% + 2%)."""
+    import glob
+    import shutil
+    import subprocess
+    import sys
+    import yaml
+    from firm.release import apply_unified_diff
+    rel = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "research", "releases", "2026-11-08")
+    patches = sorted(glob.glob(os.path.join(rel, "*.patch")))
+    if len(patches) < 2:
+        pytest.skip("patch del rilascio non presenti (sono fuori da git)")
+    dst = tmp_path / "gq"
+    shutil.copytree(SNAP, dst)
+    for p in patches:
+        apply_unified_diff(open(p).read(), str(dst))
+    out = subprocess.run([sys.executable, "-c", "import config as C, json; print(json.dumps(C.LONGTERM))"],
+                         cwd=dst, capture_output=True, text=True)
+    lt = __import__("json").loads(out.stdout)
+    cfg = yaml.safe_load(open(os.path.join(os.path.dirname(rel), "..", "..", "config", "longterm.yaml")))
+    core, expl = set(cfg["titoli"]), set(cfg["esplorativo"]["titoli"])
+    assert set(lt) == core | expl
+    assert sum(lt[s] for s in core) == pytest.approx(cfg["quota_nav"])
+    assert sum(lt[s] for s in expl) == pytest.approx(cfg["esplorativo"]["quota_nav"])

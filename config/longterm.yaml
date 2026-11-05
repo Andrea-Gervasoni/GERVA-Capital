@@ -2,7 +2,7 @@
 # Il paniere segue una REGOLA, non un pronostico: le maggiori aziende quotate in ogni anello della catena
 # (progettazione chip, fabbrica, macchine, cloud e modelli), a pesi uguali. Nessuno, nemmeno chi guida queste
 # aziende, sa quali cresceranno di piu': per questo si diversifica lungo la catena invece di scegliere un nome.
-quota_nav: 0.05              # 5% del valore del conto (letto da IBKR)
+quota_nav: 0.03              # NUCLEO: 3% del conto (letto da IBKR); con l'esplorativo il totale e' il 5%
 ribilanciamento: annuale     # piu' una banda: si ritocca un titolo solo se esce da [0,5x ; 2x] del suo peso
 banda: [0.5, 2.0]
 titoli:
@@ -15,3 +15,19 @@ titoli:
   GOOGL: {anello: "cloud, modelli e chip propri", borsa: NASDAQ, valuta: USD}
   AMZN: {anello: "cloud e chip propri", borsa: NASDAQ, valuta: USD}
   META: {anello: "modelli e centri dati", borsa: NASDAQ, valuta: USD}
+
+# ESPLORATIVO 2% (decisione di Andrea del 5/11/2026): una azienda per ogni collo di bottiglia, pesi uguali.
+# Stesso elenco di config.py di GERVA-Q (patch v3.2): se cambia qui, va cambiato anche li' con un rilascio.
+esplorativo:
+  quota_nav: 0.02
+  titoli:
+    COHR: {anello: "laser e moduli ottici"}
+    GLW:  {anello: "fibra ottica e vetro"}
+    CIEN: {anello: "reti ottiche tra data center"}
+    CRDO: {anello: "cavi attivi e chip di connessione"}
+    ALAB: {anello: "connessioni dentro i server"}
+    MU:   {anello: "memoria veloce (HBM)"}
+    VRT:  {anello: "energia e raffreddamento dei data center"}
+    BE:   {anello: "energia prodotta sul posto"}
+    GEV:  {anello: "turbine e rete elettrica"}
+    NBIS: {anello: "cloud dedicato all'AI"}

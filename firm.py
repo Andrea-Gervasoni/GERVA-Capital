@@ -75,14 +75,20 @@ def _research_longterm():
     from firm import paths, db, gateway
     from quantlab import longterm as LT, gervaq4 as G4
     cfg = yaml.safe_load(open(os.path.join(paths.CONFIG, "longterm.yaml")))
-    names = list(cfg["titoli"])
+    core = list(cfg["titoli"])
+    ex = cfg.get("esplorativo", {"quota_nav": 0.0, "titoli": {}})
+    expl = list(ex["titoli"])
+    names = core + expl
+    ring = {**{k: v["anello"] for k, v in cfg["titoli"].items()}, **{k: v["anello"] for k, v in ex["titoli"].items()}}
     import yfinance as yf
     raw = yf.download(names + ["EURUSD=X", "SPY"], start="2015-01-01", auto_adjust=True, progress=False,
                       group_by="column")["Close"].ffill(limit=5)
     nav = gateway.pod_zero_nav() if gateway.capital_source()["fonte"] == "IBKR" else 984_000.0
     src = "letto da IBKR" if gateway.capital_source()["fonte"] == "IBKR" else "984.000 EUR indicati da Andrea (IBKR non collegato qui)"
-    quota = float(cfg["quota_nav"])
-    r = LT.basket_returns(raw, names)
+    q_core, q_expl = float(cfg["quota_nav"]), float(ex["quota_nav"])
+    quota = q_core + q_expl
+    rc = LT.basket_returns(raw, core)
+    r = (q_core * rc + q_expl * LT.basket_returns(raw, expl)) / quota if expl else rc
     rep = LT.risk_report(r, nav * quota)
     spy = raw["SPY"].pct_change()
     corr_spy = LT.correlation_with(r, spy)
@@ -93,15 +99,19 @@ def _research_longterm():
         eq = G4.run_variant(dict(close=close, stocks=[x for x in G4.STOCKS if x in close]), G4.VARIANTS[0])
     corr_v3 = LT.correlation_with(r, eq) if eq is not None else float("nan")
     last = raw.iloc[-1]
-    pl = LT.plan(nav, quota, {k: float(last[k]) for k in names}, float(last["EURUSD=X"]))
+    fx = float(last["EURUSD=X"])
+    pl = pd.concat([LT.plan(nav, q_core, {k: float(last[k]) for k in core}, fx)] +
+                   ([LT.plan(nav, q_expl, {k: float(last[k]) for k in expl}, fx)] if expl else []))
     lines = [f"# Quota di lungo periodo: infrastruttura AI ({db.today()})", "",
-             f"Capitale: {nav:,.0f} EUR ({src}); quota {quota:.0%} = **{nav * quota:,.0f} EUR**, pesi uguali su {len(names)} titoli.", "",
+             f"Capitale: {nav:,.0f} EUR ({src}); quota {quota:.0%} = **{nav * quota:,.0f} EUR**: nucleo {q_core:.0%} su "
+             f"{len(core)} titoli + esplorativo {q_expl:.0%} su {len(expl)}, pesi uguali dentro ogni parte. "
+             "Nel conto entra con il rilascio v3.2 di GERVA-Q, in 3 rate mensili.", "",
              "## Piano di acquisto (azioni intere, prezzi dell'ultima chiusura)", "",
              "| Titolo | Anello della catena | Prezzo USD | Azioni | EUR investiti |", "|---|---|---|---|---|"]
     for k, x in pl.iterrows():
-        lines.append(f"| {k} | {cfg['titoli'][k]['anello']} | {x.prezzo_usd:,.2f} | {int(x.azioni)} | {x.euro_investiti:,.0f} |")
+        lines.append(f"| {k} | {ring[k]} | {x.prezzo_usd:,.2f} | {int(x.azioni)} | {x.euro_investiti:,.0f} |")
     lines += ["", f"Totale investito: {pl.euro_investiti.sum():,.0f} EUR (il resto per arrotondamento resta in liquidita').", "",
-              "## Quanto puo' far male (dal 2015, pesi uguali ribilanciati ogni anno)", "",
+              "## Quanto puo' far male (dal 2015, pesi uguali ribilanciati ogni anno; alcuni titoli quotati da meno tempo)", "",
               f"- volatilita' annua: {rep['vol']:.0%}",
               f"- anno peggiore: {rep['anno_peggiore']:.0%} ({rep['anno_peggiore_quale']}) = **{rep['anno_peggiore_eur']:,.0f} EUR** sulla quota",
               f"- caduta massima dal punto piu' alto: {rep['caduta_massima']:.0%} = **{rep['caduta_massima_eur']:,.0f} EUR** sulla quota",
