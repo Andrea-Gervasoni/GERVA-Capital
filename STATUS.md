@@ -101,3 +101,12 @@ Test: **127** (126 nel container, uno richiede lo snapshot di GERVA-Q).
 - Login reale di IB Gateway, 2FA, nomi delle linee UCITS su IBKR, regole crypto del conto paper.
 - Un feed di prezzi reale per i pod: senza, sul server i pod non inviano ordini (i prezzi li scrive solo il demo).
 - `git push`: il permesso è stato negato in questa sessione; i commit sono pronti nel branch locale.
+
+## Materiale esterno del 5/11 (post, guide, video): valutato
+Dettagli, fonti e livelli di fiducia in `docs/research/fonti_esterne_2026-11.md`. In breve:
+- **Applicato:** `firm.py check-backtest` (`quantlab/luck.py`) per verificare quanto un risultato visto in giro possa
+  essere fortuna: DSR, MinTRL deflazionata, varianti necessarie per spiegarlo col caso, intervallo di Wilson e coerenza
+  della percentuale di vincite, soglia di pareggio, margine dopo i costi. 9 test sulle proprieta' matematiche.
+- **Ipotesi per la Ricerca:** H-ATT-1, attenzione e crypto, da registrare nel trial registry prima di qualsiasi test.
+- **Non adottati, con motivo:** TradingView via MCP, Vibe-Trading, Freqtrade, bot di memecoin Solana,
+  DeepSeek Super-Agent, Grok come secondo modello. OpenBB e Lean restano utili sul Mac, piu' avanti.

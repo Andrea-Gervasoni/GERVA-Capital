@@ -96,6 +96,18 @@ def cmd_observe(_):
         time.sleep(60 * every)
 
 
+def cmd_check_backtest(a):
+    """Verifica di un backtest visto altrove: quanto puo' essere fortuna (quantlab/luck.py)."""
+    from quantlab import luck
+    kw = {k: getattr(a, k) for k in ("sharpe_annual", "n_obs", "periods", "n_trials", "skew", "kurt", "wins", "trades",
+                                     "claimed_hit_rate", "payoff_ratio", "edge_per_trade", "cost_per_trade")
+          if getattr(a, k, None) is not None}
+    r = luck.check(**kw)
+    for line in r["giudizio"]:
+        print("- " + line)
+    print(json.dumps({k: v for k, v in r.items() if k != "giudizio"}, ensure_ascii=False, indent=1, default=str))
+
+
 def cmd_heartbeat(_):
     from firm import heartbeat
     print(json.dumps(heartbeat.beat(), ensure_ascii=False, indent=1, default=str))
@@ -209,11 +221,23 @@ def main():
     ap = argparse.ArgumentParser(description="GERVA Capital")
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name in ["init", "portal", "heartbeat", "run", "status", "verify", "demo", "release", "data", "research", "report",
-                 "set-password", "ibkr-check", "observe"]:
+                 "set-password", "ibkr-check", "observe", "check-backtest"]:
         sp = sub.add_parser(name)
         sp.add_argument("--demo", action="store_true", help="usa il database dimostrativo var/demo/")
         if name == "research":
             sp.add_argument("what", nargs="?", default="gervaq4")
+        if name == "check-backtest":
+            for flag, typ, h in [("--sharpe", float, "Sharpe annuo dichiarato"), ("--obs", int, "osservazioni (giorni, trade...)"),
+                                 ("--periods", int, "osservazioni per anno (252 giorni, 365 crypto...)"),
+                                 ("--trials", int, "varianti provate (se non lo dicono, prova 10, 100, 1000)"),
+                                 ("--skew", float, "asimmetria"), ("--kurt", float, "curtosi (3 = normale)"),
+                                 ("--wins", int, "trade vinti"), ("--trades", int, "trade totali"),
+                                 ("--hit-rate", float, "percentuale di vincite dichiarata (0-1)"),
+                                 ("--payoff", float, "guadagno medio / perdita media"),
+                                 ("--edge", float, "margine medio per trade (frazione)"), ("--cost", float, "costo per trade (frazione)")]:
+                dest = {"--sharpe": "sharpe_annual", "--obs": "n_obs", "--trials": "n_trials", "--hit-rate": "claimed_hit_rate",
+                        "--payoff": "payoff_ratio", "--edge": "edge_per_trade", "--cost": "cost_per_trade"}.get(flag, flag[2:])
+                sp.add_argument(flag, type=typ, dest=dest, help=h)
         if name == "release":
             sp.add_argument("--apply", metavar="ID", help="applica il rilascio (solo nella finestra, con la scelta di Andrea)")
     a = ap.parse_args()
@@ -232,7 +256,7 @@ def main():
             shutil.copy(os.path.join(ROOT, "config", "risk_limits.yaml"), demo_risk)
         os.environ["GERVA_RISK_FILE"] = demo_risk
         os.environ["GERVA_KILL_FILE"] = os.path.join(ROOT, "var", "demo", "KILL")
-    if a.cmd not in ("init", "set-password"):            # set-password non tocca stato (e gira su immagini read-only)
+    if a.cmd not in ("init", "set-password", "check-backtest"):            # set-password non tocca stato (e gira su immagini read-only)
         from firm import db, paths
         if not os.path.exists(paths.DB_PATH):
             cmd_init(a)

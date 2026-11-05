@@ -54,7 +54,8 @@ ssh -N -L 8765:127.0.0.1:8765 gerva
 | `firm.py observe` | (server) osservatore in sola lettura del conto della sfida |
 | `firm.py ibkr-check` | prova la connessione IBKR in sola lettura (conto mascherato) |
 | `firm.py set-password` | hash della password del portale per il server |
-| `python -m pytest` | 127 test |
+| `firm.py check-backtest --sharpe S --obs N --trials K` | quanto di un backtest visto altrove puo' essere fortuna (anche `--trades`, `--hit-rate`, `--payoff`) |
+| `python -m pytest` | 136 test |
 
 ## Il portale
 
