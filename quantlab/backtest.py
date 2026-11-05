@@ -60,6 +60,10 @@ def run(W: pd.DataFrame, close: pd.DataFrame, open_: pd.DataFrame | None = None,
         if mask[t - 1]:
             move = (np.abs(tgt - w) > band) | ((tgt == 0) & (w != 0))
             new_target = np.where(move, tgt, w)
+            # la banda non deve creare leva: se i pesi rimasti fermi (cresciuti per deriva) piu' quelli nuovi
+            # superano il capitale, mancherebbe la liquidita' per comprare -> quel giorno si va tutti all'obiettivo
+            if np.abs(new_target).sum() > max(1.0, np.abs(tgt).sum()) + 1e-12:
+                new_target = tgt.copy()
         else:
             new_target = w.copy()
         if O is not None:

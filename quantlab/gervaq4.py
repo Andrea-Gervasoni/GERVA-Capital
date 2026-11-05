@@ -154,19 +154,61 @@ def _crisis(w, v, rho=0.8):
     return float(np.sqrt(w @ (np.outer(v, v) * C) @ w))
 
 
-def run_variant(data: dict, v: Variant, cost: float = 0.0008) -> pd.Series:
+def scale_exposure(W: pd.DataFrame, k: float) -> pd.DataFrame:
+    """Moltiplica i pesi per k usando il capitale inattivo, MAI oltre il 100% lordo (niente leva):
+    giorno per giorno il fattore effettivo e' min(k, 1 / lorda)."""
+    gross = W.abs().sum(axis=1)
+    f = np.minimum(k, np.where(gross > 0, 1.0 / gross.where(gross > 0, 1.0), k))
+    return W.mul(f, axis=0)
+
+
+def run_variant(data: dict, v: Variant, cost: float = 0.0008, scale: float = 1.0, return_result: bool = False):
     close = data["close"]
     sl = sleeves(close, v, data.get("stocks"))
     W = combine(close, sl, v.comb, cost)
     if v.vt:
         W = vol_target(close, W, cost=cost)
+    if scale != 1.0:
+        W = scale_exposure(W, scale)
     res = BT.run(W, close[W.columns], cost_rate=cost, band=v.band)
     r = res.returns
     if v.cash:
         rate = (close["^IRX"] / 100).ffill() if "^IRX" in close else pd.Series(data.get("cash_rate", 0.02), index=close.index)
         idle = (1 - res.daily["gross"]).clip(lower=0)
         r = r + idle * (rate - 0.001).clip(lower=0) / TD
-    return r
+    return (r, res) if return_result else r
+
+
+def risk_ladder(data: dict, v: Variant, scales=(1.0, 1.25, 1.5, 2.0), capital: float = 100_000.0,
+                start_skip: int = 300) -> pd.DataFrame:
+    """Piu' profitto senza leva = usare il capitale che il motore lascia fermo. Non migliora la QUALITA'
+    (lo Sharpe resta circa uguale): sposta guadagni e perdite insieme. La scelta del livello e' di Andrea."""
+    rows = {}
+    for k in scales:
+        r, res = run_variant(data, v, scale=k, return_result=True)
+        r = r.iloc[start_skip:]
+        p = QS.performance(r.values)
+        yearly = (1 + r).groupby(r.index.year).prod() - 1
+        rows[f"x{k:g}"] = dict(lorda_media=float(res.daily["gross"].iloc[start_skip:].mean()), Sharpe=p["Sharpe"],
+                               CAGR=p["CAGR"], Vol=p["Vol"], MaxDD=p["MaxDD"], anno_peggiore=float(yearly.min()),
+                               eur_anno=p["CAGR"] * capital, eur_10_anni=capital * ((1 + p["CAGR"]) ** 10 - 1))
+    return pd.DataFrame(rows).T
+
+
+def ladder_markdown(lad: pd.DataFrame, name: str, max_dd: float = 0.20) -> str:
+    lines = [f"## Scala del rischio ({name}): piu' esposizione senza leva", "",
+             "Lo Sharpe resta circa uguale: cambia quanto si guadagna E quanto si perde. "
+             "Il livello lo sceglie Andrea (grande richiesta: limite di rischio).", "",
+             "| Livello | Esposizione media | Sharpe | CAGR | Vol | MaxDD | Anno peggiore | EUR/anno su 100k | Guadagno in 10 anni | Sfida |",
+             "|---|---|---|---|---|---|---|---|---|---|"]
+    for k, r in lad.iterrows():
+        # REGOLE_SFIDA §10: squalifica oltre il 20% di drawdown; §13: anche per i soldi veri serve DD <= 20%
+        ok = "ammesso" if r.MaxDD > -max_dd else f"SQUALIFICA (DD oltre {max_dd:.0%})"
+        lines.append(f"| {k} | {r.lorda_media:.0%} | {r.Sharpe:.2f} | {r.CAGR:.1%} | {r.Vol:.1%} | {r.MaxDD:.1%} | "
+                     f"{r.anno_peggiore:.1%} | {r.eur_anno:,.0f} | {r.eur_10_anni:,.0f} | {ok} |")
+    lines += ["", "Nella sfida conta lo Sharpe (regola 11): piu' esposizione non aiuta a vincerla. Serve per i soldi veri, "
+              "dopo i cancelli 13-15, e solo fino al limite di drawdown."]
+    return "\n".join(lines)
 
 
 @dataclass

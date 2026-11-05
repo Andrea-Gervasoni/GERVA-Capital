@@ -44,3 +44,22 @@ def test_paired_bootstrap_detects_a_real_edge():
     b = rng.normal(0.0003, 0.01, 2000)
     assert G4.paired_sharpe_prob(b + 0.0004, b) > 0.95
     assert 0.2 < G4.paired_sharpe_prob(b + rng.normal(0, 0.002, 2000), b) < 0.8
+
+
+def test_exposure_scaling_never_levers():
+    d = synth(2, years=4)
+    _, r1 = G4.run_variant(d, G4.Variant("b"), return_result=True)
+    _, r2 = G4.run_variant(d, G4.Variant("b"), scale=2.0, return_result=True)
+    assert r2.daily["gross"].max() <= 1.0 + 1e-6                       # mai oltre il 100%: niente leva
+    assert r2.daily["gross"].mean() >= r1.daily["gross"].mean() - 1e-9
+
+
+def test_risk_ladder_moves_profit_and_loss_together():
+    d = synth(3, years=6)
+    lad = G4.risk_ladder(d, G4.Variant("b"), scales=(1.0, 1.5))
+    lo, hi = lad.loc["x1"], lad.loc["x1.5"]
+    assert hi.lorda_media > lo.lorda_media
+    if lo.lorda_media < 0.66:                                           # c'era capitale fermo da usare
+        assert abs(hi.CAGR) > abs(lo.CAGR) and hi.MaxDD <= lo.MaxDD + 1e-9     # piu' guadagno, perdite piu' profonde
+    assert abs(hi.Sharpe - lo.Sharpe) < 0.35                            # la qualita' non cambia molto
+    assert "Scala del rischio" in G4.ladder_markdown(lad, "b")

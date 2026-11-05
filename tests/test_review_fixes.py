@@ -155,3 +155,16 @@ def test_password_hash_survives_compose_interpolation():
     h = hash_password("una-frase-lunga-e-sicura")
     assert "$" not in h and check_password("una-frase-lunga-e-sicura", h) and not check_password("altra", h)
     assert check_password("una-frase-lunga-e-sicura", h.replace(":", "$"))
+
+
+def test_band_rebalancing_never_creates_leverage():
+    """Banda di non intervento con obiettivo al 100%: i pesi fermi cresciuti per deriva non devono sommarsi a quelli
+    nuovi oltre il capitale (sarebbe comprare senza liquidita')."""
+    from quantlab import backtest as BT
+    rng = np.random.default_rng(5)
+    idx = pd.bdate_range("2020-01-01", periods=500)
+    close = pd.DataFrame(np.exp(np.cumsum(rng.normal(0, 0.02, (500, 4)), axis=0)) * 100, index=idx, columns=list("ABCD"))
+    W = pd.DataFrame(rng.dirichlet(np.ones(4), 500), index=idx, columns=list("ABCD"))   # ogni giorno somma 1
+    res = BT.run(W, close, band=0.05)
+    assert res.daily["gross"].max() <= 1 + 1e-9
+    assert res.weights.sum(axis=1).max() <= 1 + 1e-9

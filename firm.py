@@ -198,6 +198,9 @@ def cmd_research(a):
     out = os.path.join(paths.RESEARCH, "gervaq4")
     os.makedirs(out, exist_ok=True)
     md = res.to_markdown() + f"\n\nImpronta dei dati: {fp}\n"
+    chosen = next(v for v in G4.VARIANTS if v.name == res.scelta)
+    md += "\n" + G4.ladder_markdown(G4.risk_ladder(dict(close=close, stocks=[s for s in G4.STOCKS if s in close]), chosen),
+                                    chosen.name) + "\n"
     open(os.path.join(out, f"{db.today()}.md"), "w").write(md)
     events.publish("research.gervaq4", "head_research", dict(scelta=res.scelta, motivo=res.motivo, pbo=res.pbo["pbo"]))
     print(md)
