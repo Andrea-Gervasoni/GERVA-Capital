@@ -30,7 +30,7 @@ import yaml
 from . import audit, db, events, paths
 
 PLAN_NAME = "longterm_plan.json"
-START = dt.date(2026, 11, 9)          # come LONGTERM_START in config.py di GERVA-Q (patch v3.2)
+START = dt.date(2026, 11, 6)          # come LONGTERM_START in config.py di GERVA-Q (patch v3.2)
 TRANCHES = 3
 MIN_DOLLAR_VOLUME = 20e6              # mediana a 20 giorni degli scambi in dollari
 MAX_VOL = 1.50                        # volatilita' annua a 60 giorni

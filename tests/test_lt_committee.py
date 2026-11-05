@@ -20,14 +20,14 @@ def _market(days=300, seed=0, crash=None):
 
 def test_calendar_and_checks(firm_env):
     from firm import lt_committee as LC
-    assert LC.calendar_fraction(dt.date(2026, 11, 8)) == 0
-    assert LC.calendar_fraction(dt.date(2026, 12, 9)) == 2 / 3
+    assert LC.calendar_fraction(dt.date(2026, 11, 5)) == 0
+    assert LC.calendar_fraction(dt.date(2026, 12, 6)) == 2 / 3
     close, vol = _market(crash="NBIS")
-    p = LC.evaluate(close, vol, today=dt.date(2026, 11, 9))
+    p = LC.evaluate(close, vol, today=dt.date(2026, 11, 6))
     assert p["frazioni"]["NVDA"] == 1 / 3 and p["frazioni"]["NBIS"] == 0.0
     assert "crollo" in p["rinvii"]["NBIS"][0]
     saved = json.load(open(LC.plan_path()))
-    assert saved["frazioni"]["NVDA"] == 1 / 3 and saved["data"] == "2026-11-09"
+    assert saved["frazioni"]["NVDA"] == 1 / 3 and saved["data"] == "2026-11-06"
 
 
 def test_low_liquidity_and_suspension_postpone(firm_env, monkeypatch):
@@ -36,7 +36,7 @@ def test_low_liquidity_and_suspension_postpone(firm_env, monkeypatch):
     vol["CRDO"] = 10.0                                         # scambi irrisori
     cfg = LC.config(); cfg["sospesi"] = ["GEV"]
     monkeypatch.setattr(LC, "config", lambda: cfg)
-    p = LC.evaluate(close, vol, today=dt.date(2026, 11, 9))
+    p = LC.evaluate(close, vol, today=dt.date(2026, 11, 6))
     assert p["frazioni"]["CRDO"] == 0 and p["frazioni"]["GEV"] == 0
     assert any("sospeso" in w for w in p["rinvii"]["GEV"])
 
@@ -45,8 +45,8 @@ def test_agents_can_only_postpone(firm_env, monkeypatch):
     from firm import lt_committee as LC
     close, vol = _market(seed=2)
     monkeypatch.setattr(LC, "_agents_vote", lambda cand, data: dict(tenuta=True, decisione="rinvia", riunione=7))
-    p = LC.evaluate(close, vol, today=dt.date(2026, 11, 9))
+    p = LC.evaluate(close, vol, today=dt.date(2026, 11, 6))
     assert all(f == 0 for f in p["frazioni"].values())         # la riunione ha rinviato tutta la rata
     monkeypatch.setattr(LC, "_agents_vote", lambda cand, data: dict(tenuta=True, decisione="compra", riunione=8))
-    p2 = LC.evaluate(close, vol, today=dt.date(2026, 11, 9))
+    p2 = LC.evaluate(close, vol, today=dt.date(2026, 11, 6))
     assert max(p2["frazioni"].values()) == 1 / 3               # mai oltre il calendario
