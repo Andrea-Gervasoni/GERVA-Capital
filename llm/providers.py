@@ -38,6 +38,24 @@ def _cfg() -> dict:
     return yaml.safe_load(open(os.path.join(paths.CONFIG, "models.yaml")))
 
 
+# Parole dello schema che l'API di Anthropic rifiuta negli output strutturati (limiti numerici, di lunghezza, di
+# numero di elementi). Si tolgono SOLO nella richiesta all'API: la validazione locale (runtime.py) usa lo schema
+# completo, quindi un valore fuori limite viene comunque scartato e richiesto di nuovo.
+_API_UNSUPPORTED = {"minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "multipleOf",
+                    "minLength", "maxLength", "maxItems", "uniqueItems"}
+
+
+def api_schema(node):
+    if isinstance(node, dict):
+        out = {k: api_schema(v) for k, v in node.items() if k not in _API_UNSUPPORTED}
+        if isinstance(out.get("minItems"), int) and out["minItems"] > 1:
+            out.pop("minItems")
+        return out
+    if isinstance(node, list):
+        return [api_schema(x) for x in node]
+    return node
+
+
 class AnthropicProvider:
     name = "anthropic"
 
@@ -52,7 +70,7 @@ class AnthropicProvider:
             # prompt stabile in testa e in cache (guida §6): i dati variabili stanno nel messaggio utente
             system=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}],
             messages=[{"role": "user", "content": user}],
-            output_config={"effort": effort, "format": {"type": "json_schema", "schema": schema}},
+            output_config={"effort": effort, "format": {"type": "json_schema", "schema": api_schema(schema)}},
         )
         if model.startswith(("claude-opus-5-5", "claude-sonnet-5-5")):
             # fallback lato server sui rifiuti dei classificatori di sicurezza (opt-in consigliato)
