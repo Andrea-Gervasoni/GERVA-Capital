@@ -194,3 +194,16 @@ def test_capital_is_read_from_ibkr_once_and_jumps_are_flagged(firm_env, monkeypa
     db.ex("UPDATE nav_marks SET day='2026-01-01' WHERE pod='pod_zero'")
     ibkr.observe_challenge(factory=lambda: IB(1_500_000.0))                  # balzo: versamento o reset?
     assert any("versamento" in e["payload"] for e in db.q("SELECT payload FROM events WHERE kind='risk.alert'"))
+
+
+def test_rerun_of_same_variant_counts_once_in_dsr_variance(firm_env):
+    from firm import trials
+    rng = np.random.default_rng(9)
+    for _ in range(2):                                     # il banco rilanciato: stessa variante, due righe
+        t = trials.register("head_research", "x:v", "famx", {"a": 1}, "Stessa variante rilanciata: deve contare una volta.")
+        trials.record_result(t, rng.normal(0.001, 0.01, 800))
+    c = trials.counts()
+    t2 = trials.register("head_research", "x:w", "famx", {"a": 2}, "Variante diversa: questa invece conta come nuova prova.")
+    trials.record_result(t2, rng.normal(0.0, 0.01, 800))
+    c2 = trials.counts()
+    assert c2["n_with_sharpe"] - c["n_with_sharpe"] == 1 and c2["n_trials"] - c["n_trials"] == 1

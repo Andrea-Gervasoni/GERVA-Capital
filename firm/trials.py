@@ -66,7 +66,12 @@ def counts() -> dict:
     """Le prove di COLLAUDO su dati sintetici (che verificano la pipeline, non una strategia)
     restano nel registro ma non entrano nel contatore del DSR."""
     n_distinct = db.one(f"SELECT COUNT(DISTINCT params_hash) n FROM trials WHERE {SYNTH}")["n"]
-    srs = [r["sharpe_daily"] for r in db.q(f"SELECT sharpe_daily FROM trials WHERE sharpe_daily IS NOT NULL AND {SYNTH}")]
+    # una ripetizione della STESSA variante (stesso hash dei parametri, es. il banco rilanciato su dati piu' lunghi)
+    # conta una volta anche nella varianza degli Sharpe: vale il risultato piu' recente
+    last: dict = {}
+    for r in db.q(f"SELECT params_hash, sharpe_daily FROM trials WHERE sharpe_daily IS NOT NULL AND {SYNTH} ORDER BY rowid"):
+        last[r["params_hash"]] = r["sharpe_daily"]
+    srs = list(last.values())
     return dict(n_trials=n_distinct, n_with_sharpe=len(srs),
                 var_sr=float(np.var(srs, ddof=1)) if len(srs) > 1 else 0.0)
 

@@ -140,3 +140,26 @@ Non più sfida: crescita massima del capitale, poi soldi veri dei genitori (dett
 - Capitale letto da IBKR (prima osservazione, scritta una volta); nel portale il valore del conto dice "prova" finché
   IBKR non è collegato. Corretto il doppio conteggio tra conto IBKR e capitale virtuale dei pod.
 - Piano v4 approvato in modo condizionato: ombra fino a metà gennaio, poi patch nella finestra della domenica.
+
+## 5/11/2026: zona ricerca crypto e quota di lungo periodo (richiesta di Andrea)
+**Crypto** (`firm.py research crypto`, report `research/crypto/2026-11-05.md`): la sleeve crypto della v3 (meta' del
+conto) riespressa su candele giornaliere Yahoo dal 2017, contro 6 varianti. **Nessuna supera i cancelli** (PBO 0,87:
+scegliere la migliore equivale quasi a tirare a sorte), quindi si tiene la v3. L'unico miglioramento meccanico, e non
+statistico, e' far rendere il tasso a breve alla parte ferma della sleeve (+2,2 punti l'anno nel backtest, P = 1,00):
+e' un interesse, non una scommessa, e si decide come scelta di Andrea, non forzando i cancelli. Limiti: il breakout a
+4 ore della v3 e' approssimato con 9/3 giorni; i parametri della v3 sono stati scelti sul periodo 2018-2022, quindi
+il backtest dal 2017 e' in gran parte dentro il campione (CAGR 54% e Sharpe 1,67 NON sono aspettative).
+
+**Lungo periodo** (`firm.py research lungo`, `config/longterm.yaml`, report `research/lungo/2026-11-05.md`): 5% del conto
+in 9 aziende della catena dell'infrastruttura AI (NVDA, AVGO, AMD, TSM, ASML, MSFT, GOOGL, AMZN, META), a pesi uguali,
+ribilanciamento annuale, nessuno stop-loss. Su 984.000 EUR: circa 49.200 EUR, circa 5.400 a titolo. Quanto puo' far male
+(dal 2015): anno peggiore -41% (2022, circa -20.000 EUR sulla quota), caduta massima -50% (circa -24.800 EUR).
+Il rendimento passato non e' un argomento: i titoli sono scelti oggi sapendo che hanno vinto. **Per entrare nel conto
+va inserita nell'obiettivo di GERVA-Q** (live.py vende cio' che non e' nel suo target): rilascio della domenica.
+
+**Prezzo del testare tanto (dichiarato):** il registro delle prove e' unico. Con le prove crypto, che hanno Sharpe
+molto piu' alti, la soglia della fortuna sale per tutti e il DSR della v4 azionaria passa da 0,996 a **0,83** (v3: da
+0,97 a 0,59). Mescolare classi di attivi e' un uso troppo severo del metodo, ma la regola non si cambia dopo aver visto
+il numero: si tiene la piu' severa, e il portafoglio ombra resta il test decisivo. Prossimo passo metodologico:
+stimare il numero EFFETTIVO di prove indipendenti raggruppandole (cluster alla Lopez de Prado), deciso prima di
+ricalcolare. Corretto anche il conteggio: rilanciare il banco non duplica piu' gli Sharpe nella varianza.

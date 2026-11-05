@@ -57,8 +57,9 @@ ssh -N -L 8765:127.0.0.1:8765 gerva
 | `firm.py ibkr-check` | prova la connessione IBKR in sola lettura (conto mascherato) |
 | `firm.py set-password` | hash della password del portale per il server |
 | `firm.py check-backtest --sharpe S --obs N --trials K` | quanto di un backtest visto altrove puo' essere fortuna (anche `--trades`, `--hit-rate`, `--payoff`) |
+| `firm.py research crypto` · `research lungo` | zona ricerca crypto (sleeve della v3 contro 6 varianti) · piano e rischio della quota AI di lungo periodo |
 | `firm.py shadow` | portafoglio ombra: v4 contro v3 in avanti dal 5/11/2026 (lo aggiorna anche il battito ogni sera) |
-| `python -m pytest` | 142 test |
+| `python -m pytest` | 153 test |
 
 ## Il portale
 

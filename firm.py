@@ -68,6 +68,98 @@ def cmd_portal(a):
     uvicorn.run("portal.app:app", host=bind, port=port, log_level="warning", proxy_headers=False, server_header=False)
 
 
+def _research_longterm():
+    """python firm.py research lungo : piano della quota di lungo periodo (AI) e quanto puo' far male."""
+    import pandas as pd
+    import yaml
+    from firm import paths, db, gateway
+    from quantlab import longterm as LT, gervaq4 as G4
+    cfg = yaml.safe_load(open(os.path.join(paths.CONFIG, "longterm.yaml")))
+    names = list(cfg["titoli"])
+    import yfinance as yf
+    raw = yf.download(names + ["EURUSD=X", "SPY"], start="2015-01-01", auto_adjust=True, progress=False,
+                      group_by="column")["Close"].ffill(limit=5)
+    nav = gateway.pod_zero_nav() if gateway.capital_source()["fonte"] == "IBKR" else 984_000.0
+    src = "letto da IBKR" if gateway.capital_source()["fonte"] == "IBKR" else "984.000 EUR indicati da Andrea (IBKR non collegato qui)"
+    quota = float(cfg["quota_nav"])
+    r = LT.basket_returns(raw, names)
+    rep = LT.risk_report(r, nav * quota)
+    spy = raw["SPY"].pct_change()
+    corr_spy = LT.correlation_with(r, spy)
+    eq = None
+    gq = os.path.join(paths.VAR, "data", "gq4_close.pkl")
+    if os.path.exists(gq):
+        close = pd.read_pickle(gq)
+        eq = G4.run_variant(dict(close=close, stocks=[x for x in G4.STOCKS if x in close]), G4.VARIANTS[0])
+    corr_v3 = LT.correlation_with(r, eq) if eq is not None else float("nan")
+    last = raw.iloc[-1]
+    pl = LT.plan(nav, quota, {k: float(last[k]) for k in names}, float(last["EURUSD=X"]))
+    lines = [f"# Quota di lungo periodo: infrastruttura AI ({db.today()})", "",
+             f"Capitale: {nav:,.0f} EUR ({src}); quota {quota:.0%} = **{nav * quota:,.0f} EUR**, pesi uguali su {len(names)} titoli.", "",
+             "## Piano di acquisto (azioni intere, prezzi dell'ultima chiusura)", "",
+             "| Titolo | Anello della catena | Prezzo USD | Azioni | EUR investiti |", "|---|---|---|---|---|"]
+    for k, x in pl.iterrows():
+        lines.append(f"| {k} | {cfg['titoli'][k]['anello']} | {x.prezzo_usd:,.2f} | {int(x.azioni)} | {x.euro_investiti:,.0f} |")
+    lines += ["", f"Totale investito: {pl.euro_investiti.sum():,.0f} EUR (il resto per arrotondamento resta in liquidita').", "",
+              "## Quanto puo' far male (dal 2015, pesi uguali ribilanciati ogni anno)", "",
+              f"- volatilita' annua: {rep['vol']:.0%}",
+              f"- anno peggiore: {rep['anno_peggiore']:.0%} ({rep['anno_peggiore_quale']}) = **{rep['anno_peggiore_eur']:,.0f} EUR** sulla quota",
+              f"- caduta massima dal punto piu' alto: {rep['caduta_massima']:.0%} = **{rep['caduta_massima_eur']:,.0f} EUR** sulla quota",
+              f"- giorno peggiore: {rep['giorno_peggiore']:.1%}",
+              f"- correlazione con l'S&P 500: {corr_spy:.2f}; con il motore azionario della v3: {corr_v3:.2f}", "",
+              "Il rendimento passato di questo paniere NON e' riportato come argomento: i titoli sono scelti oggi sapendo che hanno "
+              "vinto, quindi il passato e' gonfiato dal senno di poi. Conta solo quanto puo' scendere.", "",
+              "## Come entra nel conto",
+              "- `live.py` di GERVA-Q vende tutto cio' che non e' nel suo obiettivo: questi titoli comprati a parte sarebbero venduti "
+              "la sera stessa. La quota va quindi inserita nell'obiettivo di GERVA-Q (rilascio della domenica, con la tua scelta) "
+              "oppure tenuta su un conto separato.",
+              "- Nessuno stop-loss: e' una quota da tenere anni. Il rischio si controlla con la dimensione (5%), non con le uscite."]
+    out = os.path.join(paths.RESEARCH, "lungo")
+    os.makedirs(out, exist_ok=True)
+    md = "\n".join(lines) + "\n"
+    open(os.path.join(out, f"{db.today()}.md"), "w").write(md)
+    print(md)
+
+
+def _research_crypto():
+    """python firm.py research crypto : banco della sleeve crypto della v3 contro 6 varianti (dati reali)."""
+    import pandas as pd
+    from firm import paths, trials, db
+    from quantlab import crypto4 as C4, data as QD, gervaq4 as G4
+    p = os.path.join(paths.VAR, "data", "crypto_close.pkl")
+    if not os.path.exists(p):
+        sys.exit("mancano i dati crypto: lancia prima `python firm.py data`")
+    close = pd.read_pickle(p)
+    fp = QD.fingerprint(close)
+    hyp = {"v3_crypto": "Riferimento: sleeve crypto della v3 riespressa su candele giornaliere (H2 approssimato).",
+           "cash": "La quota ferma della sleeve rende il tasso a breve: la crypto e' spesso flat.",
+           "ibkr3": "Solo BTC/ETH/SOL nel trend: meno monete piccole, meno spread e rischio di liquidita'.",
+           "slow": "Lookback piu' lunghi: meno operazioni, quindi meno costi a 0,23% per lato.",
+           "vt": "Vol target sulla sleeve intera (40%): meno esposizione quando la volatilita' esplode.",
+           "erc": "Trend e breakout a contributi di rischio uguali invece di 50/50.",
+           "tutto": "Combinazione: verifica che i guadagni si sommino e non si annullino."}
+    reg = lambda v: trials.register("head_research", f"crypto4:{v.name}", "crypto4", v.params(), hyp[v.name])
+    dsr = lambda tid, r: trials.record_result(tid, r, fp)["dsr"]
+    res = C4.bench(dict(close=close), register=reg, dsr_fn=dsr, start_skip=200)
+    chosen = next(v for v in C4.VARIANTS if v.name == res.scelta)
+    lad = []
+    for k in (1.0, 1.5, 2.0):
+        r, rr = C4.run_variant(dict(close=close), chosen, scale=k, return_result=True)
+        from quantlab import stats as QS
+        pf = QS.performance(r.iloc[200:].values, periods=C4.TD)
+        lad.append(f"| x{k:g} | {rr.daily['gross'].iloc[200:].mean():.0%} | {pf['Sharpe']:.2f} | {pf['CAGR']:.1%} | "
+                   f"{pf['Vol']:.1%} | {pf['MaxDD']:.1%} |")
+    md = (res.to_markdown().replace("GERVA-Q v4 — banco di prova contro la v3", "Zona ricerca crypto — sleeve crypto contro la v3")
+          + f"\n\nDati: Yahoo, giornaliero, {close.index[0].date()} - {close.index[-1].date()}; impronta {fp}. "
+          "H2 (breakout a 4 ore nella v3) approssimato su candele giornaliere.\n\n"
+          f"## Scala del rischio ({chosen.name}), senza leva\n\n| Livello | Investito medio | Sharpe | CAGR | Vol | MaxDD |\n"
+          "|---|---|---|---|---|---|\n" + "\n".join(lad) + "\n")
+    out = os.path.join(paths.RESEARCH, "crypto")
+    os.makedirs(out, exist_ok=True)
+    open(os.path.join(out, f"{db.today()}.md"), "w").write(md)
+    print(md)
+
+
 def cmd_set_password(_):
     """Crea l'hash della password del portale (la password non viene mai salvata ne' stampata)."""
     import getpass
@@ -177,6 +269,16 @@ def cmd_data(_):
     print(f"{close.shape[0]} giorni x {close.shape[1]} ETF, impronta {QD.fingerprint(close)}, qualita' ok={rep.ok}")
     for pr in rep.problems[:10]:
         print("  ", pr)
+    # crypto (zona di ricerca crypto): candele giornaliere Yahoo, 365 giorni l'anno; il tasso a breve si trascina
+    from quantlab import crypto4 as C4
+    raw = yf.download(list(C4.YAHOO.values()) + ["^IRX"], start="2017-01-01", auto_adjust=True, progress=False,
+                      group_by="column")["Close"]
+    raw = raw.rename(columns={v: k for k, v in C4.YAHOO.items()})
+    coins = [c for c in C4.COINS if c in raw]
+    cc = raw[coins].dropna(how="all")
+    cc["^IRX"] = raw["^IRX"].reindex(cc.index).ffill().bfill()
+    cc.to_pickle(os.path.join(paths.VAR, "data", "crypto_close.pkl"))
+    print(f"crypto: {cc.shape[0]} giorni x {len(coins)} monete dal {cc.index[0].date()}, impronta {QD.fingerprint(cc)}")
 
 
 def cmd_research(a):
@@ -184,6 +286,10 @@ def cmd_research(a):
     import pandas as pd
     from firm import paths, trials, db, events, release
     from quantlab import gervaq4 as G4, data as QD
+    if a.what == "crypto":
+        return _research_crypto()
+    if a.what == "lungo":
+        return _research_longterm()
     p = os.path.join(paths.VAR, "data", "gq4_close.pkl")
     if not os.path.exists(p):
         sys.exit("mancano i dati reali: lancia prima `python firm.py data` sul Mac")

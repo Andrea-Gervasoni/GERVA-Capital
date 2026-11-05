@@ -1,0 +1,17 @@
+# Quota di LUNGO PERIODO (decisione di Andrea del 5/11/2026): comprare e tenere l'infrastruttura dell'AI.
+# Il paniere segue una REGOLA, non un pronostico: le maggiori aziende quotate in ogni anello della catena
+# (progettazione chip, fabbrica, macchine, cloud e modelli), a pesi uguali. Nessuno, nemmeno chi guida queste
+# aziende, sa quali cresceranno di piu': per questo si diversifica lungo la catena invece di scegliere un nome.
+quota_nav: 0.05              # 5% del valore del conto (letto da IBKR)
+ribilanciamento: annuale     # piu' una banda: si ritocca un titolo solo se esce da [0,5x ; 2x] del suo peso
+banda: [0.5, 2.0]
+titoli:
+  NVDA: {anello: "progettazione chip (GPU)", borsa: NASDAQ, valuta: USD}
+  AVGO: {anello: "progettazione chip (reti e acceleratori su misura)", borsa: NASDAQ, valuta: USD}
+  AMD:  {anello: "progettazione chip (GPU e CPU)", borsa: NASDAQ, valuta: USD}
+  TSM:  {anello: "fabbrica di chip (fonderia)", borsa: NYSE, valuta: USD}
+  ASML: {anello: "macchine per la litografia", borsa: NASDAQ, valuta: USD}
+  MSFT: {anello: "cloud e modelli", borsa: NASDAQ, valuta: USD}
+  GOOGL: {anello: "cloud, modelli e chip propri", borsa: NASDAQ, valuta: USD}
+  AMZN: {anello: "cloud e chip propri", borsa: NASDAQ, valuta: USD}
+  META: {anello: "modelli e centri dati", borsa: NASDAQ, valuta: USD}

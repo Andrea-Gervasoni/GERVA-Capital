@@ -252,34 +252,37 @@ def paired_sharpe_prob(a, b, n_boot: int = 1000, block: int = 20, seed: int = 11
 
 
 def bench(data: dict, variants=VARIANTS, holdout_years: float = 2.0, register=None, start_skip: int = 300,
-          dsr_fn=None, p_min: float = 0.90, pbo_max: float = 0.30) -> BenchResult:
-    """register(variant) -> trial_id; dsr_fn(trial_id, returns) -> dsr. Entrambi facoltativi (test)."""
+          dsr_fn=None, p_min: float = 0.90, pbo_max: float = 0.30, runner=None, ref: str = "v3_riferimento",
+          periods: int = 252) -> BenchResult:
+    """register(variant) -> trial_id; dsr_fn(trial_id, returns) -> dsr. Entrambi facoltativi (test).
+    runner(data, variant) -> rendimenti: di default il motore azionario; il banco crypto passa il suo."""
+    run = runner or run_variant
     R = {}
     for v in variants:
         tid = register(v) if register else None
-        r = run_variant(data, v).iloc[start_skip:]
+        r = run(data, v).iloc[start_skip:]
         R[v.name] = (r, tid)
     M = pd.DataFrame({k: v[0] for k, v in R.items()}).dropna()
     split = M.index[-1] - pd.DateOffset(years=holdout_years)
     sel, hold = M[M.index <= split], M[M.index > split]
     rows, comp = {}, {}
     for k in M.columns:
-        p = QS.performance(sel[k].values)
+        p = QS.performance(sel[k].values, periods=periods)
         if dsr_fn and R[k][1]:
             p["DSR"] = dsr_fn(R[k][1], sel[k].values)
         rows[k] = p
-        comp[k] = paired_sharpe_prob(sel[k].values, sel["v3_riferimento"].values) if k != "v3_riferimento" else 0.5
+        comp[k] = paired_sharpe_prob(sel[k].values, sel[ref].values) if k != ref else 0.5
     tab = pd.DataFrame(rows).T
     pbo = QS.pbo_cscv(sel.values, n_blocks=10).to_dict()
-    cand = tab.drop(index="v3_riferimento").sort_values("Sharpe", ascending=False)
-    choice, why = "v3_riferimento", "nessuna variante supera tutti i cancelli: si tiene la v3"
+    cand = tab.drop(index=ref).sort_values("Sharpe", ascending=False)
+    choice, why = ref, "nessuna variante supera tutti i cancelli: si tiene la v3"
     best = cand.index[0]
     checks = dict(pbo=pbo["pbo"] <= pbo_max, prob=comp[best] >= p_min,
                   dsr=("DSR" not in tab or tab.loc[best].get("DSR", 1) >= 0.95))
     hold_info = {}
     if all(checks.values()):
-        hs_best = QS.performance(hold[best].values)["Sharpe"]
-        hs_ref = QS.performance(hold["v3_riferimento"].values)["Sharpe"]
+        hs_best = QS.performance(hold[best].values, periods=periods)["Sharpe"]
+        hs_ref = QS.performance(hold[ref].values, periods=periods)["Sharpe"]
         hold_info = dict(variante=best, sharpe_holdout=round(hs_best, 3), sharpe_v3_holdout=round(hs_ref, 3))
         if hs_best > hs_ref:
             choice, why = best, (f"supera la v3 nel periodo di scelta (P={comp[best]:.2f}), PBO {pbo['pbo']:.2f}, "
