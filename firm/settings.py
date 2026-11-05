@@ -22,7 +22,8 @@ import yaml
 from . import db, audit, events, paths
 
 DEFAULTS_FILE = os.path.join(paths.CONFIG, "settings_defaults.yaml")
-RISK_FILE = os.path.join(paths.CONFIG, "risk_limits.yaml")
+# sul server il codice e' in sola lettura: i limiti modificati da Andrea stanno nel volume (GERVA_RISK_FILE)
+RISK_FILE = os.environ.get("GERVA_RISK_FILE", os.path.join(paths.CONFIG, "risk_limits.yaml"))
 
 
 class SettingsPermissionError(PermissionError):

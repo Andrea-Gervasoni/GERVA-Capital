@@ -1,0 +1,21 @@
+# Anagrafica per l'esecutore IBKR dei pod (firm/ibkr.py). ETF UCITS: simbolo IBKR, borsa, valuta, proxy storico.
+# Mappatura copiata da GERVA-Q lab.ASSETS ("da verificare al primo collegamento" anche li'): il primo ordine su
+# ogni simbolo va controllato nel log del Gateway. Crypto: venue IBKR Ireland (ZEROHASH) o USA (PAXOS).
+CSPX: {kind: etf_ucits, exchange: LSEETF, currency: USD, proxy: SPY}
+CNDX: {kind: etf_ucits, exchange: LSEETF, currency: USD, proxy: QQQ}
+R2US: {kind: etf_ucits, exchange: LSEETF, currency: USD, proxy: IWM}
+EXSA: {kind: etf_ucits, exchange: IBIS, currency: EUR, proxy: VGK}
+SJPA: {kind: etf_ucits, exchange: LSEETF, currency: USD, proxy: EWJ}
+EIMI: {kind: etf_ucits, exchange: LSEETF, currency: USD, proxy: EEM}
+IBTM: {kind: etf_ucits, exchange: LSEETF, currency: USD, proxy: IEF}
+IDTL: {kind: etf_ucits, exchange: LSEETF, currency: USD, proxy: TLT}
+ITPS: {kind: etf_ucits, exchange: LSEETF, currency: USD, proxy: TIP}
+LQDE: {kind: etf_ucits, exchange: LSEETF, currency: USD, proxy: LQD}
+IEMB: {kind: etf_ucits, exchange: LSEETF, currency: USD, proxy: EMB}
+IGLN: {kind: etc, exchange: LSEETF, currency: USD, proxy: GLD}
+PHAG: {kind: etc, exchange: LSEETF, currency: USD, proxy: SLV}
+CMOD: {kind: etf_ucits, exchange: LSEETF, currency: USD, proxy: DBC}
+IUSP: {kind: etf_ucits, exchange: LSEETF, currency: USD, proxy: VNQ}
+BTC: {kind: crypto, exchange: ZEROHASH, currency: USD}
+ETH: {kind: crypto, exchange: ZEROHASH, currency: USD}
+SOL: {kind: crypto, exchange: ZEROHASH, currency: USD}

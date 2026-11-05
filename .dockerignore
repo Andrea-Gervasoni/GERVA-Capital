@@ -1,0 +1,10 @@
+.git
+.env
+*.env
+secrets/
+var/
+_incoming/
+docs/FIRM_BRIEF.md
+**/__pycache__
+.pytest_cache
+KILL

@@ -12,31 +12,156 @@ Sicurezza:
 from __future__ import annotations
 
 import asyncio
+import base64
+import hashlib
+import hmac
+import ipaddress
 import json
 import os
+import secrets
 import threading
+import time
 
 from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from firm import (db, events, registry, budget, risk, pods, gateway, economy, mailbox, tasks, trials,
                   scorekeeper as SK, pod_zero, audit, settings as S, building, meetings, reports, compensation)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ALLOWED_HOSTS = {"127.0.0.1:8765", "localhost:8765", "127.0.0.1", "localhost", "testserver"}
+# Host ammessi (difesa dal DNS rebinding) e reti dei client: sul server il portale sta dietro un tunnel SSH
+# e, in Docker, le richieste arrivano dal bridge interno: le reti si configurano, mai "tutti".
+ALLOWED_HOSTS = {"127.0.0.1:8765", "localhost:8765", "127.0.0.1", "localhost", "testserver"} | {
+    h.strip() for h in os.environ.get("PORTAL_ALLOWED_HOSTS", "").split(",") if h.strip()}
+CLIENT_NETS = [ipaddress.ip_network(n.strip()) for n in
+               os.environ.get("PORTAL_CLIENT_NETS", "127.0.0.1/32,::1/128").split(",") if n.strip()]
+PASSWORD_HASH = os.environ.get("PORTAL_PASSWORD_HASH", "")        # scrypt$sale$hash (python firm.py set-password)
+SESSION_HOURS = 12
+SECURITY_HEADERS = {
+    "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; "
+                               "connect-src 'self' ws: wss:; font-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
+    "X-Frame-Options": "DENY", "X-Content-Type-Options": "nosniff", "Referrer-Policy": "no-referrer",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=()", "Cache-Control": "no-store",
+}
 
 app = FastAPI(title="GERVA Capital", docs_url=None, redoc_url=None, openapi_url=None)
 app.mount("/static", StaticFiles(directory=os.path.join(HERE, "static")), name="static")
+
+
+def _client_ok(host: str) -> bool:
+    if host == "testclient":
+        return True
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        return False
+    return any(ip in n for n in CLIENT_NETS)
+
+
+# ---------------------------------------------------------------------------
+# Password e sessione (attive quando PORTAL_PASSWORD_HASH e' impostato: obbligatorio sul server)
+# ---------------------------------------------------------------------------
+def hash_password(pw: str) -> str:
+    salt = secrets.token_bytes(16)
+    h = hashlib.scrypt(pw.encode(), salt=salt, n=2 ** 14, r=8, p=1, dklen=32)
+    return f"scrypt${salt.hex()}${h.hex()}"
+
+
+def check_password(pw: str, stored: str) -> bool:
+    try:
+        _, salt, h = stored.split("$")
+        calc = hashlib.scrypt(pw.encode(), salt=bytes.fromhex(salt), n=2 ** 14, r=8, p=1, dklen=32)
+        return hmac.compare_digest(calc.hex(), h)
+    except Exception:
+        return False
+
+
+def _session_key() -> bytes:
+    from firm import paths
+    p = os.path.join(paths.VAR, "session.key")
+    if not os.path.exists(p):
+        os.makedirs(paths.VAR, exist_ok=True)
+        with open(p, "wb") as f:
+            f.write(secrets.token_bytes(32))
+        os.chmod(p, 0o600)
+    return open(p, "rb").read()
+
+
+def _make_session() -> str:
+    exp = str(int(time.time()) + SESSION_HOURS * 3600)
+    sig = hmac.new(_session_key(), exp.encode(), hashlib.sha256).hexdigest()
+    return base64.urlsafe_b64encode(f"{exp}.{sig}".encode()).decode()
+
+
+def _session_ok(tok: str | None) -> bool:
+    if not PASSWORD_HASH:
+        return True
+    try:
+        exp, sig = base64.urlsafe_b64decode(tok.encode()).decode().split(".")
+        good = hmac.new(_session_key(), exp.encode(), hashlib.sha256).hexdigest()
+        return hmac.compare_digest(sig, good) and int(exp) > time.time()
+    except Exception:
+        return False
+
+
+_attempts: dict[str, list[float]] = {}
 
 
 @app.middleware("http")
 async def local_only(request: Request, call_next):
     host = request.headers.get("host", "")
     client = request.client.host if request.client else ""
-    if host not in ALLOWED_HOSTS or client not in ("127.0.0.1", "::1", "testclient"):
-        return JSONResponse({"errore": "solo accesso locale"}, status_code=403)
-    return await call_next(request)
+    if host not in ALLOWED_HOSTS or not _client_ok(client):
+        return JSONResponse({"errore": "accesso non consentito"}, status_code=403, headers=SECURITY_HEADERS)
+    path = request.url.path
+    if PASSWORD_HASH and path not in ("/login", "/healthz", "/static/style.css") and not path.startswith("/static/fonts") \
+            and not _session_ok(request.cookies.get("gerva_session")):
+        if path.startswith("/api"):
+            return JSONResponse({"errore": "login richiesto"}, status_code=401, headers=SECURITY_HEADERS)
+        return RedirectResponse("/login", status_code=303, headers=SECURITY_HEADERS)
+    resp = await call_next(request)
+    for k, v in SECURITY_HEADERS.items():
+        resp.headers.setdefault(k, v)
+    return resp
+
+
+LOGIN_HTML = """<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GERVA Capital — accesso</title><link rel="stylesheet" href="/static/style.css"></head><body class="login">
+<form method="post" action="/login" class="win loginbox"><div class="wh">GERVA CAPITAL — accesso riservato</div><div class="wb">
+<p>{msg}</p><input type="password" name="password" autofocus autocomplete="current-password" placeholder="password">
+<button>Entra</button></div></form></body></html>"""
+
+
+@app.get("/login", response_class=HTMLResponse)
+def login_page():
+    return LOGIN_HTML.format(msg="Inserisci la password del portale.")
+
+
+@app.post("/login")
+async def login(request: Request):
+    ip = request.client.host if request.client else "?"
+    now = time.time()
+    recent = [t for t in _attempts.get(ip, []) if now - t < 300]
+    if len(recent) >= 5:
+        return HTMLResponse(LOGIN_HTML.format(msg="Troppi tentativi: riprova tra 5 minuti."), status_code=429)
+    form = (await request.body()).decode()
+    from urllib.parse import parse_qs
+    pw = parse_qs(form).get("password", [""])[0]
+    if not PASSWORD_HASH or not check_password(pw, PASSWORD_HASH):
+        _attempts[ip] = recent + [now]
+        await asyncio.sleep(1.0)                          # rallenta la forza bruta senza bloccare l'event loop
+        return HTMLResponse(LOGIN_HTML.format(msg="Password errata."), status_code=401)
+    _attempts.pop(ip, None)
+    r = RedirectResponse("/", status_code=303)
+    r.set_cookie("gerva_session", _make_session(), max_age=SESSION_HOURS * 3600, httponly=True, samesite="strict",
+                 secure=os.environ.get("PORTAL_COOKIE_SECURE") == "1")
+    return r
+
+
+@app.get("/healthz")
+def healthz():
+    return {"ok": True}
 
 
 def _cap(request: Request) -> S.AndreaCapability:
@@ -80,7 +205,16 @@ def state():
         budget_oggi=st["spent_today"], tetto_oggi=st["daily_cap"], budget_totale=st["spent_total"],
         tetto_totale=st["total_cap"], giorni_residui=st["days_left"], ritmo=st["pace_eur_day"],
         ledger=dict(righe=len(ledger), ultima=ledger[-1] if ledger else None, disponibile=pz["disponibile"]),
-        posta_aperta=len(mailbox.items("aperta")), catena=audit.verify()["ok"]))
+        posta_aperta=len(mailbox.items("aperta")), catena=audit.verify()["ok"], ibkr=_ibkr_state()))
+
+
+def _ibkr_state():
+    from firm import ibkr
+    st = ibkr.status()
+    sf = st["sfida"] or {}
+    return dict(osservato=bool(sf), ok=sf.get("ok", False), conto=sf.get("conto"), nav=sf.get("nav_eur"), ts=sf.get("ts"),
+                errore=sf.get("errore"), broker_pod=st["broker_pod"],
+                scarti=len((st["riconciliazione"] or {}).get("scarti", [])))
 
 
 def _activity(aid: str) -> dict:
@@ -317,7 +451,8 @@ def ev(since: int = 0, limit: int = 100):
 @app.websocket("/ws")
 async def ws(websocket: WebSocket):
     host = websocket.headers.get("host", "")
-    if host not in ALLOWED_HOSTS:
+    client = websocket.client.host if websocket.client else ""
+    if host not in ALLOWED_HOSTS or not _client_ok(client) or not _session_ok(websocket.cookies.get("gerva_session")):
         await websocket.close(code=1008)
         return
     await websocket.accept()

@@ -42,6 +42,25 @@ def beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
         if not v["ok"]:
             events.publish("risk.alert", "auditor", dict(cosa=f"catena di hash rotta alla voce {v['prima_rottura']}",
                                                          gravita=5))
+    # IBKR: osservazione in sola lettura del conto della sfida (il portale non si collega mai al broker)
+    import os
+    if os.environ.get("IBKR_OBSERVE") == "1":
+        from . import ibkr
+        ibkr.observe_challenge()
+        if os.environ.get("GATEWAY_BROKER") == "ibkr_paper" and (risk.kill_active() or (now.hour == 21 and _once(f"reconcile:{day}"))):
+            try:
+                br = ibkr.IBKRPaperBroker()
+                try:
+                    if risk.kill_active():
+                        n = br.cancel_open()
+                        if n:
+                            events.publish("risk.kill", "gateway", dict(motivo=f"KILL: annullati {n} ordini aperti dei pod"))
+                    else:
+                        ibkr.reconcile(br)
+                finally:
+                    br.close()
+            except Exception as e:
+                notes.append(f"ibkr pod: {str(e)[:80]}")
     nf = news_feed.fetch_all()
     if nf["errori"] and not nf["nuove"]:
         notes.append("notizie: rete non disponibile o feed in errore")

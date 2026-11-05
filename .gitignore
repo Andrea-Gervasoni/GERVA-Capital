@@ -15,3 +15,7 @@ __pycache__/
 KILL
 # brief personale di Andrea: non pubblicato (repo pubblico)
 docs/FIRM_BRIEF.md
+
+# segreti del server (file 600, solo sul server)
+secrets/
+deploy/.wheels/

@@ -1,0 +1,15 @@
+# Versioni esatte usate nei test (aggiornarle solo con update.sh, che riesegue i test prima di riavviare)
+numpy==2.5.3
+pandas==3.0.5
+scipy==1.18.1
+PyYAML==6.0.3
+jsonschema==4.26.0
+fastapi==0.162.0
+starlette==1.7.0
+uvicorn==0.54.0
+websockets==17.4
+pydantic==2.13.5
+anthropic==2.5.0
+httpx==0.28.1
+ib_async==2.1.0
+pytest==9.2.0

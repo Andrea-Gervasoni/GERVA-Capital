@@ -229,41 +229,40 @@ class SimulatedPaperBroker:
     """Broker paper simulato: fill al prezzo +- meta' spread, commissione dal modello dei costi."""
     venue = "paper-simulato"
 
-    def execute(self, instrument: str, kind: str, side: str, qty: float, price: float) -> tuple[float, float]:
+    def execute(self, instrument: str, kind: str, side: str, qty: float, price: float, ref: str | None = None):
         m = COST_BY_KIND.get(kind, QC.UCITS_ETF)
         fill = price * (1 + m.half_spread if side == "BUY" else 1 - m.half_spread)
         fee = max(m.commission_rate * qty * fill, min(m.commission_min, m.commission_cap_rate * qty * fill))
-        return fill, fee
-
-
-class IBKRPaperBroker:
-    """Collegamento a IB Gateway in PAPER. Rifiuta qualunque conto che non inizi con 'DU'.
-    Non esiste una variante live: il passaggio a soldi veri richiede i cancelli 13-15 della sfida
-    e approvals/*.ok firmato dai titolari, fuori dal perimetro degli agenti."""
-    venue = "ibkr-paper"
-
-    def __init__(self):
-        from ib_async import IB          # disponibile solo sul Mac di Andrea
-        self.ib = IB()
-        port = int(os.environ.get("GATEWAY_IB_PORT", "4002"))
-        self.ib.connect("127.0.0.1", port, clientId=int(os.environ.get("GATEWAY_IB_CLIENT_ID", "31")), timeout=20)
-        acct = self.ib.managedAccounts()[0]
-        if not acct.startswith("DU"):
-            self.ib.disconnect()
-            raise PermissionError("il Gateway opera solo su conti paper (DU...)")
-
-    def execute(self, instrument, kind, side, qty, price):
-        raise NotImplementedError("invio a IBKR paper: da attivare sul Mac dopo il collaudo (STATUS.md)")
+        return fill, fee, qty
 
 
 def broker():
-    return IBKRPaperBroker() if os.environ.get("GATEWAY_BROKER") == "ibkr_paper" else SimulatedPaperBroker()
+    """IBKR paper solo su un SECONDO conto paper (firm/ibkr.py spiega perche'); altrimenti broker simulato."""
+    if os.environ.get("GATEWAY_BROKER") == "ibkr_paper":
+        from .ibkr import IBKRPaperBroker
+        try:
+            return IBKRPaperBroker()
+        except Exception as e:                 # conto mancante, gateway spento, conto della sfida: si resta simulati
+            events.publish("risk.alert", "gateway", dict(cosa=f"broker IBKR non disponibile, uso il simulato: {str(e)[:120]}",
+                                                         gravita=2))
+    return SimulatedPaperBroker()
 
 
 def flush(b=None) -> dict:
     """Compensazione interna tra pod e invio del netto al broker."""
-    b = b or broker()
+    own = b is None
     pending = db.q("SELECT * FROM gateway_orders WHERE status='accettato' ORDER BY id")
+    if not pending:
+        return dict(interni=0, al_broker=0, risparmio_eur=0.0)
+    b = b or broker()
+    try:
+        return _flush(b, pending)
+    finally:
+        if own and hasattr(b, "close"):
+            b.close()
+
+
+def _flush(b, pending) -> dict:
     by_instr = defaultdict(list)
     for o in pending:
         by_instr[o["instrument"]].append(o)
@@ -289,22 +288,30 @@ def flush(b=None) -> dict:
             report["risparmio_eur"] += 2 * m.cost(matched * mid)
         # 2) il netto va al broker
         net = tb - ts
+        partial = set()
         if abs(net) > 1e-12:
             side = "BUY" if net > 0 else "SELL"
             group, tot = (buys, tb) if net > 0 else (sells, ts)
-            fill, fee = b.execute(instr, kind, side, abs(net), mid)
+            ref = f"GERVA-CAP-{min(o['id'] for o in group)}-{instr}"
+            fill, fee, done = b.execute(instr, kind, side, abs(net), mid, ref=ref)
+            ratio = min(1.0, done / abs(net)) if abs(net) > 0 else 0.0      # eseguito parziale: si alloca pro quota
             model_cost = COST_BY_KIND.get(kind, QC.UCITS_ETF).cost(abs(net) * mid)
             for o in group:
-                rest = o["qty"] - o["qty"] / tot * matched
+                rest = (o["qty"] - o["qty"] / tot * matched) * ratio
+                if ratio < 1 - 1e-9:
+                    partial.add(o["id"])
                 if rest > 1e-12:
-                    frac = rest / abs(net)
+                    frac = rest / max(done, 1e-12)
                     db.ex("INSERT INTO fills(ts,order_id,pod,instrument,side,qty,price,fee,venue,model_cost)"
                           " VALUES(?,?,?,?,?,?,?,?,?,?)",
                           (db.now_iso(), o["id"], o["pod"], instr, side, rest, fill, fee * frac, b.venue,
-                           model_cost * frac))
+                           model_cost * frac * ratio))
             report["al_broker"] += 1
+            if ratio < 1 - 1e-9:
+                report.setdefault("parziali", []).append(dict(strumento=instr, richiesto=abs(net), eseguito=done))
         for o in orders:
-            db.ex("UPDATE gateway_orders SET status='eseguito' WHERE id=?", (o["id"],))
+            db.ex("UPDATE gateway_orders SET status=? WHERE id=?",
+                  ("eseguito_parziale" if o["id"] in partial else "eseguito", o["id"]))
     if pending:
         events.publish("gateway.fill", "gateway", report)
     return report

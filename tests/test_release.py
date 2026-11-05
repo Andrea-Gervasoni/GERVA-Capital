@@ -12,7 +12,7 @@ SNAP = os.path.join(os.path.dirname(__file__), "..", "_incoming", "quant_engine"
 REPO_RELEASES = os.path.join(os.path.dirname(__file__), "..", "research", "releases")
 
 
-@pytest.mark.skipif(not os.path.isdir(SNAP) or not shutil.which("patch"), reason="serve lo snapshot di GERVA-Q")
+@pytest.mark.skipif(not os.path.isdir(SNAP), reason="serve lo snapshot di GERVA-Q")
 def test_release_applies_only_on_sunday_with_backup_and_changelog(firm_env, tmp_path):
     from firm import release, settings as S
     gq = tmp_path / "gq"
@@ -36,3 +36,13 @@ def test_release_applies_only_on_sunday_with_backup_and_changelog(firm_env, tmp_
     assert "2026-11-08" in open(gq / "REGOLE_SFIDA.md").read().splitlines()[-1]
     for f in ("engine.py", "lab.py", "v3_validate.py", "crypto_live.py"):
         subprocess.run(["python", "-m", "py_compile", str(gq / f)], check=True)
+
+
+def test_diff_applier_is_strict(tmp_path):
+    from firm.release import apply_unified_diff
+    (tmp_path / "a.py").write_text("x = 1\ny = 2\nz = 3\n")
+    patch = "--- a/a.py\n+++ b/a.py\n@@ -1,3 +1,3 @@\n x = 1\n-y = 2\n+y = 20\n z = 3\n"
+    apply_unified_diff(patch, str(tmp_path))
+    assert (tmp_path / "a.py").read_text() == "x = 1\ny = 20\nz = 3\n"
+    with pytest.raises(ValueError):                        # il contesto non coincide piu': niente scrittura
+        apply_unified_diff(patch, str(tmp_path))

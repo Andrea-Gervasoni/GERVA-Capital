@@ -18,12 +18,57 @@ import datetime as dt
 import glob
 import os
 import shutil
-import subprocess
 
 from . import db, events, audit, mailbox, paths
 from . import settings as S
 
 RELEASES = os.path.join(paths.RESEARCH, "releases")
+
+
+def apply_unified_diff(patch_text: str, root: str, dry_run: bool = False) -> list[str]:
+    """Applicatore rigoroso di diff unificati (come `patch -p1`, senza dipendenze esterne).
+    Ogni riga di contesto e ogni riga tolta deve coincidere ESATTAMENTE: altrimenti non si scrive nulla."""
+    import re
+    files, cur = [], None
+    for line in patch_text.splitlines(keepends=True):
+        if line.startswith("--- "):
+            continue
+        if line.startswith("+++ "):
+            name = line[4:].split("\t")[0].strip()
+            cur = dict(path=name.split("/", 1)[1] if "/" in name else name, hunks=[])
+            files.append(cur)
+        elif line.startswith("@@"):
+            m = re.match(r"@@ -(\d+)(?:,\d+)? \+\d+(?:,\d+)? @@", line)
+            cur["hunks"].append(dict(start=int(m.group(1)), lines=[]))
+        elif cur and cur["hunks"] and line[:1] in (" ", "-", "+"):
+            cur["hunks"][-1]["lines"].append(line)
+        elif cur and cur["hunks"] and line.startswith("\\"):
+            continue
+    out = {}
+    for f in files:
+        path = os.path.join(root, f["path"])
+        src = open(path).read().splitlines(keepends=True)
+        res, pos = [], 0
+        for h in f["hunks"]:
+            i = h["start"] - 1
+            res += src[pos:i]
+            for l in h["lines"]:
+                if l[0] in " -":
+                    if i >= len(src) or src[i] != l[1:]:
+                        raise ValueError(f"{f['path']}: il contesto non coincide alla riga {i + 1}")
+                    if l[0] == " ":
+                        res.append(src[i])
+                    i += 1
+                else:
+                    res.append(l[1:])
+            pos = i
+        res += src[pos:]
+        out[path] = "".join(res)
+    if not dry_run:
+        for path, txt in out.items():
+            with open(path, "w") as fh:
+                fh.write(txt)
+    return [os.path.relpath(p, root) for p in out]
 
 
 def in_window(now: dt.datetime | None = None) -> bool:
@@ -62,9 +107,10 @@ def apply(release_id: str, cap: S.AndreaCapability, now: dt.datetime | None = No
     rel = os.path.join(RELEASES, release_id)
     patches = sorted(glob.glob(os.path.join(rel, "*.patch")))
     for p in patches:
-        r = subprocess.run(["patch", "-p1", "--dry-run", "-i", p], cwd=root, capture_output=True, text=True)
-        if r.returncode != 0:
-            return dict(ok=False, motivo=f"patch non applicabile: {os.path.basename(p)}", dettaglio=r.stdout[-500:])
+        try:
+            apply_unified_diff(open(p).read(), root, dry_run=True)
+        except (ValueError, FileNotFoundError) as e:
+            return dict(ok=False, motivo=f"patch non applicabile: {os.path.basename(p)}", dettaglio=str(e)[:300])
     stamp = (now or dt.datetime.now(dt.timezone.utc)).strftime("%Y-%m-%d")
     backup = os.path.join(root, "backups", f"pre-{release_id}")
     os.makedirs(backup, exist_ok=True)
@@ -72,7 +118,7 @@ def apply(release_id: str, cap: S.AndreaCapability, now: dt.datetime | None = No
         if os.path.exists(f):
             shutil.copy2(f, backup)
     for p in patches:
-        subprocess.run(["patch", "-p1", "-i", p], cwd=root, check=True, capture_output=True)
+        apply_unified_diff(open(p).read(), root)
     note = open(os.path.join(rel, "RELEASE.md")).read().split("\n## ")[0].strip().splitlines()
     title = next((l.lstrip("# ").strip() for l in note if l.strip()), release_id)
     regole = os.path.join(root, "REGOLE_SFIDA.md")

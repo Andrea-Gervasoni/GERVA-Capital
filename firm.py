@@ -8,6 +8,8 @@ GERVA Capital — comando unico.
     python firm.py run          # battito ogni N minuti (impostazione firm.heartbeat_minutes)
     python firm.py data         # (sul Mac) scarica i prezzi reali per la ricerca
     python firm.py research gervaq4   # (sul Mac) banco di prova dei miglioramenti contro la v3
+    python firm.py set-password # hash della password del portale (obbligatoria sul server)
+    python firm.py ibkr-check   # prova in sola lettura la connessione a IB Gateway (conto della sfida)
     python firm.py report       # report del giorno con correzioni proposte
     python firm.py status       # budget, rischio, catena di hash, prove
     python firm.py verify       # verifica la catena di hash dell'audit log
@@ -58,8 +60,28 @@ def cmd_portal(a):
     import uvicorn
     from firm import db
     db.connect()
-    print("GERVA Capital — portale su http://127.0.0.1:8765  (solo locale, Ctrl+C per chiudere)")
-    uvicorn.run("portal.app:app", host="127.0.0.1", port=8765, log_level="warning")
+    bind = os.environ.get("PORTAL_BIND", "127.0.0.1")      # in Docker 0.0.0.0, pubblicato solo su 127.0.0.1 dell'host
+    if bind not in ("127.0.0.1", "::1") and not os.environ.get("PORTAL_PASSWORD_HASH"):
+        sys.exit("Rifiuto: fuori da 127.0.0.1 il portale richiede PORTAL_PASSWORD_HASH (python firm.py set-password)")
+    print(f"GERVA Capital — portale su http://{bind}:8765  (Ctrl+C per chiudere)")
+    uvicorn.run("portal.app:app", host=bind, port=8765, log_level="warning", proxy_headers=False, server_header=False)
+
+
+def cmd_set_password(_):
+    """Crea l'hash della password del portale (la password non viene mai salvata ne' stampata)."""
+    import getpass
+    from portal.app import hash_password
+    a, b = getpass.getpass("Nuova password del portale: "), getpass.getpass("Ripeti: ")
+    if a != b or len(a) < 12:
+        sys.exit("Le password non coincidono o sono piu' corte di 12 caratteri.")
+    print("Aggiungi questa riga al file .env (permessi 600):")
+    print("PORTAL_PASSWORD_HASH=" + hash_password(a))
+
+
+def cmd_ibkr_check(_):
+    """Prova la connessione in sola lettura al conto della sfida e mostra cosa vede (conto mascherato)."""
+    from firm import ibkr
+    print(json.dumps(ibkr.observe_challenge(), ensure_ascii=False, indent=1, default=str))
 
 
 def cmd_heartbeat(_):
@@ -174,7 +196,8 @@ def main():
     _load_env()
     ap = argparse.ArgumentParser(description="GERVA Capital")
     sub = ap.add_subparsers(dest="cmd", required=True)
-    for name in ["init", "portal", "heartbeat", "run", "status", "verify", "demo", "release", "data", "research", "report"]:
+    for name in ["init", "portal", "heartbeat", "run", "status", "verify", "demo", "release", "data", "research", "report",
+                 "set-password", "ibkr-check"]:
         sp = sub.add_parser(name)
         sp.add_argument("--demo", action="store_true", help="usa il database dimostrativo var/demo/")
         if name == "research":
@@ -195,7 +218,7 @@ def main():
         from firm import db, paths
         if not os.path.exists(paths.DB_PATH):
             cmd_init(a)
-    globals()[f"cmd_{a.cmd}"](a)
+    globals()[f"cmd_{a.cmd.replace('-', '_')}"](a)
 
 
 if __name__ == "__main__":

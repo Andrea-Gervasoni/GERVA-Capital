@@ -178,6 +178,9 @@ async function openAgent(id) {
   dlg.classList.remove("hidden"); beep(760);
 }
 
+// la CSP vieta gli attributi style nell'HTML generato: le larghezze passano da data-w e CSSOM
+function applyWidths(root) { root.querySelectorAll("[data-w]").forEach((e) => (e.style.width = (+e.dataset.w || 0) + "px")); }
+
 // ---------------------------------------------------------------- pannelli
 const table = (rows, cols) => !rows || !rows.length ? "<p class='muted'>Nessun dato.</p>" :
   "<table><tr>" + cols.map((c) => `<th>${esc(c[1])}</th>`).join("") + "</tr>" +
@@ -194,7 +197,7 @@ const PANELS = {
     return ["Persone e statistiche", `<p class="muted">Clic su un'intestazione per ordinare, su un nome per la scheda completa.</p><table class="people"><tr>
       ${H("nome", "Nome")}${H("grado", "Grado")}${H("ufficio", "Ufficio")}${H("punteggio", "Punteggio")}${H("brier", "Brier")}${H("giuste", "Prev. giuste")}${H("gc", "GC")}${H("differito", "Differito")}${H("costo", "Costo €")}${H("errori", "Errori")}</tr>
       ${rows.map((r) => `<tr><td><a href="#" data-agent="${r.id}">${esc(r.nome)}</a><div class="muted">${esc(r.ruolo)}</div></td><td>${esc(r.grado_nome)}<div class="muted">#${esc(r.rank_grado)}</div></td>
-      <td>${esc(TIER_NAME[r.ufficio] || "—")}</td><td>${r.punteggio == null ? "—" : `<span class="bar" style="width:${Math.round(r.punteggio * 70)}px"></span> ${num(r.punteggio, 2)}`}</td>
+      <td>${esc(TIER_NAME[r.ufficio] || "—")}</td><td>${r.punteggio == null ? "—" : `<span class="bar" data-w="${Math.round(r.punteggio * 70)}"></span> ${num(r.punteggio, 2)}`}</td>
       <td>${r.brier == null ? "—" : num(r.brier, 3)}</td><td>${r.giuste}/${r.previsioni}</td><td class="gold">${num(r.gc, 0)}</td><td>${num(r.differito, 0)}</td><td>${num(r.costo, 3)}</td><td>${r.errori}</td></tr>`).join("")}</table>`];
   },
   async riunioni() {
@@ -256,7 +259,7 @@ const PANELS = {
   },
   async pod() {
     const d = await api("/api/pods"), z = d.pod_zero;
-    return ["Pod: capitale, risultati, Pod Zero", table(d.classifica.pod, [["nome", "Pod"], ["capitale", "Capitale", (v) => `<span class="bar" style="width:${Math.round(v * 140)}px"></span> ${pct(v)}`], ["stato", "Stato", tag], ["giorni", "Giorni"],
+    return ["Pod: capitale, risultati, Pod Zero", table(d.classifica.pod, [["nome", "Pod"], ["capitale", "Capitale", (v) => `<span class="bar" data-w="${Math.round(v * 140)}"></span> ${pct(v)}`], ["stato", "Stato", tag], ["giorni", "Giorni"],
       ["sharpe", "Sharpe in avanti [IC 90%]", (v, r) => v == null ? "<span class='muted'>&lt;30 giorni</span>" : num(v, 2) + (r.sharpe_ci90 ? ` <span class="muted">[${r.sharpe_ci90.map((x) => num(x, 2)).join("; ")}]</span>` : "")],
       ["drawdown", "Drawdown", (v) => pct(v)], ["alpha_netto_eur", "Alpha netto", (v) => v == null ? "benchmark" : eur(v)]]) +
       `<p class="muted">Correlazione media tra pod: ${d.correlazione == null ? "dati insufficienti" : num(d.correlazione, 2)}. Con meno di ~60 giorni la classifica è soprattutto fortuna: per questo la riallocazione usa lo shrinkage.</p>
@@ -288,6 +291,7 @@ async function openPanel(name, arg) {
   const [title, html] = await PANELS[name](arg);
   document.getElementById("pnl-title").textContent = title;
   document.getElementById("pnl-body").innerHTML = html;
+  applyWidths(document.getElementById("pnl-body"));
   const p = document.getElementById("panel"); p.dataset.name = name; p.classList.remove("hidden");
   document.querySelectorAll("#menu button").forEach((b) => b.classList.toggle("on", b.dataset.panel === name));
 }
@@ -326,7 +330,7 @@ document.getElementById("cmd").addEventListener("submit", async (e) => {
   const poll = setInterval(async () => {
     const p = document.getElementById("panel");
     if (++n > 60 || p.classList.contains("hidden") || p.dataset.name !== "compiti") return clearInterval(poll);
-    const [, html] = await PANELS.compiti(r.id); document.getElementById("pnl-body").innerHTML = html;
+    const [, html] = await PANELS.compiti(r.id); document.getElementById("pnl-body").innerHTML = html; applyWidths(document.getElementById("pnl-body"));
   }, 2000);
 });
 

@@ -65,3 +65,32 @@ def test_v2_endpoints(client):
     assert "correzioni" in r
     a = c.get("/api/agent/capo").json()
     assert a["ufficio"]["tier"] == "ceo" and "serie" in a
+
+
+def test_password_login_and_security_headers(firm_env, monkeypatch):
+    import importlib
+    from firm import org_seed, registry, pods
+    org_seed.seed(); registry.sync(); pods.ensure_pods()
+    import portal.app as A
+    h = A.hash_password("una-password-lunga-123")
+    assert A.check_password("una-password-lunga-123", h) and not A.check_password("sbagliata", h)
+    monkeypatch.setattr(A, "PASSWORD_HASH", h)
+    A._attempts.clear()
+    monkeypatch.setattr(A.time, "sleep", lambda s: None)
+    c = TestClient(A.app)
+    r = c.get("/api/state")
+    assert r.status_code == 401 and r.headers["X-Frame-Options"] == "DENY" and "default-src 'self'" in r.headers["Content-Security-Policy"]
+    assert c.get("/", follow_redirects=False).status_code == 303
+    assert c.get("/healthz").status_code == 200
+    for _ in range(5):
+        assert c.post("/login", data={"password": "no"}).status_code == 401
+    assert c.post("/login", data={"password": "una-password-lunga-123"}).status_code == 429     # bloccato dopo 5
+    A._attempts.clear()
+    r = c.post("/login", data={"password": "una-password-lunga-123"}, follow_redirects=False)
+    assert r.status_code == 303 and "httponly" in r.headers["set-cookie"].lower() and "samesite=strict" in r.headers["set-cookie"].lower()
+    assert c.get("/api/state").status_code == 200
+
+
+def test_client_network_filter(firm_env):
+    import portal.app as A
+    assert A._client_ok("127.0.0.1") and not A._client_ok("8.8.8.8") and not A._client_ok("172.18.0.1")

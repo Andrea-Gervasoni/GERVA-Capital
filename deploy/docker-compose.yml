@@ -1,0 +1,118 @@
+# GERVA Capital sul server — solo PAPER.
+#   docker compose -f deploy/docker-compose.yml --env-file deploy/server.env up -d --build
+# Il conto dei pod (secondo conto paper) si accende con:  --profile pods-ibkr
+#
+# Rete:
+#   ibgw-gervaq  IB Gateway del conto della SFIDA (login paper di GERVA-Q). Nessuna porta pubblicata sull'host.
+#   gervaq       scheduler di GERVA-Q: condivide la rete di ibgw-gervaq e parla con 127.0.0.1:4002,
+#                quindi live.py/crypto_live.py girano SENZA modifiche al loro codice (regola 7 della sfida).
+#   ibgw-firm    IB Gateway del SECONDO conto paper (solo pod). Profilo pods-ibkr.
+#   heartbeat    battito della societa' (agenti, rischio, osservazione IBKR in sola lettura).
+#   portal       portale: pubblicato SOLO su 127.0.0.1:8765 del server -> tunnel SSH; password obbligatoria.
+
+x-hardening: &hardening
+  read_only: true
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: ["ALL"]
+  tmpfs: ["/tmp:size=128m,mode=1777"]
+  pids_limit: 256
+  restart: unless-stopped
+  logging: {driver: json-file, options: {max-size: "10m", max-file: "5"}}
+
+x-firm-env: &firm-env
+  TZ: Europe/Rome
+  GERVA_VAR: /data/var
+  GERVA_AGENTS: /data/var/agents
+  GERVA_RESEARCH: /data/research
+  GERVA_RISK_FILE: /data/var/risk_limits.yaml
+  GERVA_Q_PATH: /gervaq
+
+services:
+  ibgw-gervaq:
+    image: ${IBGW_IMAGE:-ghcr.io/gnzsnz/ib-gateway:stable}      # fissare il digest dopo il primo pull (DEPLOY.md)
+    env_file: [../secrets/ibgw-gervaq.env]                    # TWS_USERID / TWS_PASSWORD del login PAPER (600, mai in git)
+    environment:
+      TRADING_MODE: paper
+      READ_ONLY_API: "no"                 # GERVA-Q deve poter inviare ordini sul SUO conto paper
+      TWOFA_TIMEOUT_ACTION: restart
+      RELOGIN_AFTER_TWOFA_TIMEOUT: "yes"
+      AUTO_RESTART_TIME: "11:55 PM"
+      TIME_ZONE: Europe/Rome
+    ports: ["127.0.0.1:5901:5900"]        # VNC solo per l'eventuale 2FA, raggiungibile solo via tunnel SSH
+    networks: [egress, ibnet]
+    restart: unless-stopped
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 1536m
+    logging: {driver: json-file, options: {max-size: "10m", max-file: "5"}}
+
+  gervaq:
+    <<: *hardening
+    build: {context: .., dockerfile: deploy/Dockerfile}
+    image: gerva-capital:local
+    network_mode: "service:ibgw-gervaq"   # 127.0.0.1:4002 = IB Gateway paper, come sul Mac
+    depends_on: [ibgw-gervaq]
+    environment: {TZ: Europe/Rome, GERVA_Q_PATH: /gervaq, GERVAQ_IB_PORT: "4002", GERVAQ_MODE: paper}
+    volumes: ["${GERVAQ_DIR:-/srv/gerva/GERVA-Q}:/gervaq:rw"]
+    entrypoint: []
+    command: ["python", "/app/deploy/gervaq_scheduler.py"]
+    mem_limit: 1536m
+
+  ibgw-firm:
+    profiles: [pods-ibkr]
+    image: ${IBGW_IMAGE:-ghcr.io/gnzsnz/ib-gateway:stable}
+    env_file: [../secrets/ibgw-firm.env]                      # login di un SECONDO conto paper, diverso dalla sfida
+    environment: {TRADING_MODE: paper, READ_ONLY_API: "no", TWOFA_TIMEOUT_ACTION: restart, AUTO_RESTART_TIME: "11:50 PM", TIME_ZONE: Europe/Rome}
+    ports: ["127.0.0.1:5902:5900"]
+    networks: [egress, ibnet]
+    restart: unless-stopped
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 1536m
+
+  heartbeat:
+    <<: *hardening
+    image: gerva-capital:local
+    depends_on: [gervaq]
+    env_file: [../secrets/firm.env]                           # ANTHROPIC_API_KEY, IBKR_*_ACCOUNT, ... (600)
+    environment:
+      <<: *firm-env
+      IBKR_OBSERVE: "1"
+      IBKR_GERVAQ_HOST: ibgw-gervaq
+      IBKR_GERVAQ_PORT: "4004"            # porta paper esposta dall'immagine sulla rete interna
+      IBKR_FIRM_HOST: ibgw-firm
+      IBKR_FIRM_PORT: "4004"
+    volumes:
+      - firmdata:/data
+      - "${GERVAQ_DIR:-/srv/gerva/GERVA-Q}:/gervaq:ro"
+    command: ["python", "firm.py", "run"]
+    networks: [egress, ibnet]
+    mem_limit: 1g
+
+  portal:
+    <<: *hardening
+    image: gerva-capital:local
+    depends_on: [heartbeat]
+    env_file: [../secrets/portal.env]                         # PORTAL_PASSWORD_HASH (python firm.py set-password)
+    environment:
+      <<: *firm-env
+      PORTAL_BIND: 0.0.0.0
+      PORTAL_CLIENT_NETS: "172.16.0.0/12,127.0.0.1/32"        # il bridge Docker; dall'esterno si arriva solo via tunnel
+    volumes:
+      - firmdata:/data
+      - "${GERVAQ_DIR:-/srv/gerva/GERVA-Q}:/gervaq:ro"
+    command: ["python", "firm.py", "portal"]
+    ports: ["127.0.0.1:8765:8765"]        # MAI 0.0.0.0: niente porte aperte su internet
+    networks: [front]
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8765/healthz',timeout=3)"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  firmdata: {}
+
+networks:
+  egress: {}                                # uscita verso IBKR, API LLM, feed
+  ibnet: {internal: true}                   # gateway <-> societa': nessuna uscita su internet
+  front: {}

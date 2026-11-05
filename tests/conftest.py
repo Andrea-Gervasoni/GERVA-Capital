@@ -22,6 +22,10 @@ def firm_env(tmp_path, monkeypatch):
     # copia dei profili: i test (post-mortem, promozioni) non devono scrivere nei file versionati
     agents = tmp_path / "agents"
     shutil.copytree(paths.AGENTS, agents)
+    for d, _, files in os.walk(agents):                 # nell'immagine il codice e' in sola lettura: la copia no
+        os.chmod(d, 0o755)
+        for f in files:
+            os.chmod(os.path.join(d, f), 0o644)
     monkeypatch.setattr(paths, "AGENTS", str(agents))
     monkeypatch.setattr(paths, "RESEARCH", str(tmp_path / "research"))
     risk = tmp_path / "risk_limits.yaml"

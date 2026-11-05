@@ -102,3 +102,8 @@ footer { padding: 0 12px 10px; }
 .reports { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; } .reports a { padding: 0 6px; border: 1px solid var(--edge); text-decoration: none; } .reports a.on { border-color: var(--gold); color: var(--gold); }
 .mh { margin-bottom: 4px; }
 @media (max-width: 1000px) { main { flex-direction: column; } #side { width: 100%; } #feed { max-height: 30vh; } #office { max-width: 100%; } }
+
+body.login { align-items: center; justify-content: center; }
+.loginbox { position: static; width: min(420px, 92vw); margin: 18vh auto 0; }
+.loginbox input { width: 100%; font-family: "VT323"; font-size: 22px; background: var(--ink); color: var(--paper); border: 1px solid var(--edge); padding: 4px 8px; margin: 6px 0 10px; }
+.loginbox button { background: var(--gold); color: var(--ink); border: 0; padding: 4px 16px; }
