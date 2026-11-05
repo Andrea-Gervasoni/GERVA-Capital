@@ -146,6 +146,7 @@ TRIGGERS = "\n".join(
     for t in APPEND_ONLY
 ) + """
 -- una previsione registrata non si puo' piu' cambiare: si puo' solo risolvere UNA volta
+BEGIN IMMEDIATE;   -- DROP+CREATE in un colpo solo: due connessioni insieme (portale e battito) non si pestano i piedi
 DROP TRIGGER IF EXISTS forecasts_frozen;
 CREATE TRIGGER forecasts_frozen BEFORE UPDATE ON forecasts
 BEGIN
@@ -157,6 +158,7 @@ BEGIN
     WHEN OLD.outcome IS NOT NULL THEN RAISE(ABORT, 'previsione gia'' risolta')
   END;
 END;
+COMMIT;
 CREATE TRIGGER IF NOT EXISTS forecasts_no_delete BEFORE DELETE ON forecasts
 BEGIN SELECT RAISE(ABORT, 'forecasts e'' append-only'); END;
 -- una prova registrata non sparisce (il contatore del Deflated Sharpe ne dipende)
