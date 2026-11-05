@@ -16,7 +16,7 @@ from __future__ import annotations
 import datetime as dt
 import re
 
-from . import db, events, risk, pods, budget, audit, gateway, news_feed, mailbox, workflows, economy, compensation, meetings, reports
+from . import db, events, paths, risk, pods, budget, audit, gateway, news_feed, mailbox, workflows, economy, compensation, meetings, reports
 
 
 def _once(key: str) -> bool:
@@ -87,6 +87,17 @@ def beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
             if _once(f"gwdown:{day}:{now.hour}"):        # un allarme l'ora, non uno per battito
                 events.publish("risk.alert", "gateway", dict(cosa=f"esecuzione dei pod sospesa: {str(e)[:120]}", gravita=3))
             notes.append(f"gateway fermo: {str(e)[:80]}")
+    # portafoglio ombra v4 contro v3: una volta al giorno dopo la chiusura USA (22 UTC), se i dati si scaricano
+    if os.environ.get("GERVA_SHADOW", "1") != "0" and now.hour >= 22 and _once(f"shadow:{day}"):
+        try:
+            import subprocess, sys
+            subprocess.run([sys.executable, os.path.join(paths.ROOT, "firm.py"), "data"], cwd=paths.ROOT,
+                           capture_output=True, timeout=600)
+            from . import shadow
+            sh = shadow.update()
+            notes.append(f"ombra: {sh.get('giorni', 0)} giorni, {sh.get('verdetto', '')[:60]}")
+        except Exception as e:
+            notes.append(f"ombra non aggiornata: {str(e)[:60]}")
     nf = news_feed.fetch_all()
     if nf["errori"] and not nf["nuove"]:
         notes.append("notizie: rete non disponibile o feed in errore")

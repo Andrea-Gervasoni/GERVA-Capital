@@ -108,6 +108,12 @@ def cmd_check_backtest(a):
     print(json.dumps({k: v for k, v in r.items() if k != "giudizio"}, ensure_ascii=False, indent=1, default=str))
 
 
+def cmd_shadow(_):
+    """Aggiorna il portafoglio ombra (v4 contro v3, in avanti, senza ordini) e ne stampa il bilancio."""
+    from firm import shadow
+    print(json.dumps(shadow.update(), ensure_ascii=False, indent=1, default=str))
+
+
 def cmd_heartbeat(_):
     from firm import heartbeat
     print(json.dumps(heartbeat.beat(), ensure_ascii=False, indent=1, default=str))
@@ -224,7 +230,7 @@ def main():
     ap = argparse.ArgumentParser(description="GERVA Capital")
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name in ["init", "portal", "heartbeat", "run", "status", "verify", "demo", "release", "data", "research", "report",
-                 "set-password", "ibkr-check", "observe", "check-backtest"]:
+                 "set-password", "ibkr-check", "observe", "check-backtest", "shadow"]:
         sp = sub.add_parser(name)
         sp.add_argument("--demo", action="store_true", help="usa il database dimostrativo var/demo/")
         if name == "research":

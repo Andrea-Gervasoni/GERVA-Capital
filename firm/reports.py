@@ -92,6 +92,14 @@ def diagnostics() -> list[dict]:
     return sorted(out, key=lambda x: -x["gravita"])
 
 
+def _shadow() -> dict:
+    try:
+        from . import shadow
+        return shadow.summary()
+    except Exception as e:                       # il report non cade se l'ombra non c'e'
+        return dict(giorni=0, verdetto=f"non disponibile: {str(e)[:80]}")
+
+
 def daily(day: str | None = None, save: bool = True) -> dict:
     day = day or db.today()
     fb = gateway.firm_book()
@@ -115,6 +123,7 @@ def daily(day: str | None = None, save: bool = True) -> dict:
         riunioni=[dict(id=m["id"], tipo=m["kind"], titolo=m["title"], decisione=m["decision"], stato=m["status"])
                   for m in meetings.history(5)],
         posta_aperta=len(mailbox.items("aperta")),
+        ombra=_shadow(),
         correzioni=diagnostics(),
     )
     if save:

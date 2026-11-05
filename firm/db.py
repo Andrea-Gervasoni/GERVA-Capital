@@ -118,6 +118,10 @@ CREATE TABLE IF NOT EXISTS fills (
   id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, order_id INTEGER, pod TEXT,
   instrument TEXT, side TEXT, qty REAL, price REAL, fee REAL, venue TEXT, model_cost REAL
 );
+CREATE TABLE IF NOT EXISTS shadow_returns (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, day TEXT, variant TEXT, ret REAL, recorded_ts TEXT, data_fp TEXT,
+  UNIQUE(day, variant)
+);
 CREATE TABLE IF NOT EXISTS nav_marks (
   id INTEGER PRIMARY KEY AUTOINCREMENT, day TEXT, pod TEXT, nav REAL, capital REAL,
   gross REAL, UNIQUE(day, pod)
@@ -132,7 +136,7 @@ CREATE TABLE IF NOT EXISTS gc_ledger (
 );
 """
 
-APPEND_ONLY = ["audit_log", "events", "llm_calls", "fills", "gc_ledger", "career", "postmortems", "evaluations"]
+APPEND_ONLY = ["audit_log", "events", "llm_calls", "fills", "gc_ledger", "career", "postmortems", "evaluations", "shadow_returns"]
 
 TRIGGERS = "\n".join(
     f"""CREATE TRIGGER IF NOT EXISTS {t}_no_update BEFORE UPDATE ON {t}

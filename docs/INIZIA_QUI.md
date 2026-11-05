@@ -69,6 +69,7 @@ Il risultato è in `research/gervaq4/`. Può dire "si tiene la v3": è un risult
 | Ogni sera | Leggi il **Report**: cosa è successo e le correzioni proposte | pannello Report |
 | Domenica | Decidi i rilasci per GERVA-Q (si applicano solo la domenica, 9-21 ora italiana) | Posta, poi `firm.py release --apply ID` |
 | Ogni mese | Niente: riallocazione del capitale e bonus li fa il codice; li vedi nel report | — |
+| Ogni sera, da solo | Il battito aggiorna il **portafoglio ombra** (v4 contro v3 in avanti); lo vedi nel report | report, oppure `firm.py shadow` |
 | Dopo un risultato visto online | Lo verifichi prima di crederci | `firm.py check-backtest` |
 
 ## Fase 4: il server (quando le fasi 1-3 girano senza sorprese da 2 settimane)

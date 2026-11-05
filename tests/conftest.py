@@ -31,6 +31,7 @@ def firm_env(tmp_path, monkeypatch):
     risk = tmp_path / "risk_limits.yaml"
     shutil.copy(settings.RISK_FILE, risk)
     monkeypatch.setattr(settings, "RISK_FILE", str(risk))
+    monkeypatch.setenv("GERVA_SHADOW", "0")              # niente download di dati dal battito nei test
     for k in [k for k in os.environ if k.endswith("_API_KEY")]:
         monkeypatch.delenv(k, raising=False)
     db.reset_connection_cache()

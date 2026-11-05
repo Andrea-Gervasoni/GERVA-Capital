@@ -110,3 +110,27 @@ Dettagli, fonti e livelli di fiducia in `docs/research/fonti_esterne_2026-11.md`
 - **Ipotesi per la Ricerca:** H-ATT-1, attenzione e crypto, da registrare nel trial registry prima di qualsiasi test.
 - **Non adottati, con motivo:** TradingView via MCP, Vibe-Trading, Freqtrade, bot di memecoin Solana,
   DeepSeek Super-Agent, Grok come secondo modello. OpenBB e Lean restano utili sul Mac, piu' avanti.
+
+## 5/11/2026: il banco v4 su dati REALI (2004-oggi, 116 serie, Yahoo Finance)
+Report: `research/gervaq4/2026-11-05.md`. Solo il motore azionario (meta' della v3); la sleeve crypto non e' toccata.
+
+| | Sharpe | CAGR | Vol | MaxDD |
+|---|---|---|---|---|
+| v3 (riespressa in quantlab, periodo di scelta) | 0,69 | 5,7% | 8,6% | -15,9% |
+| v4 "tutto" (ERC + liquidita' al tasso a breve + freno momentum + VIX + banda 5%) | 0,86 | 4,0% | 4,7% | -9,0% |
+| v4 "tutto", esposizione massima senza leva (x2, 76% investito, periodo intero) | 0,81 | 6,2% | 7,7% | -13,2% |
+
+- **Supera tutti i cancelli:** P(Sharpe > v3) 0,97 nel periodo di scelta e 0,97 nei 2 anni mai usati per scegliere
+  (Sharpe 1,38 contro 0,88); PBO 0,22; DSR 0,996 contando tutte le 64 prove del registro.
+- **Il DSR della v3 ricalcolato con gli Sharpe veri e' 0,97** (rilievo R1: prima era calcolato su valori inventati).
+- **Cosa vuol dire in soldi:** a esposizione normale la v4 guadagna MENO della v3 (rischia la meta'). Usando il
+  capitale che lascia fermo, senza leva, guadagna un po' di piu' (6,2% contro 5,7%) con perdite massime minori
+  (-13% contro -16%). E' un miglioramento di qualita', non un moltiplicatore.
+- **Limiti dichiarati:** la riespressione della v3 in quantlab non coincide con i numeri di GERVA-Q (CAGR 5,7% contro
+  7,1% del README della v3), quindi vale il confronto relativo; survivorship nell'universo azionario (R6) per entrambe.
+
+### Prossimo passo, deciso prima di vedere i dati: il portafoglio ombra
+Dal 5/11/2026 `firm/shadow.py` registra ogni sera, senza ordini, il rendimento in avanti di v3 e v4 (ogni giorno
+scritto una volta sola). Dopo **40 giorni di borsa** (meta' gennaio 2027): se P(Sharpe v4 > v3) >= 0,80 e il drawdown
+della v4 non e' peggiore, la societa' propone ad Andrea di adottarla (grande richiesta n.5, finestra della domenica,
+dichiarata in REGOLE_SFIDA come modifica decisa dopo aver visto i risultati). Altrimenti si resta sulla v3.
