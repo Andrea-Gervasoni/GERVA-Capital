@@ -7,7 +7,7 @@ import yaml
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 COMPOSE = yaml.safe_load(open(os.path.join(ROOT, "deploy", "docker-compose.yml")))
-FIRM = ("gervaq", "heartbeat", "portal")
+FIRM = ("gervaq", "observer", "heartbeat", "portal")
 
 
 def test_nessuna_porta_su_internet():
@@ -23,9 +23,27 @@ def test_container_della_societa_blindati():
         assert "no-new-privileges:true" in svc.get("security_opt", []), name
 
 
-def test_rete_dei_gateway_senza_internet_e_portale_isolato():
-    assert COMPOSE["networks"]["ibnet"].get("internal") is True
-    assert "ibnet" not in COMPOSE["services"]["portal"].get("networks", [])
+def _nets(name):
+    return set(COMPOSE["services"][name].get("networks", []) or [])
+
+
+def test_reti_interne_e_isolamento():
+    assert COMPOSE["networks"]["chnet"].get("internal") is True and COMPOSE["networks"]["podnet"].get("internal") is True
+    # sul gateway della SFIDA (che accetta ordini) arrivano solo il suo gateway e l'osservatore senza internet
+    on_chnet = {n for n in COMPOSE["services"] if "chnet" in _nets(n)}
+    assert on_chnet == {"ibgw-gervaq", "observer"}
+    assert _nets("observer") == {"chnet"}
+    assert "chnet" not in _nets("heartbeat") and _nets("portal") == {"front"}
+
+
+def test_segreti_del_portale_solo_al_portale():
+    for name, svc in COMPOSE["services"].items():
+        vols = [str(v) for v in svc.get("volumes", [])]
+        if name != "portal":
+            assert not any(v.startswith("portalkeys:") for v in vols), name
+            assert all(v.endswith(":ro") for v in vols if v.startswith("andrea:")), name
+    env = COMPOSE["services"]["portal"]["environment"]
+    assert env["GERVA_ANDREA_TOKEN"].startswith("/keys/") and env["GERVA_PORTAL_KEYS"] == "/keys"
 
 
 def test_solo_paper():
@@ -39,7 +57,7 @@ def test_stato_mutabile_nel_volume_scrivibile():
     for name in ("heartbeat", "portal"):
         env = COMPOSE["services"][name]["environment"]
         for k in ("GERVA_VAR", "GERVA_AGENTS", "GERVA_RESEARCH", "GERVA_RISK_FILE", "GERVA_KILL_FILE"):
-            assert str(env[k]).startswith("/data/"), f"{name}: {k}={env.get(k)}"
+            assert str(env[k]).startswith(("/data/", "/andrea/")), f"{name}: {k}={env.get(k)}"
     out = subprocess.run([sys.executable, "-c", "from firm import paths; print(paths.KILL_FILE)"], cwd=ROOT,
                          env=dict(os.environ, GERVA_KILL_FILE="/data/var/KILL"), capture_output=True, text=True)
     assert out.stdout.strip() == "/data/var/KILL"

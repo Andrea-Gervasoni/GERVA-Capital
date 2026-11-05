@@ -43,9 +43,12 @@ def ensure_token() -> str:
     p = paths.ANDREA_TOKEN
     os.makedirs(os.path.dirname(p), exist_ok=True)
     if not os.path.exists(p):
-        with open(p, "w") as f:
-            f.write(secrets.token_urlsafe(32))
-        os.chmod(p, 0o600)
+        try:
+            fd = os.open(p, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)      # 0600 fin dalla creazione
+            with os.fdopen(fd, "w") as f:
+                f.write(secrets.token_urlsafe(32))
+        except FileExistsError:
+            pass
     return _read_token()
 
 
@@ -86,12 +89,40 @@ def all_settings() -> dict:
     return flat
 
 
+def validate(key: str, value, default):
+    """Stesso tipo del valore di partenza, numeri finiti e non negativi (un budget a -5 non ha senso)."""
+    import math
+    num = (int, float)
+    if isinstance(default, bool):
+        if not isinstance(value, bool):
+            raise TypeError(f"{key}: serve vero/falso")
+    elif isinstance(default, num):
+        if isinstance(value, bool) or not isinstance(value, num) or not math.isfinite(value):
+            raise TypeError(f"{key}: serve un numero")
+        if value < 0 <= default:
+            raise ValueError(f"{key}: non puo' essere negativo")
+    elif isinstance(default, str):
+        if not isinstance(value, str) or len(value) > 500:
+            raise TypeError(f"{key}: serve un testo (massimo 500 caratteri)")
+    elif isinstance(default, dict):
+        if not isinstance(value, dict):
+            raise TypeError(f"{key}: serve un oggetto chiave: valore")
+        for k, v in value.items():
+            if k in default:
+                validate(f"{key}.{k}", v, default[k])
+    elif isinstance(default, list):
+        if not isinstance(value, list):
+            raise TypeError(f"{key}: serve un elenco")
+    return value
+
+
 def set(key: str, value, cap: AndreaCapability):
     if not isinstance(cap, AndreaCapability) or not getattr(cap, "_ok", False):
         raise SettingsPermissionError("solo Andrea modifica le impostazioni")
     known = _flatten(defaults())
     if key not in known:
         raise KeyError(f"impostazione sconosciuta: {key}")
+    validate(key, value, known[key])
     old = get(key)
     db.ex("INSERT INTO settings(key,value,updated_ts,updated_by) VALUES(?,?,?,?) "
           "ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_ts=excluded.updated_ts, "
@@ -118,6 +149,7 @@ def set_risk_limit(path: str, value, cap: AndreaCapability):
     if parts[-1] not in node:
         raise KeyError(path)
     old = node[parts[-1]]
+    validate(f"risk_limits.{path}", value, old)
     node[parts[-1]] = value
     tmp = RISK_FILE + ".tmp"
     with open(tmp, "w") as f:

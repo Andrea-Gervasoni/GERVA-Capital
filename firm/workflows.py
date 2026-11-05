@@ -441,7 +441,8 @@ def pod_cycle(pid: str, signal_weights: dict[str, float], now=None) -> dict:
         res = gateway.submit_order(pid, p["head"], instr, side, round(abs(delta), 6),
                                    f"{o['azione']}: {o['motivo'][:120]}", "settimane", now=now)
         sent.append(dict(strumento=instr, lato=side, esito=res["status"], motivi=res.get("reasons")))
-        SK.add_eval(p["head"], "disciplina_rischio", 1.0 if res["status"] == "accettato" else 0.0)
+    if sent:                                            # UNA valutazione per ribilanciamento, non una per ordine
+        SK.add_eval(p["head"], "disciplina_rischio", sum(x["esito"] == "accettato" for x in sent) / len(sent))
     f = o["previsione"]
     SK.register_forecast(p["head"], f["enunciato"], f["probabilita"], f["scadenza"], f["criterio"], f["fonte"])
     return dict(pod=pid, azione=o["azione"], ordini=sent)

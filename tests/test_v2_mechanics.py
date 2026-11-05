@@ -1,4 +1,5 @@
 """v2: compensi con differito e clawback, regola propria, edificio monotono, uffici per grado, riunioni, report."""
+import datetime as dt
 import json
 
 import numpy as np
@@ -88,14 +89,19 @@ def test_meeting_full_cycle_with_scripted_agents(org, monkeypatch):
     assert r["ok"] and r["decisione"] in ("riduci", "mantieni")
     m = meetings.history(1)[0]
     assert m["status"] == "decisa" and set(m["transcript"]["repliche"]) == {"cro", "capo", "pod_crypto"}
-    # i fatti: il pod perde nei giorni successivi -> 'riduci' era giusto
+    # i fatti: il pod OPERA e perde nei giorni successivi -> 'riduci' era giusto
     start = m["ts"][:10]
+    d0 = dt.date.fromisoformat(start)
     for i, nav in enumerate([5000, 4950, 4900, 4880]):
-        db.ex("INSERT INTO nav_marks(day,pod,nav,capital,gross) VALUES(?,?,?,?,?)", (f"{start}-{i}", "crypto", nav, 0, 0))
+        db.ex("INSERT INTO nav_marks(day,pod,nav,capital,gross) VALUES(?,?,?,?,?)",
+              ((d0 + dt.timedelta(days=i)).isoformat(), "crypto", nav, 0, 0))
+    db.ex("INSERT INTO fills(ts,order_id,pod,instrument,side,qty,price,fee,venue,model_cost) VALUES(?,?,?,?,?,?,?,?,?,?)",
+          (start + "T15:00:00", 0, "crypto", "BTC", "BUY", 0.01, 60000, 1, "test", 1))
     db.ex("UPDATE meetings SET resolve_after=? WHERE id=?", (start, m["id"]))
     res = meetings.resolve_due(start)
     assert res[0]["giusta"] == "riduci"
     assert res[0]["gc"]["cro"] > 0 > res[0]["gc"]["capo"]
+    assert "pod_crypto" not in res[0]["gc"]          # il capo del pod non scommette sul proprio pod
     assert E.gc_unvested("cro") > 0 and E.gc_balance("capo") < 0
 
 
@@ -105,3 +111,29 @@ def test_daily_report_has_corrections(org):
     assert "correzioni" in r and isinstance(r["correzioni"], list)
     assert any("DSR della v3" in c["cosa"] for c in r["correzioni"])
     assert reports.listing()[0] == r["giorno"]
+
+
+def test_unverifiable_meeting_is_voided_not_won(org, monkeypatch):
+    """Pod fermo: 'mantieni' non si vince a tavolino; dopo 30 giorni la riunione si annulla."""
+    from firm import meetings, db
+    from llm import providers
+    from llm.providers import LLMResult
+
+    class P:
+        name = "scripted"
+        def complete(self, model, system, user, schema, max_tokens, effort="low"):
+            out = ({"replica": "ok", "posizione_finale": "mantieni", "fiducia": 1.0} if "posizione_finale" in json.dumps(schema)
+                   else {"posizione": "mantieni", "argomento": "x", "evidenza": ["y"], "fiducia": 1.0, "cambierei_idea_se": "z"})
+            return LLMResult(text=json.dumps(out), model=model, provider="scripted", input_tokens=10, output_tokens=5)
+    monkeypatch.setattr(providers, "for_agent", lambda p: P())
+    meetings.risk_meeting("crypto", "prova")
+    m = meetings.history(1)[0]
+    start = m["ts"][:10]
+    d0 = dt.date.fromisoformat(start)
+    for i in range(4):
+        db.ex("INSERT INTO nav_marks(day,pod,nav,capital,gross) VALUES(?,?,?,?,?)",
+              ((d0 + dt.timedelta(days=i)).isoformat(), "crypto", 5000, 0, 0))
+    db.ex("UPDATE meetings SET resolve_after=? WHERE id=?", (start, m["id"]))
+    assert meetings.resolve_due(start) == []
+    meetings.resolve_due((d0 + dt.timedelta(days=40)).isoformat())
+    assert meetings.history(1)[0]["status"] == "annullata"

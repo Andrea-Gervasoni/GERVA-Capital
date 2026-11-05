@@ -32,7 +32,8 @@ from firm import (db, events, registry, budget, risk, pods, gateway, economy, ma
 HERE = os.path.dirname(os.path.abspath(__file__))
 # Host ammessi (difesa dal DNS rebinding) e reti dei client: sul server il portale sta dietro un tunnel SSH
 # e, in Docker, le richieste arrivano dal bridge interno: le reti si configurano, mai "tutti".
-ALLOWED_HOSTS = {"127.0.0.1:8765", "localhost:8765", "127.0.0.1", "localhost", "testserver"} | {
+_PORT = os.environ.get("PORTAL_PORT", "8765")
+ALLOWED_HOSTS = {f"127.0.0.1:{_PORT}", f"localhost:{_PORT}", "127.0.0.1", "localhost", "testserver"} | {
     h.strip() for h in os.environ.get("PORTAL_ALLOWED_HOSTS", "").split(",") if h.strip()}
 CLIENT_NETS = [ipaddress.ip_network(n.strip()) for n in
                os.environ.get("PORTAL_CLIENT_NETS", "127.0.0.1/32,::1/128").split(",") if n.strip()]
@@ -47,6 +48,15 @@ SECURITY_HEADERS = {
 
 app = FastAPI(title="GERVA Capital", docs_url=None, redoc_url=None, openapi_url=None)
 app.mount("/static", StaticFiles(directory=os.path.join(HERE, "static")), name="static")
+
+
+def _origin_ok(origin: str | None) -> bool:
+    """Un browser manda Origin su WebSocket e POST: deve essere il portale stesso (niente siti terzi)."""
+    if not origin:
+        return True                      # client non-browser (curl, test): restano Host, rete e sessione
+    from urllib.parse import urlparse
+    u = urlparse(origin)
+    return u.scheme in ("http", "https") and u.netloc in ALLOWED_HOSTS
 
 
 def _client_ok(host: str) -> bool:
@@ -78,13 +88,18 @@ def check_password(pw: str, stored: str) -> bool:
 
 
 def _session_key() -> bytes:
+    """Chiave delle sessioni: sul server in un volume che SOLO il portale monta (GERVA_PORTAL_KEYS)."""
     from firm import paths
-    p = os.path.join(paths.VAR, "session.key")
+    d = os.environ.get("GERVA_PORTAL_KEYS", paths.VAR)
+    p = os.path.join(d, "session.key")
     if not os.path.exists(p):
-        os.makedirs(paths.VAR, exist_ok=True)
-        with open(p, "wb") as f:
-            f.write(secrets.token_bytes(32))
-        os.chmod(p, 0o600)
+        os.makedirs(d, exist_ok=True)
+        try:
+            fd = os.open(p, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)   # 0600 fin dalla creazione
+            with os.fdopen(fd, "wb") as f:
+                f.write(secrets.token_bytes(32))
+        except FileExistsError:
+            pass
     return open(p, "rb").read()
 
 
@@ -106,6 +121,10 @@ def _session_ok(tok: str | None) -> bool:
 
 
 _attempts: dict[str, list[float]] = {}
+_scrypt_slots = asyncio.Semaphore(2)     # scrypt costa ~50 ms e 16 MB: al massimo due alla volta, fuori dal loop
+# senza sessione si serve SOLO cio' che serve alla pagina di accesso (percorsi esatti, niente prefissi)
+PUBLIC_PATHS = frozenset({"/login", "/logout", "/healthz", "/static/style.css",
+                          "/static/fonts/PressStart2P.woff2", "/static/fonts/VT323.woff2"})
 
 
 @app.middleware("http")
@@ -115,8 +134,9 @@ async def local_only(request: Request, call_next):
     if host not in ALLOWED_HOSTS or not _client_ok(client):
         return JSONResponse({"errore": "accesso non consentito"}, status_code=403, headers=SECURITY_HEADERS)
     path = request.url.path
-    if PASSWORD_HASH and path not in ("/login", "/healthz", "/static/style.css") and not path.startswith("/static/fonts") \
-            and not _session_ok(request.cookies.get("gerva_session")):
+    if request.method not in ("GET", "HEAD", "OPTIONS") and not _origin_ok(request.headers.get("origin")):
+        return JSONResponse({"errore": "origine non consentita"}, status_code=403, headers=SECURITY_HEADERS)
+    if PASSWORD_HASH and path not in PUBLIC_PATHS and not _session_ok(request.cookies.get("gerva_session")):
         if path.startswith("/api"):
             return JSONResponse({"errore": "login richiesto"}, status_code=401, headers=SECURITY_HEADERS)
         return RedirectResponse("/login", status_code=303, headers=SECURITY_HEADERS)
@@ -145,17 +165,26 @@ async def login(request: Request):
     recent = [t for t in _attempts.get(ip, []) if now - t < 300]
     if len(recent) >= 5:
         return HTMLResponse(LOGIN_HTML.format(msg="Troppi tentativi: riprova tra 5 minuti."), status_code=429)
+    _attempts[ip] = recent + [now]                        # registrato PRIMA della verifica: niente corse in parallelo
     form = (await request.body()).decode()
     from urllib.parse import parse_qs
-    pw = parse_qs(form).get("password", [""])[0]
-    if not PASSWORD_HASH or not check_password(pw, PASSWORD_HASH):
-        _attempts[ip] = recent + [now]
+    pw = parse_qs(form).get("password", [""])[0][:1024]
+    async with _scrypt_slots:
+        ok = bool(PASSWORD_HASH) and await asyncio.to_thread(check_password, pw, PASSWORD_HASH)
+    if not ok:
         await asyncio.sleep(1.0)                          # rallenta la forza bruta senza bloccare l'event loop
         return HTMLResponse(LOGIN_HTML.format(msg="Password errata."), status_code=401)
     _attempts.pop(ip, None)
     r = RedirectResponse("/", status_code=303)
     r.set_cookie("gerva_session", _make_session(), max_age=SESSION_HOURS * 3600, httponly=True, samesite="strict",
                  secure=os.environ.get("PORTAL_COOKIE_SECURE") == "1")
+    return r
+
+
+@app.get("/logout")
+def logout():
+    r = RedirectResponse("/login", status_code=303)
+    r.delete_cookie("gerva_session", path="/")
     return r
 
 
@@ -399,6 +428,8 @@ async def set_setting(request: Request):
             S.set(body["key"], body["value"], cap)
     except KeyError as e:
         raise HTTPException(400, f"impostazione sconosciuta: {e}")
+    except (TypeError, ValueError) as e:
+        raise HTTPException(400, str(e))
     return _json(dict(ok=True))
 
 
@@ -452,7 +483,8 @@ def ev(since: int = 0, limit: int = 100):
 async def ws(websocket: WebSocket):
     host = websocket.headers.get("host", "")
     client = websocket.client.host if websocket.client else ""
-    if host not in ALLOWED_HOSTS or not _client_ok(client) or not _session_ok(websocket.cookies.get("gerva_session")):
+    if host not in ALLOWED_HOSTS or not _client_ok(client) or not _origin_ok(websocket.headers.get("origin")) \
+            or not _session_ok(websocket.cookies.get("gerva_session")):
         await websocket.close(code=1008)
         return
     await websocket.accept()

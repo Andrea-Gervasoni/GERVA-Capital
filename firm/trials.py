@@ -84,16 +84,19 @@ def deflated(trial_id: str) -> dict:
 
 
 def gate(trial_id: str, pbo: float | None = None, cost2x_sharpe: float | None = None,
-         lookahead_ok: bool | None = None) -> dict:
-    """Cancello automatico in codice (DECISIONS D3). Solo cio' che passa va alla Validazione."""
+         lookahead_ok: bool | None = None, strict: bool = False) -> dict:
+    """Cancello automatico in codice (DECISIONS D3). Solo cio' che passa va alla Validazione.
+    Il test anti look-ahead e' sempre obbligatorio (non eseguito = non superato). Con strict=True (chiamata
+    da un agente) lo sono anche PBO e Sharpe a costi doppi: omettere un controllo non lo fa passare."""
     d = deflated(trial_id)
     years = db.one("SELECT n_obs FROM trials WHERE id=?", (trial_id,))["n_obs"] / 252
     checks = {
         "dsr": (d["dsr"] >= float(S.get("gate.dsr_min")), round(d["dsr"], 4)),
         "anni_di_storia": (years >= float(S.get("gate.min_years")), round(years, 2)),
-        "pbo": (pbo is None or pbo <= float(S.get("gate.pbo_max")), pbo),
-        "sharpe_costi_doppi": (cost2x_sharpe is None or cost2x_sharpe > 0, cost2x_sharpe),
-        "look_ahead": (lookahead_ok is not False, lookahead_ok),
+        "pbo": ((pbo is None and not strict) or (pbo is not None and pbo <= float(S.get("gate.pbo_max"))), pbo),
+        "sharpe_costi_doppi": ((cost2x_sharpe is None and not strict) or (cost2x_sharpe is not None and cost2x_sharpe > 0),
+                               cost2x_sharpe),
+        "look_ahead": (lookahead_ok is True, lookahead_ok),
     }
     ok = all(v[0] for v in checks.values())
     out = dict(trial=trial_id, passa=ok, controlli={k: dict(ok=v[0], valore=v[1]) for k, v in checks.items()},

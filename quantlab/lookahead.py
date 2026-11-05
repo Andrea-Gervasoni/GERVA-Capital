@@ -33,8 +33,11 @@ def truncation_test(signal_fn: Callable[[pd.DataFrame], pd.DataFrame], prices: p
         b = part
         diff = (a - b).abs().where(~(a.isna() & b.isna()))
         worst = float(np.nanmax(diff.values)) if np.isfinite(diff.values).any() else 0.0
+        mismatch = int((a.isna() ^ b.isna()).values.sum())      # valore noto con il futuro, assente senza
+        if mismatch:
+            worst = max(worst, float("inf"))
         if worst > atol:
-            bad.append(dict(taglio=str(prices.index[c]), differenza_max=worst))
+            bad.append(dict(taglio=str(prices.index[c]), differenza_max=worst, nan_asimmetrici=mismatch))
     return dict(ok=not bad, violazioni=bad, tagli=len(cuts))
 
 

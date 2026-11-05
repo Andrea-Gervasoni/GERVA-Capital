@@ -170,11 +170,21 @@ def promotion_test(agent_id: str, dept: str, grade: int, peers: list[str]) -> di
     min_n = int(S.get("talent.min_evals_promotion"))
     alpha = float(S.get("talent.p_value"))
 
+    sign = {m: s for lst in ROLE_METRICS.values() for m, s in lst}
+
     def series(a):
-        return np.array([r["value"] for r in db.q(
-            "SELECT value FROM evaluations WHERE agent_id=? AND kind IN ('dura','pari') AND metric!='brier'", (a,))]
-            + [1 - r["value"] / 0.25 for r in db.q(
-                "SELECT value FROM evaluations WHERE agent_id=? AND metric='brier'", (a,))])
+        # ogni valutazione nel verso giusto, in [0,1] (1 = ottimo): un "allarme falso" alto non aiuta a salire
+        out = []
+        for r in db.q("SELECT metric, kind, value v FROM evaluations WHERE agent_id=? "
+                      "AND kind IN ('dura','pari') AND metric NOT IN ('canarino')", (a,)):
+            v = float(r["v"])
+            if r["metric"] == "brier":
+                out.append(float(np.clip(1 - v / 0.25, 0, 1)))
+            elif r["kind"] == "dura" and sign.get(r["metric"], +1) < 0:
+                out.append(1 - float(np.clip(v, 0, 1)))
+            else:
+                out.append(float(np.clip(v, 0, 1)))
+        return np.array(out)
 
     x = series(agent_id)
     pool = np.concatenate([series(p) for p in peers if p != agent_id] or [np.array([])])

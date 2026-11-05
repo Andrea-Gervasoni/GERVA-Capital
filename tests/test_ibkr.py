@@ -140,6 +140,7 @@ def test_heartbeat_chiede_il_secondo_conto_una_volta(firm_env, monkeypatch):
     """Senza secondo conto paper la societa' lo chiede ad Andrea (credenziali, cat. 4) una sola volta."""
     from firm import heartbeat, ibkr, db
     monkeypatch.setenv("IBKR_OBSERVE", "1")
+    monkeypatch.setenv("IBKR_CHALLENGE_ACCOUNT", "DU999999")
     monkeypatch.delenv("IBKR_FIRM_ACCOUNT", raising=False)
     monkeypatch.delenv("GATEWAY_BROKER", raising=False)
     monkeypatch.setattr(ibkr, "observe_challenge", lambda *a, **k: None)

@@ -57,7 +57,9 @@ TOOLS: dict[str, Tool] = {
     "trial_register": Tool(lambda agent_id, strategy_id, family, params, hypothesis:
                            trials.register(agent_id, strategy_id, family, params, hypothesis),
                            True, "registro", "registra una prova PRIMA del test"),
-    "trial_gate": Tool(lambda agent_id, trial_id, **kw: trials.gate(trial_id, **kw), False, "calcolo",
+    "trial_gate": Tool(lambda agent_id, trial_id, pbo=None, cost2x_sharpe=None, lookahead_ok=None:
+                       trials.gate(trial_id, pbo=pbo, cost2x_sharpe=cost2x_sharpe, lookahead_ok=lookahead_ok, strict=True),
+                       False, "calcolo",
                        "cancello automatico DSR/PBO/costi/look-ahead"),
     "run_backtest": Tool(lambda agent_id, **kw: {"nota": "eseguito dal codice della pipeline di ricerca"},
                          False, "calcolo", "backtest quantlab (eseguito dal codice)"),
@@ -119,6 +121,11 @@ def _write_research(rid: str, name: str, text: str):
 def _read_research(rid: str):
     import glob, os
     from firm import paths
+    if not isinstance(rid, str) or not rid or not rid.replace("-", "").replace("_", "").isalnum():
+        raise PermissionError("percorso non ammesso")
+    base = os.path.realpath(paths.RESEARCH)
+    if not os.path.realpath(os.path.join(base, rid)).startswith(base + os.sep):
+        raise PermissionError("percorso non ammesso")
     return {os.path.basename(p): open(p).read()[:6000] for p in glob.glob(os.path.join(paths.RESEARCH, rid, "*.md"))}
 
 

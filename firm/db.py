@@ -132,7 +132,7 @@ CREATE TABLE IF NOT EXISTS gc_ledger (
 );
 """
 
-APPEND_ONLY = ["audit_log", "events", "llm_calls", "fills", "gc_ledger", "career", "postmortems"]
+APPEND_ONLY = ["audit_log", "events", "llm_calls", "fills", "gc_ledger", "career", "postmortems", "evaluations"]
 
 TRIGGERS = "\n".join(
     f"""CREATE TRIGGER IF NOT EXISTS {t}_no_update BEFORE UPDATE ON {t}
@@ -142,12 +142,13 @@ TRIGGERS = "\n".join(
     for t in APPEND_ONLY
 ) + """
 -- una previsione registrata non si puo' piu' cambiare: si puo' solo risolvere UNA volta
-CREATE TRIGGER IF NOT EXISTS forecasts_frozen BEFORE UPDATE ON forecasts
+DROP TRIGGER IF EXISTS forecasts_frozen;
+CREATE TRIGGER forecasts_frozen BEFORE UPDATE ON forecasts
 BEGIN
   SELECT CASE
     WHEN NEW.statement IS NOT OLD.statement OR NEW.prob IS NOT OLD.prob OR NEW.deadline IS NOT OLD.deadline
       OR NEW.criterion IS NOT OLD.criterion OR NEW.hash IS NOT OLD.hash OR NEW.ts IS NOT OLD.ts
-      OR NEW.agent_id IS NOT OLD.agent_id
+      OR NEW.agent_id IS NOT OLD.agent_id OR NEW.source IS NOT OLD.source OR NEW.canary IS NOT OLD.canary
     THEN RAISE(ABORT, 'previsione congelata: si puo'' solo risolvere')
     WHEN OLD.outcome IS NOT NULL THEN RAISE(ABORT, 'previsione gia'' risolta')
   END;

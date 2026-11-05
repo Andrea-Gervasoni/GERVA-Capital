@@ -39,9 +39,11 @@ class CostModel:
 def min_efficient_notional(m: CostModel, max_rate: float = 0.005) -> float:
     """Controvalore minimo perche' il costo di un ordine resti sotto `max_rate`.
     Sotto questa soglia la commissione minima mangia il rendimento: meglio non ribilanciare.
-    Esempio: minimo 3 EUR, tasso 0,05%, meta' spread 0,03% -> 3 / (0,005 - 0,0008) = ~714 EUR."""
-    room = max_rate - m.commission_rate - m.half_spread
-    return float("inf") if room <= 0 else m.commission_min / room
+    Dove vale il minimo la commissione E' il minimo, quindi costo = minimo + meta' spread * q <= max_rate * q.
+    Esempio: minimo 3 EUR, meta' spread 0,03% -> 3 / (0,005 - 0,0003) = ~638 EUR."""
+    if m.commission_rate + m.half_spread >= max_rate:
+        return float("inf")
+    return m.commission_min / (max_rate - m.half_spread)
 
 
 # Tariffe di partenza (verificate o dichiarate come stime nel commento)

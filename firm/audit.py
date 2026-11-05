@@ -10,9 +10,11 @@ Il payload passa dal filtro dei segreti PRIMA di essere scritto.
 from __future__ import annotations
 
 import hashlib
+import json
+import os
 import threading
 
-from . import db
+from . import db, paths
 from llm import redact
 
 GENESIS = "0" * 64
@@ -46,7 +48,24 @@ def log(actor: str, action: str, payload: dict | None = None, model: str | None 
         except Exception:
             conn.execute("ROLLBACK")
             raise
+        _write_head(seq, h)
     return dict(seq=seq, hash=h)
+
+
+def _head_path() -> str:
+    return os.path.join(paths.VAR, "audit.head")
+
+
+def _write_head(seq: int, h: str):
+    """Testa della catena FUORI dal DB: cancellare le ultime righe non passa piu' inosservato. Il report della
+    sera la stampa: una copia nei backup e nella posta di Andrea la rende verificabile anche dall'esterno."""
+    try:
+        tmp = _head_path() + ".tmp"
+        with open(tmp, "w") as f:
+            json.dump(dict(seq=seq, hash=h), f)
+        os.replace(tmp, _head_path())
+    except OSError:
+        pass
 
 
 def verify(conn=None) -> dict:
@@ -59,4 +78,11 @@ def verify(conn=None) -> dict:
         if r["seq"] != i or r["prev_hash"] != prev or r["hash"] != h:
             return dict(ok=False, n=len(rows), prima_rottura=r["seq"])
         prev = h
+    try:
+        head = json.load(open(_head_path()))
+    except (OSError, ValueError):
+        head = None
+    if head and (len(rows) < head["seq"] or rows[head["seq"] - 1]["hash"] != head["hash"]):
+        return dict(ok=False, n=len(rows), prima_rottura=min(len(rows), head["seq"]) + 1,
+                    motivo="righe mancanti o riscritte rispetto alla testa registrata")
     return dict(ok=True, n=len(rows), prima_rottura=None, testa=prev)

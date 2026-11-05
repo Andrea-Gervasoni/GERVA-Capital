@@ -63,8 +63,9 @@ def cmd_portal(a):
     bind = os.environ.get("PORTAL_BIND", "127.0.0.1")      # in Docker 0.0.0.0, pubblicato solo su 127.0.0.1 dell'host
     if bind not in ("127.0.0.1", "::1") and not os.environ.get("PORTAL_PASSWORD_HASH"):
         sys.exit("Rifiuto: fuori da 127.0.0.1 il portale richiede PORTAL_PASSWORD_HASH (python firm.py set-password)")
-    print(f"GERVA Capital — portale su http://{bind}:8765  (Ctrl+C per chiudere)")
-    uvicorn.run("portal.app:app", host=bind, port=8765, log_level="warning", proxy_headers=False, server_header=False)
+    port = int(os.environ.get("PORTAL_PORT", "8765"))      # cambiandola, aggiungere host:porta a PORTAL_ALLOWED_HOSTS
+    print(f"GERVA Capital — portale su http://{bind}:{port}  (Ctrl+C per chiudere)")
+    uvicorn.run("portal.app:app", host=bind, port=port, log_level="warning", proxy_headers=False, server_header=False)
 
 
 def cmd_set_password(_):
@@ -82,6 +83,17 @@ def cmd_ibkr_check(_):
     """Prova la connessione in sola lettura al conto della sfida e mostra cosa vede (conto mascherato)."""
     from firm import ibkr
     print(json.dumps(ibkr.observe_challenge(), ensure_ascii=False, indent=1, default=str))
+
+
+def cmd_observe(_):
+    """Osservatore del conto della sfida, da solo: sul server gira in un container senza agenti, senza internet,
+    l'unico che raggiunge il gateway della sfida. Scrive solo l'istantanea (conto mascherato) e il NAV."""
+    from firm import ibkr
+    every = float(os.environ.get("IBKR_OBSERVE_MINUTES", "5"))
+    while True:
+        s = ibkr.observe_challenge()
+        print(time.strftime("%H:%M"), "ok" if s.get("ok") else s.get("errore"), flush=True)
+        time.sleep(60 * every)
 
 
 def cmd_heartbeat(_):
@@ -197,7 +209,7 @@ def main():
     ap = argparse.ArgumentParser(description="GERVA Capital")
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name in ["init", "portal", "heartbeat", "run", "status", "verify", "demo", "release", "data", "research", "report",
-                 "set-password", "ibkr-check"]:
+                 "set-password", "ibkr-check", "observe"]:
         sp = sub.add_parser(name)
         sp.add_argument("--demo", action="store_true", help="usa il database dimostrativo var/demo/")
         if name == "research":
@@ -214,7 +226,13 @@ def main():
         if not os.path.isdir(demo_agents):
             shutil.copytree(os.path.join(ROOT, "agents"), demo_agents)
         os.environ["GERVA_AGENTS"] = demo_agents
-    if a.cmd not in ("init",):
+        # e i limiti di rischio: salvarli dal portale demo NON deve toccare config/risk_limits.yaml
+        demo_risk = os.path.join(ROOT, "var", "demo", "risk_limits.yaml")
+        if not os.path.exists(demo_risk):
+            shutil.copy(os.path.join(ROOT, "config", "risk_limits.yaml"), demo_risk)
+        os.environ["GERVA_RISK_FILE"] = demo_risk
+        os.environ["GERVA_KILL_FILE"] = os.path.join(ROOT, "var", "demo", "KILL")
+    if a.cmd not in ("init", "set-password"):            # set-password non tocca stato (e gira su immagini read-only)
         from firm import db, paths
         if not os.path.exists(paths.DB_PATH):
             cmd_init(a)

@@ -19,7 +19,8 @@ install -m 600 -o "$USER_NAME" -g "$USER_NAME" /root/.ssh/authorized_keys "/home
 echo "$USER_NAME ALL=(ALL) NOPASSWD:ALL" > "/etc/sudoers.d/90-$USER_NAME" && chmod 440 "/etc/sudoers.d/90-$USER_NAME"
 
 # --- SSH: solo chiavi, niente root, solo l'utente di servizio, tunnel locali ammessi (portale e VNC)
-cat > /etc/ssh/sshd_config.d/99-gerva.conf <<CONF
+# 00-: sshd tiene il PRIMO valore letto, quindi questo file vince su 50-cloud-init.conf (PasswordAuthentication yes)
+cat > /etc/ssh/sshd_config.d/00-gerva.conf <<CONF
 PermitRootLogin no
 PasswordAuthentication no
 KbdInteractiveAuthentication no
@@ -33,7 +34,11 @@ AllowTcpForwarding local
 PermitTunnel no
 ClientAliveInterval 300
 CONF
-sshd -t && systemctl restart ssh
+sshd -t
+for kv in "passwordauthentication no" "permitrootlogin no" "kbdinteractiveauthentication no"; do
+  sshd -T | grep -qx "$kv" || { echo "sshd: '$kv' non applicato, controlla /etc/ssh/sshd_config.d/"; exit 1; }
+done
+systemctl restart ssh
 
 # --- firewall: entra solo SSH. ATTENZIONE: Docker scavalca ufw per le porte PUBBLICATE; per questo il compose
 #     pubblica solo su 127.0.0.1 e mai su 0.0.0.0.

@@ -2,13 +2,17 @@
 #   docker compose -f deploy/docker-compose.yml --env-file deploy/server.env up -d --build   (oppure deploy/update.sh)
 # Il conto dei pod (secondo conto paper) si accende con:  --profile pods-ibkr
 #
-# Rete:
-#   ibgw-gervaq  IB Gateway del conto della SFIDA (login paper di GERVA-Q). Nessuna porta pubblicata sull'host.
+# Servizi e reti (chi puo' parlare con chi):
+#   ibgw-gervaq  IB Gateway del conto della SFIDA (login paper di GERVA-Q). Reti: egress (verso IBKR), chnet.
 #   gervaq       scheduler di GERVA-Q: condivide la rete di ibgw-gervaq e parla con 127.0.0.1:4002,
 #                quindi live.py/crypto_live.py girano SENZA modifiche al loro codice (regola 7 della sfida).
-#   ibgw-firm    IB Gateway del SECONDO conto paper (solo pod). Profilo pods-ibkr.
-#   heartbeat    battito della societa' (agenti, rischio, osservazione IBKR in sola lettura).
+#   observer     legge NAV e posizioni della sfida. Unico altro servizio su chnet; niente internet, niente agenti.
+#   ibgw-firm    IB Gateway del SECONDO conto paper (solo pod). Profilo pods-ibkr. Reti: egress, podnet.
+#   heartbeat    battito della societa' (agenti LLM, rischio, Gateway dei pod). Reti: egress, podnet.
+#                NON raggiunge il gateway della sfida: un agente o una dipendenza compromessa non puo' inviargli ordini.
 #   portal       portale: pubblicato SOLO su 127.0.0.1:8765 del server -> tunnel SSH; password obbligatoria.
+#                Unico a montare 'portalkeys' (chiave delle sessioni, token di Andrea) e a scrivere 'andrea'
+#                (limiti di rischio): il battito li legge in sola lettura o non li vede affatto.
 
 name: gerva                               # volume = gerva_firmdata (lo usa backup.sh)
 
@@ -26,7 +30,7 @@ x-firm-env: &firm-env
   GERVA_VAR: /data/var
   GERVA_AGENTS: /data/var/agents
   GERVA_RESEARCH: /data/research
-  GERVA_RISK_FILE: /data/var/risk_limits.yaml
+  GERVA_RISK_FILE: /andrea/risk_limits.yaml
   GERVA_KILL_FILE: /data/var/KILL
   GERVA_Q_PATH: /gervaq
 
@@ -42,7 +46,7 @@ services:
       AUTO_RESTART_TIME: "11:55 PM"
       TIME_ZONE: Europe/Rome
     ports: ["127.0.0.1:5901:5900"]        # VNC solo per l'eventuale 2FA, raggiungibile solo via tunnel SSH
-    networks: [egress, ibnet]
+    networks: [egress, chnet]
     restart: unless-stopped
     security_opt: ["no-new-privileges:true"]
     mem_limit: 1536m
@@ -60,13 +64,29 @@ services:
     command: ["python", "/app/deploy/gervaq_scheduler.py"]
     mem_limit: 1536m
 
+  observer:
+    <<: *hardening
+    image: gerva-capital:local
+    depends_on:
+      portal: {condition: service_healthy}               # il portale crea DB e volumi al primo avvio
+      ibgw-gervaq: {condition: service_started}
+    env_file: [../secrets/ibkr.env]                      # solo IBKR_CHALLENGE_ACCOUNT (niente chiavi API)
+    environment:
+      <<: *firm-env
+      IBKR_GERVAQ_HOST: ibgw-gervaq
+      IBKR_GERVAQ_PORT: "4004"            # porta paper rilanciata da socat sulla rete interna
+    volumes: ["firmdata:/data", "andrea:/andrea:ro"]
+    command: ["python", "firm.py", "observe"]
+    networks: [chnet]
+    mem_limit: 384m
+
   ibgw-firm:
     profiles: [pods-ibkr]
     image: ${IBGW_IMAGE:-ghcr.io/gnzsnz/ib-gateway:stable}
     env_file: [../secrets/ibgw-firm.env]                      # login di un SECONDO conto paper, diverso dalla sfida
     environment: {TRADING_MODE: paper, READ_ONLY_API: "no", TWOFA_TIMEOUT_ACTION: restart, AUTO_RESTART_TIME: "11:50 PM", TIME_ZONE: Europe/Rome}
     ports: ["127.0.0.1:5902:5900"]
-    networks: [egress, ibnet]
+    networks: [egress, podnet]
     restart: unless-stopped
     security_opt: ["no-new-privileges:true"]
     mem_limit: 1536m
@@ -74,33 +94,38 @@ services:
   heartbeat:
     <<: *hardening
     image: gerva-capital:local
-    depends_on: [gervaq]
-    env_file: [../secrets/firm.env]                           # ANTHROPIC_API_KEY, IBKR_*_ACCOUNT, ... (600)
+    depends_on:
+      portal: {condition: service_healthy}
+    env_file: [../secrets/firm.env, ../secrets/ibkr.env]      # ANTHROPIC_API_KEY ... ; IBKR_*_ACCOUNT (600)
     environment:
       <<: *firm-env
-      IBKR_OBSERVE: "1"
-      IBKR_GERVAQ_HOST: ibgw-gervaq
-      IBKR_GERVAQ_PORT: "4004"            # porta paper esposta dall'immagine sulla rete interna
+      IBKR_OBSERVE: "0"                   # lo fa il container observer
+      IBKR_GERVAQ_HOST: ibgw-gervaq       # non raggiungibile da qui (chnet): l'esecutore lo usa solo per escluderlo
+      IBKR_GERVAQ_PORT: "4004"
       IBKR_FIRM_HOST: ibgw-firm
       IBKR_FIRM_PORT: "4004"
     volumes:
       - firmdata:/data
+      - "andrea:/andrea:ro"               # limiti di rischio: il battito li legge, non li cambia
       - "${GERVAQ_DIR:-/srv/gerva/GERVA-Q}:/gervaq:ro"
     command: ["python", "firm.py", "run"]
-    networks: [egress, ibnet]
+    networks: [egress, podnet]
     mem_limit: 1g
 
   portal:
     <<: *hardening
     image: gerva-capital:local
-    depends_on: [heartbeat]
     env_file: [../secrets/portal.env]                         # PORTAL_PASSWORD_HASH (python firm.py set-password)
     environment:
       <<: *firm-env
+      GERVA_PORTAL_KEYS: /keys
+      GERVA_ANDREA_TOKEN: /keys/andrea.token
       PORTAL_BIND: 0.0.0.0
       PORTAL_CLIENT_NETS: "172.16.0.0/12,127.0.0.1/32"        # il bridge Docker; dall'esterno si arriva solo via tunnel
     volumes:
       - firmdata:/data
+      - portalkeys:/keys
+      - andrea:/andrea
       - "${GERVAQ_DIR:-/srv/gerva/GERVA-Q}:/gervaq:ro"
     command: ["python", "firm.py", "portal"]
     ports: ["127.0.0.1:8765:8765"]        # MAI 0.0.0.0: niente porte aperte su internet
@@ -111,11 +136,16 @@ services:
       interval: 60s
       timeout: 5s
       retries: 3
+      start_period: 60s
+      start_interval: 3s
 
 volumes:
-  firmdata: {}
+  firmdata: {}                              # DB, KILL, profili, ricerca
+  portalkeys: {}                            # chiave delle sessioni e token di Andrea: SOLO il portale
+  andrea: {}                                # limiti di rischio: scrive solo il portale (Andrea), gli altri leggono
 
 networks:
   egress: {}                                # uscita verso IBKR, API LLM, feed
-  ibnet: {internal: true}                   # gateway <-> societa': nessuna uscita su internet
+  chnet: {internal: true}                   # gateway della SFIDA <-> observer: nessuna uscita su internet
+  podnet: {internal: true}                  # gateway dei pod <-> battito
   front: {}

@@ -142,9 +142,14 @@ def reallocate(apply: bool = True, p_min: float = 0.80, dd_penalty: float = 0.5,
 # ---------------------------------------------------------------------------
 def distribute_bonus(pid: str) -> dict:
     na = net_alpha(pid)
-    if na["alpha_netto_eur"] <= 0:
-        return dict(pod=pid, bonus_gc=0.0, motivo="alpha netto non positivo")
-    pool_gc = na["alpha_netto_eur"] * float(S.get("economy.bonus_share")) * float(S.get("economy.gc_per_eur"))
+    # l'alpha netto e' cumulato dall'inizio: si paga solo la parte sopra quella gia' pagata (high-water mark),
+    # altrimenti lo stesso guadagno verrebbe ripagato ogni mese
+    paid = float(db.runtime_get(f"bonus_paid_alpha:{pid}", 0.0) or 0.0)
+    new_alpha = na["alpha_netto_eur"] - paid
+    if new_alpha <= 0:
+        return dict(pod=pid, bonus_gc=0.0, motivo="nessun alpha netto nuovo sopra il massimo gia' pagato")
+    db.runtime_set(f"bonus_paid_alpha:{pid}", na["alpha_netto_eur"])
+    pool_gc = new_alpha * float(S.get("economy.bonus_share")) * float(S.get("economy.gc_per_eur"))
     head = pods.get(pid)["head"]
     members = [r["id"] for r in db.q("SELECT id FROM agents WHERE profile LIKE ? AND kind='llm'",
                                      (f'%"pod": "{pid}"%',))]

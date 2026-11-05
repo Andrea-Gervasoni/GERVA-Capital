@@ -102,7 +102,10 @@ def hold(kind: str, title: str, reason: str, participants: list[str], data: dict
     decision = next(o for o in opts if score[o] == best) if final else opts[0]     # pareggio -> la piu' prudente
     deadline = (dt.date.fromisoformat(db.today()) + dt.timedelta(days=spec["days"])).isoformat()
     fids = {}
+    conflicted = _conflicted(kind, context or {})
     for p, out in final.items():
+        if p in conflicted:                      # chi decide i trade del pod non scommette sull'esito del suo pod
+            continue
         fids[p] = SK.register_forecast(p, f"Riunione #{mid}: '{out['posizione_finale']}' e' la scelta giusta",
                                        out["fiducia"], deadline, spec["criterion"], "sala_riunioni")
     transcript = dict(posizioni=first, repliche=final, pesi=weights, punteggi=score, previsioni=fids)
@@ -115,17 +118,36 @@ def hold(kind: str, title: str, reason: str, participants: list[str], data: dict
 # ---------------------------------------------------------------------------
 # Risoluzione: i fatti decidono chi aveva ragione, e la regola di Brier paga
 # ---------------------------------------------------------------------------
+VOID_AFTER_DAYS = 30                      # una riunione che i fatti non possono decidere si annulla
+
+
+def _conflicted(kind: str, ctx: dict) -> set[str]:
+    if kind in ("rischio", "allocazione") and ctx.get("pod"):
+        p = pods.get(ctx["pod"])
+        return {p["head"]} if p else set()
+    return set()
+
+
 def _pod_ret(pid: str, start: str, days: int) -> float | None:
-    rows = db.q("SELECT day, nav FROM nav_marks WHERE pod=? AND day>=? ORDER BY day", (pid, start))
+    """Rendimento su una finestra FISSA [start, start+days]: non scivola in avanti con il tempo."""
+    end = (dt.date.fromisoformat(start) + dt.timedelta(days=days)).isoformat()
+    rows = db.q("SELECT day, nav FROM nav_marks WHERE pod=? AND day>=? AND day<=? ORDER BY day", (pid, start, end))
     if len(rows) < max(2, days // 2):
         return None
     return rows[-1]["nav"] / rows[0]["nav"] - 1
+
+
+def _traded(pid: str, start: str, days: int) -> bool:
+    end = (dt.date.fromisoformat(start) + dt.timedelta(days=days + 1)).isoformat()
+    return bool(db.one("SELECT 1 FROM fills WHERE pod=? AND ts>=? AND ts<? LIMIT 1", (pid, start, end)))
 
 
 def correct_option(m: dict) -> str | None:
     ctx = json.loads(m["context"] or "{}")
     start = m["ts"][:10]
     if m["kind"] == "rischio" and ctx.get("pod"):
+        if ctx["pod"] != "pod_zero" and not _traded(ctx["pod"], start, 5):
+            return None                          # pod fermo: "mantieni" sarebbe vinto a tavolino
         r = _pod_ret(ctx["pod"], start, 5)
         return None if r is None else ("riduci" if r < 0 else "mantieni")
     if m["kind"] == "allocazione" and ctx.get("pod"):
@@ -146,10 +168,21 @@ def resolve_due(today: str | None = None) -> list[dict]:
     for m in db.q("SELECT * FROM meetings WHERE status='decisa' AND resolve_after<=?", (today,)):
         right = correct_option(m)
         if right is None:
+            late = (dt.date.fromisoformat(today) - dt.date.fromisoformat(m["resolve_after"][:10])).days
+            if late > VOID_AFTER_DAYS:           # nessun fatto verificabile: annullata, nessuno vince a tavolino
+                tr = json.loads(m["transcript"])
+                for fid in tr.get("previsioni", {}).values():
+                    if fid:
+                        db.ex("UPDATE forecasts SET resolved_by='annullata' WHERE id=? AND outcome IS NULL", (fid,))
+                db.ex("UPDATE meetings SET status='annullata', outcome=? WHERE id=?",
+                      (db.dumps(dict(motivo="esito non verificabile con i dati")), m["id"]))
             continue
         tr = json.loads(m["transcript"])
+        conflicted = _conflicted(m["kind"], json.loads(m["context"] or "{}"))
         paid = {}
         for p, rep in tr["repliche"].items():
+            if p in conflicted:
+                continue
             ok = rep["posizione_finale"] == right
             fid = tr["previsioni"].get(p)
             if fid:

@@ -8,7 +8,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 PIP_DISABLE_
 
 # niente apt: meno pacchetti, meno superficie d'attacco (tzdata arriva da pip, patch e' in Python)
 RUN useradd --uid 10001 --no-create-home --shell /usr/sbin/nologin gerva \
- && mkdir -p /data && chown 10001:10001 /data && chmod 700 /data     # i volumi nominati ereditano proprieta' e permessi
+ && mkdir -p /data /keys /andrea && chown 10001:10001 /data /keys /andrea && chmod 700 /data /keys /andrea     # i volumi nominati ereditano proprieta' e permessi
 
 WORKDIR /app
 COPY deploy/requirements.lock /app/deploy/requirements.lock
