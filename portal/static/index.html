@@ -9,7 +9,7 @@
 </head>
 <body>
 <header id="top">
-  <div class="brand"><canvas id="logo" width="30" height="30"></canvas><div><div class="name">GERVA <span>CAPITAL</span></div><div class="tag">trading quantitativo · società di agenti</div></div></div>
+  <div class="brand"><canvas id="logo" width="30" height="30"></canvas><div><div class="name">GERVA <span>CAPITAL</span></div><div class="tagline">trading quantitativo · società di agenti</div></div></div>
   <div class="mode"><span class="paper">PAPER</span><span class="live" title="LIVE bloccato: servono i cancelli 13-15 della sfida e la firma dei titolari del conto">🔒 LIVE</span></div>
   <div class="kpis">
     <div class="k"><div class="l">NAV paper</div><div id="k-nav" class="v">—</div></div>
@@ -25,7 +25,7 @@
 <div id="banner-sim" class="banner sim hidden">SIMULAZIONE — nessuna chiave API: gli agenti rispondono in modo prudente e finto (costo zero)</div>
 
 <main>
-  <section id="stage"><canvas id="office"></canvas><div id="zoom"><button data-z="1.25" title="Avvicina">＋</button><button data-z="0.8" title="Allontana">－</button><button data-z="fit" title="Tutto l'edificio">⤢</button><span>rotella = zoom · trascina = sposta · doppio clic = stanza</span></div></section>
+  <section id="stage"><canvas id="office" tabindex="0" role="img" aria-label="Edificio di GERVA Capital: uffici, persone e sala riunioni in tempo reale"></canvas><div id="zoom"><button data-z="1.25" title="Avvicina">＋</button><button data-z="0.8" title="Allontana">－</button><button data-z="fit" title="Tutto l'edificio">⤢</button><span>rotella: zoom · trascina · doppio clic: stanza</span></div></section>
   <aside id="side">
     <nav id="menu">
       <button data-panel="persone">◉ Persone</button>
@@ -48,17 +48,18 @@
 </main>
 
 <footer>
-  <form id="cmd"><span class="p">▶ Parla al Capo</span><input id="cmdtext" autocomplete="off" maxlength="2000" placeholder="es. «Fammi un riepilogo del rischio di oggi»"><button>Invia</button></form>
+  <form id="cmd"><label class="p" for="cmdtext">▶ Parla al Capo</label><input id="cmdtext" autocomplete="off" maxlength="2000" placeholder="es. «Fammi un riepilogo del rischio di oggi»"><button>Invia</button></form>
 </footer>
 
 <div id="tip" class="hidden"></div>
-<div id="dialog" class="win hidden">
-  <div class="wh"><div id="dlg-head" class="dh"></div><button class="x" data-close="dialog">✕</button></div>
+<div id="toast" role="alert" hidden></div>
+<div id="dialog" class="win hidden" role="dialog" aria-modal="false" aria-labelledby="dlg-head">
+  <div class="wh"><div id="dlg-head" class="dh"></div><button class="x" data-close="dialog" aria-label="Chiudi la scheda">✕</button></div>
   <div class="tabs" id="dlg-tabs"></div>
   <div class="wb" id="dlg-body"></div>
 </div>
-<div id="panel" class="win hidden">
-  <div class="wh"><span id="pnl-title"></span><button class="x" data-close="panel">✕</button></div>
+<div id="panel" class="win hidden" role="dialog" aria-modal="false" aria-labelledby="pnl-title">
+  <div class="wh"><span id="pnl-title"></span><button class="x" data-close="panel" aria-label="Chiudi il pannello">✕</button></div>
   <div class="wb" id="pnl-body"></div>
 </div>
 

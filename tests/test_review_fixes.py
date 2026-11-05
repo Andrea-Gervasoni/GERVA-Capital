@@ -147,3 +147,11 @@ def test_settings_reject_wrong_types(firm_env):
         S.set("budget.daily_eur", "0.6", cap)
     S.set("budget.daily_eur", 0.8, cap)
     assert S.get("budget.daily_eur") == 0.8
+
+
+def test_password_hash_survives_compose_interpolation():
+    """Il formato non contiene '$' (Compose li interpola negli env_file) e il vecchio formato resta valido."""
+    from portal.app import hash_password, check_password
+    h = hash_password("una-frase-lunga-e-sicura")
+    assert "$" not in h and check_password("una-frase-lunga-e-sicura", h) and not check_password("altra", h)
+    assert check_password("una-frase-lunga-e-sicura", h.replace(":", "$"))

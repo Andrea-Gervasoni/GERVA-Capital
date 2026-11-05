@@ -56,3 +56,48 @@ Costo di sviluppo: non leggibile da me in questa sessione (`/cost` non è dispon
 - Agenti in simulazione senza chiave; banco v4 testato solo su dati sintetici (sul Mac: `firm.py data` e poi `firm.py research gervaq4`).
 - Le tariffe UCITS (minimo 3 €) sono stime: vanno lette sul listino IBKR prima di cambiare R11.
 - Il livello dell'edificio e gli arredi sono rappresentazione: non cambiano nessuna regola di rischio.
+
+## v3 — IBKR, server, sicurezza, revisione con una squadra di agenti ✅
+- **IBKR (`firm/ibkr.py`)**: osservatore in sola lettura del conto della sfida (involucro che vieta ogni metodo
+  di scrittura, mai un NAV a zero, mai il conto sbagliato) ed esecutore dei pod **solo** su un secondo conto paper.
+  Ordini limite sul tick, quantità intere, orari di borsa con ora legale, registrazione prima dell'invio e
+  recupero dopo un crash, annullamento confermato, KILL. Senza secondo conto la società lo chiede nella posta (cat. 4).
+- **Server (`deploy/`, guida in `docs/DEPLOY.md`)**: Docker con utente non root, filesystem in sola lettura, nessuna
+  capability; reti interne separate (gateway della sfida raggiungibile solo dall'osservatore); portale solo via
+  tunnel SSH con password; backup cifrati; aggiornamenti che rieseguono i test.
+- **Demo provabile**: il portale vero impacchettato su un'istantanea del demo, in sola lettura
+  (pubblicato come pagina privata su claude.ai).
+
+### La revisione: quattro agenti indipendenti, 50 rilievi
+Revisori in parallelo su sicurezza (12), ordini IBKR (13), correttezza quantitativa (11) e interfaccia (14).
+Corretti tutti quelli di gravità critica, alta e media, quasi sempre con un test che riproduce il caso. I più gravi:
+1. **KILL inutilizzabile sul server**: il file stava nel codice, in sola lettura. Ora nel volume.
+2. **Gateway che ignorava gli ordini in attesa**: dieci acquisti accettati prima del flush portavano la leva a 2,4×
+   e permettevano short. Ora gli ordini aperti contano nei controlli.
+3. **Crash dopo l'invio**: l'eseguito andava perso o l'ordine si poteva reinviare. Ora registrazione prima
+   dell'invio, recupero dal broker, "da verificare" se manca la traccia.
+4. **Bonus pagato ogni mese sullo stesso alpha** (cumulato dall'inizio). Ora solo sull'alpha nuovo.
+5. **Test anti look-ahead cieco a un passo di futuro** (NaN asimmetrici ignorati). Ora li conta.
+6. **Promozioni** che premiavano valori alti anche delle metriche "meno è meglio". Ora normalizzate.
+7. **Riunioni**: il capo di un pod scommetteva sul proprio pod e vinceva "mantieni" a pod fermo. Ora escluso,
+   finestra fissa, annullamento se l'esito non è verificabile.
+8. **Sicurezza**: il container degli agenti raggiungeva il gateway della sfida; WebSocket senza controllo
+   dell'Origin; rate limit aggirabile in parallelo; backup mai eseguiti (nome del volume); demo che scriveva i
+   limiti di rischio veri; impostazioni senza validazione (budget a −5 accettato). Tutti corretti con test.
+9. Trovato da me nella prova con compose: **Docker Compose troncava l'hash della password** (interpreta i `$`).
+   Nuovo formato senza `$`.
+
+Rimasti aperti, di gravità bassa, dichiarati:
+- `nav_marks`, `meetings` e `trials` accettano ancora UPDATE (servono per ricalcolare i segni giornalieri e lo stato);
+  la testa dell'audit fuori dal DB rileva le cancellazioni, ma chi controlla il server può riscrivere tutto (serve una copia esterna: il backup cifrato la contiene).
+- Valute: i controlli di rischio trattano i prezzi come EUR; l'esecutore IBKR rifiuta un prezzo in una valuta diversa da quella del contratto invece di convertire. Le festività di borsa non sono gestite (l'ordine non si esegue e si annulla).
+- Sul server i segreti passati come variabili si vedono con `docker inspect` (chi può farlo è già root); i container di IB Gateway non hanno `cap_drop` perché l'immagine ne ha bisogno per l'interfaccia grafica.
+- Sessioni del portale: c'è il logout, ma non la revoca di una singola sessione (si revocano tutte cancellando `session.key`).
+- Interfaccia: sul telefono l'edificio intero ha scritte troppo piccole (ora c'è lo zoom a due dita); i pannelli gestiscono il fuoco all'apertura e alla chiusura ma non lo intrappolano.
+
+Test: **127** (126 nel container, uno richiede lo snapshot di GERVA-Q).
+
+### Cosa resta da verificare (non verificabile da qui)
+- Login reale di IB Gateway, 2FA, nomi delle linee UCITS su IBKR, regole crypto del conto paper.
+- Un feed di prezzi reale per i pod: senza, sul server i pod non inviano ordini (i prezzi li scrive solo il demo).
+- `git push`: il permesso è stato negato in questa sessione; i commit sono pronti nel branch locale.

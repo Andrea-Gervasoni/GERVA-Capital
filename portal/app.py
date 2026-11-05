@@ -37,7 +37,7 @@ ALLOWED_HOSTS = {f"127.0.0.1:{_PORT}", f"localhost:{_PORT}", "127.0.0.1", "local
     h.strip() for h in os.environ.get("PORTAL_ALLOWED_HOSTS", "").split(",") if h.strip()}
 CLIENT_NETS = [ipaddress.ip_network(n.strip()) for n in
                os.environ.get("PORTAL_CLIENT_NETS", "127.0.0.1/32,::1/128").split(",") if n.strip()]
-PASSWORD_HASH = os.environ.get("PORTAL_PASSWORD_HASH", "")        # scrypt$sale$hash (python firm.py set-password)
+PASSWORD_HASH = os.environ.get("PORTAL_PASSWORD_HASH", "")        # scrypt:sale:hash (python firm.py set-password)
 SESSION_HOURS = 12
 SECURITY_HEADERS = {
     "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; "
@@ -75,12 +75,13 @@ def _client_ok(host: str) -> bool:
 def hash_password(pw: str) -> str:
     salt = secrets.token_bytes(16)
     h = hashlib.scrypt(pw.encode(), salt=salt, n=2 ** 14, r=8, p=1, dklen=32)
-    return f"scrypt${salt.hex()}${h.hex()}"
+    # separatore ':' e non '$': Docker Compose interpola i '$' nei file env_file e troncherebbe l'hash
+    return f"scrypt:{salt.hex()}:{h.hex()}"
 
 
 def check_password(pw: str, stored: str) -> bool:
     try:
-        _, salt, h = stored.split("$")
+        _, salt, h = stored.replace("$", ":").split(":")          # accetta anche il vecchio formato scrypt$..$..
         calc = hashlib.scrypt(pw.encode(), salt=bytes.fromhex(salt), n=2 ** 14, r=8, p=1, dklen=32)
         return hmac.compare_digest(calc.hex(), h)
     except Exception:

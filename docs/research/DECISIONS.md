@@ -21,4 +21,7 @@
 - **Le prove di collaudo su dati sintetici** restano nel registro ma non entrano nel contatore del DSR: verificano la pipeline, non una strategia, e falserebbero la varianza degli Sharpe.
 - **Organico:** 8 agenti iniziali come da brief, più i 3 Capi Pod richiesti da M5 con budget minimo (0,03 €/giorno ciascuno, sveglia settimanale).
 - **Il brief non è pubblicato** (repo pubblico, contiene dettagli personali): è escluso da git e resta solo in locale.
+- **IBKR con due ruoli separati (v3).** Il conto della sfida è solo osservato; i pod eseguono su IBKR solo con un secondo conto paper (R12). Senza, restano sul broker simulato. Se IBKR è configurato e non risponde, i pod si fermano invece di ripiegare sul simulato.
+- **Server: difesa in profondità invece di fiducia nel codice (v3).** Gli agenti LLM leggono testo dal web, quindi il loro container non raggiunge il gateway della sfida, non vede le chiavi del portale e non può scrivere i limiti di rischio. Il portale è raggiungibile solo dal tunnel SSH, con password.
+- **La patch di rilascio per GERVA-Q esce da git (v3).** Conteneva righe del codice privato di GERVA-Q; il branch non era mai stato pubblicato, quindi l'ho tolta anche dalla storia locale. Resta su disco.
 - **`/cost` non è disponibile per me in questa sessione.** STATUS.md lo dichiara e non riporta stime inventate; Andrea legge il valore vero con `/cost` dal suo terminale.

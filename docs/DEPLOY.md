@@ -16,11 +16,12 @@ Tempo richiesto: circa 45 minuti la prima volta. Costo: un piccolo VPS (vedi §9
 | SSH | Solo chiavi, niente root, niente password, un solo utente ammesso (`AllowUsers`), solo tunnel *locali*, `fail2ban`. | `server_setup.sh` |
 | Portale | Raggiungibile solo dal tunnel. Password obbligatoria fuori da 127.0.0.1 (il portale **rifiuta di partire** senza `PORTAL_PASSWORD_HASH`), hash scrypt, cookie di sessione firmato HMAC (`HttpOnly`, `SameSite=Strict`, 12 ore), 5 tentativi ogni 5 minuti, controllo dell'header `Host` contro il DNS rebinding, lista delle reti client, CSP senza `unsafe-inline`, `X-Frame-Options: DENY`, nessun header `Server`. | `portal/app.py` |
 | Container | Utente non root (uid 10001), filesystem in sola lettura, `cap_drop: ALL`, `no-new-privileges`, limiti di memoria e processi, log a rotazione. Lo stato sta solo nel volume `gerva_firmdata` (permessi 700/600). | `deploy/Dockerfile`, compose |
-| Rete interna | Gateway IBKR ↔ società sulla rete `ibnet`, marcata `internal` (nessuna uscita su internet). Il portale sta su una rete a parte e **non** può parlare con IB Gateway. | compose |
+| Reti interne | Il gateway della **sfida** (che accetta ordini, perché GERVA-Q deve poterne inviare) è raggiungibile solo dal suo motore e da `observer`, un container senza agenti e senza internet, sulla rete interna `chnet`. Il battito (agenti LLM, testo dal web, più dipendenze) **non** lo raggiunge: un agente manipolato o una libreria compromessa non può mandargli ordini. Il gateway dei pod sta su `podnet`, il portale su una rete a parte. | compose |
+| Volumi | `gerva_firmdata` (DB, KILL, profili) condiviso. `portalkeys` (chiave delle sessioni, token di Andrea) lo monta **solo** il portale. `andrea` (limiti di rischio) lo scrive solo il portale; battito e osservatore lo montano in sola lettura. | compose |
 | Broker | Solo conti `DU…` (paper). Il conto della sfida è osservato in **sola lettura** (`readonly=True`). I pod possono eseguire solo su un **secondo** conto paper distinto; l'esecutore rifiuta se il conto manca, non è DU, coincide con quello della sfida o se il gateway vede anche quello della sfida. | `firm/ibkr.py` |
 | Segreti | Solo in `secrets/*.env` sul server (permessi 600, esclusi da git e dall'immagine). Mai nei log (`llm/redact.py`), mai nel DB in chiaro (numero di conto mascherato `DU****999`), mai nei prompt. | `.gitignore`, `.dockerignore` |
-| Aggiornamenti | `update.sh`: `git pull --ff-only`, build, **test dentro l'immagine nuova senza rete**, riavvio solo se verdi. Aggiornamenti di sicurezza del sistema automatici. | `deploy/update.sh` |
-| Backup | Ogni notte copia coerente del DB (`sqlite3 .backup`) + stato di GERVA-Q, cifrata con `age` verso una chiave che resta sul tuo computer, 30 giorni. | `deploy/backup.sh` |
+| Aggiornamenti | `update.sh`: `git pull --ff-only`, con `REQUIRE_SIGNED=1` rifiuta i commit non firmati; build, **test dentro l'immagine nuova senza rete**, riavvio solo se verdi, sempre con `deploy/server.env` (il digest fissato di IB Gateway non si perde). Aggiornamenti di sicurezza del sistema automatici. | `deploy/update.sh` |
+| Backup | Ogni notte copia coerente del DB (`sqlite3 .backup`, con controllo di integrità) + stato di GERVA-Q + testa della catena di audit, cifrata **in streaming** con `age` verso una chiave che resta sul tuo computer (nessuna copia in chiaro sul disco; senza destinatario lo script si rifiuta), 30 giorni. | `deploy/backup.sh` |
 
 **Perché i pod non usano il conto della sfida.** `live.py` e `crypto_live.py` di GERVA-Q vendono ogni posizione
 che non è nel loro target. Un ordine di un pod sullo stesso conto verrebbe liquidato la sera stessa e
@@ -83,6 +84,13 @@ GERVA-Q **non** è nel repository pubblico: copialo dal Mac (stato e ledger comp
 rsync -a --exclude '.venv' --exclude '__pycache__' ~/Documents/GERVA-Q/ gerva:/srv/gerva/GERVA-Q/
 ```
 
+Anche le patch di rilascio per GERVA-Q (`research/releases/*/*.patch`) restano fuori da git, perché contengono
+righe del suo codice privato. Se vuoi usare la finestra di rilascio sul server, copiale a mano:
+
+```bash
+rsync -a ~/GERVA-Capital/research/releases/ gerva:/srv/gerva/GERVA-Capital/research/releases/
+```
+
 > Importante: da quando GERVA-Q gira sul server, **spegni lo scheduler sul Mac** (cron/launchd di `run_daily.sh`
 > e `crypto_live.py`). Due motori sullo stesso conto paper si rincorrerebbero.
 
@@ -105,14 +113,16 @@ cd /srv/gerva/GERVA-Capital && install -d -m 700 secrets && cp deploy/secrets.ex
 Poi compila con `nano`:
 
 - `secrets/ibgw-gervaq.env` — `TWS_USERID` / `TWS_PASSWORD` del **login paper** della sfida. Nel Client Portal di IBKR il conto paper ha un nome utente proprio, diverso da quello del conto reale: usa quello. `VNC_SERVER_PASSWORD` serve solo se devi completare una 2FA a mano (§6).
-- `secrets/firm.env` — `ANTHROPIC_API_KEY`; `IBKR_CHALLENGE_ACCOUNT=DU…` (serve all'esecutore per **rifiutarsi** di operarci); lascia vuoto `IBKR_FIRM_ACCOUNT` finché non hai il secondo conto.
+- `secrets/firm.env` — `ANTHROPIC_API_KEY` (solo il battito la vede).
+- `secrets/ibkr.env` — `IBKR_CHALLENGE_ACCOUNT=DU…`: l'osservatore lo legge e l'esecutore dei pod lo usa per **rifiutarsi** di operarci (senza, l'esecutore non parte). Lascia vuoto `IBKR_FIRM_ACCOUNT` finché non hai il secondo conto.
 - `secrets/portal.env` — l'hash della password del portale. Generalo così (la password non viene salvata da nessuna parte):
 
 ```bash
 cd /srv/gerva/GERVA-Capital && docker compose -f deploy/docker-compose.yml --env-file deploy/server.env build gervaq && docker run --rm -it --entrypoint python gerva-capital:local firm.py set-password
 ```
 
-  Copia la riga `PORTAL_PASSWORD_HASH=scrypt$…` in `secrets/portal.env`. Almeno 12 caratteri; meglio una frase lunga.
+  Copia la riga `PORTAL_PASSWORD_HASH=scrypt:…` in `secrets/portal.env`. Almeno 12 caratteri; meglio una frase lunga.
+  (Il formato usa `:` e non `$` apposta: Docker Compose interpreta i `$` nei file di segreti e troncherebbe l'hash.)
 
 ## 5. Avvio
 
@@ -131,10 +141,18 @@ docker compose -f deploy/docker-compose.yml --env-file deploy/server.env logs --
 ```
 
 ```bash
-docker compose -f deploy/docker-compose.yml --env-file deploy/server.env exec heartbeat python firm.py ibkr-check
+docker compose -f deploy/docker-compose.yml --env-file deploy/server.env logs --tail 20 observer
 ```
 
-`ibkr-check` dice se il gateway risponde, se il conto è DU e mostra solo il numero mascherato.
+`ibkr-check` dice se il gateway risponde, se il conto è DU e mostra solo il numero mascherato. Va lanciato
+dall'osservatore, l'unico che vede il gateway della sfida; il battito risponderebbe "host sconosciuto", ed è voluto:
+
+```bash
+docker compose -f deploy/docker-compose.yml --env-file deploy/server.env exec observer python firm.py ibkr-check
+```
+
+Ordine di avvio: il portale parte per primo (crea il DB, i limiti di rischio e le chiavi), poi battito e osservatore
+quando il portale risulta sano. GERVA-Q e il suo gateway sono indipendenti.
 
 **Fissa la versione di IB Gateway** (difesa da un'immagine compromessa o da un aggiornamento che rompe):
 
@@ -171,16 +189,20 @@ login completo periodicamente.
 ## 7. Secondo conto paper per i pod (facoltativo)
 
 1. Nel Client Portal di IBKR crea un ulteriore conto paper (o un utente paper separato) **diverso** da quello della sfida.
-2. Compila `secrets/ibgw-firm.env` con il suo login e in `secrets/firm.env` metti `IBKR_FIRM_ACCOUNT=DU…` e `GATEWAY_BROKER=ibkr_paper`.
+2. Compila `secrets/ibgw-firm.env` con il suo login; in `secrets/ibkr.env` metti `IBKR_FIRM_ACCOUNT=DU…` e in `secrets/firm.env` `GATEWAY_BROKER=ibkr_paper`.
 3. Avvia anche il suo gateway:
 
 ```bash
 docker compose -f deploy/docker-compose.yml --env-file deploy/server.env --profile pods-ibkr up -d
 ```
 
-L'esecutore (`IBKRPaperBroker`) all'avvio rifiuta: conto non DU, conto uguale a quello della sfida, gateway
-che vede anche il conto della sfida. Gli ordini sono **limite** (mai a mercato) a ± metà della deviazione
-massima ammessa, quantità intere per gli ETF, IOC per le crypto, `orderRef` con prefisso `GERVA-CAP-` per
+L'esecutore (`IBKRPaperBroker`) all'avvio rifiuta: conto non DU, conto della sfida non impostato, conto uguale
+a quello della sfida, stesso indirizzo del gateway della sfida, gateway che vede anche il conto della sfida.
+Se IBKR è configurato ma non risponde, i pod **si fermano** (nessun ripiego sul simulato: creerebbe posizioni che
+il conto non ha). Ogni invio è registrato *prima* di partire: dopo un crash la società recupera l'eseguito dal
+broker invece di reinviare, e se il broker non ne ha traccia l'ordine resta "da verificare". Gli ordini sono **limite** (mai a mercato) a ± metà della deviazione
+massima ammessa e sul tick del contratto, quantità intere per gli ETF, IOC per le crypto, solo negli orari della
+borsa (con l'ora legale), `orderRef` con prefisso `GERVA-CAP-` per
 l'idempotenza, residui annullati dopo 30 s, ripartizione pro quota dei parziali. Con il file `KILL` gli ordini
 aperti dei pod vengono annullati a ogni battito. Ogni sera alle 21 la società riconcilia le posizioni
 del broker con quelle del registro e alza un'allerta se divergono.
@@ -236,21 +258,25 @@ scegliere**. È una spesa nuova, cioè una tua decisione (grande richiesta n. 4)
 
 Verificato in questa sessione:
 
-- immagine costruita e **94 test verdi dentro il container** non root, con filesystem in sola lettura e senza capability;
+- immagine costruita e **125 test verdi dentro il container** non root, con filesystem in sola lettura, senza capability e senza rete (1 saltato: richiede lo snapshot di GERVA-Q);
+- `docker compose` con portale e battito: login, token, KILL dal portale visto dal battito, Origin estranea → 403, budget negativo → 400, limite di rischio scritto solo dal portale e letto dal battito in sola lettura, logout → 401; il battito non vede le chiavi del portale né il gateway della sfida;
 - portale nel container:
   - senza password rifiuta di partire;
   - con password: `/` → 303 al login, `/api/state` → 401, Host estraneo → 403, cookie falsificato → 401, login → cookie `HttpOnly; SameSite=Strict`;
   - il sesto tentativo errato → 429, senza bloccare le altre richieste;
   - header di sicurezza presenti, nessun header `Server`;
   - file di stato 600 e cartelle 700 di proprietà dell'uid 10001;
-- `docker compose config` valido; tutte le porte pubblicate solo su 127.0.0.1;
+- `docker compose config` valido; tutte le porte pubblicate solo su 127.0.0.1 (lo verifica anche `tests/test_deploy.py`);
 - porte dell'immagine `gnzsnz/ib-gateway` dal suo README: API paper interna 4002, rilanciata da `socat` su 4004 per gli altri container; VNC 5900; variabili `TWS_USERID`, `TWS_PASSWORD` (anche `TWS_PASSWORD_FILE`), `TRADING_MODE`, `READ_ONLY_API`, `TWOFA_TIMEOUT_ACTION`, `RELOGIN_AFTER_TWOFA_TIMEOUT`, `AUTO_RESTART_TIME`, `TIME_ZONE`, `VNC_SERVER_PASSWORD`.
 
-Non verificabile da qui (nessun conto IBKR in questa sessione):
+Non verificabile da qui (nessun conto IBKR in questa sessione; l'immagine di IB Gateway non è stata scaricata):
 
 - il login reale di IB Gateway e la 2FA;
 - i nomi esatti delle linee UCITS su IBKR (`config/instruments.yaml`: borsa e valuta di CSPX, CNDX, …): controlla con `ibkr-check` e, se un contratto non si qualifica, correggi la riga;
 - i prezzi in pence (GBX) delle linee di Londra;
-- le regole IBKR sugli ordini crypto per il conto paper.
+- le regole IBKR sugli ordini crypto per il conto paper;
+- un feed di prezzi reale per i pod: oggi i prezzi li scrive solo il simulatore del demo, quindi sul server i pod
+  non inviano ordini finché un feed non chiama `gateway.set_price` (in EUR, o con la valuta del contratto per IBKR);
+- l'osservatore: la valuta base del conto della sfida deve essere EUR (altrimenti si ferma e lo dice, senza scrivere un NAV a zero).
 
 Il primo giorno guarda i log di `heartbeat` e la scheda IBKR del portale.

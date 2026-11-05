@@ -28,6 +28,16 @@ Battito ogni 15 minuti (la società lavora a eventi e sveglia solo gli agenti ne
 Per vedere il portale pieno senza toccare il database vero: `python firm.py demo` e poi
 `python firm.py portal --demo` (45 giorni di mercato **sintetico** in `var/demo/`, marcati DEMO).
 
+## Sul server (24 ore su 24, solo paper)
+
+Guida completa, passo per passo: [`docs/DEPLOY.md`](docs/DEPLOY.md). In breve: un VPS Ubuntu indurito da
+`deploy/server_setup.sh`, i container di `deploy/docker-compose.yml` (GERVA-Q con il suo IB Gateway paper,
+osservatore, battito, portale) e il portale aperto dal tuo computer con un tunnel SSH:
+
+```bash
+ssh -N -L 8765:127.0.0.1:8765 gerva
+```
+
 ## Comandi
 
 | Comando | Cosa fa |
@@ -41,7 +51,10 @@ Per vedere il portale pieno senza toccare il database vero: `python firm.py demo
 | `firm.py research gervaq4` | (sul Mac) banco di prova dei miglioramenti del motore contro la v3 |
 | `firm.py report` | report del giorno con le correzioni proposte dalla diagnostica |
 | `python -m llm.evals [agente]` | eval dei prompt (senza chiave: solo validità dello schema) |
-| `python -m pytest` | 84 test |
+| `firm.py observe` | (server) osservatore in sola lettura del conto della sfida |
+| `firm.py ibkr-check` | prova la connessione IBKR in sola lettura (conto mascherato) |
+| `firm.py set-password` | hash della password del portale per il server |
+| `python -m pytest` | 127 test |
 
 ## Il portale
 

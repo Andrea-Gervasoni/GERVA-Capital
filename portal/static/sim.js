@@ -43,7 +43,41 @@ window.addEventListener("mousemove", (e) => {
   if (Math.abs(dx) + Math.abs(dy) > 3) cam.drag.moved = true;
   cam.cx = cam.drag.cx - dx; cam.cy = cam.drag.cy - dy;
 });
-cv.addEventListener("dblclick", (e) => { const [wx, wy] = screenToWorld(e); cam.cx = wx; cam.cy = wy; zoomAt(cam.z < 2 ? 2.5 : 1); });
+// doppio clic: si entra nella stanza cliccata (lo zoom PRIMA, il centro DOPO: camView non lo riporta al centro)
+cv.addEventListener("dblclick", (e) => { const [wx, wy] = screenToWorld(e); cam.z = cam.z < 2 ? 2.5 : 1; cam.cx = wx; cam.cy = wy; });
+// telefono e tablet: un dito sposta, due dita zoomano, doppio tocco entra nella stanza
+const touch = { pts: new Map(), d0: 0, z0: 1, last: 0 };
+cv.style.touchAction = "none";
+cv.addEventListener("pointerdown", (e) => {
+  if (e.pointerType === "mouse") return;
+  cv.setPointerCapture(e.pointerId);
+  touch.pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (touch.pts.size === 1) {
+    cam.drag = { x: e.clientX, y: e.clientY, cx: cam.cx, cy: cam.cy, moved: false };
+    const now = performance.now();
+    if (now - touch.last < 300) { const [wx, wy] = screenToWorld(e); cam.z = cam.z < 2 ? 2.5 : 1; cam.cx = wx; cam.cy = wy; }
+    touch.last = now;
+  } else if (touch.pts.size === 2) {
+    const [a, b] = [...touch.pts.values()]; touch.d0 = Math.hypot(a.x - b.x, a.y - b.y); touch.z0 = cam.z; cam.drag = null;
+  }
+});
+cv.addEventListener("pointermove", (e) => {
+  if (e.pointerType === "mouse" || !touch.pts.has(e.pointerId)) return;
+  touch.pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (touch.pts.size === 2 && touch.d0 > 0) {
+    const [a, b] = [...touch.pts.values()];
+    const mid = { clientX: (a.x + b.x) / 2, clientY: (a.y + b.y) / 2 }, [wx, wy] = screenToWorld(mid);
+    zoomAt(touch.z0 * Math.hypot(a.x - b.x, a.y - b.y) / touch.d0, wx, wy);
+  } else if (cam.drag) {
+    const r = cv.getBoundingClientRect(), k = (cv.width / r.width) / camScale();
+    const dx = (e.clientX - cam.drag.x) * k, dy = (e.clientY - cam.drag.y) * k;
+    if (Math.abs(dx) + Math.abs(dy) > 3) cam.drag.moved = true;
+    cam.cx = cam.drag.cx - dx; cam.cy = cam.drag.cy - dy;
+  }
+});
+const touchEnd = (e) => { touch.pts.delete(e.pointerId); if (touch.pts.size < 2) touch.d0 = 0; if (!touch.pts.size) setTimeout(() => (cam.drag = null), 0); };
+cv.addEventListener("pointerup", touchEnd);
+cv.addEventListener("pointercancel", touchEnd);
 window.addEventListener("resize", resizeCanvas);
 
 let frame = 0, WORLD = null, OBJECTS = [], ENT = {}, LEVEL = 0, SERVICES = [];
@@ -232,7 +266,9 @@ function drawMeetingBoard() {
   ctx.font = "9px VT323";
   ctx.fillStyle = "#1a2a52";
   if (meeting.state !== "idle") {
-    ctx.fillText(meeting.title.slice(0, 26), x + 2, y + 5);
+    const t = meeting.title, span = 26, extra = Math.max(0, t.length - span);   // titolo lungo: scorre come un tabellone
+    const off = extra ? Math.min(extra, Math.max(0, (Math.floor(frame / 12) % (extra + 16)) - 8)) : 0;
+    ctx.fillText(t.slice(off, off + span), x + 2, y + 5);
     const counts = {};
     Object.values(meeting.tally).forEach((v) => (counts[v] = (counts[v] || 0) + 1));
     ctx.fillStyle = meeting.decision ? P.red : "#3c70c8";

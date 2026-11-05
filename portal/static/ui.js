@@ -6,8 +6,19 @@ let STATE = null, soundOn = false;
 
 async function api(path, opts = {}) {
   const r = await fetch(path, Object.assign({ headers: { "Content-Type": "application/json", "X-Andrea-Token": TOKEN } }, opts));
-  if (!r.ok) throw new Error((await r.text()) || r.status);
+  if (r.status === 401) { location.href = "/login"; throw new Error("sessione scaduta: accedi di nuovo"); }
+  if (!r.ok) {
+    const t = await r.text();
+    let msg = t;
+    try { const j = JSON.parse(t); msg = j.detail || j.errore || t; } catch (_) { /* testo semplice */ }
+    throw new Error(String(msg || r.status));
+  }
   return r.json();
+}
+function toast(msg, bad = true) {
+  const el = document.getElementById("toast");
+  el.textContent = msg; el.className = bad ? "bad" : ""; el.hidden = false;
+  clearTimeout(toast.t); toast.t = setTimeout(() => (el.hidden = true), 5000);
 }
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const eur = (x, d = 0) => (x == null ? "—" : x.toLocaleString("it-IT", { minimumFractionDigits: d, maximumFractionDigits: d }) + " €");
@@ -78,7 +89,7 @@ function pushFeed(ev) {
   while (ul.children.length > 40) ul.lastChild.remove();
 }
 function connectWS() {
-  const ws = new WebSocket(`ws://${location.host}/ws`);
+  const ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`);
   ws.onmessage = (m) => JSON.parse(m.data).forEach((ev) => { onWorldEvent(ev); pushFeed(ev); if (ev.kind.startsWith("career") || ev.kind === "meeting.end") refreshWorld(); });
   ws.onclose = () => setTimeout(connectWS, 3000);
 }
@@ -144,7 +155,7 @@ async function openAgent(id) {
   info.innerHTML = `<h2>${esc(P_.nome)}</h2><div class="role">${esc(P_.ruolo)}</div>
     <div class="badges"><span class="b gold">${esc(P_.grado)}</span><span class="b">${esc(TIER_NAME[d.ufficio?.tier] || "—")}</span>
     <span class="b">${esc(P_.stato)}</span>${pe.rank_grado ? `<span class="b">#${esc(pe.rank_grado)} nel grado</span>` : ""}</div>
-    <div class="muted">Superiore: ${esc(P_.superiore || "Andrea")} · Modello: ${esc(P_.modello)}</div>`;
+    <div class="muted">Superiore: ${esc(P_.superiore ? (ENT[P_.superiore]?.a.name || P_.superiore) : "Andrea")} · Modello: ${esc(P_.modello)}</div>`;
   head.appendChild(info);
   const pt = R_.punteggio, F = R_.previsioni;
   const T_ = {
@@ -278,26 +289,41 @@ const PANELS = {
   },
   async impostazioni() {
     const d = await api("/api/settings"), S_ = d.impostazioni;
-    const row = (k, v, kind = "set") => `<div class="setrow"><span>${esc(k)}</span><input data-k="${esc(k)}" data-kind="${kind}" value='${esc(JSON.stringify(v))}'><button data-save="${esc(k)}">Salva</button></div>`;
+    const row = (k, v, kind = "set") => `<div class="setrow"><label for="set-${esc(kind)}-${esc(k)}">${esc(k)}</label><input id="set-${esc(kind)}-${esc(k)}" data-k="${esc(k)}" data-kind="${kind}" value="${esc(JSON.stringify(v))}"><button data-save="${esc(k)}" data-savekind="${kind}">Salva</button><em class="err" role="status"></em></div>`;
     const flat = (o, p = "") => Object.entries(o).flatMap(([k, v]) => (v && typeof v === "object" && !Array.isArray(v) ? flat(v, p + k + ".") : [[p + k, v]]));
     return ["Impostazioni (solo Andrea)", `<p>Ogni modifica va nell'audit log. Autonomia: <b>${d.budget.days_left == null ? "∞" : num(d.budget.days_left, 1) + " giorni"}</b> al ritmo di ${eur(d.budget.pace_eur_day, 3)}/giorno.</p>
       <button id="strikebtn" class="${S_["firm.strike"] ? "" : "danger"}">${S_["firm.strike"] ? "Riprendi la società" : "Sciopero (ferma gli agenti)"}</button> <button class="danger" id="killbtn">${STATE && STATE.kill ? "Togli il KILL" : "KILL"}</button>
-      <h3>Budget, modelli, rilascio, pod, economia</h3>${Object.entries(S_).filter(([k]) => k !== "firm.mode").map(([k, v]) => row(k, v)).join("")}
+      <h3>Budget, modelli, rilascio, pod, economia</h3>${Object.entries(S_).filter(([k]) => k !== "firm.mode" && k !== "firm.strike").map(([k, v]) => row(k, v)).join("")}
       <h3>Limiti di rischio</h3>${flat(d.limiti).map(([k, v]) => row(k, v, "risk")).join("")}<p class="muted">LIVE è bloccato: servono i cancelli 13-15 della sfida e la firma dei titolari.</p>`];
   },
 };
 
+let lastFocus = null;
+function showWin(id) {
+  const w = document.getElementById(id);
+  if (w.classList.contains("hidden")) lastFocus = document.activeElement;
+  w.classList.remove("hidden");
+  w.querySelector(".x")?.focus({ preventScroll: true });
+}
+function closeWin(id) {
+  const w = document.getElementById(id);
+  if (w.classList.contains("hidden")) return;
+  w.classList.add("hidden");
+  if (lastFocus && document.body.contains(lastFocus)) lastFocus.focus({ preventScroll: true });
+}
 async function openPanel(name, arg) {
-  const [title, html] = await PANELS[name](arg);
+  let title, html;
+  try { [title, html] = await PANELS[name](arg); }
+  catch (err) { title = "Errore"; html = `<p class="err">Non riesco a caricare questo pannello: ${esc(err.message)}</p>`; }
   document.getElementById("pnl-title").textContent = title;
   document.getElementById("pnl-body").innerHTML = html;
   applyWidths(document.getElementById("pnl-body"));
-  const p = document.getElementById("panel"); p.dataset.name = name; p.classList.remove("hidden");
+  const p = document.getElementById("panel"); p.dataset.name = name; showWin("panel");
   document.querySelectorAll("#menu button").forEach((b) => b.classList.toggle("on", b.dataset.panel === name));
 }
 document.querySelectorAll("#menu button[data-panel]").forEach((b) => (b.onclick = () => { beep(600); openPanel(b.dataset.panel); }));
-document.querySelectorAll("[data-close]").forEach((b) => (b.onclick = () => document.getElementById(b.dataset.close).classList.add("hidden")));
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") ["dialog", "panel"].forEach((i) => document.getElementById(i).classList.add("hidden")); });
+document.querySelectorAll("[data-close]").forEach((b) => (b.onclick = () => closeWin(b.dataset.close)));
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") ["dialog", "panel"].forEach(closeWin); });
 document.getElementById("sound").onclick = (e) => { soundOn = !soundOn; e.target.textContent = "Suoni " + (soundOn ? "ON" : "OFF"); beep(880); };
 
 document.getElementById("pnl-body").addEventListener("click", async (e) => {
@@ -310,10 +336,28 @@ document.getElementById("pnl-body").addEventListener("click", async (e) => {
     if (t.dataset.report) openPanel("report", t.dataset.report);
     if (t.dataset.sort) { peopleSort = [t.dataset.sort, peopleSort[0] === t.dataset.sort ? -peopleSort[1] : -1]; openPanel("persone"); }
     if (t.dataset.mail) { await api("/api/mailbox/" + t.dataset.mail, { method: "POST", body: JSON.stringify({ choice: t.dataset.choice }) }); openPanel("posta"); refreshState(); }
-    if (t.dataset.save) { const inp = document.querySelector(`input[data-k="${CSS.escape(t.dataset.save)}"]`); await api("/api/settings", { method: "POST", body: JSON.stringify({ key: t.dataset.save, value: JSON.parse(inp.value), kind: inp.dataset.kind }) }); t.textContent = "✓"; refreshState(); }
+    if (t.dataset.save) {
+      const inp = document.querySelector(`input[data-k="${CSS.escape(t.dataset.save)}"][data-kind="${CSS.escape(t.dataset.savekind)}"]`);
+      const err = t.parentElement.querySelector(".err"); err.textContent = "";
+      let value;
+      try { value = JSON.parse(inp.value); } catch (_) { err.textContent = "valore non valido: numero, true/false o testo tra virgolette"; return; }
+      try {
+        await api("/api/settings", { method: "POST", body: JSON.stringify({ key: t.dataset.save, value, kind: inp.dataset.kind }) });
+        t.textContent = "Salvato"; setTimeout(() => (t.textContent = "Salva"), 2000); refreshState();
+      } catch (e2) { err.textContent = e2.message; }
+      return;
+    }
     if (t.id === "strikebtn") { await api("/api/strike", { method: "POST", body: JSON.stringify({ on: t.textContent.startsWith("Sciopero") }) }); openPanel("impostazioni"); refreshState(); refreshWorld(); }
-    if (t.id === "killbtn") { const on = !(STATE && STATE.kill); if (on && !confirm("Attivare il KILL? Il Gateway rifiuterà tutti gli ordini.")) return; await api("/api/kill", { method: "POST", body: JSON.stringify({ on }) }); await refreshState(); openPanel("impostazioni"); }
-  } catch (err) { alert("Errore: " + err.message); }
+    if (t.id === "killbtn") {
+      const on = !(STATE && STATE.kill);
+      if (on && !t.dataset.armed) {                 // conferma in due tempi, dentro la pagina
+        t.dataset.armed = "1"; t.textContent = "Conferma: il Gateway rifiuterà ogni ordine";
+        setTimeout(() => { if (document.body.contains(t)) { delete t.dataset.armed; t.textContent = "KILL"; } }, 5000);
+        return;
+      }
+      await api("/api/kill", { method: "POST", body: JSON.stringify({ on }) }); await refreshState(); openPanel("impostazioni");
+    }
+  } catch (err) { toast(err.message); }
 });
 
 // ---------------------------------------------------------------- barra di comando
@@ -321,8 +365,10 @@ document.getElementById("cmd").addEventListener("submit", async (e) => {
   e.preventDefault();
   const inp = document.getElementById("cmdtext"), text = inp.value.trim();
   if (!text) return;
+  let r;
+  try { r = await api("/api/command", { method: "POST", body: JSON.stringify({ text }) }); }
+  catch (err) { toast("Ordine non inviato: " + err.message); return; }
   inp.value = "";
-  const r = await api("/api/command", { method: "POST", body: JSON.stringify({ text }) });
   ENT.capo?.say("Ricevuto, Andrea: " + text.slice(0, 60), 4000);
   beep(880, 0.08);
   await openPanel("compiti", r.id);
