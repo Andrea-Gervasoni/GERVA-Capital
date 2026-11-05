@@ -36,7 +36,7 @@ setenv() {  # setenv CHIAVE VALORE: toglie ogni riga vecchia (anche commentata) 
 say "3/6 Collegamento al conto paper (TWS, porta $PORT)"
 ACCT="$(grep -E '^IBKR_CHALLENGE_ACCOUNT=DU' .env | head -1 | cut -d= -f2 || true)"
 if [ -z "$ACCT" ]; then
-  read -r -p "Numero del conto paper (inizia con DU, lo trovi in alto in TWS): " ACCT
+  read -r -p "Numero del conto paper (inizia con DU, lo trovi in alto in TWS): " ACCT </dev/tty
 fi
 case "$ACCT" in DU*) ;; *) echo "Il conto deve iniziare con DU (paper). Fermo qui."; exit 1;; esac
 setenv GERVA_Q_PATH "$Q"
