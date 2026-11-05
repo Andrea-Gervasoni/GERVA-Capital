@@ -231,7 +231,8 @@ def state():
     return _json(dict(
         modalita="PAPER", live_bloccato=True, sciopero=st["strike"], motivo_sciopero=st["strike_reason"],
         simulato=not os.environ.get("ANTHROPIC_API_KEY"), demo=bool(db.runtime_get("demo", False)),
-        nav=fb["nav"], pnl=fb["pnl"], capitale=gateway.capital_source(), capitale_iniziale=fb["capitale_iniziale"],
+        nav=fb["nav"], nav_conto=gateway.pod_zero_nav(), nav_pod_simulati=fb["nav"] - gateway.pod_zero_nav(),
+        pnl=fb["pnl"], capitale=gateway.capital_source(), capitale_iniziale=fb["capitale_iniziale"],
         semaforo=rk["semaforo"], kill=rk["kill"], allarmi=rk["allarmi"],
         budget_oggi=st["spent_today"], tetto_oggi=st["daily_cap"], budget_totale=st["spent_total"],
         tetto_totale=st["total_cap"], giorni_residui=st["days_left"], ritmo=st["pace_eur_day"],

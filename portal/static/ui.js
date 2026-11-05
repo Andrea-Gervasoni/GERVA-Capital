@@ -43,6 +43,7 @@ async function refreshState() {
     const fromIb = s.capitale && s.capitale.fonte === "IBKR";
     kpi("k-nav", eur(s.nav) + (fromIb ? "" : ` <small title="Capitale non ancora letto da IBKR: cifra di prova">prova</small>`));
     document.getElementById("k-nav").title = fromIb ? `Capitale letto da IBKR il ${s.capitale.dal}` : "Capitale non ancora letto da IBKR";
+    document.getElementById("k-navsub").innerHTML = fromIb && s.nav_pod_simulati > 1 ? `conto IBKR ${eur(s.nav_conto)} · pod simulati +${eur(s.nav_pod_simulati)}` : "";
     kpi("k-pnl", (s.pnl >= 0 ? "+" : "") + eur(s.pnl) + ` <small>${pct(s.pnl / (s.capitale_iniziale || 100000), 2)}</small>`, s.pnl >= 0 ? "pos" : "neg");
     kpi("k-risk", `<i class="light ${s.semaforo}"></i>${s.kill ? "KILL" : s.semaforo}`);
     kpi("k-bud", `${num(s.budget_oggi, 3)} / ${num(s.tetto_oggi, 2)} €`);
