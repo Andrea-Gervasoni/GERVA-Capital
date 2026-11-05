@@ -70,19 +70,23 @@ def news_cycle(limit: int = 12) -> dict:
     queue = db.q("SELECT * FROM news WHERE status='nuova' ORDER BY id DESC LIMIT ?", (limit,))
     if not queue:
         return dict(nota="nessuna notizia nuova")
-    raw = "\n".join(f"[{n['id']}] {n['title']} — {n['domain']} ({n['published']})\n{(n['summary'] or '')[:400]}"
-                    for n in queue)
-    tri = runtime.call("news_analyst", "Fai il triage delle notizie: rilevanza per i nostri mercati, sintesi "
-                       "fedele, affermazioni verificabili. Non aggiungere fatti che non sono nel testo.",
-                       untrusted=raw, schema=NEWS_TRIAGE, purpose="triage notizie", status_label="legge")
     submitted = 0
-    if tri["ok"]:
-        ids = {n["id"] for n in queue}
-        for it in tri["output"]["items"]:
-            if it["news_id"] in ids:
-                db.ex("UPDATE news SET summary=?, tags=?, agent_id='news_analyst', status='da_verificare' WHERE id=?",
-                      (it["sintesi"][:600], db.dumps(it["tag"]), it["news_id"]))
-                submitted += 1
+    ids = {n["id"] for n in queue}
+    # a pezzi da 4: un analista di grado 1 ha pochi token in uscita, e un JSON tagliato a meta' viene scartato
+    for i in range(0, len(queue), 4):
+        chunk = queue[i:i + 4]
+        raw = "\n".join(f"[{n['id']}] {n['title']} — {n['domain']} ({n['published']})\n{(n['summary'] or '')[:400]}"
+                        for n in chunk)
+        tri = runtime.call("news_analyst", "Fai il triage delle notizie: rilevanza per i nostri mercati, sintesi "
+                           "fedele (massimo 25 parole), al massimo 2 tag e 2 affermazioni verificabili. "
+                           "Non aggiungere fatti che non sono nel testo.",
+                           untrusted=raw, schema=NEWS_TRIAGE, purpose="triage notizie", status_label="legge")
+        if tri["ok"]:
+            for it in tri["output"]["items"]:
+                if it["news_id"] in ids:
+                    db.ex("UPDATE news SET summary=?, tags=?, agent_id='news_analyst', status='da_verificare' WHERE id=?",
+                          (it["sintesi"][:600], db.dumps(it["tag"]), it["news_id"]))
+                    submitted += 1
     # verifica: le fonti primarie passano; le altre servono una seconda fonte indipendente
     pool = db.q("SELECT * FROM news ORDER BY id DESC LIMIT 400")
     to_check, verified, rejected = [], 0, 0
@@ -93,14 +97,15 @@ def news_cycle(limit: int = 12) -> dict:
             verified += 1
         else:
             to_check.append(dict(n, candidati=second_source_candidates(n, pool)))
-    if to_check:
+    for k in range(0, len(to_check), 3):
+        part = to_check[k:k + 3]
         txt = "\n\n".join(f"[{n['id']}] {n['title']} — {n['domain']}\nSintesi: {n['summary']}\nCandidati seconda fonte: "
-                          + json.dumps(n["candidati"], ensure_ascii=False) for n in to_check)
-        fc = runtime.call("fact_checker", "Verifica ogni notizia: e' confermata da una seconda fonte INDIPENDENTE tra i "
+                          + json.dumps(n["candidati"], ensure_ascii=False) for n in part)
+        fc = runtime.call("fact_checker", "Verifica ogni notizia (motivo in massimo 15 parole): e' confermata da una seconda fonte INDIPENDENTE tra i "
                           "candidati? Se non ci sono candidati adeguati, la notizia NON e' verificata.",
                           untrusted=txt, schema=FACT_CHECK, purpose="verifica notizie", status_label="verifica")
         if fc["ok"]:
-            cand = {n["id"]: {c["url"] for c in n["candidati"]} for n in to_check}
+            cand = {n["id"]: {c["url"] for c in n["candidati"]} for n in part}
             for e in fc["output"]["esiti"]:
                 if e["news_id"] not in cand:
                     continue
