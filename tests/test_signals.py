@@ -101,3 +101,19 @@ def test_overlay_keeps_signal_positions_when_desk_rewrites(firm_env, monkeypatch
     desk.write_overlay(dict(targets={"LLY": 0.05}, per_desk={}, scartate=[]), dt.date.today())
     doc = json.load(open(desk.overlay_path()))
     assert doc["targets"] == {"LLY": 0.05} and "SOL" in doc["crypto_targets"]
+
+
+@pytest.fixture(autouse=True)
+def _crypto_on(firm_env):
+    """Questi test descrivono la filiera con le crypto eseguibili (il conto paper reale oggi non lo consente)."""
+    from firm import settings as S
+    S.set("crypto.eseguibile", True, S.AndreaCapability(S.ensure_token()))
+
+
+def test_signals_are_only_observed_while_paper_cannot_trade_crypto(firm_env, monkeypatch):
+    from firm import settings as S
+    S.set("crypto.eseguibile", False, S.AndreaCapability(S.ensure_token()))
+    org_seed.seed(); registry.sync(); _fake(monkeypatch)
+    r = SG.process(SG.create("BUY SOL entry 150 SL 140 TP1 165"), _close())
+    assert r["stato"] == "osservato" and SG.active_targets() == {} and "non puo'" in r["motivo"]
+    assert db.one("SELECT * FROM forecasts WHERE criterion LIKE 'signal:%'")                 # la previsione resta: si misura comunque

@@ -66,10 +66,13 @@ def portfolio(model_eq=None, model_cr=None, overlay=None, lt_plan=None) -> dict:
         fonti[label] = round(sum(abs(v) for v in d.values()), 4)
 
     add(_scaled(eq, pod_zero.equity_scale(eq) if eq else 1.0), "modello azioni e ETF")
-    add(_scaled(cr), "crypto")
+    exe = bool(S.get("crypto.eseguibile", False))
     ov = overlay if overlay is not None else (db.runtime_get("desk.overlay") or {})
+    crypto_model = _scaled(cr)
+    crypto_sig = {k: float(v) for k, v in (ov.get("crypto_targets") or {}).items()}
+    add(crypto_model if exe else {}, "crypto")
     add({k: float(v) for k, v in (ov.get("targets") or {}).items()}, "desk")
-    add({k: float(v) for k, v in (ov.get("crypto_targets") or {}).items()}, "segnali crypto")
+    add(crypto_sig if exe else {}, "segnali crypto")
     plan = lt_plan if lt_plan is not None else _lt_plan()
     from . import lt_committee
     cfg = lt_committee.config()
@@ -80,7 +83,8 @@ def portfolio(model_eq=None, model_cr=None, overlay=None, lt_plan=None) -> dict:
     gross = sum(abs(v) for v in w.values())
     cr_w = sum(abs(v) for k, v in w.items() if k in (cr or {}).get("weights", {}))
     return dict(pesi={k: round(v, 5) for k, v in sorted(w.items(), key=lambda x: -abs(x[1]))}, lordo=round(gross, 4),
-                leva=round(max(gross - 1.0, 0.0), 4), quota_crypto=round(cr_w, 4), fonti=fonti)
+                leva=round(max(gross - 1.0, 0.0), 4), quota_crypto=round(cr_w, 4), fonti=fonti, crypto_eseguibile=exe,
+                crypto_escluse=0.0 if exe else round(sum(abs(v) for v in crypto_model.values()) + sum(crypto_sig.values()), 4))
 
 
 def _lt_plan() -> dict:

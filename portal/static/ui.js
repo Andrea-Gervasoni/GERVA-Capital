@@ -330,7 +330,7 @@ const PANELS = {
       `<h3>Quanto vale la sala (tutti i segnali, anche quelli scartati, si seguono)</h3><div class="kgrid">${card("Segnali ricevuti", st.totale)}${card("Chiusi", st.chiusi, `${st.obiettivo} all'obiettivo · ${st.stop} allo stop · ${st.scaduti} scaduti`)}` +
       `${card("Arrivano all'obiettivo", st.tasso_obiettivo == null ? "—" : pct(st.tasso_obiettivo, 0), "sui segnali chiusi", st.tasso_obiettivo != null && st.tasso_obiettivo < 0.4 ? "gold" : "")}${card("Risultato medio", st.r_medio == null ? "—" : num(st.r_medio, 2) + " R", "R = rischio preso")}` +
       `${card("In posizione ora", Object.keys(d.posizioni).length ? Object.entries(d.posizioni).map(([k, v]) => `${esc(k)} ${pct(v, 1)}`).join(" · ") : "nessuna", "dai segnali accettati")}</div>` +
-      `<p class="muted">Obiettivo e stop si controllano sui prezzi di chiusura giornalieri (approssimazione: un tocco dentro la giornata non si vede). Le posizioni entrano nel conto solo con il prossimo rilascio di GERVA-Q che legge i segnali.</p>` + d.segnali.map(card1).join("")];
+      `<p class="muted"><b>Oggi i segnali non si eseguono:</b> il conto paper di IBKR rifiuta le crypto ("calcolo del margine non disponibile"). Si analizzano, si seguono e si misurano, così avrai il dato vero sulla sala. </p><p class="muted">Obiettivo e stop si controllano sui prezzi di chiusura giornalieri (approssimazione: un tocco dentro la giornata non si vede). Le posizioni entrano nel conto solo con il prossimo rilascio di GERVA-Q che legge i segnali.</p>` + d.segnali.map(card1).join("")];
   },
   async ricerca() {
     const d = await api("/api/research");
@@ -384,7 +384,7 @@ async function drawFund() {
   if (!f.ok) { box.innerHTML = `<p class="muted">${esc(f.motivo || "dati non disponibili")}</p>`; return; }
   const m = f.montecarlo, k = f.rischio, p = f.portafoglio, c = f.composizione, P = (v, d = 1) => pct(v, d);
   const E = (v) => (Math.abs(v) >= 1e6 ? (v / 1e6).toFixed(2).replace(".", ",") + " M" : (v / 1e3).toFixed(0) + " k") + " €";
-  const fonti = Object.entries(p.fonti || {}).map(([n, v]) => `${esc(n)} ${P(v, 1)}`).join(" · ");
+  const fonti = Object.entries(p.fonti || {}).map(([n, v]) => `${esc(n)} ${P(v, 1)}`).join(" · ") + (p.crypto_eseguibile === false ? ` · <b>crypto escluse (${P(p.crypto_escluse, 0)} del modello): il conto paper di IBKR non le può comprare</b>` : "");
   const X = CHARTS.exp, xs = X && X.registrata ? X.stato : null, pc2 = (v) => (v == null ? "—" : Math.round(v) + "°");
   const expHtml = !X || !X.registrata ? `<h3>Aspettative e realtà</h3><p class="muted">${esc((X && X.nota) || "Non ancora scritte.")}</p>` :
     `<h3>Aspettative scritte prima, e come sta andando</h3><div class="cbar">${[["1 sett.", 7], ["1 mese", 30], ["3 mesi", 90], ["1 anno", 365]].map(([n, d]) => `<button data-zoom="${d}">${n}</button>`).join("")}</div>` +

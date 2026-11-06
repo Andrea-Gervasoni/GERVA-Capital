@@ -168,6 +168,8 @@ def process(sid: int, close: pd.DataFrame | None = None, execute: bool = True) -
                 veto = bool(rv["output"]["veto"])
                 analysis["veto"] = dict(bloccato=veto, motivo=rv["output"]["motivo"])
             state, weight, why = _decide(analysis, ctl, veto)
+            if state == "accettato" and not S.get("crypto.eseguibile", False):
+                state, weight, why = "osservato", 0.0, "il conto paper di IBKR non puo' comprare crypto: si segue e si misura, non si esegue"
             if state == "accettato" and not execute:
                 state, weight, why = "osservato", 0.0, "esecuzione dei segnali di questa fonte spenta (signals.telegram_execute): si segue senza eseguire"
             p_tp = min(max(float(analysis.get("probabilita_tp1", 0.5)), 0.02), 0.98)

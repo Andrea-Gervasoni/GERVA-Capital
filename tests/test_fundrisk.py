@@ -15,7 +15,9 @@ def _close(n=1500, seed=2):
     return df
 
 
-def test_portfolio_applies_scale_only_to_base_weights():
+def test_portfolio_applies_scale_only_to_base_weights(firm_env):
+    from firm import settings as S
+    S.set("crypto.eseguibile", True, S.AndreaCapability(S.ensure_token()))
     base = dict(weights=dict(SPY=0.30, AAA=0.15), gross_base=0.45, scale=2.0, asof="2026-11-05")
     pf = F.portfolio(model_eq=base, model_cr=dict(weights=dict(BTC=0.1), gross_base=0.1, scale=2.0),
                      overlay=dict(targets=dict(CCC=0.05)), lt_plan={})
@@ -69,3 +71,15 @@ def test_stress_uses_episode_windows():
 def test_overview_without_gerva_q_state_is_graceful(firm_env, tmp_path):
     out = F.overview(1, close=_close(), model_eq={}, model_cr={}, overlay={}, lt_plan={})
     assert out["ok"] is False and "pesi" in out["motivo"]
+
+
+def test_crypto_excluded_from_expected_portfolio_when_not_executable(firm_env):
+    from firm import settings as S
+    eq = dict(weights=dict(SPY=0.5), gross_base=0.5, scale=1.0, asof="2026-11-05")
+    cr = dict(weights=dict(BTC=0.2), gross_base=0.2, scale=1.0)
+    ov = dict(crypto_targets=dict(SOL=0.02))
+    off = F.portfolio(model_eq=eq, model_cr=cr, overlay=ov, lt_plan={})
+    assert "BTC" not in off["pesi"] and "SOL" not in off["pesi"] and off["crypto_eseguibile"] is False and off["crypto_escluse"] > 0.2
+    S.set("crypto.eseguibile", True, S.AndreaCapability(S.ensure_token()))
+    on = F.portfolio(model_eq=eq, model_cr=cr, overlay=ov, lt_plan={})
+    assert on["pesi"]["BTC"] == 0.2 and on["pesi"]["SOL"] == 0.02 and on["crypto_eseguibile"] is True

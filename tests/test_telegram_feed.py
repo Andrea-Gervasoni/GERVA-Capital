@@ -70,3 +70,10 @@ def test_session_and_hash_are_filtered_from_prompts(monkeypatch):
     from llm import redact
     monkeypatch.setenv("TELEGRAM_API_HASH", "0123456789abcdef0123456789abcdef")
     assert "0123456789abcdef" not in redact.text("hash 0123456789abcdef0123456789abcdef nel testo")
+
+
+@pytest.fixture(autouse=True)
+def _crypto_on(firm_env):
+    """Questi test descrivono la filiera con le crypto eseguibili (il conto paper reale oggi non lo consente)."""
+    from firm import settings as S
+    S.set("crypto.eseguibile", True, S.AndreaCapability(S.ensure_token()))

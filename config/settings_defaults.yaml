@@ -22,6 +22,9 @@ firm:
   mode: paper                # unico valore ammesso: paper (LIVE e' bloccato)
   heartbeat_minutes: 15
 
+crypto:
+  eseguibile: false          # IBKR paper rifiuta le crypto (6/11: 'calcolo del margine non disponibile'): si seguono e si misurano, non si eseguono
+
 signals:                    # sala segnali crypto: gli agenti analizzano, il codice limita
   risk_frac: 0.005           # si rischia al massimo lo 0,5% del conto per segnale (dimensione = rischio / distanza dello stop)
   max_frac: 0.03             # al massimo il 3% del conto su un segnale
