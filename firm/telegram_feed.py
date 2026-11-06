@@ -98,9 +98,17 @@ def login(sms: bool = False) -> None:
         from telethon.errors import SessionPasswordNeededError
         run(client.connect())
         if not run(client.is_user_authorized()):
-            phone = input("Numero di telefono con prefisso (+39...): ").strip()
-            sent = run(client.send_code_request(phone, force_sms=True))
-            code = input("Codice ricevuto per SMS: ").strip()
+            phone = input("Numero di telefono con prefisso (+39...): ").strip().replace(" ", "")
+            sent = run(client.send_code_request(phone))                      # Telegram sceglie il canale: di solito l'app
+            code = input("Codice (scrivilo qui). Se non arriva dopo 1-2 minuti premi solo Invio per chiedere l'SMS: ").strip()
+            if not code:
+                from telethon.errors import RPCError
+                from telethon.tl.functions.auth import ResendCodeRequest
+                try:
+                    sent = run(client(ResendCodeRequest(phone, sent.phone_code_hash)))
+                except RPCError as e:
+                    raise SystemExit(f"Telegram non permette un altro invio adesso ({type(e).__name__}): aspetta mezz'ora e riprova")
+                code = input("Codice ricevuto (SMS o chiamata): ").strip()
             try:
                 run(client.sign_in(phone, code, phone_code_hash=sent.phone_code_hash))
             except SessionPasswordNeededError:
