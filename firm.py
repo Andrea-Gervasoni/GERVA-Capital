@@ -222,6 +222,12 @@ def cmd_comitato_lungo(_):
     print(json.dumps(lt_committee.run(), ensure_ascii=False, indent=1, default=str))
 
 
+def cmd_desk(_):
+    """Fa lavorare subito i capi desk: propongono posizioni, il codice valida e scrive var/firm_overlay.json per GERVA-Q."""
+    from firm import desk
+    print(json.dumps(desk.cycle(), ensure_ascii=False, indent=1, default=str))
+
+
 def cmd_heartbeat(_):
     from firm import heartbeat
     print(json.dumps(heartbeat.beat(), ensure_ascii=False, indent=1, default=str))
@@ -352,7 +358,7 @@ def main():
     ap = argparse.ArgumentParser(description="GERVA Capital")
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name in ["init", "portal", "heartbeat", "run", "status", "verify", "demo", "release", "data", "research", "report",
-                 "set-password", "ibkr-check", "observe", "check-backtest", "shadow", "comitato-lungo"]:
+                 "set-password", "ibkr-check", "observe", "check-backtest", "shadow", "comitato-lungo", "desk"]:
         sp = sub.add_parser(name)
         sp.add_argument("--demo", action="store_true", help="usa il database dimostrativo var/demo/")
         if name == "research":
