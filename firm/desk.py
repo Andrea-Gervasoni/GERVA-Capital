@@ -104,14 +104,21 @@ def merge(by_desk: dict[str, list[dict]], allowed: set[str], c: dict | None = No
                 per_desk=per_desk, scartate=scartate)
 
 
-def write_overlay(result: dict, today: dt.date | None = None) -> dict:
-    today = today or dt.date.today()
-    doc = dict(data=today.isoformat(), targets=result["targets"], per_desk=result["per_desk"], regole=caps())
+def save_overlay(doc: dict) -> dict:
     tmp = overlay_path() + ".tmp"
     with open(tmp, "w") as f:
         json.dump(doc, f, indent=1)
     os.replace(tmp, overlay_path())
     db.runtime_set("desk.overlay", doc)
+    return doc
+
+
+def write_overlay(result: dict, today: dt.date | None = None) -> dict:
+    today = today or dt.date.today()
+    prev = db.runtime_get("desk.overlay") or {}
+    doc = dict(data=today.isoformat(), targets=result["targets"], per_desk=result["per_desk"], regole=caps(),
+               crypto_targets=prev.get("crypto_targets", {}), crypto_data=prev.get("crypto_data"))   # le posizioni dei segnali non si perdono
+    save_overlay(doc)
     audit.log("desk", "desk.overlay", dict(data=doc["data"], titoli=len(doc["targets"]), totale=round(sum(doc["targets"].values()), 4),
                                            scartate=len(result["scartate"])))
     events.publish("desk.overlay", "desk", dict(titoli=len(doc["targets"]), totale=round(sum(doc["targets"].values()), 4),

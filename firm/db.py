@@ -122,6 +122,10 @@ CREATE TABLE IF NOT EXISTS shadow_returns (
   id INTEGER PRIMARY KEY AUTOINCREMENT, day TEXT, variant TEXT, ret REAL, recorded_ts TEXT, data_fp TEXT,
   UNIQUE(day, variant)
 );
+CREATE TABLE IF NOT EXISTS signals (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, fonte TEXT, testo TEXT, stato TEXT, parsed TEXT, controlli TEXT, analisi TEXT,
+  peso REAL, motivo TEXT, scade TEXT, forecast TEXT, esito TEXT, r_multiple REAL, chiuso_ts TEXT
+);
 CREATE TABLE IF NOT EXISTS expectations (
   id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, nav0 REAL, params TEXT, modello TEXT, realistico TEXT, hash TEXT
 );

@@ -205,6 +205,15 @@ const tag = (v) => `<span class="tag ${esc(v)}">${esc(v)}</span>`;
 let peopleSort = ["punteggio", -1];
 
 const AFTER = {};
+AFTER.segnali = async () => {
+  const b = document.getElementById("sig-send"); if (!b) return;
+  b.onclick = async () => {
+    const t = document.getElementById("sig-text").value.trim(), m = document.getElementById("sig-msg");
+    if (!t) { m.textContent = "Incolla prima il segnale."; return; }
+    m.textContent = "Inviato: il desk lo sta analizzando (può servire un minuto)…";
+    try { await api("/api/signals", { method: "POST", body: JSON.stringify({ text: t }) }); setTimeout(() => openPanel("segnali"), 25000); } catch (e) { m.textContent = "Errore: " + e.message; }
+  };
+};
 const PANELS = {
   async persone() {
     const rows = await api("/api/people");
@@ -305,6 +314,23 @@ const PANELS = {
     return ["Grafici: il nostro fondo e i titoli",
       `<div class="cbar"><button data-ctab="fondo">Il nostro fondo</button><button data-ctab="titoli">Titoli e indicatori</button></div>` +
       `<div id="sec-fondo"><p class="muted">Calcolo il portafoglio atteso e il Monte Carlo…</p></div><div id="sec-titoli" class="hidden">${titoli}</div>`];
+  },
+  async segnali() {
+    const d = await api("/api/signals"), st = d.statistiche, tag2 = (v) => `<span class="tag ${esc(v)}">${esc(v)}</span>`;
+    const card1 = (r) => { const p = r.parsed || {}, c = r.controlli || {}, a = r.analisi || {};
+      return `<div class="mail"><b>#${r.id} ${esc(p.moneta || "?")} ${esc(p.direzione || "")}</b> ${tag2(r.stato)} ${r.esito ? tag2(r.esito) : ""}<span class="muted"> ${esc((r.ts || "").slice(5, 16).replace("T", " "))} · ${esc(r.fonte || "")}</span>` +
+        `<p class="muted">${esc((r.testo || "").slice(0, 220))}</p>` +
+        (p.ok ? `<p>Ingresso ${num(p.ingresso, 4)} · stop ${num(p.stop, 4)} · obiettivi ${(p.obiettivi || []).map((x) => num(x, 4)).join(", ")}${c.rr ? ` · rischio/rendimento ${num(c.rr, 1)} · stop a ${num(c.stop_in_sigma, 1)} volte la volatilità giornaliera` : ""}</p>` : "") +
+        ((c.problemi || []).length ? `<p class="neg">Controlli: ${esc(c.problemi.join("; "))}</p>` : "") + ((c.note || []).length ? `<p class="muted">${esc(c.note.join("; "))}</p>` : "") +
+        (a.motivo ? `<p><b>Analisi:</b> ${esc(a.motivo)}</p><p>Probabilità di arrivare all'obiettivo prima dello stop: <b>${pct(a.probabilita_tp1, 0)}</b> · peso deciso: <b>${pct(r.peso, 2)}</b> del conto${a.veto && a.veto.bloccato ? ` · <span class="neg">veto del Rischio: ${esc(a.veto.motivo)}</span>` : ""}</p>` +
+          ((a.rischi || []).length ? `<p class="muted">Rischi: ${esc(a.rischi.join("; "))}. Si esce se: ${esc(a.invalidazione || "—")}</p>` : "") : "") +
+        `<p class="muted">Decisione: ${esc(r.motivo || "in analisi…")}${r.r_multiple != null ? ` · risultato ${num(r.r_multiple, 2)} R` : ""}</p></div>`; };
+    return ["Sala segnali crypto", `<p class="muted">Incolla qui un segnale che hai ricevuto. Il desk crypto lo analizza con i dati veri e decide se tenerlo in considerazione: i controlli e il veto del Rischio li può solo restringere, non aggirare. Il testo del segnale non può dare ordini.</p>` +
+      `<textarea id="sig-text" rows="5" placeholder="Es.: BUY SOL  entry 150  SL 140  TP1 165  TP2 180"></textarea><div class="cbar"><button id="sig-send">Invia al desk crypto</button><span id="sig-msg" class="muted"></span></div>` +
+      `<h3>Quanto vale la sala (tutti i segnali, anche quelli scartati, si seguono)</h3><div class="kgrid">${card("Segnali ricevuti", st.totale)}${card("Chiusi", st.chiusi, `${st.obiettivo} all'obiettivo · ${st.stop} allo stop · ${st.scaduti} scaduti`)}` +
+      `${card("Arrivano all'obiettivo", st.tasso_obiettivo == null ? "—" : pct(st.tasso_obiettivo, 0), "sui segnali chiusi", st.tasso_obiettivo != null && st.tasso_obiettivo < 0.4 ? "gold" : "")}${card("Risultato medio", st.r_medio == null ? "—" : num(st.r_medio, 2) + " R", "R = rischio preso")}` +
+      `${card("In posizione ora", Object.keys(d.posizioni).length ? Object.entries(d.posizioni).map(([k, v]) => `${esc(k)} ${pct(v, 1)}`).join(" · ") : "nessuna", "dai segnali accettati")}</div>` +
+      `<p class="muted">Obiettivo e stop si controllano sui prezzi di chiusura giornalieri (approssimazione: un tocco dentro la giornata non si vede). Le posizioni entrano nel conto solo con il prossimo rilascio di GERVA-Q che legge i segnali.</p>` + d.segnali.map(card1).join("")];
   },
   async ricerca() {
     const d = await api("/api/research");

@@ -128,3 +128,4 @@ body.login { align-items: center; justify-content: center; }
 .cbar button { background: var(--panel2); color: var(--paper); border: 2px solid var(--edge); padding: 2px 10px; }
 .cbar button.on { border-color: var(--gold); color: var(--gold); }
 #pnl-body canvas.chart { display: block; width: 100%; margin: 6px 0; border: 2px solid var(--edge); }
+#pnl-body textarea { width: 100%; font-family: "VT323", monospace; font-size: 18px; background: var(--panel2); color: var(--paper); border: 2px solid var(--edge); padding: 6px; }

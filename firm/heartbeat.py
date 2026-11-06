@@ -156,6 +156,12 @@ def beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
             woke.append("capo")
     except Exception as e:                                    # le aspettative non devono fermare il battito
         notes.append(f"aspettative: {str(e)[:80]}")
+    if _once(f"signals-track:{day}:{now.hour // 4}"):                 # ogni 4 ore: obiettivo, stop, scadenza dei segnali
+        try:
+            from . import signals
+            signals.track()
+        except Exception as e:
+            notes.append(f"segnali: {str(e)[:80]}")
     if now.hour >= 7 and _once(f"desk:{day}"):               # i capi desk propongono posizioni per il conto
         from . import desk
         try:

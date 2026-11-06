@@ -28,7 +28,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from firm import (db, events, registry, budget, risk, pods, gateway, economy, mailbox, tasks, trials,
-                  scorekeeper as SK, pod_zero, audit, settings as S, building, meetings, reports, compensation, charts, fundrisk, expectations)
+                  scorekeeper as SK, pod_zero, audit, settings as S, building, meetings, reports, compensation, charts, fundrisk, expectations, signals)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 # Host ammessi (difesa dal DNS rebinding) e reti dei client: sul server il portale sta dietro un tunnel SSH
@@ -492,6 +492,29 @@ def fund_expectation():
         return _json(expectations.overview())
     except Exception as e:
         return _json(dict(registrata=None, nota=f"{type(e).__name__}: {str(e)[:160]}"))
+
+
+@app.post("/api/signals")
+async def signals_new(request: Request):
+    body = await request.json()
+    text = (body.get("text") or "").strip()[:2000]
+    if not text:
+        raise HTTPException(400, "segnale vuoto")
+    _cap(request)
+    sid = signals.create(text, (body.get("fonte") or "sala segnali")[:60])
+
+    def work():
+        try:
+            signals.process(sid)
+        except Exception as e:                       # un errore non deve far cadere il portale ne' lasciare il segnale 'accettato'
+            db.ex("UPDATE signals SET stato='osservato', motivo=? WHERE id=?", (f"analisi non riuscita: {str(e)[:120]}", sid))
+    threading.Thread(target=work, daemon=True).start()
+    return _json(dict(id=sid))
+
+
+@app.get("/api/signals")
+def signals_list():
+    return _json(dict(segnali=signals.listing(), statistiche=signals.stats(), posizioni=signals.active_targets()))
 
 
 @app.get("/api/charts/series")

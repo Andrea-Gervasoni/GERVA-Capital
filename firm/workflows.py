@@ -36,6 +36,11 @@ def arr(items: dict) -> dict:
 # ===========================================================================
 DESK_PROPOSAL = obj({"proposte": arr(obj({"simbolo": S_STR, "peso_pct": {"type": "number"}, "motivo": S_STR})), "nota": S_STR})
 OUTLOOK = obj({"previsioni": arr(obj({"orizzonte_giorni": {"type": "integer"}, "p_sopra": {"type": "number"}, "mediana_pct": {"type": "number"}})), "motivo": S_STR})
+SIGNAL_PARSE = obj({"moneta": S_STR, "direzione": {"type": "string", "enum": ["long", "short"]}, "ingresso": {"type": "number"},
+                    "stop": {"type": "number"}, "obiettivi": arr({"type": "number"})})
+SIGNAL_VERDICT = obj({"decisione": {"type": "string", "enum": ["accetta", "osserva", "scarta"]}, "probabilita_tp1": {"type": "number"},
+                      "peso_pct": {"type": "number"}, "motivo": S_STR, "rischi": arr(S_STR), "invalidazione": S_STR})
+SIGNAL_VETO = obj({"veto": {"type": "boolean"}, "motivo": S_STR})
 NEWS_TRIAGE = obj({"items": arr(obj({"news_id": {"type": "integer"}, "rilevanza": S_PROB, "sintesi": S_STR,
                                      "tag": arr(S_STR), "affermazioni": arr(S_STR), "fonte_primaria": {"type": "boolean"}})),
                    "note": S_STR})

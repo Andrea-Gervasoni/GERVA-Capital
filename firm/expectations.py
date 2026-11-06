@@ -74,7 +74,9 @@ def register(nav0: float | None = None, note: str = "", **kw) -> dict:
 def _dates(ts: str, steps: list[int]) -> list[str]:
     start = pd.Timestamp(ts[:10])
     days = pd.bdate_range(start, periods=max(steps) + 1)
-    return [str(days[s].date()) + "T22:00:00" for s in steps]
+    out = [str(days[s].date()) + "T22:00:00" for s in steps]
+    out[0] = ts[:19]                                          # il primo punto e' il momento esatto della registrazione
+    return out
 
 
 def _percentile(value: float, curve: dict[str, float]) -> float:
