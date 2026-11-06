@@ -40,3 +40,16 @@ def test_cycle_writes_overlay_within_caps(firm_env, monkeypatch):
 def test_cycle_without_market_data_does_nothing(firm_env, monkeypatch):
     monkeypatch.setattr(desk, "table", lambda *a, **k: [])
     assert "mancano i dati" in desk.cycle()["nota"]
+
+
+def test_profile_changes_reach_the_db_after_pull(firm_env):
+    import yaml
+    from firm import paths
+    org_seed.seed(); registry.sync()
+    assert registry.sync_if_profiles_changed() is True          # prima volta: registra l'impronta
+    assert registry.sync_if_profiles_changed() is False         # niente di nuovo
+    f = f"{paths.AGENTS}/pod_trend/profile.yaml"
+    prof = yaml.safe_load(open(f)); prof["daily_budget_eur"] = 1.5
+    yaml.safe_dump(prof, open(f, "w"), allow_unicode=True, sort_keys=False)
+    assert registry.sync_if_profiles_changed() is True
+    assert registry.get("pod_trend")["daily_budget_eur"] == 1.5

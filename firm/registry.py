@@ -52,6 +52,22 @@ def sync() -> int:
     return n
 
 
+def sync_if_profiles_changed() -> bool:
+    """Dopo un git pull i profile.yaml possono essere cambiati (budget, ruoli): il DB si riallinea da solo al prossimo battito."""
+    import glob
+    import hashlib
+    h = hashlib.sha256()
+    for f in sorted(glob.glob(os.path.join(paths.AGENTS, "*", "profile.yaml"))):
+        h.update(f.encode())
+        h.update(open(f, "rb").read())
+    sig = h.hexdigest()[:16]
+    if db.runtime_get("profiles.sha") == sig:
+        return False
+    sync()
+    db.runtime_set("profiles.sha", sig)
+    return True
+
+
 def get(agent_id: str) -> dict | None:
     import json
     r = db.one("SELECT * FROM agents WHERE id=?", (agent_id,))

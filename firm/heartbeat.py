@@ -16,7 +16,7 @@ from __future__ import annotations
 import datetime as dt
 import re
 
-from . import db, events, paths, risk, pods, budget, audit, gateway, news_feed, mailbox, workflows, economy, compensation, meetings, reports
+from . import db, events, paths, risk, pods, budget, audit, gateway, news_feed, mailbox, workflows, economy, compensation, meetings, reports, registry
 
 
 def _once(key: str) -> bool:
@@ -48,6 +48,7 @@ def beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
         from . import ibkr
         ibkr.observe_challenge()
     pods.ensure_pods()
+    registry.sync_if_profiles_changed()
     if os.environ.get("IBKR_CHALLENGE_ACCOUNT") and pods.enabled():
         if not os.environ.get("IBKR_FIRM_ACCOUNT"):
             # i pod non possono usare il conto della sfida (live.py vende tutto cio' che non e' nel suo target):
