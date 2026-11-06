@@ -272,12 +272,15 @@ const PANELS = {
       ${m.status === "aperta" ? m.options.map((o) => `<button data-mail="${m.id}" data-choice="${esc(o)}">Scegli: ${esc(o)}</button>`).join("") + `<button class="ghost" data-mail="${m.id}" data-choice="__rimanda__">Rimanda</button>` : `<p class="muted">Scelta: ${esc(m.choice || "rimandata (vale il default)")}</p>`}</div>`).join("")];
   },
   async pod() {
-    const d = await api("/api/pods"), z = d.pod_zero;
-    return ["Pod: capitale, risultati, Pod Zero", table(d.classifica.pod, [["nome", "Pod"], ["capitale", "Capitale", (v) => `<span class="bar" data-w="${Math.round(v * 140)}"></span> ${pct(v)}`], ["stato", "Stato", tag], ["giorni", "Giorni"],
-      ["sharpe", "Sharpe in avanti [IC 90%]", (v, r) => v == null ? "<span class='muted'>&lt;30 giorni</span>" : num(v, 2) + (r.sharpe_ci90 ? ` <span class="muted">[${r.sharpe_ci90.map((x) => num(x, 2)).join("; ")}]</span>` : "")],
-      ["drawdown", "Drawdown", (v) => pct(v)], ["alpha_netto_eur", "Alpha netto", (v) => v == null ? "benchmark" : eur(v)]]) +
-      `<p class="muted">Correlazione media tra pod: ${d.correlazione == null ? "dati insufficienti" : num(d.correlazione, 2)}. Con meno di ~60 giorni la classifica è soprattutto fortuna: per questo la riallocazione usa lo shrinkage.</p>
-      <h3>Pod Zero — GERVA-Q v3 (sola lettura)</h3>${z.disponibile ? `<div class="kgrid">${card("Dati al", esc(z.dati_al))}${card("Lorda target", pct(z.lorda))}${card("Quota crypto", pct(z.quota_crypto))}${card("Liquidità ferma", pct(1 - z.lorda), "candidato «cash» nel banco v4", "gold")}</div>` +
+    const d = await api("/api/desk"), z = d.pod_zero, t = Object.entries(d.targets || {}).sort((x, y) => y[1] - x[1]);
+    const tot = t.reduce((a, [, v]) => a + v, 0);
+    return ["Desk: le posizioni che i capi desk propongono per il conto",
+      `<p class="muted">I capi desk propongono, il codice valida (peso massimo per titolo e in totale), GERVA-Q esegue sul conto. Non esistono più capitali separati.</p>` +
+      (t.length ? `<div class="kgrid">${card("Proposte del", esc(d.data || "—"))}${card("Titoli", t.length)}${card("Totale sul conto", pct(tot, 1))}</div>` +
+        table(t.map(([k, v]) => ({ k, v, desk: Object.entries(d.per_desk || {}).filter(([, m]) => m[k]).map(([n]) => n.replace("pod_", "")).join(", ") })),
+          [["k", "Titolo"], ["v", "Peso sul conto", (v) => pct(v, 2)], ["desk", "Proposto da"]])
+        : `<p class="muted">Nessuna proposta ancora: i capi desk lavorano ogni mattina.</p>`) +
+      `<h3>Modello GERVA-Q (sola lettura)</h3>${z.disponibile ? `<div class="kgrid">${card("Dati al", esc(z.dati_al))}${card("Lorda target", pct(z.lorda))}${card("Quota crypto", pct(z.quota_crypto))}</div>` +
         table(Object.entries(z.pesi).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ k, v })), [["k", "Strumento"], ["v", "Peso sul NAV", (v) => pct(v, 2)]]) : `<p class="muted">GERVA-Q non trovato (${esc(z.percorso)}).</p>`}`];
   },
   async ricerca() {

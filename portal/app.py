@@ -457,6 +457,14 @@ async def kill(request: Request):
     return _json(dict(ok=True))
 
 
+@app.get("/api/desk")
+def desk_view():
+    """Le posizioni proposte dai capi desk (validate dal codice) che GERVA-Q compra sopra il modello."""
+    doc = db.runtime_get("desk.overlay") or {}
+    return _json(dict(data=doc.get("data"), targets=doc.get("targets", {}), per_desk=doc.get("per_desk", {}),
+                      regole=doc.get("regole", {}), pod_zero=pod_zero.summary()))
+
+
 @app.get("/api/pods")
 def pods_view():
     lb = economy.leaderboard()
