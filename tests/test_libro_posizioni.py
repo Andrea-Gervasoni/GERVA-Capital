@@ -20,3 +20,15 @@ def test_libro_has_positions_and_no_secrets(firm_env):
 def test_libro_without_ibkr_does_not_crash(firm_env):
     libro = workflows.libro_posizioni()
     assert libro["pod_zero"]["posizioni"] == [] and libro["pod_zero"]["collegato"] is False
+
+
+def test_real_numbers_only_when_andrea_allows(monkeypatch):
+    from llm import runtime
+    data = dict(ordine="x", _reale=dict(conto_paper="DU1234567", totale_eur=969794.26))
+    monkeypatch.delenv("GERVA_LLM_REAL_NUMBERS", raising=False)
+    assert "DU1234567" not in runtime._data_block(data) and "969794" not in runtime._data_block(data)
+    monkeypatch.setenv("GERVA_LLM_REAL_NUMBERS", "1")
+    blk = runtime._data_block(data)
+    assert "DU1234567" in blk and "969794.26" in blk
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-abcdefghijklmnop12345")
+    assert "sk-ant-abcdefghijklmnop12345" not in runtime._data_block(dict(ordine="sk-ant-abcdefghijklmnop12345", _reale=data["_reale"]))

@@ -39,6 +39,18 @@ def _effort(grade: int) -> str:
     return "low" if grade <= 2 else "medium"
 
 
+def _data_block(data: dict) -> str:
+    """Dati per l'agente. Il filtro (regola 6) toglie conto, NAV e chiavi. UNICA eccezione, scelta da Andrea il 6/11 e
+    reversibile (GERVA_LLM_REAL_NUMBERS=1 in .env): il blocco '_reale' (numero del conto paper e totale) arriva
+    all'agente. Resta filtrato in audit e portale, e le chiavi non passano MAI."""
+    data = dict(data)
+    real = data.pop("_reale", None)
+    out = redact.obj(data)
+    if real and os.environ.get("GERVA_LLM_REAL_NUMBERS") == "1":
+        out["conto_e_totale_reali"] = {k: v for k, v in real.items() if v is not None}
+    return json.dumps(out, ensure_ascii=False, default=str)
+
+
 def call(agent_id: str, task: str, data: dict | None = None, untrusted: str | None = None,
          schema: dict | None = None, purpose: str = "", status_label: str = "pensa") -> dict:
     a = registry.get(agent_id)
@@ -50,7 +62,7 @@ def call(agent_id: str, task: str, data: dict | None = None, untrusted: str | No
     system = _prompt(agent_id) + "\n\n<memoria>\n" + registry.memory(agent_id) + "\n</memoria>"
     user = f"<compito>\n{task}\n</compito>\n"
     if data is not None:
-        user += "<dati>\n" + json.dumps(redact.obj(data), ensure_ascii=False, default=str) + "\n</dati>\n"
+        user += "<dati>\n" + _data_block(data) + "\n</dati>\n"
     if untrusted:
         user += f"<nota>{UNTRUSTED_NOTE}</nota>\n<dati_non_fidati>\n{redact.text(untrusted)}\n</dati_non_fidati>\n"
     user += "Rispondi solo con il JSON richiesto dallo schema."

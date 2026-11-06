@@ -214,16 +214,28 @@ def libro_posizioni() -> dict:
     return dict(pod_zero=zero, pod_simulati=simulati, limiti_di_rischio=risk.limits())
 
 
+def dati_reali() -> dict:
+    """Numero del conto paper e totale, SOLO se Andrea li ha concessi (GERVA_LLM_REAL_NUMBERS=1). Passano all'agente
+    ma non finiscono in audit ne' nel portale (vedi llm.runtime._data_block)."""
+    import os
+    if os.environ.get("GERVA_LLM_REAL_NUMBERS") != "1":
+        return {}
+    ch = db.runtime_get("ibkr.challenge") or {}
+    return dict(conto_paper=os.environ.get("IBKR_CHALLENGE_ACCOUNT"), totale_eur=ch.get("nav_eur"),
+                aggiornato=ch.get("ts"))
+
+
 def handle_command(cid: int) -> dict:
     cmd = db.one("SELECT * FROM commands WHERE id=?", (cid,))
     libro = libro_posizioni()
+    reale = dati_reali()
     rk = {k: v for k, v in risk.snapshot().items() if k != "nav"}             # niente NAV assoluto verso l'LLM
     snap = dict(rischio=rk, libro=libro, budget=__import__("firm.budget", fromlist=["x"]).status(),
                 organigramma=[dict(id=a["id"], ruolo=a["role"], stato=a["status"]) for a in registry.all_agents()
                               if a["kind"] == "llm"])
     plan = runtime.call("capo", "Andrea ti ha dato un ordine. Scomponilo in compiti per i manager. Se porta piu' rischio "
                         "senza piu' vantaggio, dillo e proponi l'alternativa.",
-                        data=dict(ordine=cmd["text"], stato_societa=snap), schema=CEO_PLAN, purpose="delega",
+                        data=dict(ordine=cmd["text"], stato_societa=snap, _reale=reale), schema=CEO_PLAN, purpose="delega",
                         status_label="riunione")
     if not plan["ok"]:
         db.ex("UPDATE commands SET status='errore', answer=? WHERE id=?", (plan["motivo"], cid))
@@ -235,7 +247,7 @@ def handle_command(cid: int) -> dict:
         tid = tasks.create(cid, root, c["assegnatario"], "capo", c["titolo"])
         w = runtime.call(c["assegnatario"], f"Compito dal Capo: {c['titolo']}. Perche': {c['perche']}. Lavora con i dati "
                          "che hai; se non bastano, stato 'servono_dati' e indica quali.",
-                         data=dict(ordine_originale=cmd["text"], libro=libro, rischio=rk), schema=MANAGER_WORK, purpose="compito",
+                         data=dict(ordine_originale=cmd["text"], libro=libro, rischio=rk, _reale=reale), schema=MANAGER_WORK, purpose="compito",
                          status_label="scrive")
         out = w["output"] if w["ok"] else dict(risultato=w["motivo"], stato="servono_dati", sotto_compiti=[], fonti=[])
         for sc in out.get("sotto_compiti", [])[:2]:
