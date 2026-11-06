@@ -7,7 +7,7 @@ superior: lt_head
 kind: llm
 room: lungo
 desk: 2
-daily_budget_eur: 0.02
+daily_budget_eur: 0.2
 tools:
 - read_task_results
 - register_forecast

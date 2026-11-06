@@ -7,7 +7,7 @@ superior: capo
 kind: llm
 room: validazione
 desk: 0
-daily_budget_eur: 0.06
+daily_budget_eur: 0.6
 tools:
 - read_research_doc
 - run_backtest

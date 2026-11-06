@@ -7,7 +7,7 @@ superior: null
 kind: llm
 room: capo
 desk: 0
-daily_budget_eur: 0.12
+daily_budget_eur: 1.2
 tools:
 - delegate_task
 - read_task_results

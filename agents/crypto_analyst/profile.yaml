@@ -7,7 +7,7 @@ superior: senior_crypto
 kind: llm
 room: ricerca
 desk: 7
-daily_budget_eur: 0.02
+daily_budget_eur: 0.2
 tools:
 - read_task_results
 - research_queue

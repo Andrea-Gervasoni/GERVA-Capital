@@ -7,7 +7,7 @@ superior: head_intel
 kind: llm
 room: redazione
 desk: 2
-daily_budget_eur: 0.04
+daily_budget_eur: 0.4
 tools:
 - read_news_queue
 - find_second_source

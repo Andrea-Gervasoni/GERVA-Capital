@@ -30,10 +30,23 @@ def firm_env(tmp_path, monkeypatch):
     monkeypatch.setattr(paths, "RESEARCH", str(tmp_path / "research"))
     risk = tmp_path / "risk_limits.yaml"
     shutil.copy(settings.RISK_FILE, risk)
+    # i test verificano il MECCANISMO dei limiti con i valori prudenti storici, non i numeri scelti da Andrea il 6/11
+    import yaml
+    lim = yaml.safe_load(open(risk))
+    lim["order"]["max_notional_frac_nav"] = 0.05
+    lim["pod"].update(max_gross=1.0, allow_short=False)
+    lim["firm"].update(max_gross=1.0, kill_drawdown=0.15, max_crypto_frac=0.50)
+    lim["instruments"].update(allowed_kinds=["etf_ucits", "stock", "etc", "crypto"],
+                              forbidden_kinds=["etf_us", "cfd", "option", "future", "forex_speculative"])
+    yaml.safe_dump(lim, open(risk, "w"), allow_unicode=True, sort_keys=False)
     monkeypatch.setattr(settings, "RISK_FILE", str(risk))
     monkeypatch.setenv("GERVA_SHADOW", "0")              # niente download di dati dal battito nei test
     for k in [k for k in os.environ if k.endswith("_API_KEY")]:
         monkeypatch.delenv(k, raising=False)
     db.reset_connection_cache()
+    # i test storici descrivono la societa' con i pod accesi; il comportamento a pod spenti ha i suoi test
+    db.connect()
+    for k, v in (("pods.enabled", "true"), ("pods.initial_capital_frac", "0.05")):
+        db.ex("INSERT INTO settings(key,value,updated_ts,updated_by) VALUES(?,?,?,?)", (k, v, db.now_iso(), "test"))
     yield tmp_path
     db.reset_connection_cache()

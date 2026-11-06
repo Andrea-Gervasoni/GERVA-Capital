@@ -19,10 +19,10 @@ providers:
   gemini:    {kind: openai_compatible, base_url: "https://generativelanguage.googleapis.com/v1beta/openai/", env_key: GEMINI_API_KEY, model_env: GEMINI_MODEL}
 
 max_output_tokens_by_grade:
-  "0": 600
-  "1": 800
-  "2": 1000
-  "3": 1500
-  "4": 2000
-  "5": 2500
-  "6": 3000
+  "0": 1200
+  "1": 1600
+  "2": 2000
+  "3": 3000
+  "4": 4000
+  "5": 5000
+  "6": 6000

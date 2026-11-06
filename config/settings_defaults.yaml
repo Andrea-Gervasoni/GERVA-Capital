@@ -2,20 +2,20 @@
 # le modifiche vanno nella tabella `settings` (e nell'audit log), questo file resta il default.
 
 budget:
-  daily_eur: 0.60            # tetto giornaliero di esecuzione degli agenti
-  total_eur: 24.0            # 40 EUR di credito - 40% riservato allo sviluppo = 24 EUR per far vivere la societa'
+  daily_eur: 2.00            # tetto giornaliero degli agenti (6/11: era 0,60; la spesa reale e' di pochi centesimi)
+  total_eur: 20.0            # crediti Anthropic oggi: circa 20,7 EUR (23,11 USD)
   downgrade_at: 0.80         # oltre l'80% del tetto giornaliero il Governor scala i modelli verso il basso
   alert_days_left: 7         # sotto 7 giorni di autonomia il Capo bussa ad Andrea (grande richiesta n.3)
   usd_eur: 0.894             # cambio per convertire i prezzi in USD (EURUSD 1,1183 in GERVA-Q state/ al 30/10/2026)
   per_dept_daily_eur_map:    # tetti per reparto (somma > daily_eur di proposito: e' il tetto globale a vincolare)
-    direzione: 0.20
-    rischio: 0.10
-    ricerca: 0.20
-    validazione: 0.15
-    redazione: 0.20
-    pod: 0.15
-    talent: 0.05
-    lungo: 0.08               # Comitato di lungo periodo (Head + due analisti)
+    direzione: 0.60
+    rischio: 0.30
+    ricerca: 0.60
+    validazione: 0.45
+    redazione: 0.50
+    pod: 0.60
+    talent: 0.10
+    lungo: 0.25               # Comitato di lungo periodo (Head + due analisti)
 
 firm:
   strike: false              # Sciopero: agenti fermi, codice deterministico attivo
@@ -29,9 +29,9 @@ release:
 
 models:
   by_grade_map:              # livello di modello per grado (la promozione cambia il livello)
-    "0": claude-haiku-5-5    # Stagista
-    "1": claude-haiku-5-5    # Analista
-    "2": claude-haiku-5-5    # Analista Senior
+    "0": claude-sonnet-5-5    # Stagista
+    "1": claude-sonnet-5-5    # Analista
+    "2": claude-sonnet-5-5    # Analista Senior
     "3": claude-sonnet-5-5   # Ricercatore
     "4": claude-sonnet-5-5   # Senior
     "5": claude-sonnet-5-5   # Manager
@@ -45,7 +45,8 @@ gate:                        # cancello automatico prima della Validazione (DECI
   min_years: 3.0
 
 pods:
-  initial_capital_frac: 0.05
+  enabled: false             # i pod sono spenti (scelta di Andrea del 6/11): si opera solo sul conto
+  initial_capital_frac: 0.0
   dd_cut: 0.05               # drawdown del pod: capitale dimezzato
   dd_close: 0.075            # drawdown del pod: pod chiuso
   capital_tax_annual: 0.02   # tassa sul capitale usato (costo opportunita')

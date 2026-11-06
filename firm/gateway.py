@@ -38,7 +38,7 @@ def start_nav() -> float:
 def firm_start() -> float:
     """Capitale iniziale della SOCIETA': il conto osservato su IBKR (Pod Zero) piu' il capitale dichiarato dei pod.
     Senza IBKR (demo, test) il Pod Zero vale la quota rimasta di START_NAV_DEFAULT, e il totale torna a quello."""
-    n = len(db.q("SELECT id FROM pods WHERE id!='pod_zero'"))
+    n = len(pods.sim_pod_ids())
     base = start_nav() * float(S.get("pods.initial_capital_frac"))
     zero = start_nav() if db.runtime_get(START_KEY) else start_nav() - n * base
     return zero + n * base
@@ -131,7 +131,8 @@ def pod_zero_nav() -> float:
 
 def firm_nav_estimate() -> float:
     navs = [pod_zero_nav()]
-    for p in db.q("SELECT id FROM pods WHERE id!='pod_zero'"):
+    for pid_ in pods.sim_pod_ids():
+        p = dict(id=pid_)
         base = start_nav() * float(S.get("pods.initial_capital_frac"))
         cash = sum((-1 if f["side"] == "BUY" else 1) * f["qty"] * f["price"] - f["fee"]
                    for f in db.q("SELECT side,qty,price,fee FROM fills WHERE pod=?", (p["id"],)))

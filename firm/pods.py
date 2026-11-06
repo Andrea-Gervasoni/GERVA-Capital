@@ -21,7 +21,28 @@ POD_DEFS = [
 ]
 
 
+def enabled() -> bool:
+    return bool(S.get("pods.enabled", False))
+
+
+def sim_pod_ids() -> list[str]:
+    """Pod con capitale simulato: nessuno finche' i pod sono spenti (scelta di Andrea del 6/11)."""
+    if not enabled():
+        return []
+    return [r["id"] for r in db.q("SELECT id FROM pods WHERE id!='pod_zero'")]
+
+
 def ensure_pods():
+    if not enabled():
+        # I pod non esistono piu': il conto e' uno solo e tutto il capitale e' del Pod Zero (GERVA-Q).
+        if not db.one("SELECT id FROM pods WHERE id='pod_zero'"):
+            db.ex("INSERT INTO pods(id,name,head,philosophy,benchmark,capital_frac,status,hwm,created_ts,strategy)"
+                  " VALUES(?,?,?,?,?,?,?,?,?,?)",
+                  ("pod_zero", "Conto — GERVA-Q", "pod_zero", "Sistematico validato (STUDIO.md)", "SPY",
+                   1.0, "attivo", 1.0, db.now_iso(), "gervaq_v3"))
+        db.ex("UPDATE pods SET status='chiuso', capital_frac=0 WHERE id!='pod_zero' AND status!='chiuso'")
+        db.ex("UPDATE pods SET capital_frac=1.0 WHERE id='pod_zero' AND capital_frac!=1.0")
+        return
     frac = float(S.get("pods.initial_capital_frac"))
     if not db.one("SELECT id FROM pods WHERE id='pod_zero'"):
         db.ex("INSERT INTO pods(id,name,head,philosophy,benchmark,capital_frac,status,hwm,created_ts,strategy)"
@@ -35,6 +56,8 @@ def ensure_pods():
 
 
 def all_pods() -> list[dict]:
+    if not enabled():
+        return db.q("SELECT * FROM pods WHERE id='pod_zero'")
     return db.q("SELECT * FROM pods ORDER BY CASE id WHEN 'pod_zero' THEN 0 ELSE 1 END, id")
 
 

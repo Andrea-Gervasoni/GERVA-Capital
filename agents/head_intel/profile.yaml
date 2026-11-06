@@ -7,7 +7,7 @@ superior: capo
 kind: llm
 room: redazione
 desk: 0
-daily_budget_eur: 0.05
+daily_budget_eur: 0.5
 tools:
 - read_news_queue
 - publish_bulletin

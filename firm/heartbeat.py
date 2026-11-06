@@ -47,7 +47,8 @@ def beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
     if os.environ.get("IBKR_OBSERVE") == "1":            # sul Mac; sul server lo fa il container 'observer'
         from . import ibkr
         ibkr.observe_challenge()
-    if os.environ.get("IBKR_CHALLENGE_ACCOUNT"):
+    pods.ensure_pods()
+    if os.environ.get("IBKR_CHALLENGE_ACCOUNT") and pods.enabled():
         if not os.environ.get("IBKR_FIRM_ACCOUNT"):
             # i pod non possono usare il conto della sfida (live.py vende tutto cio' che non e' nel suo target):
             # serve un secondo conto paper, cioe' una nuova credenziale -> grande richiesta n.4

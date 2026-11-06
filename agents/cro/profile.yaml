@@ -7,7 +7,7 @@ superior: capo
 kind: llm
 room: rischio
 desk: 0
-daily_budget_eur: 0.08
+daily_budget_eur: 0.8
 tools:
 - risk_snapshot
 - stress_test
