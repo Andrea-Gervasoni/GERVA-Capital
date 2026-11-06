@@ -87,16 +87,31 @@ def _client():
     return TelegramClient(session, api_id, api_hash)
 
 
-def login() -> None:
-    """Accesso interattivo, UNA volta, sul Terminale di Andrea: telefono e codice non passano da nessun'altra parte."""
+def login(sms: bool = False) -> None:
+    """Accesso interattivo, UNA volta, sul Terminale di Andrea: telefono e codice non passano da nessun'altra parte.
+    sms=True chiede a Telegram di mandare il codice per SMS invece che nell'app (utile se l'app non lo mostra)."""
     client = _client()
-    client.start()                                                           # chiede telefono, codice e (se c'e') la password a 2 fattori
+    run = client.loop.run_until_complete
+    if not sms:
+        client.start()                                                       # telefono, codice e (se c'e') password a 2 fattori
+    else:
+        from telethon.errors import SessionPasswordNeededError
+        run(client.connect())
+        if not run(client.is_user_authorized()):
+            phone = input("Numero di telefono con prefisso (+39...): ").strip()
+            sent = run(client.send_code_request(phone, force_sms=True))
+            code = input("Codice ricevuto per SMS: ").strip()
+            try:
+                run(client.sign_in(phone, code, phone_code_hash=sent.phone_code_hash))
+            except SessionPasswordNeededError:
+                import getpass
+                run(client.sign_in(password=getpass.getpass("Password della verifica in due passaggi: ")))
     try:
         os.chmod(os.path.join(paths.VAR, "telegram.session"), 0o600)
     except OSError:
         pass
     print("\nCollegato. I tuoi gruppi e canali:")
-    dialogs = [d for d in client.loop.run_until_complete(client.get_dialogs()) if d.is_group or d.is_channel]
+    dialogs = [d for d in run(client.get_dialogs()) if d.is_group or d.is_channel]
     for d in dialogs[:60]:
         print(f"  - {d.name}")
     names = input("\nScrivi i NOMI delle sale segnali da ascoltare, separati da virgola: ").strip()

@@ -235,10 +235,11 @@ def cmd_aspettative(_):
     print(json.dumps(expectations.register(note="registrazione manuale di Andrea"), ensure_ascii=False, indent=1))
 
 
-def cmd_telegram_login(_):
-    """Accesso a Telegram, una volta sola, sul tuo Terminale (telefono e codice non passano da nessun altro)."""
+def cmd_telegram_login(a):
+    """Accesso a Telegram, una volta sola, sul tuo Terminale (telefono e codice non passano da nessun altro).
+    Con --sms il codice arriva per SMS invece che nell'app."""
     from firm import telegram_feed
-    telegram_feed.login()
+    telegram_feed.login(sms=getattr(a, "sms", False))
 
 
 def cmd_telegram(_):
@@ -400,6 +401,8 @@ def main():
                  "set-password", "ibkr-check", "observe", "check-backtest", "shadow", "comitato-lungo", "desk", "live-nav", "aspettative", "telegram-login", "telegram"]:
         sp = sub.add_parser(name)
         sp.add_argument("--demo", action="store_true", help="usa il database dimostrativo var/demo/")
+        if name == "telegram-login":
+            sp.add_argument("--sms", action="store_true", help="manda il codice per SMS invece che nell'app di Telegram")
         if name == "research":
             sp.add_argument("what", nargs="?", default="gervaq4")
         if name == "check-backtest":
