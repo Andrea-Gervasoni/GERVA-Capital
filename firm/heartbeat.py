@@ -46,7 +46,9 @@ def beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
     import os
     if os.environ.get("IBKR_OBSERVE") == "1":            # sul Mac; sul server lo fa il container 'observer'
         from . import ibkr
-        ibkr.observe_challenge()
+        obs = ibkr.observe_challenge()                          # (non chiamarla snap: e' lo snapshot del rischio)
+        if obs and obs.get("ok") and (obs.get("nav_eur") or 0) > 0:          # un punto per battito: serve al grafico del conto
+            db.ex("INSERT INTO nav_ticks(ts,nav) VALUES(?,?)", (db.now_iso(), float(obs["nav_eur"])))
     pods.ensure_pods()
     registry.sync_if_profiles_changed()
     if os.environ.get("IBKR_CHALLENGE_ACCOUNT") and pods.enabled():

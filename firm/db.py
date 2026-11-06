@@ -122,6 +122,9 @@ CREATE TABLE IF NOT EXISTS shadow_returns (
   id INTEGER PRIMARY KEY AUTOINCREMENT, day TEXT, variant TEXT, ret REAL, recorded_ts TEXT, data_fp TEXT,
   UNIQUE(day, variant)
 );
+CREATE TABLE IF NOT EXISTS nav_ticks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, nav REAL
+);
 CREATE TABLE IF NOT EXISTS nav_marks (
   id INTEGER PRIMARY KEY AUTOINCREMENT, day TEXT, pod TEXT, nav REAL, capital REAL,
   gross REAL, UNIQUE(day, pod)

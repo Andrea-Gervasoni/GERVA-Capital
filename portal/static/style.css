@@ -121,3 +121,10 @@ body.login { align-items: center; justify-content: center; }
 .loginbox { position: static; width: min(420px, 92vw); margin: 0 auto; }
 .loginbox input { width: 100%; font-family: "VT323"; font-size: 22px; background: var(--ink); color: var(--paper); border: 1px solid var(--edge); padding: 4px 8px; margin: 6px 0 10px; }
 .loginbox button { background: var(--gold); color: var(--ink); border: 0; padding: 4px 16px; }
+
+/* grafici quant */
+.cbar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
+.cbar select { font-family: "VT323", monospace; font-size: 18px; background: var(--panel2); color: var(--paper); border: 2px solid var(--edge); padding: 3px 6px; }
+.cbar button { background: var(--panel2); color: var(--paper); border: 2px solid var(--edge); padding: 2px 10px; }
+.cbar button.on { border-color: var(--gold); color: var(--gold); }
+#pnl-body canvas.chart { display: block; width: 100%; margin: 6px 0; border: 2px solid var(--edge); }

@@ -27,7 +27,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from firm import (db, events, registry, budget, risk, pods, gateway, economy, mailbox, tasks, trials,
-                  scorekeeper as SK, pod_zero, audit, settings as S, building, meetings, reports, compensation)
+                  scorekeeper as SK, pod_zero, audit, settings as S, building, meetings, reports, compensation, charts)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 # Host ammessi (difesa dal DNS rebinding) e reti dei client: sul server il portale sta dietro un tunnel SSH
@@ -455,6 +455,31 @@ async def kill(request: Request):
     else:
         risk.release_kill(cap)
     return _json(dict(ok=True))
+
+
+@app.get("/api/charts/list")
+def charts_list():
+    return _json(dict(simboli=charts.symbols()))
+
+
+@app.get("/api/charts/series")
+def charts_series(sym: str, days: int = 250):
+    close = charts.load_close()
+    if close is None or sym not in charts.symbols(close):
+        raise HTTPException(404, "simbolo sconosciuto o dati non scaricati (firm.py data)")
+    return _json(charts.indicators(sym, days, close))
+
+
+@app.get("/api/charts/overview")
+def charts_overview():
+    close = charts.load_close()
+    pos = [p["simbolo"] for p in ((db.runtime_get("ibkr.challenge") or {}).get("posizioni") or [])]
+    desk_syms = list(((db.runtime_get("desk.overlay") or {}).get("targets") or {}))
+    have = set(charts.symbols(close))
+    mine = [x for x in dict.fromkeys(desk_syms + pos) if x in have]
+    return _json(dict(portafoglio=mine, simboli=sorted(have), regime=charts.regime(close), equity=charts.equity_vs_benchmark(close),
+                      screener=charts.screener(close, 40) if close is not None else [],
+                      corr=charts.correlation(["SPY", "QQQ", "TLT", "GLD"] + desk_syms + pos, 120, close)))
 
 
 @app.get("/api/desk")
