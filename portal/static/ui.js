@@ -286,21 +286,23 @@ const PANELS = {
   },
   async grafici() {
     const ov = await api("/api/charts/overview"); CHARTS.ov = ov;
-    if (!ov.simboli.length) return ["Grafici quant", "<p class='muted'>Servono i prezzi: lancia <b>firm.py data</b> sul Mac e riapri questa pagina.</p>"];
-    const r = ov.regime || {}, opt = (s) => `<option value="${esc(s)}">${esc(s)}</option>`;
+    if (!ov.simboli.length) return ["Grafici", "<p class='muted'>Servono i prezzi: lancia <b>firm.py data</b> sul Mac e riapri questa pagina.</p>"];
+    const r = ov.regime || {}, opt = (s) => `<option value="${esc(s)}">${esc(s)}</option>`, sgn = (v) => (v == null ? "" : `<span class="${v >= 0 ? "pos" : "neg"}">${pct(v, 1)}</span>`);
     CHARTS.sym = CHARTS.sym && ov.simboli.includes(CHARTS.sym) ? CHARTS.sym : (ov.portafoglio[0] || "SPY");
-    return ["Grafici quant: gli indicatori dei bot sui prezzi veri",
-      `<h3>Regime di mercato</h3><div class="kgrid">${card("S&P 500 (SPY)", r.spy != null ? num(r.spy, 2) : "—", r.spy_sopra_ema200 ? "sopra la media a 200 giorni" : "sotto la media a 200 giorni", r.spy_sopra_ema200 ? "" : "gold")}` +
+    const titoli = `<h3>Regime di mercato</h3><div class="kgrid">${card("S&P 500 (SPY)", r.spy != null ? num(r.spy, 2) : "—", r.spy_sopra_ema200 ? "sopra la media a 200 giorni" : "sotto la media a 200 giorni", r.spy_sopra_ema200 ? "" : "gold")}` +
       `${card("Distanza dalla EMA200", r.spy_vs_ema200 != null ? pct(r.spy_vs_ema200, 1) : "—")}${card("Da 1 mese", r.spy_r1m != null ? pct(r.spy_r1m, 1) : "—", "S&P 500")}` +
       `${card("VIX", r.vix != null ? num(r.vix, 1) : "—", r.vix_percentile != null ? `più alto del ${Math.round(r.vix_percentile * 100)}% degli ultimi 2 anni` : "")}${card("Lettura", esc(r.lettura || "—"))}</div>` +
       `<h3>Il conto contro l'S&P 500 (base 100)</h3><canvas class="chart" id="c-eq"></canvas><p class="muted">${esc(ov.equity.nota || "Un punto a ogni battito (15 minuti) per il conto, uno al giorno per l'S&P 500: il confronto si legge su giorni e settimane, non su una mattina.")}</p>` +
-      `<h3>Un titolo alla volta</h3><div class="cbar"><select id="c-sym">${ov.portafoglio.length ? `<optgroup label="Nel conto e dai desk">${ov.portafoglio.map(opt).join("")}</optgroup>` : ""}<optgroup label="Tutti">${ov.simboli.map(opt).join("")}</optgroup></select>` +
+      `<h3>Un titolo alla volta (${ov.simboli.length} titoli: azioni, ETF che compriamo, crypto)</h3><div class="cbar"><select id="c-sym">${ov.portafoglio.length ? `<optgroup label="Nel conto e dai desk">${ov.portafoglio.map(opt).join("")}</optgroup>` : ""}<optgroup label="Tutti">${ov.simboli.map(opt).join("")}</optgroup></select>` +
       [["3M", 63], ["6M", 126], ["1A", 252], ["3A", 756]].map(([n, d]) => `<button data-days="${d}">${n}</button>`).join("") + `</div>` +
       `<div class="kgrid" id="c-sum"></div><canvas class="chart" id="c-price"></canvas><canvas class="chart" id="c-rsi"></canvas><canvas class="chart" id="c-vol"></canvas><canvas class="chart" id="c-dd"></canvas>` +
       `<h3>Correlazioni a 120 giorni (oro = si muovono insieme, azzurro = in senso opposto)</h3><canvas class="chart" id="c-heat"></canvas>` +
-      `<h3>Screener: i titoli per slancio a 3 mesi</h3>` + table(ov.screener, [["simbolo", "Titolo"], ["r1m", "1 mese", (v) => `<span class="${v >= 0 ? "pos" : "neg"}">${pct(v, 1)}</span>`], ["r3m", "3 mesi", (v) => `<span class="${v >= 0 ? "pos" : "neg"}">${pct(v, 1)}</span>`], ["r12m", "12 mesi", (v) => `<span class="${v >= 0 ? "pos" : "neg"}">${pct(v, 1)}</span>`],
-        ["vs_ema200", "vs EMA200", (v) => `<span class="${v >= 0 ? "pos" : "neg"}">${pct(v, 1)}</span>`], ["rsi", "RSI"], ["vol", "Volatilità", (v) => pct(v, 0)], ["trend", "Trend", tag]]) +
-      `<p class="muted">Solo lettura: i grafici non inviano ordini. EMA = media mobile esponenziale; RSI = forza relativa (14 giorni); Bollinger = media a 20 giorni ± 2 deviazioni.</p>`];
+      `<h3>Screener: tutti i titoli, quelli del conto e dei desk in cima</h3>` + table(ov.screener, [["simbolo", "Titolo"], ["tipo", "Tipo"], ["nel_conto", "Nel conto", (v) => (v ? "sì" : "")], ["r1m", "1 mese", sgn], ["r3m", "3 mesi", sgn], ["r12m", "12 mesi", sgn],
+        ["vs_ema200", "vs EMA200", sgn], ["rsi", "RSI"], ["vol", "Volatilità", (v) => pct(v, 0)], ["trend", "Trend", tag]]) +
+      `<p class="muted">Solo lettura. EMA = media mobile esponenziale; RSI = forza relativa (14 giorni); Bollinger = media a 20 giorni ± 2 deviazioni. Gli ETF europei (CSPX, IUES…) usano i prezzi del loro gemello USA.</p>`;
+    return ["Grafici: il nostro fondo e i titoli",
+      `<div class="cbar"><button data-ctab="fondo">Il nostro fondo</button><button data-ctab="titoli">Titoli e indicatori</button></div>` +
+      `<div id="sec-fondo"><p class="muted">Calcolo il portafoglio atteso e il Monte Carlo…</p></div><div id="sec-titoli" class="hidden">${titoli}</div>`];
   },
   async ricerca() {
     const d = await api("/api/research");
@@ -338,7 +340,7 @@ function closeWin(id) {
 }
 
 // ---------------------------------------------------------------- grafici quant (disegno dopo il caricamento del pannello)
-const CHARTS = { ov: null, sym: null, days: 252 };
+const CHARTS = { ov: null, sym: null, days: 252, years: 1, tab: "fondo" };
 async function drawSymbol() {
   const d = await api(`/api/charts/series?sym=${encodeURIComponent(CHARTS.sym)}&days=${CHARTS.days}`), s = d.riepilogo;
   const cl = (v) => (v == null ? "" : v >= 0 ? "" : "gold");
@@ -348,14 +350,49 @@ async function drawSymbol() {
   QC.price(document.getElementById("c-price"), d); QC.rsi(document.getElementById("c-rsi"), d); QC.vol(document.getElementById("c-vol"), d); QC.drawdown(document.getElementById("c-dd"), d);
   document.querySelectorAll("#pnl-body [data-days]").forEach((b) => b.classList.toggle("on", +b.dataset.days === CHARTS.days));
 }
+async function drawFund() {
+  const box = document.getElementById("sec-fondo"), f = await api(`/api/fund/overview?years=${CHARTS.years}`);
+  if (!f.ok) { box.innerHTML = `<p class="muted">${esc(f.motivo || "dati non disponibili")}</p>`; return; }
+  const m = f.montecarlo, k = f.rischio, p = f.portafoglio, c = f.composizione, P = (v, d = 1) => pct(v, d);
+  const E = (v) => (Math.abs(v) >= 1e6 ? (v / 1e6).toFixed(2).replace(".", ",") + " M" : (v / 1e3).toFixed(0) + " k") + " €";
+  const fonti = Object.entries(p.fonti || {}).map(([n, v]) => `${esc(n)} ${P(v, 1)}`).join(" · ");
+  box.innerHTML = `<h3>Cosa teniamo, con la leva (portafoglio atteso)</h3><div class="kgrid">${card("Esposizione lorda", P(p.lordo, 0), "del valore del conto", p.lordo > 1 ? "gold" : "")}${card("Leva", P(p.leva, 0), "denaro preso in prestito")}` +
+    `${card("Azioni · ETF · crypto", [c.azioni, c.ETF, c.crypto].map((v) => P(v, 0)).join(" · "), "sul valore del conto")}${card("Titoli indipendenti", num(k.titoli_indipendenti, 1), "quanti rischi davvero diversi")}${k.rischio_classi ? card("Dove sta il rischio", [k.rischio_classi.azioni, k.rischio_classi.ETF, k.rischio_classi.crypto].map((v) => P(v, 0)).join(" · "), "azioni · ETF · crypto (quota del rischio totale)", k.rischio_classi.crypto > c.crypto * 1.8 ? "gold" : "") : ""}</div>` +
+    `<p class="muted">Fonti: ${fonti}. Pesi di GERVA-Q con la scala di investimento, più i desk e le rate del lungo periodo.${f.senza_dati.length ? " Senza dati (esclusi): " + esc(f.senza_dati.join(", ")) + "." : ""}</p>` +
+    `<h3>Quanto può perdere (storia del portafoglio dal ${esc(m.storia_dal)})</h3><div class="kgrid">${card("Perdita in un giorno (VaR 95%)", E(k.var95_eur), P(k.var95, 2) + " del conto: 1 giorno su 20 va peggio", "gold")}${card("Nei giorni peggiori (CVaR)", E(k.cvar95_eur), "media dei giorni oltre il VaR")}` +
+    `${card("Volatilità annua", P(k.vol_annua, 1))}${card("Beta con l'S&P 500", num(k.beta_spy, 2), "correlazione " + num(k.corr_spy, 2))}${card("Peggior calo storico", P(k.dd_storico, 1), "dal massimo")}${card("Giorni di VaR fino al KILL", num(k.giorni_var_al_kill, 0), "KILL al −" + Math.round(f.kill * 100) + "%")}</div>` +
+    `<h3>Monte Carlo: dove può essere il conto tra ${m.anni === 1 ? "un anno" : m.anni + " anni"}</h3><div class="cbar"><button data-years="1">1 anno</button><button data-years="3">3 anni</button></div>` +
+    `<canvas class="chart" id="f-fan"></canvas><div class="kgrid">${card("Caso mediano", E(m.finale["50"]), P(m.rendimento_mediano, 1) + " sul conto di oggi")}${card("90% dei casi tra", E(m.finale["5"]) + " e " + E(m.finale["95"]), "5° e 95° percentile")}` +
+    `${card("Chiude in perdita", P(m.p_perdita, 0), "dei percorsi", m.p_perdita > 0.25 ? "gold" : "")}${card("Perde più del 10%", P(m.p_perdita_10, 0))}${card("Guadagna più del 20%", P(m.p_guadagno_20, 0))}${card("Tocca il KILL", P(m.p_kill, 1), "almeno una volta", m.p_kill > 0.1 ? "gold" : "")}` +
+    `${card("Calo massimo tipico", P(m.dd_mediano, 0), "nel 5% peggiore: " + P(m.dd_95, 0))}</div><canvas class="chart" id="f-hist"></canvas>` +
+    `<p class="muted">Metodo: ${m.percorsi.toLocaleString("it-IT")} percorsi ricampionando a blocchi di ${m.blocco} giorni la storia reale del portafoglio (${m.storia_giorni.toLocaleString("it-IT")} giorni): tiene le code grasse e i giorni cattivi consecutivi, senza curve a campana. Scenari, non previsioni: i titoli di oggi sono quelli che hanno funzionato (sopravvivenza) e non c'è slippage né margin call.</p>` +
+    `<h3>Se tornasse una crisi già vista (il portafoglio di oggi, con la leva)</h3><canvas class="chart" id="f-stress"></canvas>` +
+    `<h3>Chi pesa davvero sul rischio</h3><canvas class="chart" id="f-rc"></canvas><p class="muted">Quota del rischio totale per titolo (ultimi 2 anni): se uno pesa molto più del suo peso in euro, è lui a muovere il conto.</p>` +
+    `<h3>Cosa si aspettano gli agenti (previsioni aperte, con probabilità)</h3>` + table(f.previsioni, [["agent_id", "Chi"], ["statement", "Previsione"], ["prob", "Probabilità", (v) => P(v, 0)], ["deadline", "Scadenza"], ["criterion", "Come si verifica"]]);
+  QC.fan(document.getElementById("f-fan"), m); QC.hist(document.getElementById("f-hist"), m);
+  QC.bars(document.getElementById("f-stress"), f.stress.filter((x) => x.disponibile).map((x) => ({ name: x.nome, v: x.rendimento, label: `${(x.rendimento * 100).toFixed(1)}% · ${E(x.euro)} (calo max ${(x.drawdown * 100).toFixed(0)}%)` })));
+  QC.bars(document.getElementById("f-rc"), (k.contributi || []).map((x) => ({ name: x.simbolo, v: x.quota_rischio, label: `${(x.quota_rischio * 100).toFixed(1)}% del rischio · peso ${(x.peso * 100).toFixed(1)}%` })));
+  document.querySelectorAll("#pnl-body [data-years]").forEach((b) => { b.classList.toggle("on", +b.dataset.years === CHARTS.years); b.onclick = async () => { CHARTS.years = +b.dataset.years; await drawFund(); }; });
+}
+function showTab(t) {
+  CHARTS.tab = t;
+  document.getElementById("sec-fondo").classList.toggle("hidden", t !== "fondo");
+  document.getElementById("sec-titoli").classList.toggle("hidden", t !== "titoli");
+  document.querySelectorAll("#pnl-body [data-ctab]").forEach((b) => b.classList.toggle("on", b.dataset.ctab === t));
+}
 AFTER.grafici = async () => {
   const body = document.getElementById("pnl-body");
-  body.querySelectorAll("canvas.chart").forEach((c) => c.classList.add("chart"));
-  QC.equity(document.getElementById("c-eq"), CHARTS.ov.equity); QC.heat(document.getElementById("c-heat"), CHARTS.ov.corr);
+  body.querySelectorAll("[data-ctab]").forEach((b) => (b.onclick = () => showTab(b.dataset.ctab)));
   const sel = document.getElementById("c-sym"); sel.value = CHARTS.sym;
   sel.onchange = () => { CHARTS.sym = sel.value; drawSymbol(); };
   body.querySelectorAll("[data-days]").forEach((b) => (b.onclick = () => { CHARTS.days = +b.dataset.days; drawSymbol(); }));
+  showTab(CHARTS.tab);
+  const wasHidden = document.getElementById("sec-titoli").classList.contains("hidden");
+  document.getElementById("sec-titoli").classList.remove("hidden");           // i canvas si disegnano visibili (altrimenti larghezza zero)
+  QC.equity(document.getElementById("c-eq"), CHARTS.ov.equity); QC.heat(document.getElementById("c-heat"), CHARTS.ov.corr);
   await drawSymbol();
+  if (wasHidden) document.getElementById("sec-titoli").classList.add("hidden");
+  await drawFund();
 };
 
 async function openPanel(name, arg) {

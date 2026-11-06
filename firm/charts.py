@@ -19,24 +19,41 @@ from . import db, paths
 
 TD = 252
 
+# L'universo del fondo: azioni USA, gli ETF UCITS che il fondo compra (con i dati del loro proxy USA) e le crypto.
+ALIAS = {"CSPX": "SPY", "CNDX": "QQQ", "EXSA": "VGK", "EIMI": "EEM", "IBTM": "IEF", "IDTL": "TLT", "IGLN": "GLD",
+         "CMOD": "DBC", "IUES": "XLE", "IUIT": "XLK", "IUHC": "XLV", "IJPA": "EWJ", "IDTP": "TIP"}
+CRYPTO = ["BTC", "ETH", "SOL", "XRP", "ADA", "DOGE", "LTC", "LINK", "AVAX", "BCH", "SUI"]
+PROXY_ETF = ["SPY", "QQQ", "IWM", "VGK", "EWJ", "EEM", "IEF", "TLT", "TIP", "LQD", "EMB", "GLD", "SLV", "DBC", "VNQ",
+             "XLK", "XLF", "XLE", "XLV", "XLI", "XLP", "XLY", "XLU", "XLB"]
+
 
 def _file() -> str:
     return os.path.join(paths.VAR, "data", "gq4_close.pkl")
 
 
 def load_close() -> pd.DataFrame | None:
+    """Prezzi giornalieri: azioni e proxy ETF (gq4_close.pkl) + crypto + titoli extra del lungo periodo (extra_close.pkl)."""
     f = _file()
     if not os.path.exists(f):
         return None
-    return pd.read_pickle(f).sort_index()
+    df = pd.read_pickle(f).sort_index()
+    d = os.path.dirname(f)
+    for name in ("extra_close.pkl", "crypto_close.pkl"):
+        p = os.path.join(d, name)
+        if os.path.exists(p):
+            x = pd.read_pickle(p).sort_index()
+            x = x[[c for c in x.columns if c not in df.columns]]
+            df = df.join(x, how="outer")
+    return df
 
 
 def symbols(close: pd.DataFrame | None = None) -> list[str]:
     close = load_close() if close is None else close
     if close is None:
         return []
-    ok = [c for c in close.columns if close[c].dropna().shape[0] >= 260 and not str(c).startswith("^")]
-    return sorted(ok)
+    ok = [c for c in close.columns if close[c].dropna().shape[0] >= 60 and not str(c).startswith("^")]
+    alias = [a for a, p in ALIAS.items() if p in ok]
+    return sorted(set(ok) | set(alias))
 
 
 def rsi(c: pd.Series, n: int = 14) -> pd.Series:
@@ -54,9 +71,10 @@ def _clean(x) -> list:
 
 def indicators(sym: str, days: int = 250, close: pd.DataFrame | None = None) -> dict:
     close = load_close() if close is None else close
-    if close is None or sym not in close:
+    src = ALIAS.get(sym, sym)
+    if close is None or src not in close:
         raise KeyError(sym)
-    c = close[sym].dropna()
+    c = close[src].dropna()
     days = max(30, min(int(days), len(c) - 1))
     ema = {n: c.ewm(span=n, adjust=False).mean() for n in (20, 50, 200)}
     sma20, sd20 = c.rolling(20).mean(), c.rolling(20).std()
@@ -84,24 +102,35 @@ def indicators(sym: str, days: int = 250, close: pd.DataFrame | None = None) -> 
                    trend="rialzista" if last > float(ema[50].iloc[-1]) > float(ema[200].iloc[-1]) else
                          "ribassista" if last < float(ema[50].iloc[-1]) < float(ema[200].iloc[-1]) else "misto",
                    segnale_rsi="ipercomprato" if rs.iloc[-1] > 70 else "ipervenduto" if rs.iloc[-1] < 30 else "neutro")
-    return dict(simbolo=sym, date=[str(d.date()) for d in idx], close=_clean(tail.values),
+    return dict(simbolo=sym + (f" (dati {src})" if src != sym else ""), date=[str(d.date()) for d in idx], close=_clean(tail.values),
                 ema20=pick(ema[20]), ema50=pick(ema[50]), ema200=pick(ema[200]),
                 bb_su=pick(up), bb_giu=pick(dn), rsi=pick(rs), vol20=pick(vol20), drawdown=_clean(dd.values),
                 riepilogo=summary)
 
 
-def screener(close: pd.DataFrame | None = None, limit: int = 120) -> list[dict]:
+def _ret(c: pd.Series, n: int):
+    return round(float(c.iloc[-1] / c.iloc[-1 - n] - 1), 4) if len(c) > n else None
+
+
+def screener(close: pd.DataFrame | None = None, limit: int = 400, mine: list[str] | None = None) -> list[dict]:
+    """Tutti i titoli con dati: slancio, RSI, volatilita', trend. 'mine' = quelli nel conto o proposti dai desk (in cima)."""
     close = load_close() if close is None else close
+    mine = list(mine or [])
     rows = []
-    for s in symbols(close):
-        c = close[s].dropna()
+    names = [s for s in symbols(close) if s not in ALIAS or s in mine]
+    for s in names:
+        src = ALIAS.get(s, s)
+        c = close[src].dropna()
+        if len(c) < 60:
+            continue
         r = c.pct_change()
         e50, e200 = c.ewm(span=50, adjust=False).mean().iloc[-1], c.ewm(span=200, adjust=False).mean().iloc[-1]
-        rows.append(dict(simbolo=s, r1m=round(float(c.iloc[-1] / c.iloc[-22] - 1), 4), r3m=round(float(c.iloc[-1] / c.iloc[-64] - 1), 4),
-                         r12m=round(float(c.iloc[-1] / c.iloc[-253] - 1), 4), vs_ema200=round(float(c.iloc[-1] / e200 - 1), 4),
+        kind = "crypto" if s in CRYPTO else "ETF" if (s in ALIAS or s in PROXY_ETF) else "azione"
+        rows.append(dict(simbolo=s + (f" ({src})" if src != s else ""), chiave=s, tipo=kind, nel_conto=s in mine,
+                         r1m=_ret(c, 21), r3m=_ret(c, 63), r12m=_ret(c, 252), vs_ema200=round(float(c.iloc[-1] / e200 - 1), 4),
                          rsi=round(float(rsi(c).iloc[-1]), 1), vol=round(float(r.tail(60).std() * math.sqrt(TD)), 3),
                          trend="su" if c.iloc[-1] > e50 > e200 else "giu" if c.iloc[-1] < e50 < e200 else "misto"))
-    rows.sort(key=lambda x: x["r3m"], reverse=True)
+    rows.sort(key=lambda x: (not x["nel_conto"], -(x["r3m"] if x["r3m"] is not None else -9)))
     return rows[:limit]
 
 

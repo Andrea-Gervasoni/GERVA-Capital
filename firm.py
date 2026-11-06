@@ -301,6 +301,20 @@ def cmd_data(_):
     cc["^IRX"] = raw["^IRX"].reindex(cc.index).ffill().bfill()
     cc.to_pickle(os.path.join(paths.VAR, "data", "crypto_close.pkl"))
     print(f"crypto: {cc.shape[0]} giorni x {len(coins)} monete dal {cc.index[0].date()}, impronta {QD.fingerprint(cc)}")
+    # titoli del lungo periodo che non sono nel paniere di ricerca (ASML, TSM, COHR, ...): servono ai grafici e al rischio del fondo
+    try:
+        from firm import lt_committee
+        full = pd.read_pickle(os.path.join(paths.VAR, "data", "gq4_close.pkl"))
+        extra = [x for x in lt_committee.symbols() if x not in full.columns]
+        if extra:
+            ex = yf.download(extra, start="2015-01-01", auto_adjust=True, progress=False, group_by="column")["Close"]
+            if hasattr(ex, "to_frame") and getattr(ex, "ndim", 2) == 1:
+                ex = ex.to_frame(extra[0])
+            ex = ex.dropna(how="all")
+            ex.to_pickle(os.path.join(paths.VAR, "data", "extra_close.pkl"))
+            print(f"extra (lungo periodo): {ex.shape[1]} titoli, {ex.shape[0]} giorni")
+    except Exception as e:                          # un titolo mancante non deve fermare il resto
+        print(f"extra non scaricati: {str(e)[:80]}")
 
 
 def cmd_research(a):

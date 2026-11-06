@@ -27,7 +27,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from firm import (db, events, registry, budget, risk, pods, gateway, economy, mailbox, tasks, trials,
-                  scorekeeper as SK, pod_zero, audit, settings as S, building, meetings, reports, compensation, charts)
+                  scorekeeper as SK, pod_zero, audit, settings as S, building, meetings, reports, compensation, charts, fundrisk)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 # Host ammessi (difesa dal DNS rebinding) e reti dei client: sul server il portale sta dietro un tunnel SSH
@@ -462,6 +462,17 @@ def charts_list():
     return _json(dict(simboli=charts.symbols()))
 
 
+@app.get("/api/fund/overview")
+def fund_overview(years: int = 1):
+    """Rischio e aspettative del nostro fondo: portafoglio atteso, VaR, Monte Carlo a blocchi, stress test, contributi al rischio."""
+    if years not in (1, 3):
+        raise HTTPException(400, "years deve essere 1 o 3")
+    try:
+        return _json(fundrisk.overview(years))
+    except Exception as e:                                   # dati incompleti: il portale lo dice, non si rompe
+        return _json(dict(ok=False, motivo=f"{type(e).__name__}: {str(e)[:160]}"))
+
+
 @app.get("/api/charts/series")
 def charts_series(sym: str, days: int = 250):
     close = charts.load_close()
@@ -478,7 +489,7 @@ def charts_overview():
     have = set(charts.symbols(close))
     mine = [x for x in dict.fromkeys(desk_syms + pos) if x in have]
     return _json(dict(portafoglio=mine, simboli=sorted(have), regime=charts.regime(close), equity=charts.equity_vs_benchmark(close),
-                      screener=charts.screener(close, 40) if close is not None else [],
+                      screener=charts.screener(close, 400, mine) if close is not None else [],
                       corr=charts.correlation(["SPY", "QQQ", "TLT", "GLD"] + desk_syms + pos, 120, close)))
 
 
