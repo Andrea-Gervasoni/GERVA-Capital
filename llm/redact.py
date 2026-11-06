@@ -23,7 +23,7 @@ PATTERNS = [
 ]
 SENSITIVE_KEYS = {"nav_real", "account", "account_id", "password", "secret", "token",
                   "api_key", "apikey", "authorization"}
-SECRET_ENV_HINTS = ("KEY", "TOKEN", "SECRET", "PASSWORD")
+SECRET_ENV_HINTS = ("KEY", "TOKEN", "SECRET", "PASSWORD", "HASH", "SESSION")
 
 
 def _env_secrets() -> list[str]:

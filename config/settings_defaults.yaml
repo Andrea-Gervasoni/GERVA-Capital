@@ -26,6 +26,8 @@ signals:                    # sala segnali crypto: gli agenti analizzano, il cod
   risk_frac: 0.005           # si rischia al massimo lo 0,5% del conto per segnale (dimensione = rischio / distanza dello stop)
   max_frac: 0.03             # al massimo il 3% del conto su un segnale
   max_total_frac: 0.10       # al massimo il 10% del conto su tutti i segnali insieme
+  telegram_execute: true      # i segnali che arrivano da Telegram possono entrare nel conto (analisi, veto e tetti permettendo); false = solo si seguono
+  telegram_max_per_hour: 10   # al massimo 10 segnali all'ora dalle sale: oltre si ignorano (anti-spam, anti-manipolazione)
   ttl_days: 7                # un segnale non raggiunto in 7 giorni scade
 
 expectations:               # aspettative del fondo: il caso realistico riduce il rendimento storico

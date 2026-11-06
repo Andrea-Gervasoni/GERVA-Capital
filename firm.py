@@ -235,6 +235,18 @@ def cmd_aspettative(_):
     print(json.dumps(expectations.register(note="registrazione manuale di Andrea"), ensure_ascii=False, indent=1))
 
 
+def cmd_telegram_login(_):
+    """Accesso a Telegram, una volta sola, sul tuo Terminale (telefono e codice non passano da nessun altro)."""
+    from firm import telegram_feed
+    telegram_feed.login()
+
+
+def cmd_telegram(_):
+    """Ascolta le sale segnali di Telegram (sola lettura) e le passa alla sala segnali."""
+    from firm import telegram_feed
+    telegram_feed.run()
+
+
 def cmd_desk(_):
     """Fa lavorare subito i capi desk: propongono posizioni, il codice valida e scrive var/firm_overlay.json per GERVA-Q."""
     from firm import desk
@@ -385,7 +397,7 @@ def main():
     ap = argparse.ArgumentParser(description="GERVA Capital")
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name in ["init", "portal", "heartbeat", "run", "status", "verify", "demo", "release", "data", "research", "report",
-                 "set-password", "ibkr-check", "observe", "check-backtest", "shadow", "comitato-lungo", "desk", "live-nav", "aspettative"]:
+                 "set-password", "ibkr-check", "observe", "check-backtest", "shadow", "comitato-lungo", "desk", "live-nav", "aspettative", "telegram-login", "telegram"]:
         sp = sub.add_parser(name)
         sp.add_argument("--demo", action="store_true", help="usa il database dimostrativo var/demo/")
         if name == "research":

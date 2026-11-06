@@ -133,7 +133,7 @@ def _decide(agent_out: dict, ctl: dict, veto: bool) -> tuple[str, float, str]:
     return "accettato", round(w, 4), "tenuto in considerazione ed eseguibile"
 
 
-def process(sid: int, close: pd.DataFrame | None = None) -> dict:
+def process(sid: int, close: pd.DataFrame | None = None, execute: bool = True) -> dict:
     """Legge, controlla, fa analizzare e decide. Un errore dell'agente non lascia mai il segnale 'accettato'."""
     from . import workflows as W
     from llm import runtime
@@ -168,6 +168,8 @@ def process(sid: int, close: pd.DataFrame | None = None) -> dict:
                 veto = bool(rv["output"]["veto"])
                 analysis["veto"] = dict(bloccato=veto, motivo=rv["output"]["motivo"])
             state, weight, why = _decide(analysis, ctl, veto)
+            if state == "accettato" and not execute:
+                state, weight, why = "osservato", 0.0, "esecuzione dei segnali di questa fonte spenta (signals.telegram_execute): si segue senza eseguire"
             p_tp = min(max(float(analysis.get("probabilita_tp1", 0.5)), 0.02), 0.98)
             deadline = (dt.date.today() + dt.timedelta(days=int(S.get("signals.ttl_days", 7)))).isoformat()
             forecast = SK.register_forecast("senior_crypto", f"{p['moneta']}: il segnale #{sid} raggiunge il primo obiettivo ({p['obiettivi'][0]}) prima dello stop ({p['stop']}) entro il {deadline}",
