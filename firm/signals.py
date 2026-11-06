@@ -237,8 +237,7 @@ def track(close: pd.DataFrame | None = None) -> int:
                     pass
             events.publish("signal.closed", "senior_crypto", dict(id=r["id"], esito=hit[0], r=round(hit[1], 2)))
             n += 1
-    if n:
-        refresh_overlay()
+    refresh_overlay()                                   # sempre: la data del file non deve invecchiare mentre un segnale e' aperto
     return n
 
 

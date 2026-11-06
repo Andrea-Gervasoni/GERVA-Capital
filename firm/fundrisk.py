@@ -69,6 +69,7 @@ def portfolio(model_eq=None, model_cr=None, overlay=None, lt_plan=None) -> dict:
     add(_scaled(cr), "crypto")
     ov = overlay if overlay is not None else (db.runtime_get("desk.overlay") or {})
     add({k: float(v) for k, v in (ov.get("targets") or {}).items()}, "desk")
+    add({k: float(v) for k, v in (ov.get("crypto_targets") or {}).items()}, "segnali crypto")
     plan = lt_plan if lt_plan is not None else _lt_plan()
     from . import lt_committee
     cfg = lt_committee.config()
