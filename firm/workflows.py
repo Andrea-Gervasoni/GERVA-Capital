@@ -194,9 +194,31 @@ MANAGER_WORK = obj({"risultato": S_STR, "stato": {"type": "string", "enum": ["fa
 CEO_SUMMARY = obj({"sintesi": S_STR, "stato": {"type": "string", "enum": ["fatto", "in_corso", "servono_dati"]}})
 
 
+def libro_posizioni() -> dict:
+    """Fatti per gli agenti, presi dal codice (mai inventati): posizioni del conto osservato su IBKR e libri dei pod.
+    Niente numero di conto e niente NAV assoluto del conto reale (regola 6): solo simboli, quantita' e costi medi.
+    I pod operano su un broker SIMULATO: i loro valori non sono soldi del conto."""
+    ch = db.runtime_get("ibkr.challenge") or {}
+    zero = dict(fonte="IBKR, sola lettura", aggiornato=ch.get("ts"), collegato=bool(ch.get("ok")),
+                posizioni=[dict(simbolo=x.get("simbolo"), quantita=x.get("qty"), costo_medio=round(float(x.get("costo_medio") or 0), 2))
+                           for x in (ch.get("posizioni") or [])],
+                eseguiti_oggi=ch.get("eseguiti_oggi"),
+                nota="gli ordini ancora in coda su IBKR non sono visibili all'osservatore")
+    simulati = []
+    for p in pods.all_pods():
+        if p["id"] == "pod_zero":
+            continue
+        b = gateway.pod_book(p["id"])
+        simulati.append(dict(pod=p["id"], stato=p["status"], simulato=True, rendimento=round(b["pnl"] / b["base"], 4) if b["base"] else 0.0,
+                             drawdown=round(b["drawdown"], 4), posizioni=b["posizioni"]))
+    return dict(pod_zero=zero, pod_simulati=simulati, limiti_di_rischio=risk.limits())
+
+
 def handle_command(cid: int) -> dict:
     cmd = db.one("SELECT * FROM commands WHERE id=?", (cid,))
-    snap = dict(rischio=risk.snapshot(), budget=__import__("firm.budget", fromlist=["x"]).status(),
+    libro = libro_posizioni()
+    rk = {k: v for k, v in risk.snapshot().items() if k != "nav"}             # niente NAV assoluto verso l'LLM
+    snap = dict(rischio=rk, libro=libro, budget=__import__("firm.budget", fromlist=["x"]).status(),
                 organigramma=[dict(id=a["id"], ruolo=a["role"], stato=a["status"]) for a in registry.all_agents()
                               if a["kind"] == "llm"])
     plan = runtime.call("capo", "Andrea ti ha dato un ordine. Scomponilo in compiti per i manager. Se porta piu' rischio "
@@ -213,7 +235,7 @@ def handle_command(cid: int) -> dict:
         tid = tasks.create(cid, root, c["assegnatario"], "capo", c["titolo"])
         w = runtime.call(c["assegnatario"], f"Compito dal Capo: {c['titolo']}. Perche': {c['perche']}. Lavora con i dati "
                          "che hai; se non bastano, stato 'servono_dati' e indica quali.",
-                         data=dict(ordine_originale=cmd["text"]), schema=MANAGER_WORK, purpose="compito",
+                         data=dict(ordine_originale=cmd["text"], libro=libro, rischio=rk), schema=MANAGER_WORK, purpose="compito",
                          status_label="scrive")
         out = w["output"] if w["ok"] else dict(risultato=w["motivo"], stato="servono_dati", sotto_compiti=[], fonti=[])
         for sc in out.get("sotto_compiti", [])[:2]:
