@@ -42,6 +42,11 @@ def ensure_pods():
                    1.0, "attivo", 1.0, db.now_iso(), "gervaq_v3"))
         db.ex("UPDATE pods SET status='chiuso', capital_frac=0 WHERE id!='pod_zero' AND status!='chiuso'")
         db.ex("UPDATE pods SET capital_frac=1.0 WHERE id='pod_zero' AND capital_frac!=1.0")
+        if not db.runtime_get("pods.off_marks_cleaned"):
+            # Le marcature storiche della societa' includevano il capitale simulato dei pod: il massimo storico (e quindi il
+            # drawdown e il KILL) sarebbe calcolato su un NAV gonfiato. Si cancellano: ripartono dal NAV del solo conto.
+            db.ex("DELETE FROM nav_marks WHERE pod!='pod_zero'")
+            db.runtime_set("pods.off_marks_cleaned", db.now_iso())
         return
     frac = float(S.get("pods.initial_capital_frac"))
     if not db.one("SELECT id FROM pods WHERE id='pod_zero'"):
