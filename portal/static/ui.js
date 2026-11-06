@@ -44,6 +44,8 @@ async function refreshState() {
     kpi("k-nav", eur(s.nav) + (fromIb ? "" : ` <small title="Capitale non ancora letto da IBKR: cifra di prova">prova</small>`));
     document.getElementById("k-nav").title = fromIb ? `Capitale letto da IBKR il ${s.capitale.dal}` : "Capitale non ancora letto da IBKR";
     document.getElementById("k-navsub").innerHTML = fromIb && s.nav_pod_simulati > 1 ? `conto IBKR ${eur(s.nav_conto)} · pod simulati +${eur(s.nav_pod_simulati)}` : "";
+    const lv = s.diretta || {};
+    if (!s.nav_pod_simulati || s.nav_pod_simulati <= 1) document.getElementById("k-navsub").innerHTML = lv.fresca ? `<span class="pos">● in diretta</span>${lv.stima ? " (stima)" : ""}` : `<span class="muted">aggiornato ${lv.eta_s != null ? Math.round(lv.eta_s / 60) + " min fa" : "al battito"}</span>`;
     kpi("k-pnl", (s.pnl >= 0 ? "+" : "") + eur(s.pnl) + ` <small>${pct(s.pnl / (s.capitale_iniziale || 100000), 2)}</small>`, s.pnl >= 0 ? "pos" : "neg");
     kpi("k-risk", `<i class="light ${s.semaforo}"></i>${s.kill ? "KILL" : s.semaforo}`);
     kpi("k-bud", `${num(s.budget_oggi, 3)} / ${num(s.tetto_oggi, 2)} €`);
@@ -340,7 +342,7 @@ function closeWin(id) {
 }
 
 // ---------------------------------------------------------------- grafici quant (disegno dopo il caricamento del pannello)
-const CHARTS = { ov: null, sym: null, days: 252, years: 1, tab: "fondo" };
+const CHARTS = { ov: null, sym: null, days: 252, years: 1, tab: "fondo", exp: null, zoom: 30 };
 async function drawSymbol() {
   const d = await api(`/api/charts/series?sym=${encodeURIComponent(CHARTS.sym)}&days=${CHARTS.days}`), s = d.riepilogo;
   const cl = (v) => (v == null ? "" : v >= 0 ? "" : "gold");
@@ -352,11 +354,22 @@ async function drawSymbol() {
 }
 async function drawFund() {
   const box = document.getElementById("sec-fondo"), f = await api(`/api/fund/overview?years=${CHARTS.years}`);
+  CHARTS.exp = await api("/api/fund/expectation").catch(() => null);
   if (!f.ok) { box.innerHTML = `<p class="muted">${esc(f.motivo || "dati non disponibili")}</p>`; return; }
   const m = f.montecarlo, k = f.rischio, p = f.portafoglio, c = f.composizione, P = (v, d = 1) => pct(v, d);
   const E = (v) => (Math.abs(v) >= 1e6 ? (v / 1e6).toFixed(2).replace(".", ",") + " M" : (v / 1e3).toFixed(0) + " k") + " €";
   const fonti = Object.entries(p.fonti || {}).map(([n, v]) => `${esc(n)} ${P(v, 1)}`).join(" · ");
-  box.innerHTML = `<h3>Cosa teniamo, con la leva (portafoglio atteso)</h3><div class="kgrid">${card("Esposizione lorda", P(p.lordo, 0), "del valore del conto", p.lordo > 1 ? "gold" : "")}${card("Leva", P(p.leva, 0), "denaro preso in prestito")}` +
+  const X = CHARTS.exp, xs = X && X.registrata ? X.stato : null, pc2 = (v) => (v == null ? "—" : Math.round(v) + "°");
+  const expHtml = !X || !X.registrata ? `<h3>Aspettative e realtà</h3><p class="muted">${esc((X && X.nota) || "Non ancora scritte.")}</p>` :
+    `<h3>Aspettative scritte prima, e come sta andando</h3><div class="cbar">${[["1 sett.", 7], ["1 mese", 30], ["3 mesi", 90], ["1 anno", 365]].map(([n, d]) => `<button data-zoom="${d}">${n}</button>`).join("")}</div>` +
+    `<canvas class="chart" id="f-exp"></canvas><div class="kgrid">${card("Conto dal via", P(X.rendimento_dal_via, 2), `${num(X.giorni_trascorsi, 1)} giorni di borsa · partito da ${eur(X.nav0)}`, X.rendimento_dal_via >= 0 ? "" : "gold")}` +
+    `${card("Caso realistico", pc2(xs.realistico.percentile) + " percentile", esc(xs.realistico.lettura) + " · atteso " + eur(xs.realistico.atteso_mediano))}${card("Aspettativa del modello", pc2(xs.modello.percentile) + " percentile", esc(xs.modello.lettura) + " · atteso " + eur(xs.modello.atteso_mediano))}` +
+    `${card("A un anno (realistico)", `${eur(X.finale_realistico["5"])} – ${eur(X.finale_realistico["95"])}`, `mediana ${eur(X.finale_realistico["50"])} · perdita nel ${P(X.p_perdita.realistico, 0)} dei casi`)}${card("A un anno (modello)", `${eur(X.finale_modello["5"])} – ${eur(X.finale_modello["95"])}`, `mediana ${eur(X.finale_modello["50"])}`)}</div>` +
+    `<p class="muted">Scritte il ${esc(X.registrata.slice(0, 16).replace("T", " "))} UTC (versione ${X.versioni}, impronta ${esc(X.hash)}) e mai riscritte. <b>Modello</b> = la storia del portafoglio così com'è. <b>Realistico</b> = stessa storia con il ${Math.round((X.parametri.haircut) * 100)}% del rendimento medio e ${P(X.parametri.costi_annui, 1)} l'anno di costi tolti. Fascia scura = 50% dei casi, chiara = 90%.</p>` +
+    `<h4>Le previsioni del Capo sul conto (valutate alla scadenza con il Brier score: 0 = perfetto, 0,25 = tirare a sorte${X.brier.brier != null ? `; finora ${num(X.brier.brier, 3)} su ${X.brier.risolte}` : ""})</h4>` +
+    table(X.previsioni_agenti, [["ts", "Quando", (v) => esc((v || "").slice(5, 16).replace("T", " "))], ["horizon_days", "A", (v) => v + " giorni"], ["p_up", "Prob. di essere sopra", (v) => P(v, 0)], ["median_pct", "Mediana attesa", (v) => P(v, 1)],
+      ["outcome", "Esito", (v, r) => (v == null ? "<span class='muted'>aperta fino al " + esc(r.deadline) + "</span>" : (v ? "sopra" : "sotto") + ` (${P(r.realized_pct, 1)})`)], ["brier", "Brier", (v) => (v == null ? "—" : num(v, 3))]]);
+  box.innerHTML = expHtml + `<h3>Cosa teniamo, con la leva (portafoglio atteso)</h3><div class="kgrid">${card("Esposizione lorda", P(p.lordo, 0), "del valore del conto", p.lordo > 1 ? "gold" : "")}${card("Leva", P(p.leva, 0), "denaro preso in prestito")}` +
     `${card("Azioni · ETF · crypto", [c.azioni, c.ETF, c.crypto].map((v) => P(v, 0)).join(" · "), "sul valore del conto")}${card("Titoli indipendenti", num(k.titoli_indipendenti, 1), "quanti rischi davvero diversi")}${k.rischio_classi ? card("Dove sta il rischio", [k.rischio_classi.azioni, k.rischio_classi.ETF, k.rischio_classi.crypto].map((v) => P(v, 0)).join(" · "), "azioni · ETF · crypto (quota del rischio totale)", k.rischio_classi.crypto > c.crypto * 1.8 ? "gold" : "") : ""}</div>` +
     `<p class="muted">Fonti: ${fonti}. Pesi di GERVA-Q con la scala di investimento, più i desk e le rate del lungo periodo.${f.senza_dati.length ? " Senza dati (esclusi): " + esc(f.senza_dati.join(", ")) + "." : ""}</p>` +
     `<h3>Quanto può perdere (storia del portafoglio dal ${esc(m.storia_dal)})</h3><div class="kgrid">${card("Perdita in un giorno (VaR 95%)", E(k.var95_eur), P(k.var95, 2) + " del conto: 1 giorno su 20 va peggio", "gold")}${card("Nei giorni peggiori (CVaR)", E(k.cvar95_eur), "media dei giorni oltre il VaR")}` +
@@ -369,6 +382,12 @@ async function drawFund() {
     `<h3>Se tornasse una crisi già vista (il portafoglio di oggi, con la leva)</h3><canvas class="chart" id="f-stress"></canvas>` +
     `<h3>Chi pesa davvero sul rischio</h3><canvas class="chart" id="f-rc"></canvas><p class="muted">Quota del rischio totale per titolo (ultimi 2 anni): se uno pesa molto più del suo peso in euro, è lui a muovere il conto.</p>` +
     `<h3>Cosa si aspettano gli agenti (previsioni aperte, con probabilità)</h3>` + table(f.previsioni, [["agent_id", "Chi"], ["statement", "Previsione"], ["prob", "Probabilità", (v) => P(v, 0)], ["deadline", "Scadenza"], ["criterion", "Come si verifica"]]);
+  const fe = document.getElementById("f-exp");
+  if (fe) {
+    const draw = () => { QC.expect(fe, CHARTS.exp, CHARTS.zoom); document.querySelectorAll("#pnl-body [data-zoom]").forEach((b) => b.classList.toggle("on", +b.dataset.zoom === CHARTS.zoom)); };
+    document.querySelectorAll("#pnl-body [data-zoom]").forEach((b) => (b.onclick = () => { CHARTS.zoom = +b.dataset.zoom; draw(); }));
+    draw();
+  }
   QC.fan(document.getElementById("f-fan"), m); QC.hist(document.getElementById("f-hist"), m);
   QC.bars(document.getElementById("f-stress"), f.stress.filter((x) => x.disponibile).map((x) => ({ name: x.nome, v: x.rendimento, label: `${(x.rendimento * 100).toFixed(1)}% · ${E(x.euro)} (calo max ${(x.drawdown * 100).toFixed(0)}%)` })));
   QC.bars(document.getElementById("f-rc"), (k.contributi || []).map((x) => ({ name: x.simbolo, v: x.quota_rischio, label: `${(x.quota_rischio * 100).toFixed(1)}% del rischio · peso ${(x.peso * 100).toFixed(1)}%` })));

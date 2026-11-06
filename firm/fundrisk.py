@@ -127,11 +127,11 @@ def backcast(weights: dict[str, float], rets: pd.DataFrame, irx: pd.Series | Non
 
 # ---------------------------------------------------------------------------------------------- Monte Carlo
 def monte_carlo(rp: pd.Series, nav0: float, years: int = 1, n: int = 5000, block: int = 21, seed: int = 20261106,
-                kill_dd: float = 0.35) -> dict:
+                kill_dd: float = 0.35, steps: list[int] | None = None, days: int | None = None) -> dict:
     r = rp.dropna().values.astype(float)
     if len(r) < 252:
         raise ValueError("storia troppo corta per un Monte Carlo (servono almeno 252 giorni)")
-    H = int(years * TD)
+    H = int(days) if days else int(years * TD)
     rng = np.random.default_rng(seed)
     nb = math.ceil(H / block)
     starts = rng.integers(0, len(r), size=(n, nb))
@@ -142,7 +142,7 @@ def monte_carlo(rp: pd.Series, nav0: float, years: int = 1, n: int = 5000, block
     peak = np.maximum.accumulate(nav, axis=1)
     mdd = (nav / peak - 1.0).min(axis=1)
     term = nav[:, -1]
-    steps = np.unique(np.linspace(0, H, 53).astype(int))
+    steps = np.unique(np.asarray(steps if steps is not None else np.linspace(0, H, 53), dtype=int).clip(0, H))
     qs = (5, 25, 50, 75, 95)
     fan = {str(q): [round(float(x), 0) for x in np.percentile(nav[:, steps], q, axis=0)] for q in qs}
     hist, edges = np.histogram(term / nav0 - 1.0, bins=40)

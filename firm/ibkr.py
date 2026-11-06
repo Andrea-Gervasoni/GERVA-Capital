@@ -128,7 +128,7 @@ def market_open(symbol: str, kind: str, now: dt.datetime | None = None) -> bool:
 # ---------------------------------------------------------------------------
 class _ReadOnlyIB:
     """Involucro dell'osservatore: solo letture. placeOrder/cancelOrder e tutto il resto sono vietati."""
-    _ALLOWED = frozenset({"connect", "disconnect", "managedAccounts", "accountValues", "positions", "fills", "sleep"})
+    _ALLOWED = frozenset({"connect", "disconnect", "managedAccounts", "accountValues", "positions", "fills", "sleep", "reqPnL", "cancelPnL"})
 
     def __init__(self, ib):
         object.__setattr__(self, "_ib", ib)
@@ -190,6 +190,71 @@ def observe_challenge(factory=_default_factory, timeout: float = 15) -> dict:
         db.ex("INSERT OR REPLACE INTO nav_marks(day,pod,nav,capital,gross) VALUES(?,?,?,?,?)",
               (db.today(), "pod_zero", snap["nav_eur"], 1.0, 0.0))
     return snap
+
+
+# ---------------------------------------------------------------------------
+# Valore del conto in tempo reale (sola lettura): connessione che resta aperta
+# ---------------------------------------------------------------------------
+def _pick_account(ib, ep) -> tuple[str | None, str | None]:
+    accts = list(ib.managedAccounts())
+    acct = (ep.account if ep.account in accts else None) if ep.account else (accts[0] if len(accts) == 1 else None)
+    if not acct:
+        return None, "il gateway non gestisce il conto configurato (IBKR_CHALLENGE_ACCOUNT)"
+    if not acct.startswith("DU"):
+        return None, "il conto osservato non e' un conto paper (DU...): osservazione interrotta"
+    return acct, None
+
+
+def live_loop(factory=_default_factory, interval: float = 5.0, max_iter: int | None = None, retry: float = 15.0,
+              sleep=None) -> None:
+    """Tiene aperta UNA connessione in sola lettura e scrive il valore del conto ogni pochi secondi.
+
+    TWS manda il valore esatto (NetLiquidation) ogni ~3 minuti; in mezzo si usa il P&L in tempo reale (reqPnL) per stimare
+    la variazione: stima = ultimo valore esatto + variazione del P&L da quel momento. Il valore esatto resta salvato
+    accanto alla stima. Scrive ibkr.live, la marcatura di oggi e un punto al minuto per il grafico (nav_ticks).
+    Si riconnette da sola. Mai ordini: l'involucro _ReadOnlyIB li vieta."""
+    import time
+    sleep = sleep or time.sleep
+    ep = challenge_endpoint()
+    client_id = int(os.environ.get("IBKR_LIVE_CLIENT_ID", ep.client_id + 1))
+    n, last_tick = 0, 0.0
+    while max_iter is None or n < max_iter:
+        ib = _ReadOnlyIB(factory())
+        try:
+            ib.connect(ep.host, ep.port, clientId=client_id, timeout=15, readonly=True)
+            acct, err = _pick_account(ib, ep)
+            if not acct:
+                raise RuntimeError(err)
+            pnl = ib.reqPnL(acct)
+            base = None
+            while max_iter is None or n < max_iter:
+                ib.sleep(interval)
+                n += 1
+                vals = {(v.tag, v.currency): v.value for v in ib.accountValues(acct)}
+                exact = float(vals.get(("NetLiquidation", "EUR")) or vals.get(("NetLiquidation", "BASE")) or 0)
+                if exact <= 0:
+                    continue                                   # mai un valore a zero
+                tot = sum(float(x) for x in (getattr(pnl, "unrealizedPnL", None), getattr(pnl, "realizedPnL", None))
+                          if x is not None and math.isfinite(float(x)))
+                if base is None or exact != base[0]:
+                    base = (exact, tot)                        # arrivato un valore esatto nuovo: si riparte da lui
+                est = exact + (tot - base[1])
+                now = db.now_iso()
+                db.runtime_set("ibkr.live", dict(ts=now, nav=round(est, 2), nav_exact=round(exact, 2), stima=abs(est - exact) > 0.005))
+                db.ex("INSERT OR REPLACE INTO nav_marks(day,pod,nav,capital,gross) VALUES(?,?,?,?,?)",
+                      (db.today(), "pod_zero", est, 1.0, 0.0))
+                if time.time() - last_tick >= 60:
+                    db.ex("INSERT INTO nav_ticks(ts,nav) VALUES(?,?)", (now, est))
+                    last_tick = time.time()
+        except Exception as e:                                 # TWS spento o in riavvio: si registra e si riprova
+            db.runtime_set("ibkr.live", dict(ts=db.now_iso(), errore=f"{type(e).__name__}: {str(e)[:120]}"))
+            n += 1
+            sleep(retry)
+        finally:
+            try:
+                ib.disconnect()
+            except Exception:
+                pass
 
 
 # ---------------------------------------------------------------------------

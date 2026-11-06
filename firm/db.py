@@ -122,6 +122,13 @@ CREATE TABLE IF NOT EXISTS shadow_returns (
   id INTEGER PRIMARY KEY AUTOINCREMENT, day TEXT, variant TEXT, ret REAL, recorded_ts TEXT, data_fp TEXT,
   UNIQUE(day, variant)
 );
+CREATE TABLE IF NOT EXISTS expectations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, nav0 REAL, params TEXT, modello TEXT, realistico TEXT, hash TEXT
+);
+CREATE TABLE IF NOT EXISTS outlooks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, agent_id TEXT, horizon_days INTEGER, deadline TEXT, nav0 REAL,
+  p_up REAL, median_pct REAL, motivo TEXT, outcome INTEGER, realized_pct REAL, resolved_ts TEXT, brier REAL
+);
 CREATE TABLE IF NOT EXISTS nav_ticks (
   id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, nav REAL
 );
@@ -139,7 +146,7 @@ CREATE TABLE IF NOT EXISTS gc_ledger (
 );
 """
 
-APPEND_ONLY = ["audit_log", "events", "llm_calls", "fills", "gc_ledger", "career", "postmortems", "evaluations", "shadow_returns"]
+APPEND_ONLY = ["audit_log", "events", "llm_calls", "fills", "gc_ledger", "career", "postmortems", "evaluations", "shadow_returns", "expectations"]
 
 TRIGGERS = "\n".join(
     f"""CREATE TRIGGER IF NOT EXISTS {t}_no_update BEFORE UPDATE ON {t}

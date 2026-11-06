@@ -146,6 +146,16 @@ def beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
     if now.hour >= 9 and _once(f"research:{day}"):          # ogni giorno (6/11: era martedi' e giovedi')
         workflows.research_cycle()
         woke += ["senior_trend", "senior_validator"]
+    from . import expectations
+    try:
+        expectations.resolve_outlooks(now)
+        if not expectations.latest() and _once(f"exp-try:{day}:{now.hour}"):      # prima registrazione, appena i dati ci sono
+            expectations.register(note="prima registrazione automatica")
+        if now.hour >= 8 and expectations.latest() and _once(f"outlook:{day}"):
+            expectations.outlook_cycle()
+            woke.append("capo")
+    except Exception as e:                                    # le aspettative non devono fermare il battito
+        notes.append(f"aspettative: {str(e)[:80]}")
     if now.hour >= 7 and _once(f"desk:{day}"):               # i capi desk propongono posizioni per il conto
         from . import desk
         try:

@@ -131,5 +131,30 @@ const QC = (() => {
       x.fillStyle = K.paper; x.textAlign = "left"; x.fillText(r.label, L + Math.max(bw, 1) + 8, y + 11);
     });
   }
-  return { price, rsi, vol, drawdown, equity, heat, fan, hist, bars };
+
+  function expect(canvas, e, zoom, w = 860, h = 340) {
+    const x = setup(canvas, w, h), pad = { l: 64, r: 76, t: 24, b: 26 }, T0 = new Date(e.registrata.slice(0, 19) + "Z").getTime(), T1 = T0 + zoom * 86400000;
+    const tm = (iso) => new Date(iso.slice(0, 19) + (iso.endsWith("Z") ? "" : "Z")).getTime();
+    const idx = e.date.map((d, i) => [tm(d), i]).filter(([t]) => t <= T1 + 86400000).map(([, i]) => i);
+    const cut = (arr) => idx.map((i) => arr[i]), ts = idx.map((i) => tm(e.date[i]));
+    const real = e.realizzato.map((p) => ({ t: tm(p.t), v: p.v })).filter((p) => p.t <= T1);
+    const vals = [...cut(e.modello["5"]), ...cut(e.modello["95"]), ...cut(e.realistico["5"]), ...cut(e.realistico["95"]), ...real.map((p) => p.v), e.nav0];
+    const lo = Math.min(...vals) * 0.995, hi = Math.max(...vals) * 1.005, g = frame(x, w, h, lo, hi, 5, eur, pad);
+    const xf = (t) => g.L + ((t - T0) / (T1 - T0)) * (g.R - g.L);
+    const band = (a, b, col) => { x.beginPath(); a.forEach((v, i) => (i ? x.lineTo(xf(ts[i]), g.y(v)) : x.moveTo(xf(ts[i]), g.y(v)))); for (let i = a.length - 1; i >= 0; i--) x.lineTo(xf(ts[i]), g.y(b[i])); x.closePath(); x.fillStyle = col; x.fill(); };
+    band(cut(e.modello["95"]), cut(e.modello["5"]), "rgba(94,200,216,0.10)"); band(cut(e.modello["75"]), cut(e.modello["25"]), "rgba(94,200,216,0.20)");
+    band(cut(e.realistico["95"]), cut(e.realistico["5"]), "rgba(227,178,74,0.12)"); band(cut(e.realistico["75"]), cut(e.realistico["25"]), "rgba(227,178,74,0.26)");
+    const ln = (arr, col, wd, dash) => { x.beginPath(); x.strokeStyle = col; x.lineWidth = wd; x.setLineDash(dash || []); arr.forEach((v, i) => (i ? x.lineTo(xf(ts[i]), g.y(v)) : x.moveTo(xf(ts[i]), g.y(v)))); x.stroke(); x.setLineDash([]); };
+    ln(cut(e.modello["50"]), K.cyan, 1.6, [6, 4]); ln(cut(e.realistico["50"]), K.gold, 2);
+    x.setLineDash([3, 4]); x.strokeStyle = K.grid; x.beginPath(); x.moveTo(g.L, g.y(e.nav0)); x.lineTo(g.R, g.y(e.nav0)); x.stroke(); x.setLineDash([]);
+    if (real.length) {
+      x.beginPath(); x.strokeStyle = K.paper; x.lineWidth = 2.6; real.forEach((p, i) => (i ? x.lineTo(xf(p.t), g.y(p.v)) : x.moveTo(xf(p.t), g.y(p.v)))); x.stroke();
+      const q = real[real.length - 1]; x.fillStyle = K.paper; x.beginPath(); x.arc(xf(q.t), g.y(q.v), 4, 0, 7); x.fill();
+      x.textAlign = "left"; x.fillText(eur(q.v), Math.min(xf(q.t) + 8, g.R + 4), g.y(q.v));
+    }
+    x.textAlign = "center"; x.fillStyle = K.text;
+    [0, 0.25, 0.5, 0.75, 1].forEach((f) => { const d = new Date(T0 + f * (T1 - T0)); x.fillText(d.getUTCDate() + "/" + (d.getUTCMonth() + 1), g.L + f * (g.R - g.L), h - 10); });
+    legend(x, [["conto reale", K.paper], ["aspettativa del modello", K.cyan], ["aspettativa realistica", K.gold], ["capitale di partenza", K.grid]], g.L, 0);
+  }
+  return { price, rsi, vol, drawdown, equity, heat, fan, hist, bars, expect };
 })();

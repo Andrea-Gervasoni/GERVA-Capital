@@ -22,6 +22,10 @@ firm:
   mode: paper                # unico valore ammesso: paper (LIVE e' bloccato)
   heartbeat_minutes: 15
 
+expectations:               # aspettative del fondo: il caso realistico riduce il rendimento storico
+  haircut: 0.5               # si tiene il 50% del rendimento medio storico (sopravvivenza, sovradattamento)
+  costs_year: 0.015          # costi di esecuzione e commissioni, 1,5% l'anno
+
 desk:                        # desk di trading: gli agenti propongono, il codice valida, GERVA-Q esegue
   enabled: true
   max_name_frac: 0.05        # al massimo il 5% del NAV su un titolo

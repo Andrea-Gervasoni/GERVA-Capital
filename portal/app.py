@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import calendar
 import hashlib
 import hmac
 import ipaddress
@@ -27,7 +28,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from firm import (db, events, registry, budget, risk, pods, gateway, economy, mailbox, tasks, trials,
-                  scorekeeper as SK, pod_zero, audit, settings as S, building, meetings, reports, compensation, charts, fundrisk)
+                  scorekeeper as SK, pod_zero, audit, settings as S, building, meetings, reports, compensation, charts, fundrisk, expectations)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 # Host ammessi (difesa dal DNS rebinding) e reti dei client: sul server il portale sta dietro un tunnel SSH
@@ -221,6 +222,17 @@ def index():
     return html.replace("{{ANDREA_TOKEN}}", S.ensure_token())
 
 
+def _live_state() -> dict:
+    """Il valore del conto e' 'in diretta' se la connessione in sola lettura ha scritto da meno di 90 secondi."""
+    lv = db.runtime_get("ibkr.live") or {}
+    try:
+        age = time.time() - calendar.timegm(time.strptime(lv["ts"][:19], "%Y-%m-%dT%H:%M:%S")) if lv.get("ts") else None
+    except (ValueError, KeyError):
+        age = None
+    return dict(fresca=bool(lv.get("nav") and age is not None and age < 90), eta_s=None if age is None else round(age),
+                stima=bool(lv.get("stima")), errore=lv.get("errore"))
+
+
 @app.get("/api/state")
 def state():
     st = budget.status()
@@ -231,7 +243,7 @@ def state():
     return _json(dict(
         modalita="PAPER", live_bloccato=True, sciopero=st["strike"], motivo_sciopero=st["strike_reason"],
         simulato=not os.environ.get("ANTHROPIC_API_KEY"), demo=bool(db.runtime_get("demo", False)),
-        nav=fb["nav"], nav_conto=gateway.pod_zero_nav(), nav_pod_simulati=fb["nav"] - gateway.pod_zero_nav(),
+        diretta=_live_state(), nav=fb["nav"], nav_conto=gateway.pod_zero_nav(), nav_pod_simulati=fb["nav"] - gateway.pod_zero_nav(),
         pnl=fb["pnl"], capitale=gateway.capital_source(), capitale_iniziale=fb["capitale_iniziale"],
         semaforo=rk["semaforo"], kill=rk["kill"], allarmi=rk["allarmi"],
         budget_oggi=st["spent_today"], tetto_oggi=st["daily_cap"], budget_totale=st["spent_total"],
@@ -471,6 +483,15 @@ def fund_overview(years: int = 1):
         return _json(fundrisk.overview(years))
     except Exception as e:                                   # dati incompleti: il portale lo dice, non si rompe
         return _json(dict(ok=False, motivo=f"{type(e).__name__}: {str(e)[:160]}"))
+
+
+@app.get("/api/fund/expectation")
+def fund_expectation():
+    """I due ventagli registrati prima (modello e realistico), il valore reale del conto, e le previsioni del Capo."""
+    try:
+        return _json(expectations.overview())
+    except Exception as e:
+        return _json(dict(registrata=None, nota=f"{type(e).__name__}: {str(e)[:160]}"))
 
 
 @app.get("/api/charts/series")
