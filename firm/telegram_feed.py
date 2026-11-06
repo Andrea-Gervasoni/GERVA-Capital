@@ -179,7 +179,7 @@ def run() -> None:
             ids[d.id] = d.name
     if not ids:
         raise SystemExit("nessuna delle sale in TELEGRAM_CHATS corrisponde ai tuoi gruppi")
-    print("ascolto (solo lettura):", ", ".join(ids.values()))
+    print("ascolto (solo lettura):", ", ".join(ids.values()), flush=True)
 
     @client.on(tl_events.NewMessage())
     async def on_message(ev):
