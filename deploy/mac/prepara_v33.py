@@ -44,6 +44,13 @@ def main():
     if not re.search(r"^import config as C|^from . import config as C|^import config as C", live0, re.M):
         stop("in live.py non trovo 'import config as C'")
     cfg1 = cfg0.rstrip("\n") + "\n" + "\n".join(CFG) + "\n"
+    # LEVA (scelta di Andrea del 6/11): la scala di investimento e' min(SCALE_K, SCALE_CAP / esposizione del giorno).
+    # SCALE_CAP e' l'esposizione totale massima (1.5 = 150% del conto, come il backtest a 1,5x), SCALE_K il moltiplicatore massimo.
+    for name, val in (("SCALE_K", "2.5"), ("SCALE_CAP", "1.5")):
+        rx = re.compile(rf"^({name}\s*=\s*)[0-9.]+", re.M)
+        if not rx.search(cfg1):
+            stop(f"in config.py non trovo {name}: mandami le righe con SCALE")
+        cfg1 = rx.sub(rf"\g<1>{val}", cfg1, count=1)
     L = live0.split("\n")
     i = find(L, lambda s: s.startswith("# 2. IBKR"), "# 2. IBKR")
     L[i:i] = FUNCS
@@ -69,7 +76,8 @@ def main():
     open(OUT, "w").write(text)
     open(os.path.join(os.path.dirname(OUT), "RELEASE.md"), "w").write(
         "# Desk di trading (v3.3)\n\nGERVA-Q legge var/firm_overlay.json di GERVA Capital: le posizioni proposte dai capi desk e "
-        "validate dal codice entrano nel conto sopra il modello (tetti OVERLAY_MAX_* in config.py). Scelta di Andrea del 6/11.\n")
+        "validate dal codice entrano nel conto sopra il modello (tetti OVERLAY_MAX_* in config.py). In piu' la leva: SCALE_K 2.5 e SCALE_CAP 1.5 "
+        "(esposizione totale fino al 150% del conto). Scelta di Andrea del 6/11.\n")
     print(f"OK: scritto {OUT} ({len(text.splitlines())} righe). GERVA-Q non e' stato toccato.")
     print("Ora: .venv/bin/python firm.py release --apply 2026-11-06")
 

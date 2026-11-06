@@ -17,7 +17,7 @@ pod:
 
 firm:
   max_gross: 2.0                   # LEVA fino a 2x il NAV (6/11, scelta di Andrea; era 1.0)
-  kill_drawdown: 0.25              # KILL automatico: unico freno che resta (6/11: era 0.15)
+  kill_drawdown: 0.35              # KILL automatico: unico freno che resta (6/11: era 0.15; col 1,5x il backtest ha max DD -34%)
   max_crypto_frac: 0.60            # esposizione crypto per controparte
   max_pod_correlation: 0.5
 
