@@ -22,7 +22,13 @@ firm:
   mode: paper                # unico valore ammesso: paper (LIVE e' bloccato)
   heartbeat_minutes: 15
 
+desk:                        # desk di trading: gli agenti propongono, il codice valida, GERVA-Q esegue
+  enabled: true
+  max_name_frac: 0.05        # al massimo il 5% del NAV su un titolo
+  max_total_frac: 0.30       # al massimo il 30% del NAV in totale su tutti i desk
+
 release:
+  any_day: true               # scelta di Andrea del 6/11: i rilasci di GERVA-Q si applicano quando serve (sempre backup, changelog e audit)
   weekday: 6                 # 0 = lunedi' ... 6 = domenica (REGOLE_SFIDA regola 7)
   start_hour_utc: 8
   end_hour_utc: 20

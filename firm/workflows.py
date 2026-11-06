@@ -34,6 +34,7 @@ def arr(items: dict) -> dict:
 # ===========================================================================
 # 1. REDAZIONE: triage -> verifica su seconda fonte -> bollettino
 # ===========================================================================
+DESK_PROPOSAL = obj({"proposte": arr(obj({"simbolo": S_STR, "peso_pct": {"type": "number"}, "motivo": S_STR})), "nota": S_STR})
 NEWS_TRIAGE = obj({"items": arr(obj({"news_id": {"type": "integer"}, "rilevanza": S_PROB, "sintesi": S_STR,
                                      "tag": arr(S_STR), "affermazioni": arr(S_STR), "fonte_primaria": {"type": "boolean"}})),
                    "note": S_STR})

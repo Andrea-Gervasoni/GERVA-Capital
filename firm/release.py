@@ -72,6 +72,8 @@ def apply_unified_diff(patch_text: str, root: str, dry_run: bool = False) -> lis
 
 
 def in_window(now: dt.datetime | None = None) -> bool:
+    if S.get("release.any_day", False):               # 6/11: Andrea ha tolto il vincolo della domenica
+        return True
     now = now or dt.datetime.now(dt.timezone.utc)
     return (now.weekday() == int(S.get("release.weekday"))
             and int(S.get("release.start_hour_utc")) <= now.hour < int(S.get("release.end_hour_utc")))

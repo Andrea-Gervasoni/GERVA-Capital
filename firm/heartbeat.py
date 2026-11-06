@@ -140,9 +140,17 @@ def beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
         if snap["allarmi"] or now.hour == 20:
             workflows.risk_review()
             woke.append("cro")
-    if now.weekday() in (1, 3) and now.hour >= 9 and _once(f"research:{day}"):
+    if now.hour >= 9 and _once(f"research:{day}"):          # ogni giorno (6/11: era martedi' e giovedi')
         workflows.research_cycle()
         woke += ["senior_trend", "senior_validator"]
+    if now.hour >= 7 and _once(f"desk:{day}"):               # i capi desk propongono posizioni per il conto
+        from . import desk
+        try:
+            r = desk.cycle()
+            woke += r.get("desk", [])
+            notes.append(f"desk: {len(r.get('targets', {}))} titoli proposti" if r.get("ok") else f"desk: {r.get('nota', '')}")
+        except Exception as e:                               # un errore del desk non ferma il battito
+            notes.append(f"desk non eseguito: {str(e)[:80]}")
     if now.weekday() == 6 and now.hour >= 17 and _once(f"sunday:{day}"):
         workflows.committee()
         workflows.talent_cycle()

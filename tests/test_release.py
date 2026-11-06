@@ -18,6 +18,7 @@ def test_release_applies_only_on_sunday_with_backup_and_changelog(firm_env, tmp_
     gq = tmp_path / "gq"
     shutil.copytree(SNAP, gq)
     cap = S.AndreaCapability(S.ensure_token())
+    S.set("release.any_day", False, cap)               # il vincolo della domenica e' opzionale (default spento dal 6/11)
     with pytest.raises(PermissionError):
         release.apply("2026-11-08", cap=None, now=SUN, gerva_q=str(gq))
     assert not release.apply("2026-11-08", cap, now=WED, gerva_q=str(gq))["ok"]
