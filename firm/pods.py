@@ -47,6 +47,11 @@ def ensure_pods():
             # drawdown e il KILL) sarebbe calcolato su un NAV gonfiato. Si cancellano: ripartono dal NAV del solo conto.
             db.ex("DELETE FROM nav_marks WHERE pod!='pod_zero'")
             db.runtime_set("pods.off_marks_cleaned", db.now_iso())
+        if not db.runtime_get("building.reset_after_pods_off"):
+            # Il livello dell'edificio non scende mai: con il massimo storico gonfiato dai pod era salito a 5 (Eccellenza)
+            # per un rialzo che non c'era. Si riparte da 0 e il livello si ricalcola dal NAV del solo conto.
+            db.runtime_set("building.level", 0)
+            db.runtime_set("building.reset_after_pods_off", db.now_iso())
         return
     frac = float(S.get("pods.initial_capital_frac"))
     if not db.one("SELECT id FROM pods WHERE id='pod_zero'"):

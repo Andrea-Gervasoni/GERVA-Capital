@@ -30,3 +30,16 @@ def test_switching_pods_off_drops_inflated_history(firm_env):
     left = {r["pod"] for r in db.q("SELECT pod FROM nav_marks")}
     assert left == {"pod_zero"}                                      # via il massimo storico gonfiato del 'firm'
     assert gateway.firm_book()["peak"] <= gateway.firm_nav_estimate() * 1.0001 or gateway.firm_book()["peak"] < 1115000.0
+
+
+def test_building_level_restarts_after_pods_off(firm_env):
+    from firm import building
+    pods.ensure_pods()
+    db.runtime_set("building.level", 5)                              # salito per il capitale simulato dei pod
+    db.ex("DELETE FROM settings WHERE key LIKE 'pods.%'")
+    pods.ensure_pods()
+    assert db.runtime_get("building.level") == 0
+    assert building.level()["livello"] <= 1                           # ricalcolato dal conto, senza il capitale simulato
+    db.runtime_set("building.level", 3)
+    pods.ensure_pods()                                               # una volta sola: non azzera di nuovo
+    assert db.runtime_get("building.level") == 3
