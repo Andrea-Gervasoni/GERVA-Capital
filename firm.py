@@ -239,7 +239,7 @@ def cmd_telegram_login(a):
     """Accesso a Telegram, una volta sola, sul tuo Terminale (telefono e codice non passano da nessun altro).
     Con --sms il codice arriva per SMS invece che nell'app."""
     from firm import telegram_feed
-    telegram_feed.login(sms=getattr(a, "sms", False))
+    telegram_feed.login(sms=getattr(a, "sms", False), qr=getattr(a, "qr", False))
 
 
 def cmd_telegram(_):
@@ -402,6 +402,7 @@ def main():
         sp = sub.add_parser(name)
         sp.add_argument("--demo", action="store_true", help="usa il database dimostrativo var/demo/")
         if name == "telegram-login":
+            sp.add_argument("--qr", action="store_true", help="accesso con codice QR (nessun codice da ricevere)")
             sp.add_argument("--sms", action="store_true", help="manda il codice per SMS invece che nell'app di Telegram")
         if name == "research":
             sp.add_argument("what", nargs="?", default="gervaq4")

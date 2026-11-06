@@ -87,12 +87,45 @@ def _client():
     return TelegramClient(session, api_id, api_hash)
 
 
-def login(sms: bool = False) -> None:
+def _qr_login(client, run) -> None:
+    """Accesso con il codice QR: niente SMS e niente codice. Si inquadra dal telefono (Impostazioni > Dispositivi)."""
+    import asyncio
+    from telethon.errors import SessionPasswordNeededError
+    try:
+        import qrcode
+    except ImportError:
+        raise SystemExit("serve qrcode: .venv/bin/pip install qrcode")
+    run(client.connect())
+    if run(client.is_user_authorized()):
+        return
+    qr = run(client.qr_login())
+    for tentativo in range(6):
+        q = qrcode.QRCode(border=1)
+        q.add_data(qr.url)
+        q.make()
+        print("\nSul telefono: Telegram > Impostazioni > Dispositivi > Collega un dispositivo desktop, e inquadra questo codice")
+        print("(scade in pochi secondi: se non fai in tempo se ne crea uno nuovo da solo)\n")
+        q.print_ascii(invert=True)
+        try:
+            run(qr.wait(30))
+            return
+        except SessionPasswordNeededError:
+            import getpass
+            run(client.sign_in(password=getpass.getpass("Password della verifica in due passaggi: ")))
+            return
+        except (asyncio.TimeoutError, TimeoutError):
+            run(qr.recreate())
+    raise SystemExit("codice QR scaduto troppe volte: riprova")
+
+
+def login(sms: bool = False, qr: bool = False) -> None:
     """Accesso interattivo, UNA volta, sul Terminale di Andrea: telefono e codice non passano da nessun'altra parte.
     sms=True chiede a Telegram di mandare il codice per SMS invece che nell'app (utile se l'app non lo mostra)."""
     client = _client()
     run = client.loop.run_until_complete
-    if not sms:
+    if qr:
+        _qr_login(client, run)
+    elif not sms:
         client.start()                                                       # telefono, codice e (se c'e') password a 2 fattori
     else:
         from telethon.errors import SessionPasswordNeededError
