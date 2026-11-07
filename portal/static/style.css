@@ -553,9 +553,9 @@ kbd { display: inline-flex; align-items: center; justify-content: center; min-wi
 .page > p.muted { max-width: 74ch; }
 
 /* vuoti disegnati invece di una riga grigia */
-p.empty, .feed li.empty { display: flex; align-items: center; gap: 14px; margin: 6px 0; padding: 16px 18px; border: 1px dashed var(--rule); border-radius: var(--r-sm); color: var(--muted); font-size: .86rem; max-width: none;
+p.empty, .feed li.empty { position: relative; display: block; margin: 6px 0; padding: 16px 18px 16px 54px; border: 1px dashed var(--rule); border-radius: var(--r-sm); color: var(--muted); font-size: .86rem; max-width: none;
   background: repeating-linear-gradient(135deg, transparent 0 10px, var(--grid-minor) 10px 11px); }
-p.empty::before, .feed li.empty::before { content: '∅'; flex: none; font: 400 1.7rem/1 var(--f-accent); color: var(--rule); }
+p.empty::before, .feed li.empty::before { content: '∅'; position: absolute; left: 18px; top: 50%; transform: translateY(-50%); font: 400 1.7rem/1 var(--f-accent); color: var(--rule); }
 
 /* luce che segue il puntatore sulle schede */
 .lg.card:hover, .kcard:hover, .person:hover, .idea:hover { background-image: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgba(27, 63, 216, .07), transparent 62%); }
@@ -614,3 +614,42 @@ p.empty::before, .feed li.empty::before { content: '∅'; flex: none; font: 400 
 .sys.rest i { background: var(--muted); } .sys.rest span, .sys.rest time { color: var(--muted); }
 .sys.ko time { color: var(--neg); font-weight: 500; }
 .sys-why { margin: 0 10px 6px 28px; font-size: .68rem; line-height: 1.35; color: var(--muted); }
+
+
+/* ═════════════════════════ RIFINITURA (regole di mestiere) ═════════════════════════
+   Un solo numero grande; ogni cosa detta una volta; niente valori vuoti; spazio che segue il contenuto; maiuscole solo per le etichette piccole. */
+.g-hero { grid-template-columns: 1.5fr 1.15fr 1fr; align-items: stretch; }
+.g-3 { align-items: start; } .g-2 { align-items: start; }
+.lg.card.fringe { box-shadow: inset 0 0 0 1px var(--rule), 0 22px 40px -28px rgba(15, 18, 34, .5); }
+.fringe .lbl { color: var(--signal); }
+.acct { display: grid; grid-template-columns: 1fr; gap: 2px; padding: 12px 0; border-bottom: 1px solid var(--hair); }
+.acct:last-child { border-bottom: 0; padding-bottom: 0; }
+.acct .an { font-size: .74rem; color: var(--muted); }
+.acct b { font: 500 1.6rem/1.15 var(--f-accent); letter-spacing: -.01em; }
+.acct .ad { font-size: .8rem; color: var(--muted); }
+.acct.off .ad { font-size: .84rem; }
+.g-2 .feed { max-height: 304px; -webkit-mask-image: linear-gradient(#000 82%, transparent); mask-image: linear-gradient(#000 82%, transparent); }
+
+/* persone */
+.nw { white-space: nowrap; }
+.score { display: inline-flex; align-items: center; gap: 10px; } .score b { width: 34px; font-weight: 500; }
+.who-cell .role { display: block; max-width: 32ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* impostazioni: due colonne, la voce aperta occupa tutta la riga */
+.setgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; align-items: start; }
+.setgrid > details { margin: 0; } .setgrid > details[open] { grid-column: 1 / -1; }
+.setgrid { margin-top: 16px; }
+@media (max-width: 900px) { .setgrid { grid-template-columns: 1fr; } }
+
+/* maiuscole solo per etichette piccole: bottoni, schede e segnaposto si leggono in minuscolo */
+.view .subnav button { text-transform: none; letter-spacing: .01em; font-size: .9rem; font-weight: 500; }
+.btn, .cbar button, .seg button, .subnav button { text-transform: none; letter-spacing: 0; font-size: .86rem; height: 34px; padding: 0 14px; }
+.tag { text-transform: none; letter-spacing: .01em; font-size: .74rem; height: 22px; }
+.loginbox button { text-transform: none; letter-spacing: .02em; font-size: .92rem; }
+
+/* la fila di stato: stessa altezza, stessa voce */
+.status > * { height: 34px; }
+.pill { text-transform: none; letter-spacing: .02em; font-size: .8rem; height: 34px; }
+.clock { height: 34px; }
+.pill.paper { font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-size: .7rem; }
+.iconbtn { width: 34px; height: 34px; }

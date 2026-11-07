@@ -218,7 +218,7 @@ const GROUPS = { panoramica: ["panoramica"], plancia: ["plancia"], mercati: ["gr
   posta: ["posta"], impostazioni: ["impostazioni"] };
 const GROUP_NAME = { panoramica: "Panoramica", plancia: "Plancia", mercati: "Mercati", segnali: "Segnali", azienda: "Azienda", idee: "Idee e regole", ricerca: "Ricerca", posta: "Posta", impostazioni: "Impostazioni" };
 const SECTION = { panoramica: "Il fondo", plancia: "Il fondo", mercati: "Il fondo", segnali: "Il fondo", azienda: "L'azienda", idee: "L'azienda", ricerca: "L'azienda", posta: "Tu", impostazioni: "Tu" };
-const LABEL = { ufficio: "Ufficio", conversazioni: "Conversazioni", tecniche: "Tecniche del fondo", persone: "Persone", org: "Organigramma", riunioni: "Riunioni", compiti: "Compiti", report: "Report", idee: "Idee", regole: "Regole", banco: "Banco libero", grafici: "Il fondo e i titoli", desk: "Desk", ricerca: "Prove e fascicoli", strategie: "Strategie dai paper" };
+const LABEL = { ufficio: "Ufficio", conversazioni: "Conversazioni", tecniche: "Tecniche del fondo", persone: "Persone", org: "Organigramma", riunioni: "Riunioni", compiti: "Compiti", report: "Report", idee: "Idee", regole: "Regole", banco: "Banco libero", grafici: "Grafici", desk: "Desk", ricerca: "Prove e fascicoli", strategie: "Strategie dai paper" };
 const groupOf = (p) => Object.keys(GROUPS).find((g) => GROUPS[g].includes(p)) || "panoramica";
 const CUR = { page: "panoramica", arg: null };
 function go(page, arg) { CUR.arg = arg ?? null; if (location.hash !== "#/" + page) location.hash = "#/" + page; else render(page, CUR.arg); }
@@ -255,7 +255,7 @@ async function render(page, arg, keepScroll = false) {
 }
 
 // ---------------------------------------------------------------- ordine nella pagina
-const EMPTY = /^(nessun|ancora nessun|ancora niente|nulla)/i;
+const EMPTY = /^(nessun|ancora nessun|ancora niente|nulla|servono)/i;
 function tidy(body) {
   const lede = document.getElementById("lede");
   lede.classList.add("hidden"); lede.classList.remove("open"); lede.innerHTML = "";
@@ -278,15 +278,19 @@ function fillOverviewTop(s) {
   const navNow = tt.nav_eur || s.nav, moved = LAST_NAV != null && navNow != null && Math.round(navNow) !== Math.round(LAST_NAV) ? (navNow > LAST_NAV ? "tick-up" : "tick-dn") : "";
   LAST_NAV = navNow; setTimeout(() => { const b = el.querySelector(".big"); if (b && moved) b.classList.add(moved); }, 0);
   const base = (ib.nav_eur || 0) - (ib.pnl_eur || 0) + (al.disponibile ? (al.nav_eur || 0) - (al.pnl_eur || 0) : 0);
+  const acct = (name, a, ok = true) => ok ? `<div class="acct"><span class="an">${name}</span><b>${eur(a.nav_eur)}</b><span class="ad">${sg(a.pnl_eur)}${a.leva != null ? ` · leva ${num(a.leva, 2)}×` : ""}${a.equity_usd ? ` · ${num(a.equity_usd, 0)} $` : ""}</span></div>`
+    : `<div class="acct off"><span class="an">${name}</span><span class="ad">non collegato</span></div>`;
   el.innerHTML =
     `<div class="lg card fringe"><div class="lbl">Valore totale</div><div class="big">${tt.nav_eur ? eur(tt.nav_eur) : eur(s.nav)}</div>` +
-      `<p>${sg(tt.pnl_eur ?? s.pnl)} <span class="muted">${base ? pct((tt.pnl_eur ?? 0) / base, 2) : ""} dall'inizio · IBKR + Alpaca</span></p>` +
+      `<p>${sg(tt.pnl_eur ?? s.pnl)} <span class="muted">${base ? pct((tt.pnl_eur ?? 0) / base, 2) : ""} dall'inizio</span></p>` +
       `<p class="muted">${lv.fresca ? `<span class="busy">● in diretta</span>${lv.stima ? " (stima tra due letture esatte)" : ""}` : "aggiornato al battito"} · cambio ${num(pf.cambio_usd_eur, 4)} €/$</p></div>` +
-    `<div class="lg card"><div class="lbl">IBKR · azioni</div><div class="mid">${eur(ib.nav_eur || s.nav)}</div><p>${sg(ib.pnl_eur)}</p><p class="muted">leva sul conto ${ib.leva == null ? "—" : num(ib.leva, 2) + "×"}</p></div>` +
-    `<div class="lg card"><div class="lbl">Alpaca · crypto e banco libero</div><div class="mid">${al.disponibile ? eur(al.nav_eur) : "—"}</div><p>${al.disponibile ? sg(al.pnl_eur) + ` <span class="muted">${num(al.equity_usd, 0)} $</span>` : "<span class='muted'>non collegato</span>"}</p><p class="muted">leva sul conto ${al.leva == null ? "—" : num(al.leva, 2) + "×"}</p></div>` +
+    `<div class="lg card"><div class="lbl">I due conti</div>${acct("IBKR · azioni", ib)}${acct("Alpaca · crypto e banco libero", al, !!al.disponibile)}</div>` +
     `<div class="lg card"><div class="lbl">Rischio e risorse</div><div class="mid">${s.kill ? "<span class='neg'>KILL</span>" : `<span class="${s.semaforo === "verde" ? "pos" : s.semaforo === "rosso" ? "neg" : "gold"}">${esc(s.semaforo)}</span>`}</div>` +
       `<p>Agenti oggi ${num(s.budget_oggi, 2)} / ${num(s.tetto_oggi, 2)} €</p><p class="muted">${s.sciopero ? "sciopero in corso" : `autonomia ${s.giorni_residui == null ? "illimitata" : num(s.giorni_residui, 1) + " giorni"}`} · audit ${s.catena ? "integro" : "<span class='neg'>ROTTO</span>"}</p></div>`;
 }
+
+const GROUP_LABEL = { budget: "Budget degli agenti", firm: "Società", crypto: "Crypto", signals: "Segnali", expectations: "Aspettative", desk: "Desk", volmgmt: "Gestione della volatilità", pace: "Ritmo d'ingresso",
+  ideas: "Idee", rules: "Regole", free: "Banco libero", lessons: "Lezioni", algo: "Strategie in codice", release: "Rilasci di GERVA-Q", models: "Modelli", gate: "Soglie di prova", pods: "Pod", economy: "Economia interna", talent: "Talenti" };
 
 const PANELS = {
   async ufficio() {
@@ -362,8 +366,8 @@ const PANELS = {
     const H = (key, label) => `<th class="sort" data-sort="${key}">${label}${k === key ? (dir < 0 ? " ↓" : " ↑") : ""}</th>`;
     return ["Le persone dell'azienda", `<p class="muted">Clic su un nome per la scheda completa; clic su un'intestazione per ordinare.</p><div class="tablewrap"><table><tr>
       ${H("nome", "Nome")}${H("grado", "Grado")}${H("punteggio", "Punteggio")}${H("brier", "Brier")}${H("giuste", "Previsioni giuste")}${H("gc", "Gerva-Coin")}${H("differito", "Differito")}${H("costo", "Costo €")}${H("errori", "Errori")}</tr>
-      ${rows.map((r) => `<tr><td><a href="#" data-agent="${r.id}" class="who-cell">${avatar(r.id)}<span><b>${esc(r.nome)}</b><br><span class="muted">${esc(r.ruolo)}</span></span></a></td><td>${esc(r.grado_nome)}<br><span class="muted">#${esc(r.rank_grado)} nel grado</span></td>
-      <td>${r.punteggio == null ? "—" : `<span class="bar" data-w="${Math.round(r.punteggio * 70)}"></span> ${num(r.punteggio, 2)}`}</td>
+      ${rows.map((r) => `<tr><td><a href="#" data-agent="${r.id}" class="who-cell">${avatar(r.id)}<span><b>${esc(r.nome)}</b><br><span class="muted role" title="${esc(r.ruolo)}">${esc(r.ruolo)}</span></span></a></td><td class="nw">${esc(r.grado_nome)}<br><span class="muted">#${esc(r.rank_grado)} nel grado</span></td>
+      <td class="nw">${r.punteggio == null ? "<span class='muted'>—</span>" : `<span class="score"><b>${num(r.punteggio, 2)}</b><span class="bar" data-w="${Math.round(r.punteggio * 60)}"></span></span>`}</td>
       <td>${r.brier == null ? "—" : num(r.brier, 3)}</td><td>${r.giuste}/${r.previsioni}</td><td>${num(r.gc, 0)}</td><td>${num(r.differito, 0)}</td><td>${num(r.costo, 3)}</td><td>${r.errori}</td></tr>`).join("")}</table></div>`];
   },
   async riunioni() {
@@ -509,8 +513,8 @@ const PANELS = {
     Object.entries(S_).filter(([k]) => k !== "firm.mode" && k !== "firm.strike").forEach(([k, v]) => { const g = k.split(".")[0]; (groups[g] = groups[g] || []).push([k, v]); });
     return ["Impostazioni", `<div class="lg card"><p>Ogni modifica va nel registro di audit. Autonomia degli agenti: <b>${d.budget.days_left == null ? "illimitata" : num(d.budget.days_left, 1) + " giorni"}</b> al ritmo di ${eur(d.budget.pace_eur_day, 3)} al giorno.</p>
       <div class="cbar"><button id="strikebtn" class="btn ${S_["firm.strike"] ? "" : "danger"}">${S_["firm.strike"] ? "Riprendi la società" : "Sciopero (ferma gli agenti)"}</button> <button class="btn danger" id="killbtn">${STATE && STATE.kill ? "Togli il KILL" : "KILL"}</button></div></div>` +
-      Object.entries(groups).map(([g, rows]) => `<details class="mail"><summary class="mh"><b>${esc(g)}</b> <span class="muted">${rows.length} voci</span></summary>${rows.map(([k, v]) => row(k, v)).join("")}</details>`).join("") +
-      `<details class="mail"><summary class="mh"><b>Limiti di rischio</b> <span class="muted">solo Andrea</span></summary>${flat(d.limiti).map(([k, v]) => row(k, v, "risk")).join("")}</details><p class="muted">I soldi veri sono bloccati: si sbloccano solo con la tua decisione.</p>`];
+      `<div class="setgrid">` + Object.entries(groups).map(([g, rows]) => `<details class="mail"><summary class="mh"><b>${esc(GROUP_LABEL[g] || g)}</b> <span class="muted">${rows.length} ${rows.length === 1 ? "voce" : "voci"}</span></summary>${rows.map(([k, v]) => row(k, v)).join("")}</details>`).join("") +
+      `<details class="mail locked"><summary class="mh"><b>Limiti di rischio</b> <span class="muted">solo Andrea</span></summary>${flat(d.limiti).map(([k, v]) => row(k, v, "risk")).join("")}</details></div><p class="muted">I soldi veri sono bloccati: si sbloccano solo con la tua decisione.</p>`];
   },
 };
 
@@ -519,9 +523,6 @@ AFTER.panoramica = async () => {
   if (STATE) fillOverviewTop(STATE);
   renderFeed();
   const eq = await api("/api/equity"), c = document.getElementById("o-eq");
-  const hero = document.querySelector("#o-top .card.fringe");
-  if (hero && eq.conto && eq.conto.length > 2 && !hero.querySelector(".spark")) { hero.insertAdjacentHTML("beforeend", sparkSvg(eq.conto.slice(-200)));
-    const pth = hero.querySelector(".spark path.l"); if (pth) pth.style.setProperty("--len", Math.ceil(pth.getTotalLength())); }
   if (c && eq.conto && eq.conto.length > 1) QC.equity(c, eq); else if (c) { c.classList.add("hidden"); document.getElementById("o-eq-note").textContent = eq.nota || "Servono almeno due letture del conto."; }
 };
 AFTER.segnali = async () => {
