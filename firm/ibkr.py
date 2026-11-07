@@ -267,7 +267,8 @@ def live_loop(factory=_default_factory, interval: float = 5.0, max_iter: int | N
                     db.ex("INSERT INTO nav_ticks(ts,nav) VALUES(?,?)", (now, est))
                     last_tick = time.time()
         except Exception as e:                                 # TWS spento o in riavvio: si registra e si riprova
-            db.runtime_set("ibkr.live", dict(ts=db.now_iso(), errore=f"{type(e).__name__}: {str(e)[:120]}"))
+            prev = db.runtime_get("ibkr.live") or {}                          # l'ultimo valore noto resta: l'errore si aggiunge, non lo cancella
+            db.runtime_set("ibkr.live", dict(prev, errore=f"{type(e).__name__}: {str(e)[:120]}", errore_ts=db.now_iso()))
             n += 1
             sleep(retry)
         finally:

@@ -286,7 +286,7 @@ function fillOverviewTop(s) {
   const band = document.getElementById("o-band"); if (!band) return;
   const cell = (lbl, val, sub) => `<div class="cell"><div class="lbl">${lbl}</div><div class="mid">${val}</div><p class="muted">${sub}</p></div>`;
   band.innerHTML =
-    cell("IBKR · azioni", eur(ib.nav_eur || s.nav), `${sg(ib.pnl_eur)}${ib.leva != null ? ` · leva ${num(ib.leva, 2)}×` : ""}`) +
+    cell("IBKR · azioni", eur(ib.nav_eur || s.nav), `${sg(ib.pnl_eur)}${ib.leva != null ? ` · leva ${num(ib.leva, 2)}×` : ""}${!lv.fresca && ib.dato_del ? ` · <span class="gold">dato del ${esc(when(ib.dato_del))}</span>` : ""}`) +
     cell("Alpaca · crypto", al.disponibile ? eur(al.nav_eur) : "<span class='muted'>—</span>", al.disponibile ? `${sg(al.pnl_eur)}${al.leva != null ? ` · leva ${num(al.leva, 2)}×` : ""}` : "non collegato") +
     cell("Rischio", s.kill ? "<span class='neg'>KILL</span>" : `<span class="${s.semaforo === "verde" ? "pos" : s.semaforo === "rosso" ? "neg" : "gold"}">${esc(s.semaforo)}</span>`, `audit ${s.catena ? "integro" : "<span class='neg'>ROTTO</span>"}`) +
     cell("Agenti oggi", `${num(s.budget_oggi, 2)} €`, `su ${num(s.tetto_oggi, 2)} € · ${s.sciopero ? "sciopero" : s.giorni_residui == null ? "autonomia illimitata" : num(s.giorni_residui, 1) + " giorni"}`);

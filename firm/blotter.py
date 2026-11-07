@@ -216,6 +216,15 @@ def trades(venue: str | None = None, stato: str | None = None) -> list[dict]:
     return res
 
 
+def _last_ibkr_nav() -> tuple[float, str | None]:
+    """Ultimo valore di IBKR mai salvato (punti del grafico, poi marcature giornaliere): quando Trader Workstation e' spenta il totale non deve perderlo."""
+    r = db.q("SELECT ts, nav FROM nav_ticks ORDER BY ts DESC LIMIT 1")
+    if r and r[0]["nav"]:
+        return float(r[0]["nav"]), r[0]["ts"]
+    r = db.q("SELECT day, nav FROM nav_marks WHERE pod='pod_zero' AND nav>0 ORDER BY day DESC LIMIT 1")
+    return (float(r[0]["nav"]), r[0]["day"]) if r else (0.0, None)
+
+
 def totals() -> dict:
     """Valore dei due conti e il totale in euro, con la leva di ciascuno."""
     ib = db.runtime_get("ibkr.live") or {}
@@ -223,11 +232,14 @@ def totals() -> dict:
     st = db.runtime_get("ibkr.start_nav") or {}
     al = db.runtime_get("alpaca.account") or {}
     ib_nav = float(ib.get("nav") or ia.get("nav") or 0.0)
+    ib_ts = (ib.get("ts") if ib.get("nav") else ia.get("ts")) if ib_nav else None
+    if not ib_nav:
+        ib_nav, ib_ts = _last_ibkr_nav()
     al_eq = float(al.get("equity") or 0.0)
     al_eur = al_eq * usd_eur()
     al0 = float(db.runtime_get("alpaca.start_equity") or al_eq or 0.0)
     ib0 = float(st.get("nav") or ib_nav)
-    return dict(ibkr=dict(nav_eur=round(ib_nav, 2), pnl_eur=round(ib_nav - ib0, 2), leva=ia.get("leva")),
+    return dict(ibkr=dict(nav_eur=round(ib_nav, 2), pnl_eur=round(ib_nav - ib0, 2), leva=ia.get("leva"), dato_del=ib_ts),
                 alpaca=dict(equity_usd=round(al_eq, 2), nav_eur=round(al_eur, 2), pnl_eur=round((al_eq - al0) * usd_eur(), 2),
                             leva=round(al.get("lordo", 0) / al_eq, 3) if al_eq else None, disponibile=bool(al)),
                 totale=dict(nav_eur=round(ib_nav + al_eur, 2), pnl_eur=round((ib_nav - ib0) + (al_eq - al0) * usd_eur(), 2)), cambio_usd_eur=round(usd_eur(), 5))

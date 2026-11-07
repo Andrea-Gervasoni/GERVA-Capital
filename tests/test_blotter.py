@@ -134,3 +134,16 @@ def test_conversations_and_techniques_endpoints(firm_env):
     assert c.get("/api/conversations?agent=head_research").json() and c.get("/api/conversations?agent=nessuno").json() == []
     tech = c.get("/api/techniques").json()
     assert any(t["stato"] == "adottata" for t in tech) and any(t["tipo"] == "strategia dai paper" for t in tech)
+
+
+def test_total_keeps_ibkr_when_tws_is_off(firm_env):
+    """Trader Workstation spenta: il totale deve tenere l'ultimo valore di IBKR, non scendere al solo Alpaca."""
+    from firm import blotter, db, ibkr
+    db.ex("INSERT INTO nav_ticks(ts,nav) VALUES(?,?)", ("2026-11-06T20:59:00Z", 974000.0))
+    db.runtime_set("alpaca.account", dict(equity=100000.0, lordo=0.0)); db.runtime_set("fx.usd_eur", 0.8929)
+    t = blotter.totals()
+    assert t["ibkr"]["nav_eur"] == 974000.0 and t["totale"]["nav_eur"] > 1_050_000 and t["ibkr"]["dato_del"].startswith("2026-11-06")
+    db.runtime_set("ibkr.live", dict(ts="2026-11-06T20:59:00Z", nav=975000.0))         # un errore non cancella piu' l'ultimo valore
+    prev = db.runtime_get("ibkr.live")
+    db.runtime_set("ibkr.live", dict(prev, errore="TimeoutError", errore_ts="2026-11-07T21:00:00Z"))
+    assert blotter.totals()["ibkr"]["nav_eur"] == 975000.0
