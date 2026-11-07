@@ -59,8 +59,38 @@ def parse(text: str) -> dict:
     entry = pick(rf"(?:ENTRY|INGRESSO|ENTRATA|ENTER|@|BUY AT|ZONA)\s*[:=]?\s*\$?\s*{NUM}")
     stop = pick(rf"(?:STOP(?: LOSS)?|SL)\s*[:=]?\s*\$?\s*{NUM}")
     tps = [_num(m) for m in re.findall(rf"(?:TP\d?|TARGET\s*\d?|OBIETTIVO\s*\d?|TAKE PROFIT\s*\d?)\s*[:=]?\s*\$?\s*{NUM}", t)]
+    market = bool(re.search(r"\b(MARKET|MERCATO|CMP|NOW|SUBITO|PREZZO ATTUALE|CURRENT PRICE)\b", t))
     ok = bool(coin and entry and stop and tps)
-    return dict(ok=ok, moneta=coin, direzione=side, ingresso=entry, stop=stop, obiettivi=tps[:4])
+    return dict(ok=ok, moneta=coin, direzione=side, ingresso=entry, stop=stop, obiettivi=tps[:4], a_mercato=market and not entry)
+
+
+def complete_levels(p: dict, close: pd.DataFrame | None = None) -> dict:
+    """Un segnale "a mercato" o senza stop/obiettivi non si butta: l'ingresso e' il prezzo di adesso, stop e obiettivo li calcola il desk dalla
+    volatilita' (stop a 2,5 volte la volatilita' giornaliera, obiettivo a 2 volte il rischio). Ogni livello calcolato e' dichiarato."""
+    if p.get("ok") or not p.get("moneta"):
+        return p
+    q = dict(p, livelli_calcolati=[])
+    s = _series(q["moneta"], close)
+    if not q.get("ingresso"):
+        px = None
+        try:
+            from . import crypto_venue as V
+            px = V.last_price(q["moneta"]) if V.keys_ok() else None
+        except Exception:
+            px = None
+        if px is None and s is not None and len(s):
+            px = float(s.iloc[-1])
+        if px:
+            q["ingresso"] = round(float(px), 6); q["livelli_calcolati"].append("ingresso = prezzo di adesso (segnale a mercato)")
+    if q.get("ingresso") and s is not None and len(s) > 30:
+        sig = float(s.pct_change().tail(30).std()) or 0.03
+        long_ = q["direzione"] != "short"
+        if not q.get("stop"):
+            q["stop"] = round(q["ingresso"] * (1 - 2.5 * sig if long_ else 1 + 2.5 * sig), 6); q["livelli_calcolati"].append("stop a 2,5 volte la volatilita' giornaliera")
+        if not q.get("obiettivi"):
+            q["obiettivi"] = [round(q["ingresso"] + 2 * (q["ingresso"] - q["stop"]), 6)]; q["livelli_calcolati"].append("obiettivo a 2 volte il rischio")
+    q["ok"] = bool(q.get("moneta") and q.get("ingresso") and q.get("stop") and q.get("obiettivi"))
+    return q
 
 
 def _series(coin: str, close: pd.DataFrame | None = None) -> pd.Series | None:
@@ -146,7 +176,10 @@ def process(sid: int, close: pd.DataFrame | None = None, execute: bool = True) -
             o = r["output"]
             p = dict(ok=bool(o["moneta"] and o["ingresso"] > 0 and o["stop"] > 0 and [x for x in o["obiettivi"] if x > 0]), moneta=str(o["moneta"]).upper(),
                      direzione=o["direzione"], ingresso=o["ingresso"] or None, stop=o["stop"] or None, obiettivi=[x for x in o["obiettivi"] if x > 0][:4])
+    p = complete_levels(p, close)
     ctl = controls(p, close)
+    if p.get("livelli_calcolati"):
+        ctl.setdefault("note", []).append("livelli calcolati dal desk: " + "; ".join(p["livelli_calcolati"]))
     state, weight, why = "scartato", 0.0, "; ".join(ctl["problemi"]) or "segnale non valido"
     analysis, forecast = {}, None
     if ctl["esito"] != "non_valido":

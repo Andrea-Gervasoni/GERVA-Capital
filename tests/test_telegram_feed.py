@@ -46,6 +46,8 @@ def test_dedupe_rate_limit_and_old_messages(firm_env, monkeypatch):
     assert TG.handle_message("ciao a tutti", "Sala", NOW, NOW, background=False)["azione"] == "ignorato"
     old = NOW - dt.timedelta(hours=2)
     assert TG.handle_message(TEXT, "Sala", old, NOW, background=False)["azione"] == "troppo_vecchio"
+    assert db.one("SELECT stato FROM signals ORDER BY id DESC LIMIT 1")["stato"] == "ignorato"       # resta visibile con il motivo
+    assert TG.looks_like_signal("BTC BUY a mercato SL 60000")
     r = TG.handle_message(TEXT, "Sala crypto", NOW, NOW, background=False)
     assert r["azione"] == "inviato"
     s = db.one("SELECT * FROM signals WHERE id=?", (r["id"],))

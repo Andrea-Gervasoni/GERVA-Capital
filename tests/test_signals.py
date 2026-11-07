@@ -118,3 +118,15 @@ def test_signals_are_only_observed_while_paper_cannot_trade_crypto(firm_env, mon
     r = SG.process(SG.create("BUY SOL entry 150 SL 140 TP1 165"), _close())
     assert r["stato"] == "osservato" and SG.active_targets() == {} and "nessuna sede" in r["motivo"]
     assert db.one("SELECT * FROM forecasts WHERE criterion LIKE 'signal:%'")                 # la previsione resta: si misura comunque
+
+
+def test_market_signal_without_levels_is_completed_and_studied(firm_env, monkeypatch):
+    org_seed.seed(); registry.sync(); _fake(monkeypatch)
+    p = SG.parse("BUY BTC a mercato")
+    assert not p["ok"] and p["a_mercato"] and p["moneta"] == "BTC"
+    q = SG.complete_levels(p, _close())
+    assert q["ok"] and q["ingresso"] > 0 and q["stop"] < q["ingresso"] < q["obiettivi"][0] and len(q["livelli_calcolati"]) == 3
+    r = SG.process(SG.create("BUY BTC a mercato"), _close())
+    assert r["stato"] != "scartato" or "livelli" not in r["motivo"]                # studiato, non buttato per livelli mancanti
+    row = db.one("SELECT * FROM signals WHERE id=?", (r["id"],))
+    assert "livelli calcolati dal desk" in row["controlli"]

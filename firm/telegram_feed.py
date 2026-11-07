@@ -30,12 +30,21 @@ def looks_like_signal(text: str) -> bool:
     u = text.upper()
     coin = any(re.search(rf"(?<![A-Z]){c}(?![A-Z])", u) for c in signals.COINS)
     action = re.search(r"\b(BUY|LONG|SELL|SHORT|COMPRA|VENDI|ACQUISTA)\b", u)
-    levels = re.search(r"\b(ENTRY|INGRESSO|ENTRATA|SL|STOP|TP\d?|TARGET|TAKE PROFIT|OBIETTIVO)\b", u)
+    levels = re.search(r"\b(ENTRY|INGRESSO|ENTRATA|SL|STOP|TP\d?|TARGET|TAKE PROFIT|OBIETTIVO|MARKET|MERCATO|CMP|NOW|SUBITO)\b", u)
     return bool(coin and action and levels)
 
 
 def _norm(t: str) -> str:
     return re.sub(r"\s+", " ", t).strip().upper()
+
+
+def _note_ignored(text: str, chat: str, why: str) -> None:
+    """Un segnale ricevuto ma non analizzato resta visibile, con il motivo: niente sparisce in silenzio."""
+    try:
+        sid = signals.create(text, f"Telegram: {chat}"[:60])
+        db.ex("UPDATE signals SET stato='ignorato', motivo=? WHERE id=?", (why[:300], sid))
+    except Exception:
+        pass
 
 
 def handle_message(text: str, chat: str, when: dt.datetime | None = None, now: dt.datetime | None = None, background: bool = True) -> dict:
@@ -45,15 +54,17 @@ def handle_message(text: str, chat: str, when: dt.datetime | None = None, now: d
     if len(text) < 15 or len(text) > MAX_LEN or not looks_like_signal(text):
         return dict(azione="ignorato")
     if when and (now - when.astimezone(dt.timezone.utc)).total_seconds() > MAX_AGE_MIN * 60:
+        _note_ignored(text, chat, "arrivato troppo tardi (il Mac era senza rete o spento): un segnale vecchio a quel prezzo non si esegue")
         return dict(azione="troppo_vecchio")
     key = _norm(text)
     since = (now - dt.timedelta(hours=24)).strftime("%Y-%m-%dT%H:%M:%S")
-    if any(_norm(r["testo"]) == key for r in db.q("SELECT testo FROM signals WHERE ts>=?", (since,))):
+    if any(_norm(r["testo"]) == key for r in db.q("SELECT testo FROM signals WHERE ts>=? AND COALESCE(stato,'')!='ignorato'", (since,))):
         return dict(azione="doppione")
     hour_ago = (now - dt.timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%S")
-    n = db.one("SELECT COUNT(*) n FROM signals WHERE fonte LIKE 'Telegram:%' AND ts>=?", (hour_ago,))["n"]
+    n = db.one("SELECT COUNT(*) n FROM signals WHERE fonte LIKE 'Telegram:%' AND ts>=? AND COALESCE(stato,'')!='ignorato'", (hour_ago,))["n"]
     if n >= int(S.get("signals.telegram_max_per_hour", 10)):
         events.publish("signal.throttled", "telegram", dict(chat=chat[:40]))
+        _note_ignored(text, chat, "oltre il limite di segnali all'ora")
         return dict(azione="limite_orario")
     sid = signals.create(text, f"Telegram: {chat}"[:60])
     execute = bool(S.get("signals.telegram_execute", True))
