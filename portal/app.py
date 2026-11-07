@@ -128,7 +128,7 @@ _scrypt_slots = asyncio.Semaphore(2)     # scrypt costa ~50 ms e 16 MB: al massi
 PUBLIC_PATHS = frozenset({"/login", "/logout", "/healthz", "/static/style.css", "/static/favicon.svg",
                           "/static/fonts/general-sans-400.woff2", "/static/fonts/general-sans-500.woff2",
                           "/static/fonts/general-sans-600.woff2", "/static/fonts/bodoni-moda-italic.woff2",
-                          "/static/fonts/PressStart2P.woff2", "/static/fonts/VT323.woff2"})
+                          "/static/fonts/PressStart2P.woff2", "/static/fonts/VT323.woff2", "/static/fonts/bodoni-moda-roman.woff2"})
 
 
 @app.middleware("http")
@@ -151,8 +151,8 @@ async def local_only(request: Request, call_next):
 
 
 LOGIN_HTML = """<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>GERVA Capital — accesso</title><link rel="stylesheet" href="/static/style.css"></head><body class="login">
-<form method="post" action="/login" class="win loginbox"><div class="wh">GERVA CAPITAL — accesso riservato</div><div class="wb">
+<title>GERVA Capital — accesso</title><link rel="icon" href="/static/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/static/style.css"></head><body class="login">
+<form method="post" action="/login" class="win loginbox"><div class="wh"><span class="login-mark">GERVA</span><span class="login-sub">CAPITAL · ACCESSO RISERVATO</span></div><div class="wb">
 <p>{msg}</p><input type="password" name="password" autofocus autocomplete="current-password" placeholder="password">
 <button>Entra</button></div></form></body></html>"""
 
@@ -551,6 +551,28 @@ def api_techniques():
     """Le tecniche del fondo: adottate, approvate, in prova, bocciate, con fonte."""
     from firm import journal
     return _json(journal.techniques())
+
+
+@app.get("/api/tape")
+def api_tape():
+    """Il nastro in alto: S&P 500, VIX, BTC ed EUR/USD con la variazione dell'ultimo giorno, il regime e lo stato di Wall Street."""
+    import datetime as _dt
+    from zoneinfo import ZoneInfo
+    out = dict(voci=[], regime=None, mercato="")
+    try:
+        c = charts.load_close()
+        for nome, col, dec in (("S&P 500", "SPY", 2), ("VIX", "^VIX", 1), ("BTC", "BTC", 0), ("ETH", "ETH", 0), ("ORO", "GLD", 2), ("TREASURY 20A", "TLT", 2)):
+            if c is not None and col in c:
+                s_ = c[col].dropna()
+                if len(s_) > 2:
+                    out["voci"].append(dict(nome=nome, valore=round(float(s_.iloc[-1]), dec), var=round(float(s_.iloc[-1] / s_.iloc[-2] - 1), 4), dec=dec))
+        out["regime"] = charts.regime(c).get("lettura")
+    except Exception:
+        pass
+    ny = _dt.datetime.now(ZoneInfo("America/New_York"))
+    aperta = ny.weekday() < 5 and (9, 30) <= (ny.hour, ny.minute) < (16, 0)
+    out["mercato"] = f"NEW YORK {ny:%H:%M} · {'APERTA' if aperta else 'CHIUSA'} · MILANO {_dt.datetime.now(ZoneInfo('Europe/Rome')):%H:%M}"
+    return _json(out)
 
 
 @app.get("/api/feed")

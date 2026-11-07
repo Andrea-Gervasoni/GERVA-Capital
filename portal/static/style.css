@@ -311,3 +311,121 @@ details[open] > summary::after { transform: rotate(90deg); }
 .msg .mh2 { display: flex; align-items: center; gap: 8px; } .msg .av { width: 28px; height: 28px; font-size: .7rem; }
 .msg p { margin: 4px 0 0 36px; } .msg ul { margin: 4px 0 0 36px; }
 .conv summary .tag { flex: none; }
+
+
+/* ═════════════════════════ IDENTITÀ GERVA CAPITAL ═════════════════════════
+   Un fondo sistematico, non una app: carta avorio millimetrata, inchiostro, cobalto profondo e un solo punto arancione.
+   Serif ad alto contrasto (Bodoni) per il marchio, i titoli e i numeri che contano, come in un report annuale;
+   General Sans per tutto ciò che si legge; numeri tabellari ovunque. Linee sottili invece di ombre, aria tra i blocchi. */
+@font-face { font-family: 'Bodoni Moda'; src: url('/static/fonts/bodoni-moda-roman.woff2') format('woff2'); font-weight: 400 900; font-style: normal; font-display: swap; }
+:root {
+  --paper: #F3F0E8; --sheet: #FBFAF6; --ink: #0F1222; --text: #0F1222; --muted: rgba(15, 18, 34, .56); --hair: rgba(15, 18, 34, .12); --rule: rgba(15, 18, 34, .22);
+  --cobalt: #1B3FD8; --signal: #F26A3D; --pos: #157347; --neg: #B4372B; --warn: #9A5B00;
+  --glass: rgba(251, 250, 246, .62); --glass-strong: rgba(251, 250, 246, .9); --glass-hover: rgba(255, 255, 255, .85);
+  --grid-minor: rgba(15, 18, 34, .035); --grid-major: rgba(15, 18, 34, .07);
+  --c1: #1B3FD8; --c2: #F26A3D; --c3: #157347; --c4: #B4372B;
+  --chart-grid: rgba(15, 18, 34, .09); --chart-text: rgba(15, 18, 34, .55);
+  --r: 14px; --r-sm: 10px;
+  --shadow: 0 1px 0 rgba(15, 18, 34, .04), 0 12px 28px -22px rgba(15, 18, 34, .45);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #0B0D17; --sheet: #121527; --ink: #0B0D17; --text: #ECE9E1; --muted: rgba(236, 233, 225, .55); --hair: rgba(236, 233, 225, .10); --rule: rgba(236, 233, 225, .2);
+  --cobalt: #7C93FF; --pos: #4CC98A; --neg: #FF6B5E; --warn: #F0B04A;
+  --glass: rgba(18, 21, 39, .66); --glass-strong: rgba(18, 21, 39, .92); --glass-hover: rgba(30, 34, 60, .9);
+  --grid-minor: rgba(236, 233, 225, .03); --grid-major: rgba(236, 233, 225, .055);
+  --c1: #7C93FF; --c3: #4CC98A; --c4: #FF6B5E; --chart-grid: rgba(236, 233, 225, .09); --chart-text: rgba(236, 233, 225, .55);
+  --shadow: 0 1px 0 rgba(0, 0, 0, .2), 0 14px 30px -20px rgba(0, 0, 0, .8);
+} }
+:root[data-theme="dark"] {
+  --paper: #0B0D17; --sheet: #121527; --ink: #0B0D17; --text: #ECE9E1; --muted: rgba(236, 233, 225, .55); --hair: rgba(236, 233, 225, .10); --rule: rgba(236, 233, 225, .2);
+  --cobalt: #7C93FF; --pos: #4CC98A; --neg: #FF6B5E; --warn: #F0B04A;
+  --glass: rgba(18, 21, 39, .66); --glass-strong: rgba(18, 21, 39, .92); --glass-hover: rgba(30, 34, 60, .9);
+  --grid-minor: rgba(236, 233, 225, .03); --grid-major: rgba(236, 233, 225, .055);
+  --c1: #7C93FF; --c3: #4CC98A; --c4: #FF6B5E; --chart-grid: rgba(236, 233, 225, .09); --chart-text: rgba(236, 233, 225, .55);
+  --shadow: 0 1px 0 rgba(0, 0, 0, .2), 0 14px 30px -20px rgba(0, 0, 0, .8);
+}
+body { font-feature-settings: "tnum" 1, "lnum" 1; letter-spacing: -.003em; }
+.aurora { display: none; }
+.paper-grid { position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image: linear-gradient(var(--grid-major) 1px, transparent 1px), linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+    linear-gradient(var(--grid-minor) 1px, transparent 1px), linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px);
+  background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px;
+  -webkit-mask-image: radial-gradient(120% 90% at 50% 0%, #000 40%, transparent 100%); mask-image: radial-gradient(120% 90% at 50% 0%, #000 40%, transparent 100%); }
+
+/* nastro di mercato */
+.tape { position: relative; z-index: 51; display: flex; align-items: center; gap: 22px; height: 30px; padding: 0 20px; background: var(--ink); color: #ECE9E1;
+  font-size: .72rem; letter-spacing: .08em; white-space: nowrap; overflow: hidden; }
+:root[data-theme="dark"] .tape { background: #05060C; border-bottom: 1px solid var(--hair); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tape { background: #05060C; border-bottom: 1px solid var(--hair); } }
+.tape-brand { font-weight: 600; opacity: .9; } .tape-brand::after { content: ''; display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: var(--signal); margin-left: 14px; vertical-align: middle; }
+#tape-items { display: flex; gap: 22px; flex: 1; overflow: hidden; }
+#tape-items span b { font-weight: 500; opacity: .6; margin-right: 6px; }
+.tape .up { color: #6FD39C; } .tape .dn { color: #FF8A7E; }
+.tape-clock { opacity: .75; }
+
+/* barra: vetro sottile, marchio serio */
+.topbar { padding-top: 10px; }
+.nav { border-radius: 16px; height: 60px; background-color: var(--glass); }
+.brand { gap: 12px; }
+.mono-bg { fill: var(--ink); stroke: rgba(255, 255, 255, .08); }
+:root[data-theme="dark"] .mono-bg { fill: #ECE9E1; } :root[data-theme="dark"] .mono-g { fill: #0B0D17; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .mono-bg { fill: #ECE9E1; } :root:not([data-theme="light"]) .mono-g { fill: #0B0D17; } }
+.mono-g { fill: #F3F0E8; font: 600 27px/1 var(--f-accent); font-style: normal; }
+.mono-dot { fill: var(--signal); }
+.wordmark { display: flex; align-items: center; gap: 10px; }
+.wordmark b { font: 600 1.22rem/1 var(--f-accent); font-style: normal; letter-spacing: .16em; }
+.wordmark i { width: 1px; height: 18px; background: var(--rule); }
+.wordmark span { font-size: .66rem; font-weight: 600; letter-spacing: .34em; }
+.tabs button { font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; font-weight: 500; border-radius: 10px; height: 34px; }
+.tabs button.on { background: var(--ink); color: #F3F0E8; box-shadow: none; }
+:root[data-theme="dark"] .tabs button.on { background: #ECE9E1; color: #0B0D17; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tabs button.on { background: #ECE9E1; color: #0B0D17; } }
+.pill { border-radius: 8px; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; height: 28px; }
+.pill.paper { background: transparent; color: var(--text); box-shadow: inset 0 0 0 1px var(--rule); }
+
+/* testate di pagina come un report */
+.page-head { display: flex; align-items: baseline; gap: 16px; margin: 22px 4px 18px; padding-bottom: 14px; border-bottom: 1px solid var(--rule); }
+.eyebrow { font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.eyebrow b { color: var(--signal); font-weight: 600; }
+.page-title { margin: 0; font: 500 clamp(1.9rem, 3.2vw, 2.8rem)/1.05 var(--f-accent); letter-spacing: -.01em; }
+.page-title em { font-style: italic; }
+h3 { font-size: .74rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 600; color: var(--muted); margin: 30px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--hair); }
+.card h3 { border-bottom: 1px solid var(--hair); padding-bottom: 10px; margin-bottom: 12px; font-size: .7rem; }
+h4 { font-size: .9rem; }
+
+/* fogli invece di bolle: bordo sottile, poca ombra */
+.lg.card, .kcard, .mail, .meet, .fix, .pm, .idea, .tablewrap, .scroll, .page > table, canvas.chart, .person, .lesson {
+  background: var(--sheet); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: inset 0 0 0 1px var(--hair), var(--shadow); }
+.lg.card::before { display: none; }
+.lg.card.fringe { box-shadow: inset 0 0 0 1px var(--hair), inset 3px 0 0 var(--signal), var(--shadow); }
+.kcard { border-radius: var(--r-sm); padding: 14px 16px 12px; }
+.kcard .kl, .lbl { font-size: .66rem; letter-spacing: .14em; color: var(--muted); }
+.kcard .kv { font: 500 1.55rem/1.15 var(--f-accent); letter-spacing: -.01em; margin: 6px 0 4px; }
+.big { font: 500 clamp(2.4rem, 4vw, 3.4rem)/1 var(--f-accent); letter-spacing: -.02em; }
+.mid { font: 500 1.75rem/1.1 var(--f-accent); }
+.subnav button, .seg button, .cbar button, .btn { border-radius: 8px; height: 32px; font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; background: var(--sheet); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: inset 0 0 0 1px var(--rule); }
+.subnav { gap: 6px; margin-top: 14px; }
+.tag { border-radius: 6px; font-size: .68rem; letter-spacing: .05em; text-transform: uppercase; height: 20px; }
+.page th, .sheet th { font-size: .64rem; letter-spacing: .14em; border-bottom: 1px solid var(--rule); }
+.page td, .sheet td { font-size: .86rem; }
+.step::after { background: var(--signal); box-shadow: 0 0 0 3px var(--sheet); }
+.cmd { border-radius: 14px; background-color: var(--glass-strong); }
+.cmd label { font: 500 .95rem/1 var(--f-accent); letter-spacing: .02em; }
+.sheet { border-radius: 18px; background-color: var(--sheet); }
+.who h2 { font: 500 1.6rem/1.1 var(--f-accent); }
+.av { border-radius: 10px; font-size: .78rem; letter-spacing: .04em; }
+.banner { border-radius: 10px; background: transparent; box-shadow: inset 0 0 0 1px var(--signal); color: var(--text); }
+.office { border-radius: var(--r); box-shadow: inset 0 0 0 1px var(--hair), var(--shadow); }
+.colophon { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 10px 28px; justify-content: space-between; width: min(1320px, 100%); margin: 0 auto; padding: 18px 16px 96px;
+  border-top: 1px solid var(--rule); font-size: .72rem; letter-spacing: .06em; color: var(--muted); }
+.colophon span:first-child { font: 600 .9rem/1 var(--f-accent); letter-spacing: .16em; color: var(--text); }
+.colophon i { font-style: italic; letter-spacing: 0; }
+@media (max-width: 760px) { .tape-brand { display: none; } .wordmark span, .wordmark i { display: none; } .page-head { flex-direction: column; gap: 4px; } }
+
+body.login { background: var(--paper); }
+.loginbox { background: var(--sheet); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: inset 0 0 0 1px var(--hair), var(--shadow); border-radius: 16px; }
+.loginbox .wh { display: grid; gap: 6px; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--rule); }
+.login-mark { font: 600 1.8rem/1 var(--f-accent); letter-spacing: .18em; } .login-mark::after { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--signal); margin-left: 6px; }
+.login-sub { font-size: .66rem; letter-spacing: .3em; color: var(--muted); }
+.loginbox button { border-radius: 8px; letter-spacing: .1em; text-transform: uppercase; font-size: .8rem; }
+@media (max-width: 760px) { .nav { height: auto; } #tape-items { display: none; } .tape { justify-content: center; } }

@@ -10,18 +10,23 @@
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-<div class="aurora" aria-hidden="true"><i class="a1"></i><i class="a2"></i><i class="a3"></i></div>
+<div class="paper-grid" aria-hidden="true"></div>
 
+<div class="tape" id="tape" aria-label="Mercato in breve">
+  <span class="tape-brand">GERVA CAPITAL · SYSTEMATIC MULTI-AGENT FUND · PAPER</span>
+  <span id="tape-items"></span>
+  <span class="tape-clock" id="tape-clock"></span>
+</div>
 <header class="topbar">
   <nav class="lg nav" aria-label="Sezioni">
     <a class="brand" href="#/panoramica" aria-label="GERVA Capital, panoramica">
-      <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><circle cx="16" cy="16" r="15" class="logo-ring"/><path d="M22.5 11.2A8 8 0 1 0 24 17h-7.5" class="logo-g"/><circle cx="24.6" cy="9" r="2.4" class="logo-dot"/></svg>
-      <span class="wordmark">GERVA <em>Capital</em></span>
+      <svg class="mono" viewBox="0 0 40 40" width="34" height="34" aria-hidden="true"><rect x="0.5" y="0.5" width="39" height="39" rx="9" class="mono-bg"/><text x="20" y="29.5" text-anchor="middle" class="mono-g">G</text><circle cx="32.5" cy="8" r="2.8" class="mono-dot"/></svg>
+      <span class="wordmark"><b>GERVA</b><i></i><span>CAPITAL</span></span>
     </a>
     <div class="tabs" id="tabs" role="tablist">
       <button data-go="panoramica">Panoramica</button>
       <button data-go="plancia">Plancia</button>
-      <button data-go="persone">Azienda</button>
+      <button data-go="ufficio">Azienda</button>
       <button data-go="idee">Idee</button>
       <button data-go="grafici">Mercati</button>
       <button data-go="segnali">Segnali</button>
@@ -43,7 +48,7 @@
 <main class="view">
   <div class="subnav" id="subnav" role="tablist"></div>
   <div id="tip" class="hidden"></div>
-  <h1 id="pnl-title" class="page-title"></h1>
+  <div class="page-head"><span class="eyebrow" id="eyebrow"></span><h1 id="pnl-title" class="page-title"></h1></div>
   <section id="pnl-body" class="page"></section>
   <section id="stage" class="office hidden">
     <canvas id="office" tabindex="0" role="img" aria-label="Ufficio di GERVA Capital: le persone si muovono solo per eventi veri"></canvas>
@@ -65,6 +70,7 @@
   <div class="sheet-body" id="dlg-body"></div>
 </aside>
 
+<footer class="colophon"><span>GERVA <i>Capital</i></span><span>Ricerca sistematica · società di agenti · ogni decisione registrata e verificabile</span><span>Conto simulato. Nessun soldo vero finché Andrea non lo decide.</span></footer>
 <script src="/static/gfx.js"></script>
 <script src="/static/world.js"></script>
 <script src="/static/sim.js"></script>

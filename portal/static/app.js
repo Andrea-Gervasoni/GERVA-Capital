@@ -70,6 +70,20 @@ async function refreshState() {
   } catch (e) { console.warn(e); }
 }
 
+// ---------------------------------------------------------------- nastro di mercato
+async function refreshTape() {
+  try {
+    const t = await api("/api/tape"), s = STATE || {}, pf = s.portafogli || {}, tt = pf.totale || {};
+    const it = (k, v, cls = "") => `<span><b>${esc(k)}</b><span class="${cls}">${v}</span></span>`, ch = (v) => (v == null ? "" : `${v >= 0 ? "▲" : "▼"} ${Math.abs(v * 100).toFixed(2).replace(".", ",")}%`);
+    document.getElementById("tape-items").innerHTML = [
+      tt.nav_eur ? it("FONDO", eur(tt.nav_eur) + " " + ch(tt.pnl_eur / ((tt.nav_eur - tt.pnl_eur) || 1)), tt.pnl_eur >= 0 ? "up" : "dn") : "",
+      ...(t.voci || []).map((x) => it(x.nome, `${num(x.valore, x.dec ?? 2)} ${ch(x.var)}`, x.var >= 0 ? "up" : "dn")),
+      t.regime ? it("REGIME", esc(t.regime)) : "", (pf.ibkr || {}).leva != null ? it("LEVA", num(pf.ibkr.leva, 2) + "×") : "",
+    ].join("");
+    document.getElementById("tape-clock").textContent = t.mercato || "";
+  } catch (_) { /* il nastro e' un di piu' */ }
+}
+
 // ---------------------------------------------------------------- eventi
 const FEED = [];
 function feedText(ev) {
@@ -133,6 +147,8 @@ async function render(page, arg, keepScroll = false) {
   catch (err) { t = "Qualcosa non va"; h = `<p class="err">Non riesco a caricare questa pagina: ${esc(err.message)}</p>`; }
   if (CUR.page !== page) return;                          // nel frattempo si e' cambiata pagina
   title.innerHTML = t; body.innerHTML = h; applyWidths(body);
+  const gi = Object.keys(GROUPS).indexOf(g) + 1;
+  document.getElementById("eyebrow").innerHTML = `<b>${String(gi).padStart(2, "0")}</b> · ${esc(document.querySelector(`#tabs [data-go="${GROUPS[g][0]}"]`)?.textContent.trim() || "")}`;
   if (AFTER[page]) { try { await AFTER[page](arg); } catch (err) { body.insertAdjacentHTML("beforeend", `<p class="err">Grafico non disponibile: ${esc(err.message)}</p>`); } }
 }
 
@@ -153,7 +169,7 @@ function fillOverviewTop(s) {
     `<div class="lg card"><div class="lbl">IBKR · azioni</div><div class="mid">${eur(ib.nav_eur || s.nav)}</div><p>${sg(ib.pnl_eur)}</p><p class="muted">leva sul conto ${ib.leva == null ? "—" : num(ib.leva, 2) + "×"}</p></div>` +
     `<div class="lg card"><div class="lbl">Alpaca · crypto e banco libero</div><div class="mid">${al.disponibile ? eur(al.nav_eur) : "—"}</div><p>${al.disponibile ? sg(al.pnl_eur) + ` <span class="muted">${num(al.equity_usd, 0)} $</span>` : "<span class='muted'>non collegato</span>"}</p><p class="muted">leva sul conto ${al.leva == null ? "—" : num(al.leva, 2) + "×"}</p></div>` +
     `<div class="lg card"><div class="lbl">Rischio e risorse</div><div class="mid">${s.kill ? "<span class='neg'>KILL</span>" : `<span class="${s.semaforo === "verde" ? "pos" : s.semaforo === "rosso" ? "neg" : "gold"}">${esc(s.semaforo)}</span>`}</div>` +
-      `<p>Agenti oggi ${num(s.budget_oggi, 2)} / ${num(s.tetto_oggi, 2)} €</p><p class="muted">${s.sciopero ? "sciopero in corso" : `autonomia ${s.giorni_residui == null ? "∞" : num(s.giorni_residui, 1) + " giorni"}`} · audit ${s.catena ? "integro" : "<span class='neg'>ROTTO</span>"}</p></div>`;
+      `<p>Agenti oggi ${num(s.budget_oggi, 2)} / ${num(s.tetto_oggi, 2)} €</p><p class="muted">${s.sciopero ? "sciopero in corso" : `autonomia ${s.giorni_residui == null ? "illimitata" : num(s.giorni_residui, 1) + " giorni"}`} · audit ${s.catena ? "integro" : "<span class='neg'>ROTTO</span>"}</p></div>`;
 }
 
 const PANELS = {
@@ -374,7 +390,7 @@ const PANELS = {
     const flat = (o, p = "") => Object.entries(o).flatMap(([k, v]) => (v && typeof v === "object" && !Array.isArray(v) ? flat(v, p + k + ".") : [[p + k, v]]));
     const groups = {};
     Object.entries(S_).filter(([k]) => k !== "firm.mode" && k !== "firm.strike").forEach(([k, v]) => { const g = k.split(".")[0]; (groups[g] = groups[g] || []).push([k, v]); });
-    return ["Impostazioni", `<div class="lg card"><p>Ogni modifica va nel registro di audit. Autonomia degli agenti: <b>${d.budget.days_left == null ? "∞" : num(d.budget.days_left, 1) + " giorni"}</b> al ritmo di ${eur(d.budget.pace_eur_day, 3)} al giorno.</p>
+    return ["Impostazioni", `<div class="lg card"><p>Ogni modifica va nel registro di audit. Autonomia degli agenti: <b>${d.budget.days_left == null ? "illimitata" : num(d.budget.days_left, 1) + " giorni"}</b> al ritmo di ${eur(d.budget.pace_eur_day, 3)} al giorno.</p>
       <div class="cbar"><button id="strikebtn" class="btn ${S_["firm.strike"] ? "" : "danger"}">${S_["firm.strike"] ? "Riprendi la società" : "Sciopero (ferma gli agenti)"}</button> <button class="btn danger" id="killbtn">${STATE && STATE.kill ? "Togli il KILL" : "KILL"}</button></div></div>` +
       Object.entries(groups).map(([g, rows]) => `<details class="mail"><summary class="mh"><b>${esc(g)}</b> <span class="muted">${rows.length} voci</span></summary>${rows.map(([k, v]) => row(k, v)).join("")}</details>`).join("") +
       `<details class="mail"><summary class="mh"><b>Limiti di rischio</b> <span class="muted">solo Andrea</span></summary>${flat(d.limiti).map(([k, v]) => row(k, v, "risk")).join("")}</details><p class="muted">I soldi veri sono bloccati: si sbloccano solo con la tua decisione.</p>`];
@@ -604,5 +620,6 @@ async function refreshWorld() { try { buildWorld(await api("/api/world")); } cat
   connectWS();
   setInterval(refreshState, 8000);
   setInterval(refreshWorld, 15000);
+  refreshTape(); setInterval(refreshTape, 60000);
   setInterval(() => { if (CUR.page === "panoramica") renderFeed(); }, 8000);
 })();
