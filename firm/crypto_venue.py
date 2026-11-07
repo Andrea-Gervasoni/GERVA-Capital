@@ -77,6 +77,32 @@ def last_price(sym: str) -> float | None:
         return None
 
 
+def snapshots(stocks: list[str], coins: list[str]) -> list[dict]:
+    """Prezzo ora, variazione di giornata e ultima barra a 1 minuto (sola lettura): serve a chi decide trade di pochi minuti."""
+    out = []
+    try:
+        if stocks:
+            d = _data("/v2/stocks/snapshots?feed=iex&symbols=" + ",".join(stocks[:60]))
+            for k, v in d.items():
+                px = (v.get("latestTrade") or {}).get("p")
+                prev = (v.get("prevDailyBar") or {}).get("c")
+                mb = v.get("minuteBar") or {}
+                out.append(dict(s=k, px=px, giorno_pct=round((px / prev - 1) * 100, 2) if px and prev else None, min_o=mb.get("o"), min_c=mb.get("c"), min_vol=mb.get("v")))
+    except Exception:
+        pass
+    try:
+        if coins:
+            d = _data("/v1beta3/crypto/us/snapshots?symbols=" + ",".join(f"{c}%2FUSD" for c in coins[:30]))
+            for k, v in (d.get("snapshots") or {}).items():
+                px = (v.get("latestTrade") or {}).get("p")
+                prev = (v.get("prevDailyBar") or {}).get("c")
+                mb = v.get("minuteBar") or {}
+                out.append(dict(s=k.split("/")[0], px=px, giorno_pct=round((px / prev - 1) * 100, 2) if px and prev else None, min_o=mb.get("o"), min_c=mb.get("c"), min_vol=mb.get("v")))
+    except Exception:
+        pass
+    return out
+
+
 def configured() -> bool:
     return S.get("crypto.venue", "none") == "alpaca" and bool(os.environ.get("ALPACA_PAPER_KEY")) and bool(os.environ.get("ALPACA_PAPER_SECRET"))
 
