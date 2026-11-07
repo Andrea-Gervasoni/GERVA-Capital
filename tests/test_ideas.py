@@ -135,3 +135,16 @@ def test_ideas_endpoint_and_heartbeat_job(firm_env, monkeypatch):
     from portal.app import app
     j = TestClient(app).get("/api/ideas").json()
     assert j["idee"] and "regole" in j
+
+
+def test_pick_authors_rotates_even_without_ideas_and_detail_shows_votes(firm_env, monkeypatch):
+    org_seed.seed(); registry.sync()
+    a1 = ID.pick_authors(3)
+    db.runtime_set("ideas.last_try", {a: db.today() for a in a1})                        # provato oggi, senza idee
+    a2 = ID.pick_authors(3)
+    assert not set(a1) & set(a2)                                                          # domani tocca ad altri, non sempre agli stessi
+    _fake(monkeypatch)
+    monkeypatch.setattr(ID, "_close", _close)
+    g = ID.generate("senior_crypto", rows=ROWS); ID.advance(); ID.committee()
+    d = ID.detail(g["id"])
+    assert d["riunione"] and d["riunione"]["voti"] and d["idea"]["tesi"]

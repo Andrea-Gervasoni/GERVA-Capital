@@ -262,7 +262,22 @@ def cmd_crypto_venue(a):
 
 def cmd_idee(a):
     """Idee degli agenti: senza opzioni fa un giro adesso (cercano, i superiori valutano, il comitato vota); --lista le mostra."""
-    from firm import ideas
+    from firm import ideas, db
+    if a.dettaglio:
+        d = ideas.detail(a.dettaglio)
+        i = d.get("idea")
+        if not i:
+            print("idea non trovata"); return
+        print(f"#{i['id']} [{i['status']}] {i['title']}\nautore: {i['author']}  |  probabilita' dichiarata: {i['p_success']}  |  azione: {i['azione']}")
+        print(f"\nTESI: {i['tesi']}\nEVIDENZE: {i['evidenze']}\n\nPERCORSO:")
+        for h in i["history"] or []:
+            print("  -", {k: v for k, v in h.items() if k != "ts"})
+        m = d.get("riunione")
+        if m:
+            print(f"\nRIUNIONE #{m['id']}: decisione {m['decisione']}  punteggi {m['punteggi']}")
+            for p, v in (m["voti"] or {}).items():
+                print(f"  {p}: {v['posizione']} (fiducia {v['fiducia']})\n     argomento: {v['argomento']}\n     replica: {v['replica']}")
+        return
     if not a.lista:
         print(json.dumps(ideas.daily(), ensure_ascii=False, indent=1, default=str))
     for i in ideas.listing(25):
@@ -270,6 +285,8 @@ def cmd_idee(a):
         what = f"{act.get('simbolo', '')} {act.get('peso_pct', '')}%" if i["kind"] == "posizione" else f"{act.get('chiave', '')} -> {act.get('valore', '')}"
         res = f" | alpha {i['result']['alpha']:+.1%} ({i['result']['motivo']})" if i["result"] and "alpha" in i["result"] else ""
         print(f"#{i['id']:<3} {i['status']:<14} {i['author']:<16} {i['kind']:<9} {i['title'][:50]:<50} {what}{res}")
+    c = db.one("SELECT COALESCE(SUM(cost_eur),0) e, COUNT(*) n FROM llm_calls WHERE day=?", (db.today(),))
+    print(f"\nspesa agenti oggi: {c['e']:.2f} EUR in {c['n']} chiamate")
 
 
 def cmd_regole(a):
@@ -500,6 +517,7 @@ def main():
         sp.add_argument("--demo", action="store_true", help="usa il database dimostrativo var/demo/")
         if name == "idee":
             sp.add_argument("--lista", action="store_true", help="mostra solo le idee, senza fare un giro")
+            sp.add_argument("--dettaglio", type=int, default=0, help="tesi, percorso e voti della riunione di una idea")
         if name == "regole":
             sp.add_argument("--annulla", type=int, default=0, help="ripristina il valore precedente della regola con questo numero")
         if name == "imposta":

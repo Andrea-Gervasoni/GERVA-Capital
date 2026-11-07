@@ -104,7 +104,11 @@ def pick_authors(n: int) -> list[str]:
     ag = [a["id"] for a in registry.all_agents() if a["kind"] == "llm" and a["status"] in ("attivo", "in_prova")]
     cap = int(S.get("ideas.max_per_agent_week", 2))
     ag = [a for a in ag if _recent_count(a) < cap]
-    ag.sort(key=lambda a: (_recent_count(a), (db.one("SELECT MAX(id) m FROM ideas WHERE author=?", (a,)) or {}).get("m") or 0, a))
+    tried = db.runtime_get("ideas.last_try") or {}
+    day = db.today()
+    import hashlib
+    # a rotazione: chi non ci prova da piu' tempo viene prima (anche se non aveva idee), a parita' un ordine mescolato ogni giorno
+    ag.sort(key=lambda a: (tried.get(a, "0000-00-00"), hashlib.md5(f"{day}{a}".encode()).hexdigest()))
     return ag[:n]
 
 
@@ -333,6 +337,22 @@ def proposals() -> list[dict]:
     return [dict(simbolo=k, peso_pct=round(v, 3)) for k, v in out.items()]
 
 
+def detail(iid: int) -> dict:
+    """Idea con tutto il percorso e, se c'e' stata, la riunione: chi ha votato cosa, con quali argomenti, e il punteggio."""
+    i = get(iid)
+    if not i:
+        return {}
+    m = None
+    if i["meeting"]:
+        row = db.one("SELECT * FROM meetings WHERE id=?", (i["meeting"],))
+        if row:
+            tr = json.loads(row["transcript"] or "{}")
+            m = dict(id=row["id"], decisione=row["decision"], punteggi=tr.get("punteggi"), pesi=tr.get("pesi"),
+                     voti={p: dict(posizione=v.get("posizione_finale"), fiducia=v.get("fiducia"), replica=v.get("replica"),
+                                   argomento=(tr.get("posizioni", {}).get(p) or {}).get("argomento")) for p, v in (tr.get("repliche") or {}).items()})
+    return dict(idea=i, riunione=m)
+
+
 # ---------------------------------------------------------------------------------------------- giro quotidiano
 def daily(runtime=None, close=None) -> dict:
     if not S.get("ideas.enabled", True):
@@ -342,13 +362,18 @@ def daily(runtime=None, close=None) -> dict:
         res["chiuse"] = track(close=close)
     except Exception as e:
         res["errore_track"] = str(e)[:80]
+    res["esiti"] = []
+    tried = db.runtime_get("ideas.last_try") or {}
     for a in pick_authors(int(S.get("ideas.agents_per_day", 4))):
         try:
             g = generate(a, runtime=runtime)
-            if g.get("ok"):
-                res["nuove"].append(g)
-        except Exception:
-            continue
+        except Exception as e:
+            g = dict(ok=False, motivo=f"errore: {str(e)[:80]}")
+        tried[a] = db.today()
+        if g.get("ok"):
+            res["nuove"].append(g)
+        res["esiti"].append(dict(agente=a, esito="idea presentata" if g.get("ok") else g.get("motivo", "")[:120]))
+    db.runtime_set("ideas.last_try", tried)
     res["salite"] = advance(runtime=runtime)
     try:
         res["comitato"] = committee(runtime=runtime)
