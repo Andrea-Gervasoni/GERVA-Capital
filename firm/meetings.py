@@ -80,8 +80,10 @@ def hold(kind: str, title: str, reason: str, participants: list[str], data: dict
     mid = db.ex("INSERT INTO meetings(ts,kind,title,reason,participants,options,status,context) VALUES(?,?,?,?,?,?,?,?)",
                 (db.now_iso(), kind, title, reason, db.dumps(participants), db.dumps(opts), "in_corso", db.dumps(context or {})))
     events.publish("meeting.start", "sala_riunioni", dict(id=mid, tipo=kind, titolo=title, motivo=reason, partecipanti=participants))
+    from .workflows import VOICE
     task = (f"Riunione ({kind}): {title}. Motivo: {reason}. Prendi posizione tra {opts}. Vuoi avere ragione: se i fatti "
-            "ti daranno ragione guadagni Gerva-Coin, se sbagli con troppa fiducia li perdi. Usa solo evidenze dai dati.")
+            "ti daranno ragione guadagni Gerva-Coin, se sbagli con troppa fiducia li perdi. Usa solo evidenze dai dati. "
+            "L'argomento e' quello che diresti ad alta voce al tavolo, in 3-5 frasi. " + VOICE)
     first = {}
     for p in participants:
         r = runtime.call(p, task, data=data, schema=position_schema(opts), purpose=f"riunione:{kind}", status_label="riunione")
@@ -91,9 +93,10 @@ def hold(kind: str, title: str, reason: str, participants: list[str], data: dict
                                                         testo=r["output"]["argomento"][:220], fiducia=r["output"]["fiducia"]))
     final = {}
     for p in first:
-        others = {registry.get(o)["role"]: dict(posizione=v["posizione"], argomento=v["argomento"][:400], evidenza=v["evidenza"][:4])
+        others = {f"{registry.get(o)['name']} ({registry.get(o)['role']})": dict(posizione=v["posizione"], argomento=v["argomento"][:400], evidenza=v["evidenza"][:4])
                   for o, v in first.items() if o != p}
-        r = runtime.call(p, "Replica: leggi le posizioni degli altri. Cambia idea solo se le loro evidenze battono le tue.",
+        r = runtime.call(p, "Replica al tavolo: rispondi ai colleghi chiamandoli per nome (sono nei dati), dici con chi sei d'accordo e con chi no e "
+                         "perche', in 2-4 frasi. Cambia idea solo se le loro evidenze battono le tue, e se cambi dillo. " + VOICE,
                          data=dict(tua_posizione=first[p], altri=others), schema=reply_schema(opts),
                          purpose=f"riunione:{kind}:replica", status_label="riunione")
         out = r["output"] if r["ok"] else dict(replica="(nessuna replica)", posizione_finale=first[p]["posizione"],

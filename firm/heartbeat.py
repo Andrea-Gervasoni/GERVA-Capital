@@ -14,6 +14,7 @@ In sciopero gli agenti non vengono svegliati; il codice deterministico continua.
 from __future__ import annotations
 
 import datetime as dt
+import os
 import re
 
 from . import settings as S
@@ -197,6 +198,14 @@ def beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
     try:                                                       # plancia: fill e conto Alpaca aggiornati ad ogni battito
         from . import blotter
         blotter.sync_alpaca()
+    except Exception:
+        pass
+    try:                                                       # Telegram deve ascoltare: se tace da piu' di 10 minuti lo si dice (una volta l'ora)
+        tg = db.runtime_get("telegram.alive") or {}
+        if os.environ.get("TELEGRAM_CHATS") and (not tg.get("ts") or (now - dt.datetime.fromisoformat(tg["ts"].replace("Z", "+00:00"))).total_seconds() > 600 or tg.get("collegato") is False):
+            if _once(f"telegram-giu:{now:%Y-%m-%dT%H}"):
+                events.publish("risk.alert", "telegram", dict(cosa="il lettore di Telegram non ascolta da piu' di 10 minuti: i segnali si perdono (rete del Mac? processo fermo?)", gravita=3))
+                notes.append("ATTENZIONE: Telegram non ascolta")
     except Exception:
         pass
     if now.hour >= 7 and _once(f"scala:{day}"):                # leva gestita per volatilita' (se accesa)

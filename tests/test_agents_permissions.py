@@ -167,10 +167,10 @@ def test_research_cycle_on_synthetic_data_never_reaches_capital(org):
 
 def test_command_creates_task_tree(org, monkeypatch):
     from firm import tasks, workflows as W
-    plan = {"comprensione": "riepilogo rischio", "rischio_vs_vantaggio": "nessun rischio aggiunto",
+    plan = {"risposta_diretta": "Il rischio e' verde.", "serve_delegare": True, "comprensione": "riepilogo rischio", "rischio_vs_vantaggio": "nessun rischio aggiunto",
             "compiti": [{"assegnatario": "cro", "titolo": "riepilogo rischio", "perche": "richiesta di Andrea"}],
             "risposta_ad_andrea": "ok", "grande_richiesta": False}
-    use(monkeypatch, {"capo": dict(name="Lorenzo Bassi", reply=lambda u: plan if "Scomponilo" in u else
+    use(monkeypatch, {"capo": dict(name="Lorenzo Bassi", reply=lambda u: plan if "PRIMA rispondi" in u else
                                    {"sintesi": "Il rischio e' verde.", "stato": "fatto"}),
                       "cro": dict(name="Elena Conti", reply={"risultato": "verde", "stato": "fatto",
                                                              "sotto_compiti": [], "fonti": ["risk.snapshot"]})})
@@ -204,3 +204,13 @@ def test_eval_files_are_well_formed(org):
     out = {"items": [{"rilevanza": 0.05, "tag": ["sospetto"]}]}
     assert evals.check(out, {"items.0.rilevanza": {"max": 0.1}, "items.0.tag": {"contains": "sospetto"}}) == []
     assert evals.check(out, {"items.0.rilevanza": {"min": 0.5}})
+
+
+def test_boss_answers_directly_when_he_has_the_data(org, monkeypatch):
+    from firm import tasks, workflows as W
+    plan = {"risposta_diretta": "Le crypto le ha aperte il modello di GERVA-Q venerdi'.", "serve_delegare": False, "comprensione": "chi",
+            "rischio_vs_vantaggio": "-", "compiti": [], "risposta_ad_andrea": "x", "grande_richiesta": False}
+    use(monkeypatch, {"capo": dict(name="Lorenzo Bassi", reply=lambda u: plan)})
+    cid = tasks.new_command("Chi ha aperto le crypto?")
+    r = W.handle_command(cid)
+    assert r["ok"] and r["compiti"] == 0 and "modello di GERVA-Q" in r["risposta"]

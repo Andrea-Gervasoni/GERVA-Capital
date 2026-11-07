@@ -245,7 +245,7 @@ def state():
     return _json(dict(
         modalita="PAPER", live_bloccato=True, sciopero=st["strike"], motivo_sciopero=st["strike_reason"],
         simulato=not os.environ.get("ANTHROPIC_API_KEY"), demo=bool(db.runtime_get("demo", False)),
-        diretta=_live_state(), portafogli=__import__("firm.blotter", fromlist=["x"]).totals(), nav=fb["nav"], nav_conto=gateway.pod_zero_nav(), nav_pod_simulati=fb["nav"] - gateway.pod_zero_nav(),
+        diretta=_live_state(), telegram=db.runtime_get("telegram.alive"), portafogli=__import__("firm.blotter", fromlist=["x"]).totals(), nav=fb["nav"], nav_conto=gateway.pod_zero_nav(), nav_pod_simulati=fb["nav"] - gateway.pod_zero_nav(),
         pnl=fb["pnl"], capitale=gateway.capital_source(), capitale_iniziale=fb["capitale_iniziale"],
         semaforo=rk["semaforo"], kill=rk["kill"], allarmi=rk["allarmi"],
         budget_oggi=st["spent_today"], tetto_oggi=st["daily_cap"], budget_totale=st["spent_total"],
@@ -528,7 +528,7 @@ def api_lessons(limit: int = 50):
 def api_free():
     """Banco libero: regole di casa attive (all'inizio nessuna) e ultimi trade degli agenti."""
     from firm import free_desk as FD
-    return _json(dict(regole=FD.active_rules(), trade=db.q("SELECT * FROM free_trades ORDER BY id DESC LIMIT 60"),
+    return _json(dict(regole=FD.active_rules(), classifica=FD.leaderboard(), telegram=db.runtime_get("telegram.alive"), trade=db.q("SELECT * FROM free_trades ORDER BY id DESC LIMIT 60"),
                       storia_regole=db.q("SELECT * FROM house_rules ORDER BY id DESC LIMIT 30")))
 
 

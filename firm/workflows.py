@@ -215,7 +215,9 @@ def risk_review() -> dict:
 # 3. ORDINE DI ANDREA: il Capo scompone, i manager eseguono, i risultati risalgono
 # ===========================================================================
 MANAGERS = ["cro", "head_research", "head_intel", "senior_validator"]
-CEO_PLAN = obj({"comprensione": S_STR, "rischio_vs_vantaggio": S_STR,
+VOICE = ("Parla come in una vera sala trading: prima persona, frasi brevi e dirette, chiama per nome i colleghi a cui rispondi, "
+         "di' cosa pensi e perche' con i numeri dei dati; niente burocratese, niente elenchi numerati, niente formule di cortesia.")
+CEO_PLAN = obj({"risposta_diretta": S_STR, "serve_delegare": {"type": "boolean"}, "comprensione": S_STR, "rischio_vs_vantaggio": S_STR,
                 "compiti": arr(obj({"assegnatario": {"type": "string", "enum": MANAGERS}, "titolo": S_STR, "perche": S_STR})),
                 "risposta_ad_andrea": S_STR, "grande_richiesta": {"type": "boolean"}})
 MANAGER_WORK = obj({"risultato": S_STR, "stato": {"type": "string", "enum": ["fatto", "in_corso", "servono_dati"]},
@@ -287,8 +289,11 @@ def handle_command(cid: int) -> dict:
     snap = dict(rischio=rk, libro=libro, budget=__import__("firm.budget", fromlist=["x"]).status(),
                 organigramma=[dict(id=a["id"], ruolo=a["role"], stato=a["status"]) for a in registry.all_agents()
                               if a["kind"] == "llm"])
-    plan = runtime.call("capo", "Andrea ti ha dato un ordine. Scomponilo in compiti per i manager. Se porta piu' rischio "
-                        "senza piu' vantaggio, dillo e proponi l'alternativa.",
+    plan = runtime.call("capo", "Andrea ti scrive. PRIMA rispondi tu alla sua domanda in 'risposta_diretta': al massimo 4 frasi, la risposta nella prima "
+                        "(un si', un no, un nome, un numero), poi il perche' con i dati. I fatti li hai nel libro: i due conti, ogni operazione con chi "
+                        "l'ha decisa (deciso_da: modello, idea, free = banco libero, segnale, algo), posizioni, strategie, banco libero. Delega "
+                        "(serve_delegare = true, al massimo 2 compiti) SOLO se la risposta richiede un lavoro che non puoi fare tu con questi dati. "
+                        "Niente procedure, niente sigle, niente presunzioni: se un dato manca, dillo in una frase. " + VOICE,
                         data=dict(ordine=cmd["text"], stato_societa=snap, _reale=reale), schema=CEO_PLAN, purpose="delega",
                         status_label="riunione")
     if not plan["ok"]:
@@ -296,8 +301,13 @@ def handle_command(cid: int) -> dict:
         return plan
     p = plan["output"]
     root = tasks.create(cid, None, "capo", "andrea", cmd["text"][:120])
+    if not p.get("serve_delegare") or not p.get("compiti"):        # risponde il Capo, subito, senza giro di compiti
+        answer = p.get("risposta_diretta") or p["risposta_ad_andrea"]
+        tasks.complete(root, dict(sintesi=answer))
+        db.ex("UPDATE commands SET status='risposto', answer=? WHERE id=?", (answer, cid))
+        return dict(ok=True, compiti=0, risposta=answer)
     results = []
-    for c in p["compiti"][:4]:
+    for c in p["compiti"][:2]:
         tid = tasks.create(cid, root, c["assegnatario"], "capo", c["titolo"])
         w = runtime.call(c["assegnatario"], f"Compito dal Capo: {c['titolo']}. Perche': {c['perche']}. Lavora con i dati "
                          "che hai; se non bastano, stato 'servono_dati' e indica quali.",
@@ -313,8 +323,9 @@ def handle_command(cid: int) -> dict:
                 tasks.complete(sid, sw["output"] if sw["ok"] else sw["motivo"])
         tasks.complete(tid, out, out["stato"])
         results.append(dict(da=c["assegnatario"], **out))
-    summ = runtime.call("capo", "Riassumi per Andrea i risultati dei manager, in modo onesto: cosa e' fatto, cosa no.",
-                        data=dict(ordine=cmd["text"], risultati=results), schema=CEO_SUMMARY, purpose="sintesi",
+    summ = runtime.call("capo", "Rispondi ad Andrea alla sua domanda, al massimo 5 frasi: nella prima la risposta (si', no, nome, numero), poi cosa hanno "
+                        "trovato i manager e cosa manca, se manca. Niente elenchi di procedure. " + VOICE,
+                        data=dict(ordine=cmd["text"], tua_prima_risposta=p.get("risposta_diretta"), risultati=results, libro=libro), schema=CEO_SUMMARY, purpose="sintesi",
                         status_label="scrive")
     answer = summ["output"]["sintesi"] if summ["ok"] else p["risposta_ad_andrea"]
     tasks.complete(root, dict(sintesi=answer))

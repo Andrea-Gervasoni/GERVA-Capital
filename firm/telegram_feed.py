@@ -21,7 +21,7 @@ import threading
 from . import db, events, paths, signals
 from . import settings as S
 
-MAX_AGE_MIN = 15                      # un messaggio piu' vecchio (recuperato dopo una pausa) non si tratta come segnale nuovo
+MAX_AGE_MIN = 60                      # un messaggio piu' vecchio (recuperato dopo una pausa) non si tratta come segnale nuovo
 MAX_LEN = 2000
 
 
@@ -192,6 +192,17 @@ def run() -> None:
     if not ids:
         raise SystemExit("nessuna delle sale in TELEGRAM_CHATS corrisponde ai tuoi gruppi")
     print("ascolto (solo lettura):", ", ".join(ids.values()), flush=True)
+    db.runtime_set("telegram.alive", dict(ts=db.now_iso(), sale=list(ids.values())))
+
+    async def alive():                                                       # battito del lettore: il portale e il battito sanno se ascolta
+        import asyncio
+        while True:
+            try:
+                db.runtime_set("telegram.alive", dict(ts=db.now_iso(), sale=list(ids.values()), collegato=client.is_connected()))
+            except Exception:
+                pass
+            await asyncio.sleep(60)
+    client.loop.create_task(alive())
 
     @client.on(tl_events.NewMessage())
     async def on_message(ev):

@@ -74,7 +74,8 @@ rules:                       # regole votate dal comitato (dentro la Costituzion
 free:                      # banco libero: gli agenti aprono e chiudono trade quando vogliono sul conto paper di Alpaca; nessuna regola finche' non la votano
   enabled: true
   cycle_minutes: 30          # ogni quanti minuti gli agenti sono chiamati a decidere (costo: Opus). Lo decidono loro con una regola
-  agents_per_cycle: 2         # quanti agenti decidono a ogni giro del banco (il risparmio sui compiti di routine paga il secondo)
+  agents_per_cycle: 3         # quanti agenti decidono a ogni giro del banco: prima i trader, a rotazione
+  traders: [pod_trend, pod_reversal, pod_crypto, senior_crypto, senior_trend]   # chi fa trading di mestiere
   max_intents: 20            # trade per chiamata (puo' essere tanti: la chiusura e' del codice, non serve richiamare l'agente)
   monitor_seconds: 15        # ogni quanto il codice controlla stop, obiettivi e tempi di chiusura
   riesame_loss_frac: 0.03    # una perdita di giornata oltre il 3% convoca il riesame (non e' un limite: serve a far parlare)

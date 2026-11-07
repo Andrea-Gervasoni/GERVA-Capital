@@ -259,13 +259,28 @@ STATUTO = (
 
 
 # ---------------------------------------------------------------------------------------------- gli agenti decidono
+def traders() -> list[str]:
+    return [t for t in (S.get("free.traders") or []) if (registry.get(t) or {}).get("kind") == "llm"]
+
+
 def pick_agents(n: int) -> list[str]:
+    """Prima i TRADER (capi desk e senior di mercato), a rotazione: il banco libero e' il loro lavoro. Gli altri agenti entrano ogni tanto."""
     import hashlib
     ag = [a["id"] for a in registry.all_agents() if a["kind"] == "llm" and a["status"] in ("attivo", "in_prova")]
     tried = db.runtime_get("free.last_try") or {}
     key = db.now_iso()[:13]
-    ag.sort(key=lambda a: (tried.get(a, ""), hashlib.md5(f"{key}{a}".encode()).hexdigest()))
-    return ag[:n]
+    order = lambda a: (tried.get(a, ""), hashlib.md5(f"{key}{a}".encode()).hexdigest())
+    tr = sorted([a for a in traders() if a in ag], key=order)
+    rest = sorted([a for a in ag if a not in tr], key=order)
+    k = max(1, n - 1) if rest and n > 1 else n                       # uno dei posti del giro, a rotazione, va a chi trader non e'
+    return (tr[:k] + rest[: n - min(k, len(tr))])[:n] if tr else rest[:n]
+
+
+def leaderboard() -> list[dict]:
+    """Classifica dei trader sul banco libero: trade, chiusi, vinti, risultato in dollari."""
+    rows = db.q("SELECT agent, COUNT(*) n, SUM(CASE WHEN status='chiusa' THEN 1 ELSE 0 END) chiusi, SUM(CASE WHEN pnl>0 THEN 1 ELSE 0 END) vinti, "
+                "COALESCE(SUM(pnl),0) pnl FROM free_trades GROUP BY agent ORDER BY pnl DESC")
+    return [dict(r, nome=(registry.get(r["agent"]) or {}).get("name", r["agent"])) for r in rows]
 
 
 def _wake() -> dict:
@@ -311,11 +326,12 @@ def cycle(runtime=None, agents: list[str] | None = None) -> dict:
         scan = V.scan()
         wanted = [x["s"] for x in scr if x.get("tipo") != "crypto"][:100] + [x["s"] for k in ("piu_scambiati", "maggiori_rialzi", "maggiori_ribassi") for x in scan.get(k, [])][:60]
         live = V.snapshots(list(dict.fromkeys(wanted)), [x["s"] for x in scr if x.get("tipo") == "crypto"])
-        r = runtime.call(a, STATUTO + "Hai LIBERTA' TOTALE sul conto paper. Puoi operare su QUALSIASI simbolo che Alpaca negozia, anche fuori dalla nostra tabella (universo_nostro e' solo un aiuto: "
+        role = ("Sei uno dei TRADER del fondo: trovare trade buoni e' il tuo lavoro e la tua classifica (vedi classifica) dice quanto vali. " if a in traders() else "")
+        r = runtime.call(a, STATUTO + role + "Hai LIBERTA' TOTALE sul conto paper. Puoi operare su QUALSIASI simbolo che Alpaca negozia, anche fuori dalla nostra tabella (universo_nostro e' solo un aiuto: "
                             "cosa_si_muove_ora mostra i titoli piu' scambiati e i maggiori rialzi/ribassi). Controlla l'orologio: se le azioni sono chiuse un ordine azionario resta in coda "
                             "fino all'apertura, mentre le crypto si negoziano sempre. Cosa fai adesso? Puoi aprire quanti trade vuoi, anche di pochi minuti (tieni_minuti), "
                             "con stop e obiettivo in %. Se la tua analisi sostiene un trade, aprilo; altrimenti puoi non fare niente.",
-                         data=dict(conto=st, regole_di_casa=rules_detail(), tuoi_ultimi_trade=mine, regime=charts.regime(), orologio=V.clock(), costo=cost, manuale_lezioni=__import__('firm.lessons', fromlist=['x']).recent(12), universo_nostro=scr, mercato_ora=live, cosa_si_muove_ora=scan, notizie_verificate=news),
+                         data=dict(conto=st, classifica=leaderboard()[:10], regole_di_casa=rules_detail(), tuoi_ultimi_trade=mine, regime=charts.regime(), orologio=V.clock(), costo=cost, manuale_lezioni=__import__('firm.lessons', fromlist=['x']).recent(12), universo_nostro=scr, mercato_ora=live, cosa_si_muove_ora=scan, notizie_verificate=news),
                          schema=W.FREE_TRADES, purpose="banco-libero", status_label="trada")
         tried[a] = db.now_iso()
         if not r["ok"]:

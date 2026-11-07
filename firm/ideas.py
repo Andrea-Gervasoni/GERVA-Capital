@@ -170,7 +170,7 @@ def review(iid: int, runtime=None) -> dict:
     rows = [r for r in desk.table() if i["kind"] == "posizione" and r["simbolo"] == sym]
     r = runtime.call(holder, "Un tuo collaboratore ti presenta un'idea. Valutala con i dati: puoi PORTARLA SU (con le tue migliorie), RIMANDARLA (da rifare) "
                              "o SCARTARLA. Porti su solo cio' che difenderesti davanti al comitato: se va male, la tua quota di premio sale o scende con la sua. "
-                             "Indica la TUA probabilita' di successo (sii calibrato).",
+                             "Indica la TUA probabilita' di successo (sii calibrato). Il motivo e' quello che diresti al tuo collaboratore, chiamandolo per nome. " + W.VOICE,
                      data=dict(idea=dict(id=i["id"], tipo=i["kind"], titolo=i["title"], tesi=i["tesi"], evidenze=i["evidenze"], azione=i["azione"],
                                          probabilita_autore=i["p_success"]), dati_simbolo=rows, regime=charts.regime(), storia=i["history"]),
                      schema=W.IDEA_REVIEW, purpose="idea-revisione", status_label="valuta")

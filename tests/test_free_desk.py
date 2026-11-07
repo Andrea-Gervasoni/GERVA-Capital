@@ -194,3 +194,13 @@ def test_agent_chooses_when_to_be_called_again(broker, monkeypatch):
     db.runtime_set("free.wake", {"pod_crypto": "2000-01-01T00:00:00Z"})
     FD.cycle(agents=["pod_crypto"])
     assert FD._wake() == {}                                                              # 0 = torna al giro normale
+
+
+def test_traders_come_first_and_leaderboard(broker):
+    picked = FD.pick_agents(3)
+    assert sum(1 for a in picked if a in FD.traders()) >= 2                       # il banco e' dei trader
+    FD.execute("pod_trend", _trade("AAPL", 1000, hold=0), FD.state()); FD.monitor()
+    broker.px["AAPL"] = 102.0; db.ex("UPDATE free_trades SET take_pct=1")
+    FD.monitor()
+    lb = FD.leaderboard()
+    assert lb[0]["agent"] == "pod_trend" and lb[0]["pnl"] > 0 and lb[0]["vinti"] == 1
