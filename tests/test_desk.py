@@ -53,3 +53,17 @@ def test_profile_changes_reach_the_db_after_pull(firm_env):
     yaml.safe_dump(prof, open(f, "w"), allow_unicode=True, sort_keys=False)
     assert registry.sync_if_profiles_changed() is True
     assert registry.get("pod_trend")["daily_budget_eur"] == 1.5
+
+
+def test_pace_bounds_and_choice(firm_env, monkeypatch):
+    from firm import desk, db
+    assert desk.pace_bounds(0.95)[1] == 0.50 and desk.pace_bounds(0.8)[1] == 0.75 and desk.pace_bounds(0.3)[1] == 1.0
+    monkeypatch.setattr("firm.charts.regime", lambda *a, **k: dict(vix_percentile=0.95))
+    monkeypatch.setattr("firm.fundrisk.portfolio", lambda *a, **k: dict(lordo=1.5, leva=0.5))
+    import llm.runtime as rt
+    monkeypatch.setattr(rt, "call", lambda *a, **k: dict(ok=True, output=dict(ritmo_pct=90.0, motivo="prova")))      # il Capo vorrebbe 90%
+    r = desk.refresh_pace()
+    assert r["max_turnover"] == 0.5 and r["fonte"] == "Capo"                                                       # il codice lo porta al massimo della fascia
+    monkeypatch.setattr(rt, "call", lambda *a, **k: dict(ok=False, motivo="giu"))
+    assert desk.refresh_pace()["max_turnover"] == 0.33                                                             # senza Capo: predefinito
+    assert db.runtime_get("desk.overlay")["max_turnover"] == 0.33

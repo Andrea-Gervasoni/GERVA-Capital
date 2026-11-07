@@ -51,6 +51,10 @@ volmgmt:                   # leva gestita per volatilita' (prova con: firm.py vo
   lo: 0.6                    # moltiplicatore minimo (mercato agitato)
   hi: 1.4                    # moltiplicatore massimo (mercato calmo)
 
+pace:                      # ritmo di ingresso: quanto puo' COMPRARE GERVA-Q in un giorno (in % del conto); lo sceglie il Capo
+  enabled: true
+  min_pct: 15                # il Capo non puo' scendere sotto il 15% del conto al giorno
+
 release:
   any_day: true               # scelta di Andrea del 6/11: i rilasci di GERVA-Q si applicano quando serve (sempre backup, changelog e audit)
   weekday: 6                 # 0 = lunedi' ... 6 = domenica (REGOLE_SFIDA regola 7)

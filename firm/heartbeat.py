@@ -181,6 +181,10 @@ def beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
                 notes.append(f"leva gestita: x{desk.refresh_scale()['mult']}")
             except Exception:
                 pass
+            try:
+                notes.append(f"ritmo di ingresso: {desk.refresh_pace()['max_turnover'] * 100:.0f}% del conto al giorno")
+            except Exception:
+                pass
             woke += r.get("desk", [])
             notes.append(f"desk: {len(r.get('targets', {}))} titoli proposti" if r.get("ok") else f"desk: {r.get('nota', '')}")
         except Exception as e:                               # un errore del desk non ferma il battito

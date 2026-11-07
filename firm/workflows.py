@@ -35,6 +35,7 @@ def arr(items: dict) -> dict:
 # 1. REDAZIONE: triage -> verifica su seconda fonte -> bollettino
 # ===========================================================================
 DESK_PROPOSAL = obj({"proposte": arr(obj({"simbolo": S_STR, "peso_pct": {"type": "number"}, "motivo": S_STR})), "nota": S_STR})
+PACE = obj({"ritmo_pct": {"type": "number"}, "motivo": S_STR})
 OUTLOOK = obj({"previsioni": arr(obj({"orizzonte_giorni": {"type": "integer"}, "p_sopra": {"type": "number"}, "mediana_pct": {"type": "number"}})), "motivo": S_STR})
 SIGNAL_PARSE = obj({"moneta": S_STR, "direzione": {"type": "string", "enum": ["long", "short"]}, "ingresso": {"type": "number"},
                     "stop": {"type": "number"}, "obiettivi": arr({"type": "number"})})

@@ -118,7 +118,8 @@ def write_overlay(result: dict, today: dt.date | None = None) -> dict:
     prev = db.runtime_get("desk.overlay") or {}
     doc = dict(data=today.isoformat(), targets=result["targets"], per_desk=result["per_desk"], regole=caps(),
                crypto_targets=prev.get("crypto_targets", {}), crypto_data=prev.get("crypto_data"),   # le posizioni dei segnali non si perdono
-               scale_mult=prev.get("scale_mult"), scale_data=prev.get("scale_data"))
+               scale_mult=prev.get("scale_mult"), scale_data=prev.get("scale_data"),
+               max_turnover=prev.get("max_turnover"), turnover_data=prev.get("turnover_data"))
     save_overlay(doc)
     audit.log("desk", "desk.overlay", dict(data=doc["data"], titoli=len(doc["targets"]), totale=round(sum(doc["targets"].values()), 4),
                                            scartate=len(result["scartate"])))
@@ -141,6 +142,50 @@ def refresh_scale(today: dt.date | None = None) -> dict:
     save_overlay(dict(doc, scale_mult=mult, scale_data=today.isoformat()))
     audit.log("desk", "desk.scale", dict(mult=mult, info=info))
     return dict(mult=mult, **{k: v for k, v in info.items() if k != "mult"})
+
+
+def pace_bounds(vix_pctl: float | None) -> tuple[float, float, float]:
+    """(minimo, massimo, predefinito) del ritmo di acquisto giornaliero, in frazione del conto, secondo la tensione del mercato.
+    Il Capo sceglie dentro [minimo, massimo]; il codice non lo lascia uscire. Mercato sotto tensione: massimo piu' basso."""
+    lo = float(S.get("pace.min_pct", 15)) / 100.0
+    if vix_pctl is not None and vix_pctl >= 0.90:
+        return lo, 0.50, 0.33
+    if vix_pctl is not None and vix_pctl >= 0.75:
+        return lo, 0.75, 0.50
+    return lo, 1.0, 1.0
+
+
+def refresh_pace(today: dt.date | None = None) -> dict:
+    """Il Capo sceglie il ritmo di ingresso (quanto comprare al giorno), con motivo; il codice lo limita e lo scrive per GERVA-Q
+    (max_turnover). Se il Capo non risponde: valore predefinito della fascia. Spento (pace.enabled=false): nessun tetto (1.0)."""
+    from . import charts, fundrisk, workflows as W
+    from llm import runtime
+    today = today or dt.date.today()
+    doc = db.runtime_get("desk.overlay") or dict(data=today.isoformat(), targets={}, per_desk={}, regole=caps())
+    if not S.get("pace.enabled", True):
+        save_overlay(dict(doc, max_turnover=1.0, turnover_data=today.isoformat()))
+        return dict(max_turnover=1.0, nota="spento")
+    reg = charts.regime()
+    vp = reg.get("vix_percentile")
+    lo, hi, default = pace_bounds(vp)
+    pf = fundrisk.portfolio()
+    pick, motivo, fonte = default, "valore predefinito della fascia", "regola"
+    try:
+        r = runtime.call("capo", "Scegli il RITMO DI INGRESSO: quanta parte del conto GERVA-Q puo' COMPRARE al giorno (in % del conto) mentre porta "
+                                 f"il portafoglio all'obiettivo (esposizione lorda attesa {pf['lordo'] * 100:.0f}% del conto). Le vendite non hanno tetto. "
+                                 f"Limiti del codice: tra {lo * 100:.0f}% e {hi * 100:.0f}% al giorno. Piu' alto = piu' veloce all'obiettivo e piu' esposto "
+                                 "al giorno di ingresso; piu' basso = prezzo medio mediato su piu' giorni. Motiva con il regime di mercato.",
+                         data=dict(regime=reg, esposizione_lorda_attesa=pf["lordo"], leva=pf["leva"], limiti_pct=[round(lo * 100), round(hi * 100)],
+                                   libro=W.libro_posizioni()), schema=W.PACE, purpose="ritmo", status_label="pensa")
+        if r["ok"]:
+            v = float(r["output"]["ritmo_pct"]) / 100.0
+            if v == v:
+                pick, motivo, fonte = min(max(v, lo), hi), str(r["output"].get("motivo", ""))[:300], "Capo"
+    except Exception:
+        pass
+    save_overlay(dict(doc, max_turnover=round(pick, 3), turnover_data=today.isoformat()))
+    audit.log("capo", "desk.pace", dict(max_turnover=round(pick, 3), fonte=fonte, motivo=motivo, vix_percentile=vp, limiti=[lo, hi]))
+    return dict(max_turnover=round(pick, 3), fonte=fonte, motivo=motivo, limiti=[lo, hi], vix_percentile=vp)
 
 
 def cycle(today: dt.date | None = None) -> dict:
