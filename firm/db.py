@@ -143,6 +143,9 @@ CREATE TABLE IF NOT EXISTS fills_all (
   id INTEGER PRIMARY KEY AUTOINCREMENT, ext_id TEXT UNIQUE, venue TEXT, ts TEXT, symbol TEXT, side TEXT, qty REAL, price REAL,
   fee REAL, currency TEXT, status TEXT, order_id TEXT, origine TEXT, agent TEXT
 );
+CREATE TABLE IF NOT EXISTS dossiers (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, ext_id TEXT UNIQUE, ts TEXT, symbol TEXT, data TEXT
+);
 CREATE TABLE IF NOT EXISTS lessons (
   id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, trade_key TEXT UNIQUE, agent TEXT, giudizio TEXT, cosa TEXT, lezione TEXT, regola TEXT
 );

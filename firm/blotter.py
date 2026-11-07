@@ -42,6 +42,13 @@ def attribute(symbol: str) -> dict:
 
 
 def record(venue: str, ext_id: str, ts: str, symbol: str, side: str, qty, price, fee, currency: str, status: str, order_id: str, origine: dict, agent=None) -> None:
+    if not db.one("SELECT 1 FROM fills_all WHERE ext_id=?", (ext_id,)):
+        try:                                                    # le prove si salvano PRIMA di sapere come va a finire
+            from . import dossier
+            hz = 1 if origine.get("kind") in ("free", "algo") else 5
+            dossier.save(ext_id, symbol, dossier.build(symbol, origine, hz))
+        except Exception:
+            pass
     db.ex("INSERT OR IGNORE INTO fills_all(ext_id,venue,ts,symbol,side,qty,price,fee,currency,status,order_id,origine,agent) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",
           (ext_id, venue, ts, symbol, side, qty, price, fee or 0.0, currency, status, order_id, json.dumps(origine, ensure_ascii=False), agent or origine.get("agent")))
 
@@ -298,4 +305,10 @@ def story(key: str) -> dict:
     else:
         steps.append(dict(chi=dict(id="", nome="Origine non tracciata", ruolo=""), cosa="operazione eseguita prima che la plancia esistesse o non attribuibile", testo="", evidenze=[], dati={}))
     les = db.one("SELECT * FROM lessons WHERE trade_key=?", (key,))
-    return dict(ok=True, operazione=t, passi=steps, lezione=les)
+    from . import dossier
+    first = db.one("SELECT ext_id FROM fills_all WHERE venue=? AND symbol=? AND ts=? ORDER BY id LIMIT 1", (t["venue"], t["simbolo"], t["aperta_il"]))
+    dos = dossier.get(first["ext_id"]) if first else None
+    graf = dossier.chart(t["simbolo"])
+    if graf:
+        graf["segni"] = [dict(d=t["aperta_il"][:10], px=t["ingresso"], tipo="ingresso", lato=t["lato"])] + ([dict(d=t["chiusa_il"][:10], px=t["uscita"], tipo="uscita")] if t.get("chiusa_il") else [])
+    return dict(ok=True, operazione=t, passi=steps, lezione=les, dossier=dos, grafico=graf)

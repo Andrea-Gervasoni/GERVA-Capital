@@ -13,7 +13,7 @@ const QC = (() => {
   }
   function setup(canvas, w, h) {
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+    canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); canvas.style.height = h + "px";
     const x = canvas.getContext("2d"); x.setTransform(dpr, 0, 0, dpr, 0, 0);
     theme(); x.clearRect(0, 0, w, h); x.font = FONT; x.textBaseline = "middle";
     return x;
@@ -46,6 +46,7 @@ const QC = (() => {
   const f0 = (v) => v.toFixed(0), f1 = (v) => v.toFixed(1), pc = (v) => (v * 100).toFixed(0) + "%";
 
   function price(canvas, d, w = 860, h = 320) {
+    w = Math.max(320, canvas.clientWidth || canvas.parentElement.clientWidth || w);   // la larghezza vera: niente stiramenti
     const x = setup(canvas, w, h), pad = { l: 56, r: 12, t: 22, b: 24 }, n = d.close.length;
     const all = finite([...d.close, ...d.bb_su, ...d.bb_giu, ...d.ema200]); const lo = Math.min(...all) * 0.98, hi = Math.max(...all) * 1.02;
     const g = frame(x, w, h, lo, hi, 5, (v) => (hi > 200 ? f0(v) : v.toFixed(2)), pad), xf = xs(n, g.L, g.R);
@@ -61,6 +62,7 @@ const QC = (() => {
     dates(x, d.date, g.L, g.R, g.B, h);
   }
   function rsi(canvas, d, w = 860, h = 120) {
+    w = Math.max(320, canvas.clientWidth || canvas.parentElement.clientWidth || w);   // la larghezza vera: niente stiramenti
     const x = setup(canvas, w, h), pad = { l: 56, r: 12, t: 16, b: 8 }, n = d.rsi.length;
     const g = frame(x, w, h, 0, 100, 2, f0, pad), xf = xs(n, g.L, g.R);
     x.fillStyle = "rgba(198,54,43,0.14)"; x.fillRect(g.L, g.y(100), g.R - g.L, g.y(70) - g.y(100));
@@ -69,12 +71,14 @@ const QC = (() => {
     x.fillStyle = K.text; x.textAlign = "left"; x.fillText("RSI(14): sopra 70 ipercomprato, sotto 30 ipervenduto", g.L + 6, 8);
   }
   function vol(canvas, d, w = 860, h = 110) {
+    w = Math.max(320, canvas.clientWidth || canvas.parentElement.clientWidth || w);   // la larghezza vera: niente stiramenti
     const x = setup(canvas, w, h), pad = { l: 56, r: 12, t: 16, b: 8 }, n = d.vol20.length, v = finite(d.vol20);
     const hi = Math.max(...v) * 1.1, g = frame(x, w, h, 0, hi, 2, pc, pad), xf = xs(n, g.L, g.R);
     line(x, d.vol20, xf, g.y, K.cyan, 1.6);
     x.fillStyle = K.text; x.textAlign = "left"; x.fillText("volatilità realizzata a 20 giorni (annua)", g.L + 6, 8);
   }
   function drawdown(canvas, d, w = 860, h = 110) {
+    w = Math.max(320, canvas.clientWidth || canvas.parentElement.clientWidth || w);   // la larghezza vera: niente stiramenti
     const x = setup(canvas, w, h), pad = { l: 56, r: 12, t: 16, b: 8 }, n = d.drawdown.length, lo = Math.min(...d.drawdown, -0.02) * 1.1;
     const g = frame(x, w, h, lo, 0, 2, pc, pad), xf = xs(n, g.L, g.R);
     x.beginPath(); x.moveTo(xf(0), g.y(0)); d.drawdown.forEach((v, i) => x.lineTo(xf(i), g.y(v))); x.lineTo(xf(n - 1), g.y(0)); x.closePath();
@@ -82,6 +86,7 @@ const QC = (() => {
     x.fillStyle = K.text; x.textAlign = "left"; x.fillText("drawdown dal massimo del periodo", g.L + 6, 8);
   }
   function equity(canvas, e, w = 860, h = 240) {
+    w = Math.max(320, canvas.clientWidth || canvas.parentElement.clientWidth || w);   // la larghezza vera: niente stiramenti
     const x = setup(canvas, w, h), pad = { l: 56, r: 12, t: 22, b: 24 };
     const all = [...e.conto, ...e.spy], tt = (p) => new Date(p.t).getTime();
     if (!e.conto.length) { x.fillStyle = K.text; x.fillText("Il grafico parte appena la società ha letto il conto da IBKR.", 20, h / 2); return; }
@@ -95,6 +100,7 @@ const QC = (() => {
     x.fillStyle = K.text; x.textAlign = "center"; [0, 0.5, 1].forEach((f) => x.fillText(new Date(t0 + f * (t1 - t0)).toISOString().slice(5, 10), g.L + f * (g.R - g.L), h - 10));
   }
   function heat(canvas, c, w = 860) {
+    w = Math.max(320, canvas.clientWidth || canvas.parentElement.clientWidth || w);   // la larghezza vera: niente stiramenti
     const n = c.simboli.length, cell = Math.min(34, Math.floor((w - 70) / Math.max(n, 1))), h = 30 + n * cell + 8;
     const x = setup(canvas, w, h); x.textAlign = "center";
     const col = (v) => (v >= 0 ? `rgba(252,108,58,${0.12 + 0.88 * v})` : `rgba(10,58,229,${0.12 + 0.88 * -v})`);
@@ -107,6 +113,7 @@ const QC = (() => {
 
   const eur = (v) => (Math.abs(v) >= 1e6 ? (v / 1e6).toFixed(2) + " M" : (v / 1e3).toFixed(0) + " k");
   function fan(canvas, m, w = 860, h = 300) {
+    w = Math.max(320, canvas.clientWidth || canvas.parentElement.clientWidth || w);   // la larghezza vera: niente stiramenti
     const x = setup(canvas, w, h), pad = { l: 64, r: 78, t: 22, b: 24 }, F = m.ventaglio, n = m.passi.length;
     const all = [...F["5"], ...F["95"], m.kill_livello, m.nav0], lo = Math.min(...all) * 0.97, hi = Math.max(...all) * 1.03;
     const g = frame(x, w, h, lo, hi, 5, eur, pad), xf = xs(n, g.L, g.R);
@@ -121,6 +128,7 @@ const QC = (() => {
     legend(x, [["mediana", K.gold], ["50% dei casi", "rgba(10,58,229,0.55)"], ["90% dei casi", "rgba(10,58,229,0.25)"], ["capitale oggi", K.paper]], g.L, 0);
   }
   function hist(canvas, m, w = 860, h = 190) {
+    w = Math.max(320, canvas.clientWidth || canvas.parentElement.clientWidth || w);   // la larghezza vera: niente stiramenti
     const x = setup(canvas, w, h), pad = { l: 40, r: 12, t: 18, b: 26 }, c = m.istogramma.conteggi, e = m.istogramma.bordi, mx = Math.max(...c);
     const L = pad.l, R = w - pad.r, T = pad.t, B = h - pad.b, bw = (R - L) / c.length, lo = e[0], hi = e[e.length - 1], xv = (v) => L + ((v - lo) / (hi - lo)) * (R - L);
     c.forEach((v, i) => { const mid = (e[i] + e[i + 1]) / 2, bh = (v / mx) * (B - T); x.fillStyle = mid < 0 ? "rgba(198,54,43,0.8)" : "rgba(18,128,74,0.8)"; x.fillRect(L + i * bw + 1, B - bh, bw - 2, bh); });
@@ -129,6 +137,7 @@ const QC = (() => {
     x.textAlign = "left"; x.fillText("come finisce l'anno, su 5.000 percorsi (rosso = in perdita)", L + 4, 8);
   }
   function bars(canvas, rows, w = 860) {
+    w = Math.max(320, canvas.clientWidth || canvas.parentElement.clientWidth || w);   // la larghezza vera: niente stiramenti
     const rh = 26, h = 14 + rows.length * rh, x = setup(canvas, w, h), L = 210, R = w - 340, mx = Math.max(...rows.map((r) => Math.abs(r.v)), 1e-9);
     rows.forEach((r, i) => {
       const y = 8 + i * rh, bw = (Math.abs(r.v) / mx) * (R - L);
@@ -139,6 +148,7 @@ const QC = (() => {
   }
 
   function expect(canvas, e, zoom, w = 860, h = 340) {
+    w = Math.max(320, canvas.clientWidth || canvas.parentElement.clientWidth || w);   // la larghezza vera: niente stiramenti
     const x = setup(canvas, w, h), pad = { l: 64, r: 76, t: 24, b: 26 }, T0 = new Date(e.registrata.slice(0, 19) + "Z").getTime(), T1 = T0 + zoom * 86400000;
     const tm = (iso) => new Date(iso.slice(0, 19) + (iso.endsWith("Z") ? "" : "Z")).getTime();
     const idx = e.date.map((d, i) => [tm(d), i]).filter(([t]) => t <= T1 + 86400000).map(([, i]) => i);

@@ -173,6 +173,12 @@ def beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
             signals.track()
         except Exception as e:
             notes.append(f"segnali: {str(e)[:80]}")
+    if now.hour >= 20 and _once(f"revisione-trade:{day}"):     # la sera: argomenti a favore e contro per ogni operazione nuova
+        try:
+            from . import dossier
+            notes.append(f"revisione trade: {dossier.review_daily().get('riviste', 0)} operazioni")
+        except Exception as e:
+            notes.append(f"revisione trade non fatta: {str(e)[:60]}")
     if now.hour >= 21 and _once(f"lezioni:{day}"):             # a fine giornata: cosa si e' imparato dalle operazioni chiuse
         try:
             from . import lessons

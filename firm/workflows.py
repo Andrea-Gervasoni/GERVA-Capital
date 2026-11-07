@@ -53,6 +53,7 @@ FREE_TRADES = obj({"trades": arr(obj({
     "richiamami_tra_minuti": {"type": "integer", "description": "tra quanti minuti vuoi essere richiamato per decidere di nuovo (1-1440); 0 = al giro normale. Ogni chiamata costa."}})
 LESSONS = obj({"lezioni": arr(obj({"chiave": S_STR, "giudizio": {"type": "string", "enum": ["errore", "tecnica_vincente", "rumore"]},
                                     "cosa_e_successo": S_STR, "lezione": S_STR, "regola_per_il_futuro": S_STR}))})
+TRADE_REVIEW = obj({"valutazioni": arr(obj({"chiave": S_STR, "argomento": S_STR, "indicatori_usati": arr(S_STR), "probabilita_guadagno": {"type": "number"}}))})
 IDEA_REVIEW = obj({"decisione": {"type": "string", "enum": ["porta_su", "rimanda", "scarta"]}, "motivo": S_STR,
                    "miglioramenti": S_STR, "probabilita_successo": {"type": "number"}})
 PACE = obj({"ritmo_pct": {"type": "number"}, "motivo": S_STR})

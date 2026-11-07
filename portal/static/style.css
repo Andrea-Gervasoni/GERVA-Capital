@@ -209,9 +209,8 @@ th.sort { cursor: pointer; }
 .bar { display: inline-block; height: 6px; border-radius: 3px; background: var(--cobalt); vertical-align: middle; }
 
 /* grafici */
-canvas.chart { display: block; width: 100%; height: 280px; margin: 8px 0 14px; border-radius: var(--r-sm); background: var(--glass); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: inset 0 1px 0 var(--rim-hi); }
+canvas.chart { display: block; width: 100%; margin: 8px 0 14px; border-radius: var(--r-sm); background: var(--glass); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: inset 0 1px 0 var(--rim-hi); }
 .card canvas.chart { background: transparent; box-shadow: none; margin: 0; }
-#c-rsi, #c-vol, #c-dd { height: 170px; }
 .chart.empty { padding: 30px; text-align: center; color: var(--muted); }
 .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px; }
 .charts .chart svg { width: 100%; height: auto; }
