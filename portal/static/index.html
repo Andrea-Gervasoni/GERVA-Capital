@@ -2,76 +2,65 @@
 <html lang="it">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="andrea-token" content="{{ANDREA_TOKEN}}">
+<meta name="color-scheme" content="light dark">
 <title>GERVA Capital</title>
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-<header id="top">
-  <div class="brand"><canvas id="logo" width="30" height="30"></canvas><div><div class="name">GERVA <span>CAPITAL</span></div><div class="tagline">trading quantitativo · società di agenti</div></div></div>
-  <div class="mode"><span class="paper">PAPER</span><span class="live" title="LIVE bloccato: servono i cancelli 13-15 della sfida e la firma dei titolari del conto">🔒 LIVE</span></div>
-  <div class="kpis">
-    <div class="k"><div class="l">IBKR (azioni)</div><div id="k-nav" class="v">—</div><div id="k-navsub" class="s"></div></div>
-    <div class="k"><div class="l">Alpaca (crypto)</div><div id="k-alp" class="v">—</div><div id="k-alpsub" class="s"></div></div>
-    <div class="k"><div class="l">Totale</div><div id="k-tot" class="v">—</div><div id="k-totsub" class="s"></div></div>
-    <div class="k"><div class="l">P&amp;L</div><div id="k-pnl" class="v">—</div></div>
-    <div class="k"><div class="l">Rischio</div><div id="k-risk" class="v">—</div></div>
-    <div class="k wide"><div class="l">Edificio</div><div id="k-lvl" class="v">—</div><div class="lvlbar"><i id="k-lvlbar"></i></div><div id="k-lvlnext" class="s"></div></div>
-    <div class="k"><div class="l">API oggi</div><div id="k-bud" class="v">—</div></div>
-    <div class="k"><div class="l">Autonomia</div><div id="k-days" class="v">—</div></div>
-    <div class="k"><div class="l">Audit</div><div id="k-chain" class="v">—</div></div>
-  </div>
-</header>
-<div id="banner-demo" class="banner demo hidden">DEMO — database var/demo/: mercato SINTETICO e attività dimostrativa, nessun dato reale</div>
-<div id="banner-sim" class="banner sim hidden">SIMULAZIONE — nessuna chiave API: gli agenti rispondono in modo prudente e finto (costo zero)</div>
+<div class="aurora" aria-hidden="true"><i class="a1"></i><i class="a2"></i><i class="a3"></i></div>
 
-<main>
-  <section id="stage"><canvas id="office" tabindex="0" role="img" aria-label="Edificio di GERVA Capital: uffici, persone e sala riunioni in tempo reale"></canvas><div id="zoom"><button data-z="1.25" title="Avvicina">＋</button><button data-z="0.8" title="Allontana">－</button><button data-z="fit" title="Tutto l'edificio">⤢</button><span>rotella: zoom · trascina · doppio clic: stanza</span></div></section>
-  <aside id="side">
-    <nav id="menu">
-      <button data-panel="persone">◉ Persone</button>
-      <button data-panel="riunioni">◎ Riunioni</button>
-      <button data-panel="report">▤ Report</button>
-      <button data-panel="edificio">⌂ Edificio</button>
-      <button data-panel="pod">◈ Desk</button>
-      <button data-panel="grafici">▦ Grafici</button>
-      <button data-panel="plancia">▣ Plancia</button>
-      <button data-panel="segnali">⚡ Segnali</button>
-      <button data-panel="ricerca">⚗ Ricerca</button>
-      <button data-panel="compiti">▸ Compiti</button>
-      <button data-panel="posta">✉ Posta <em id="mailn"></em></button>
-      <button data-panel="org">☷ Organigramma</button>
-      <button data-panel="gateway">⇄ Gateway</button>
-      <button data-panel="impostazioni">⚙ Impostazioni</button>
-      <button id="sound">Suoni OFF</button>
-    </nav>
-    <h4>Cosa succede</h4>
-    <ul id="feed"></ul>
-    <div class="legend">Clic su una persona per la scheda. Deleghe, consegne, riunioni, promozioni e allarmi seguono gli <b>eventi veri</b> con il loro testo; pause e chiacchiere sono animazioni d'ambiente. I robot sono automi (codice).</div>
-  </aside>
+<header class="topbar">
+  <nav class="lg nav" aria-label="Sezioni">
+    <a class="brand" href="#/panoramica" aria-label="GERVA Capital, panoramica">
+      <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><circle cx="16" cy="16" r="15" class="logo-ring"/><path d="M22.5 11.2A8 8 0 1 0 24 17h-7.5" class="logo-g"/><circle cx="24.6" cy="9" r="2.4" class="logo-dot"/></svg>
+      <span class="wordmark">GERVA <em>Capital</em></span>
+    </a>
+    <div class="tabs" id="tabs" role="tablist">
+      <button data-go="panoramica">Panoramica</button>
+      <button data-go="plancia">Plancia</button>
+      <button data-go="persone">Azienda</button>
+      <button data-go="idee">Idee</button>
+      <button data-go="grafici">Mercati</button>
+      <button data-go="segnali">Segnali</button>
+      <button data-go="ricerca">Ricerca</button>
+      <button data-go="posta">Posta <em id="mailn" class="count"></em></button>
+      <button data-go="impostazioni" aria-label="Impostazioni">Impostazioni</button>
+    </div>
+    <div class="status">
+      <span class="pill paper" title="Conto simulato: nessun soldo vero">Paper</span>
+      <span class="pill" id="live-pill"><i class="dot"></i><span id="live-txt">—</span></span>
+      <button class="pill theme" id="theme" aria-label="Cambia tema chiaro/scuro" title="Tema chiaro o scuro"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 2v16a8 8 0 0 1 0-16z"/></svg></button>
+    </div>
+  </nav>
+</header>
+
+<div id="banner-demo" class="banner hidden">Demo: database di prova, mercato sintetico, nessun dato reale.</div>
+<div id="banner-sim" class="banner hidden">Simulazione: nessuna chiave API, gli agenti rispondono in modo prudente e finto (costo zero).</div>
+
+<main class="view">
+  <div class="subnav" id="subnav" role="tablist"></div>
+  <h1 id="pnl-title" class="page-title"></h1>
+  <section id="pnl-body" class="page"></section>
 </main>
 
-<footer>
-  <form id="cmd"><label class="p" for="cmdtext">▶ Parla al Capo</label><input id="cmdtext" autocomplete="off" maxlength="2000" placeholder="es. «Fammi un riepilogo del rischio di oggi»"><button>Invia</button></form>
-</footer>
+<form id="cmd" class="lg cmd" autocomplete="off">
+  <label for="cmdtext">Parla al Capo</label>
+  <input id="cmdtext" maxlength="2000" placeholder="Es. «Fammi un riepilogo del rischio di oggi»">
+  <button class="btn primary">Invia</button>
+</form>
 
-<div id="tip" class="hidden"></div>
 <div id="toast" role="alert" hidden></div>
-<div id="dialog" class="win hidden" role="dialog" aria-modal="false" aria-labelledby="dlg-head">
-  <div class="wh"><div id="dlg-head" class="dh"></div><button class="x" data-close="dialog" aria-label="Chiudi la scheda">✕</button></div>
-  <div class="tabs" id="dlg-tabs"></div>
-  <div class="wb" id="dlg-body"></div>
-</div>
-<div id="panel" class="win hidden" role="dialog" aria-modal="false" aria-labelledby="pnl-title">
-  <div class="wh"><span id="pnl-title"></span><button class="x" data-close="panel" aria-label="Chiudi il pannello">✕</button></div>
-  <div class="wb" id="pnl-body"></div>
-</div>
+<div id="scrim" class="scrim hidden"></div>
+<aside id="dialog" class="lg sheet hidden" role="dialog" aria-modal="true" aria-labelledby="dlg-head">
+  <div class="sheet-head"><div id="dlg-head" class="who"></div><button class="x" data-close="dialog" aria-label="Chiudi la scheda">✕</button></div>
+  <div class="seg" id="dlg-tabs"></div>
+  <div class="sheet-body" id="dlg-body"></div>
+</aside>
 
-<script src="/static/gfx.js"></script>
-<script src="/static/world.js"></script>
-<script src="/static/sim.js"></script>
 <script src="/static/charts.js"></script>
-<script src="/static/ui.js"></script>
+<script src="/static/app.js"></script>
 </body>
 </html>

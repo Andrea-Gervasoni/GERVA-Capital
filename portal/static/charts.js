@@ -1,15 +1,21 @@
 // Grafici quant del portale: gli indicatori che usano i bot di trading, disegnati sui prezzi veri.
 // Solo lettura: i dati arrivano da /api/charts/* (firm/charts.py); niente librerie esterne (CSP: script-src 'self').
 const QC = (() => {
-  const K = { grid: "#2c3a6e", text: "#98a0bc", paper: "#f3ead2", cyan: "#5ec8d8", gold: "#e3b24a", red: "#d8473a", green: "#4fb06a",
-              band: "rgba(94,200,216,0.12)", bandLine: "rgba(94,200,216,0.5)" };
-  const FONT = '15px "VT323", monospace';
-
+  // colori e carattere presi dal tema della pagina (chiaro o scuro), a ogni disegno
+  const K = {};
+  let FONT = '12px "General Sans", sans-serif';
+  function theme() {
+    const st = getComputedStyle(document.documentElement), v = (n, d) => (st.getPropertyValue(n) || "").trim() || d;
+    const c1 = v("--c1", "#0A3AE5");
+    Object.assign(K, { grid: v("--chart-grid", "rgba(0,0,0,.1)"), text: v("--chart-text", "rgba(0,0,0,.55)"), paper: v("--text", "#14151F"), cyan: c1, gold: v("--c2", "#FC6C3A"),
+      red: v("--c4", "#c6362b"), green: v("--c3", "#12804a"), band: "rgba(10,58,229,0.10)", bandLine: "rgba(10,58,229,0.45)" });
+    FONT = '12px "General Sans", -apple-system, sans-serif';
+  }
   function setup(canvas, w, h) {
     const dpr = window.devicePixelRatio || 1;
     canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
     const x = canvas.getContext("2d"); x.setTransform(dpr, 0, 0, dpr, 0, 0);
-    x.fillStyle = "#0b0a14"; x.fillRect(0, 0, w, h); x.font = FONT; x.textBaseline = "middle";
+    theme(); x.clearRect(0, 0, w, h); x.font = FONT; x.textBaseline = "middle";
     return x;
   }
   const finite = (a) => a.filter((v) => v != null && isFinite(v));
@@ -57,8 +63,8 @@ const QC = (() => {
   function rsi(canvas, d, w = 860, h = 120) {
     const x = setup(canvas, w, h), pad = { l: 56, r: 12, t: 16, b: 8 }, n = d.rsi.length;
     const g = frame(x, w, h, 0, 100, 2, f0, pad), xf = xs(n, g.L, g.R);
-    x.fillStyle = "rgba(216,71,58,0.14)"; x.fillRect(g.L, g.y(100), g.R - g.L, g.y(70) - g.y(100));
-    x.fillStyle = "rgba(79,176,106,0.14)"; x.fillRect(g.L, g.y(30), g.R - g.L, g.y(0) - g.y(30));
+    x.fillStyle = "rgba(198,54,43,0.14)"; x.fillRect(g.L, g.y(100), g.R - g.L, g.y(70) - g.y(100));
+    x.fillStyle = "rgba(18,128,74,0.14)"; x.fillRect(g.L, g.y(30), g.R - g.L, g.y(0) - g.y(30));
     line(x, d.rsi, xf, g.y, K.gold, 1.6);
     x.fillStyle = K.text; x.textAlign = "left"; x.fillText("RSI(14): sopra 70 ipercomprato, sotto 30 ipervenduto", g.L + 6, 8);
   }
@@ -72,7 +78,7 @@ const QC = (() => {
     const x = setup(canvas, w, h), pad = { l: 56, r: 12, t: 16, b: 8 }, n = d.drawdown.length, lo = Math.min(...d.drawdown, -0.02) * 1.1;
     const g = frame(x, w, h, lo, 0, 2, pc, pad), xf = xs(n, g.L, g.R);
     x.beginPath(); x.moveTo(xf(0), g.y(0)); d.drawdown.forEach((v, i) => x.lineTo(xf(i), g.y(v))); x.lineTo(xf(n - 1), g.y(0)); x.closePath();
-    x.fillStyle = "rgba(216,71,58,0.35)"; x.fill(); line(x, d.drawdown, xf, g.y, K.red, 1.4);
+    x.fillStyle = "rgba(198,54,43,0.35)"; x.fill(); line(x, d.drawdown, xf, g.y, K.red, 1.4);
     x.fillStyle = K.text; x.textAlign = "left"; x.fillText("drawdown dal massimo del periodo", g.L + 6, 8);
   }
   function equity(canvas, e, w = 860, h = 240) {
@@ -91,11 +97,11 @@ const QC = (() => {
   function heat(canvas, c, w = 860) {
     const n = c.simboli.length, cell = Math.min(34, Math.floor((w - 70) / Math.max(n, 1))), h = 30 + n * cell + 8;
     const x = setup(canvas, w, h); x.textAlign = "center";
-    const col = (v) => (v >= 0 ? `rgba(227,178,74,${0.12 + 0.88 * v})` : `rgba(94,200,216,${0.12 + 0.88 * -v})`);
+    const col = (v) => (v >= 0 ? `rgba(252,108,58,${0.12 + 0.88 * v})` : `rgba(10,58,229,${0.12 + 0.88 * -v})`);
     c.simboli.forEach((s, i) => {
       x.fillStyle = K.text; x.textAlign = "right"; x.fillText(s, 62, 30 + i * cell + cell / 2);
       x.save(); x.translate(70 + i * cell + cell / 2, 24); x.rotate(-Math.PI / 4); x.textAlign = "left"; x.fillText(s, 0, 0); x.restore();
-      c.matrice[i].forEach((v, j) => { x.fillStyle = col(v); x.fillRect(70 + j * cell, 30 + i * cell, cell - 1, cell - 1); if (cell >= 26) { x.fillStyle = "#0b0a14"; x.textAlign = "center"; x.fillText(v.toFixed(1), 70 + j * cell + cell / 2, 30 + i * cell + cell / 2); } });
+      c.matrice[i].forEach((v, j) => { x.fillStyle = col(v); x.fillRect(70 + j * cell, 30 + i * cell, cell - 1, cell - 1); if (cell >= 26) { x.fillStyle = Math.abs(v) > 0.5 ? "#fff" : K.paper; x.textAlign = "center"; x.fillText(v.toFixed(1), 70 + j * cell + cell / 2, 30 + i * cell + cell / 2); } });
     });
   }
 
@@ -105,19 +111,19 @@ const QC = (() => {
     const all = [...F["5"], ...F["95"], m.kill_livello, m.nav0], lo = Math.min(...all) * 0.97, hi = Math.max(...all) * 1.03;
     const g = frame(x, w, h, lo, hi, 5, eur, pad), xf = xs(n, g.L, g.R);
     const band = (a, b, col) => { x.beginPath(); a.forEach((v, i) => (i ? x.lineTo(xf(i), g.y(v)) : x.moveTo(xf(i), g.y(v)))); for (let i = n - 1; i >= 0; i--) x.lineTo(xf(i), g.y(b[i])); x.closePath(); x.fillStyle = col; x.fill(); };
-    band(F["95"], F["5"], "rgba(94,200,216,0.14)"); band(F["75"], F["25"], "rgba(94,200,216,0.28)");
+    band(F["95"], F["5"], "rgba(10,58,229,0.14)"); band(F["75"], F["25"], "rgba(10,58,229,0.28)");
     x.setLineDash([5, 4]); x.strokeStyle = K.paper; x.beginPath(); x.moveTo(g.L, g.y(m.nav0)); x.lineTo(g.R, g.y(m.nav0)); x.stroke();
     x.strokeStyle = K.red; x.beginPath(); x.moveTo(g.L, g.y(m.kill_livello)); x.lineTo(g.R, g.y(m.kill_livello)); x.stroke(); x.setLineDash([]);
     line(x, F["50"], xf, g.y, K.gold, 2.4);
     x.textAlign = "left"; [["95", K.cyan], ["75", K.cyan], ["50", K.gold], ["25", K.cyan], ["5", K.cyan]].forEach(([q, c]) => { x.fillStyle = c; x.fillText(q + "° " + eur(F[q][n - 1]), g.R + 6, g.y(F[q][n - 1])); });
     x.fillStyle = K.red; x.textAlign = "left"; x.fillText("KILL " + eur(m.kill_livello), g.L + 6, g.y(m.kill_livello) - 9);
     x.textAlign = "center"; x.fillStyle = K.text; [0, 0.25, 0.5, 0.75, 1].forEach((f) => x.fillText(Math.round((f * m.giorni) / 21) + " mesi", g.L + f * (g.R - g.L), h - 10));
-    legend(x, [["mediana", K.gold], ["50% dei casi", "rgba(94,200,216,0.55)"], ["90% dei casi", "rgba(94,200,216,0.25)"], ["capitale oggi", K.paper]], g.L, 0);
+    legend(x, [["mediana", K.gold], ["50% dei casi", "rgba(10,58,229,0.55)"], ["90% dei casi", "rgba(10,58,229,0.25)"], ["capitale oggi", K.paper]], g.L, 0);
   }
   function hist(canvas, m, w = 860, h = 190) {
     const x = setup(canvas, w, h), pad = { l: 40, r: 12, t: 18, b: 26 }, c = m.istogramma.conteggi, e = m.istogramma.bordi, mx = Math.max(...c);
     const L = pad.l, R = w - pad.r, T = pad.t, B = h - pad.b, bw = (R - L) / c.length, lo = e[0], hi = e[e.length - 1], xv = (v) => L + ((v - lo) / (hi - lo)) * (R - L);
-    c.forEach((v, i) => { const mid = (e[i] + e[i + 1]) / 2, bh = (v / mx) * (B - T); x.fillStyle = mid < 0 ? "rgba(216,71,58,0.8)" : "rgba(79,176,106,0.8)"; x.fillRect(L + i * bw + 1, B - bh, bw - 2, bh); });
+    c.forEach((v, i) => { const mid = (e[i] + e[i + 1]) / 2, bh = (v / mx) * (B - T); x.fillStyle = mid < 0 ? "rgba(198,54,43,0.8)" : "rgba(18,128,74,0.8)"; x.fillRect(L + i * bw + 1, B - bh, bw - 2, bh); });
     x.strokeStyle = K.paper; x.beginPath(); x.moveTo(xv(0), T); x.lineTo(xv(0), B); x.stroke();
     x.fillStyle = K.text; x.textAlign = "center"; [lo, lo / 2, 0, hi / 2, hi].forEach((v) => x.fillText((v * 100).toFixed(0) + "%", xv(v), h - 10));
     x.textAlign = "left"; x.fillText("come finisce l'anno, su 5.000 percorsi (rosso = in perdita)", L + 4, 8);
@@ -127,7 +133,7 @@ const QC = (() => {
     rows.forEach((r, i) => {
       const y = 8 + i * rh, bw = (Math.abs(r.v) / mx) * (R - L);
       x.fillStyle = K.text; x.textAlign = "right"; x.fillText(r.name, L - 8, y + 11);
-      x.fillStyle = r.v < 0 ? "rgba(216,71,58,0.85)" : "rgba(227,178,74,0.85)"; x.fillRect(L, y + 2, Math.max(bw, 1), 16);
+      x.fillStyle = r.v < 0 ? "rgba(198,54,43,0.85)" : "rgba(252,108,58,0.85)"; x.fillRect(L, y + 2, Math.max(bw, 1), 16);
       x.fillStyle = K.paper; x.textAlign = "left"; x.fillText(r.label, L + Math.max(bw, 1) + 8, y + 11);
     });
   }
@@ -142,8 +148,8 @@ const QC = (() => {
     const lo = Math.min(...vals) * 0.995, hi = Math.max(...vals) * 1.005, g = frame(x, w, h, lo, hi, 5, eur, pad);
     const xf = (t) => g.L + ((t - T0) / (T1 - T0)) * (g.R - g.L);
     const band = (a, b, col) => { x.beginPath(); a.forEach((v, i) => (i ? x.lineTo(xf(ts[i]), g.y(v)) : x.moveTo(xf(ts[i]), g.y(v)))); for (let i = a.length - 1; i >= 0; i--) x.lineTo(xf(ts[i]), g.y(b[i])); x.closePath(); x.fillStyle = col; x.fill(); };
-    band(cut(e.modello["95"]), cut(e.modello["5"]), "rgba(94,200,216,0.10)"); band(cut(e.modello["75"]), cut(e.modello["25"]), "rgba(94,200,216,0.20)");
-    band(cut(e.realistico["95"]), cut(e.realistico["5"]), "rgba(227,178,74,0.12)"); band(cut(e.realistico["75"]), cut(e.realistico["25"]), "rgba(227,178,74,0.26)");
+    band(cut(e.modello["95"]), cut(e.modello["5"]), "rgba(10,58,229,0.10)"); band(cut(e.modello["75"]), cut(e.modello["25"]), "rgba(10,58,229,0.20)");
+    band(cut(e.realistico["95"]), cut(e.realistico["5"]), "rgba(252,108,58,0.12)"); band(cut(e.realistico["75"]), cut(e.realistico["25"]), "rgba(252,108,58,0.26)");
     const ln = (arr, col, wd, dash) => { x.beginPath(); x.strokeStyle = col; x.lineWidth = wd; x.setLineDash(dash || []); arr.forEach((v, i) => (i ? x.lineTo(xf(ts[i]), g.y(v)) : x.moveTo(xf(ts[i]), g.y(v)))); x.stroke(); x.setLineDash([]); };
     ln(cut(e.modello["50"]), K.cyan, 1.6, [6, 4]); ln(cut(e.realistico["50"]), K.gold, 2);
     x.setLineDash([3, 4]); x.strokeStyle = K.grid; x.beginPath(); x.moveTo(g.L, g.y(e.nav0)); x.lineTo(g.R, g.y(e.nav0)); x.stroke(); x.setLineDash([]);

@@ -125,8 +125,9 @@ def _session_ok(tok: str | None) -> bool:
 _attempts: dict[str, list[float]] = {}
 _scrypt_slots = asyncio.Semaphore(2)     # scrypt costa ~50 ms e 16 MB: al massimo due alla volta, fuori dal loop
 # senza sessione si serve SOLO cio' che serve alla pagina di accesso (percorsi esatti, niente prefissi)
-PUBLIC_PATHS = frozenset({"/login", "/logout", "/healthz", "/static/style.css",
-                          "/static/fonts/PressStart2P.woff2", "/static/fonts/VT323.woff2"})
+PUBLIC_PATHS = frozenset({"/login", "/logout", "/healthz", "/static/style.css", "/static/favicon.svg",
+                          "/static/fonts/general-sans-400.woff2", "/static/fonts/general-sans-500.woff2",
+                          "/static/fonts/general-sans-600.woff2", "/static/fonts/bodoni-moda-italic.woff2"})
 
 
 @app.middleware("http")
@@ -528,6 +529,30 @@ def api_free():
     from firm import free_desk as FD
     return _json(dict(regole=FD.active_rules(), trade=db.q("SELECT * FROM free_trades ORDER BY id DESC LIMIT 60"),
                       storia_regole=db.q("SELECT * FROM house_rules ORDER BY id DESC LIMIT 30")))
+
+
+@app.get("/api/feed")
+def api_feed(limit: int = 60):
+    """Gli ultimi eventi (piu' recenti per primi) per la Panoramica."""
+    return _json(events.recent(None, None, min(max(limit, 1), 200)))
+
+
+@app.get("/api/equity")
+def api_equity():
+    """Il conto contro l'S&P 500 (base 100), leggero: senza screener e correlazioni."""
+    try:
+        return _json(charts.equity_vs_benchmark())
+    except Exception as e:
+        return _json(dict(conto=[], spy=[], nota=f"{type(e).__name__}: {str(e)[:120]}"))
+
+
+@app.get("/api/ideas/{iid}")
+def api_idea(iid: int):
+    from firm import ideas as ID
+    d = ID.detail(iid)
+    if not d:
+        raise HTTPException(404)
+    return _json(d)
 
 
 @app.get("/api/ideas")

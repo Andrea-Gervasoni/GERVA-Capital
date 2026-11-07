@@ -115,8 +115,8 @@ def test_portal_rejects_foreign_origin_on_post_and_ws(monkeypatch, firm_env):
 
 def test_portal_exempts_only_exact_static_paths_and_logs_out(monkeypatch, firm_env):
     A, c = _portal(monkeypatch, firm_env)
-    assert c.get("/static/fonts/../ui.js", follow_redirects=False).status_code in (303, 404)
-    assert c.get("/static/fonts/VT323.woff2").status_code == 200
+    assert c.get("/static/fonts/../app.js", follow_redirects=False).status_code in (303, 404)
+    assert c.get("/static/fonts/general-sans-400.woff2").status_code == 200
     r = c.get("/logout", follow_redirects=False)
     assert r.status_code == 303 and "gerva_session=" in r.headers.get("set-cookie", "")
 
