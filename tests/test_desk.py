@@ -55,15 +55,19 @@ def test_profile_changes_reach_the_db_after_pull(firm_env):
     assert registry.get("pod_trend")["daily_budget_eur"] == 1.5
 
 
-def test_pace_bounds_and_choice(firm_env, monkeypatch):
-    from firm import desk, db
-    assert desk.pace_bounds(0.95)[1] == 0.50 and desk.pace_bounds(0.8)[1] == 0.75 and desk.pace_bounds(0.3)[1] == 1.0
+def test_pace_is_decided_by_a_meeting_without_code_caps(firm_env, monkeypatch):
+    from firm import desk, db, meetings
+    calls = []
     monkeypatch.setattr("firm.charts.regime", lambda *a, **k: dict(vix_percentile=0.95))
     monkeypatch.setattr("firm.fundrisk.portfolio", lambda *a, **k: dict(lordo=1.5, leva=0.5))
-    import llm.runtime as rt
-    monkeypatch.setattr(rt, "call", lambda *a, **k: dict(ok=True, output=dict(ritmo_pct=90.0, motivo="prova")))      # il Capo vorrebbe 90%
+    monkeypatch.setattr(meetings, "hold", lambda *a, **k: (calls.append(a[0]) or dict(ok=True, id=len(calls), decisione="100")))
     r = desk.refresh_pace()
-    assert r["max_turnover"] == 0.5 and r["fonte"] == "Capo"                                                       # il codice lo porta al massimo della fascia
-    monkeypatch.setattr(rt, "call", lambda *a, **k: dict(ok=False, motivo="giu"))
-    assert desk.refresh_pace()["max_turnover"] == 0.33                                                             # senza Capo: predefinito
-    assert db.runtime_get("desk.overlay")["max_turnover"] == 0.33
+    assert r["max_turnover"] == 1.0 and r["nuova_riunione"] and calls == ["ritmo"]          # la riunione puo' scegliere 100%: nessun massimo del codice
+    assert db.runtime_get("desk.overlay")["max_turnover"] == 1.0
+    desk.refresh_pace()
+    assert calls == ["ritmo"]                                                              # stessa fascia, pochi giorni: vale l'ultima decisione
+    monkeypatch.setattr("firm.charts.regime", lambda *a, **k: dict(vix_percentile=0.3))
+    monkeypatch.setattr(meetings, "hold", lambda *a, **k: (calls.append(a[0]) or dict(ok=True, id=9, decisione="35")))
+    assert desk.refresh_pace()["max_turnover"] == 0.35 and len(calls) == 2                 # cambia la fascia di mercato: nuova riunione
+    monkeypatch.setattr(meetings, "hold", lambda *a, **k: dict(ok=False))
+    assert desk.refresh_pace(force=True)["max_turnover"] == 0.35                           # riunione non riuscita: resta l'ultima decisione

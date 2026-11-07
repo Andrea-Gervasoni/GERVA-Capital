@@ -1,8 +1,9 @@
 """
 La Costituzione: cosa il comitato puo' cambiare votando, e fino a dove.
 
-Gli agenti propongono, il comitato vota (riunione con voto pesato per precisione storica), il codice applica SOLO dentro questi limiti.
-Cosi' l'azienda si da' le sue regole senza che un voto, un errore o un testo ingannevole possano portare il conto fuori strada.
+Gli agenti propongono, il comitato vota (riunione con voto pesato per precisione storica), il codice applica. I limiti qui sotto non
+sono una prudenza imposta: sono i limiti FISICI (pesi tra 0 e 100% del conto, la leva che il broker accetta) e servono a non scrivere
+valori senza senso. La scelta dentro questi limiti e' del comitato.
 
 Cosa NON si cambia votando (resta di Andrea): il solo conto paper (firm.mode), le credenziali, il budget in soldi veri, i limiti di rischio
 del file risk_limits.yaml (freno del -35%, ordine massimo) e ogni passo verso soldi veri.
@@ -20,18 +21,18 @@ import shutil
 from . import audit, db, events
 from . import settings as S
 
-RULES = {                                  # impostazione -> (minimo, massimo)
-    "desk.max_name_frac": (0.01, 0.15), "desk.max_total_frac": (0.05, 0.60),
-    "ideas.max_name_frac": (0.005, 0.08), "ideas.max_total_frac": (0.02, 0.30), "ideas.horizon_days": (5, 60),
-    "ideas.agents_per_day": (1, 12), "ideas.committee_per_day": (1, 6),
-    "pace.min_pct": (5, 50), "volmgmt.lo": (0.3, 1.0), "volmgmt.hi": (1.0, 1.8),
-    "signals.risk_frac": (0.001, 0.02), "signals.max_frac": (0.005, 0.08), "signals.max_total_frac": (0.02, 0.25),
-    "crypto.venue_max_frac": (0.0, 0.8), "expectations.haircut": (0.2, 1.0),
+RULES = {                                  # impostazione -> (minimo, massimo): solo limiti "fisici", la scelta e' del comitato
+    "desk.max_name_frac": (0.01, 0.25), "desk.max_total_frac": (0.05, 1.0),
+    "ideas.max_name_frac": (0.005, 0.25), "ideas.max_total_frac": (0.02, 1.0), "ideas.horizon_days": (3, 120),
+    "ideas.agents_per_day": (1, 20), "ideas.committee_per_day": (1, 10), "pace.meeting_every_days": (1, 30),
+    "volmgmt.lo": (0.1, 1.0), "volmgmt.hi": (1.0, 3.0),
+    "signals.risk_frac": (0.001, 0.05), "signals.max_frac": (0.005, 0.25), "signals.max_total_frac": (0.02, 1.0),
+    "crypto.venue_max_frac": (0.0, 1.0), "expectations.haircut": (0.1, 1.0),
 }
 ENGINE = {                                 # costante di GERVA-Q (config.py) -> (minimo, massimo)
-    "SCALE_K": (0.5, 3.0), "SCALE_CAP": (0.5, 2.0), "SCALE_HARD_CAP": (1.0, 2.0),
-    "OVERLAY_MAX_NAME": (0.01, 0.15), "OVERLAY_MAX_TOTAL": (0.05, 0.60),
-    "VOL_MULT_MIN": (0.3, 1.0), "VOL_MULT_MAX": (1.0, 1.8), "TURNOVER_MIN": (0.05, 0.5),
+    "SCALE_K": (0.5, 4.0), "SCALE_CAP": (0.5, 3.0), "SCALE_HARD_CAP": (1.0, 3.0),   # oltre ~2x lordo sulle azioni e' il broker a rifiutare gli ordini
+    "OVERLAY_MAX_NAME": (0.01, 0.25), "OVERLAY_MAX_TOTAL": (0.05, 1.0),
+    "VOL_MULT_MIN": (0.1, 1.0), "VOL_MULT_MAX": (1.0, 3.0), "TURNOVER_MIN": (0.05, 1.0),
 }
 
 

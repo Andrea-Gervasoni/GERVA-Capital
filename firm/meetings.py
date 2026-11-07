@@ -55,6 +55,8 @@ KINDS = {
     # quota di lungo periodo: il primo elemento e' la scelta prudente (in caso di pareggio vince "rinvia")
     "idee": dict(options=["respingi", "approva"], days=25,
                  criterion="L'idea approvata rende piu' dell'S&P 500 nella sua finestra (alpha > 0) -> 'approva' era giusto."),
+    "ritmo": dict(options=["20", "35", "50", "75", "100"], days=5,
+                  criterion="Nessun esito misurabile direttamente: il ritmo si giudica dal conto, non dal voto."),
     "regola": dict(options=["respingi", "approva"], days=30,
                    criterion="Nessun esito misurabile: la regola si giudica nel tempo dal conto, non dal voto."),
     "lungo": dict(options=["rinvia", "compra"], days=90,

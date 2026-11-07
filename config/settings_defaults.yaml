@@ -51,9 +51,9 @@ volmgmt:                   # leva gestita per volatilita' (prova con: firm.py vo
   lo: 0.6                    # moltiplicatore minimo (mercato agitato)
   hi: 1.4                    # moltiplicatore massimo (mercato calmo)
 
-pace:                      # ritmo di ingresso: quanto puo' COMPRARE GERVA-Q in un giorno (in % del conto); lo sceglie il Capo
+pace:                      # ritmo di ingresso: quanto puo' COMPRARE GERVA-Q in un giorno; lo decide una riunione, senza massimi del codice
   enabled: true
-  min_pct: 15                # il Capo non puo' scendere sotto il 15% del conto al giorno
+  meeting_every_days: 7      # la riunione si rifa' ogni 7 giorni, o appena cambia la fascia di volatilita' del mercato
 
 ideas:                     # ogni agente cerca idee e le presenta al superiore; il comitato approva; i fatti decidono il premio
   enabled: true
