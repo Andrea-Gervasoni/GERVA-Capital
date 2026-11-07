@@ -181,18 +181,23 @@ def beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
             woke += [n["a"] for n in r.get("nuove", []) if n.get("a")]
         except Exception as e:
             notes.append(f"idee non eseguite: {str(e)[:80]}")
+    if now.hour >= 7 and _once(f"scala:{day}"):                # leva gestita per volatilita' (se accesa)
+        try:
+            from . import desk
+            notes.append(f"leva gestita: x{desk.refresh_scale()['mult']}")
+        except Exception as e:
+            notes.append(f"leva gestita non scritta: {str(e)[:60]}")
+    if now.hour >= 7 and _once(f"ritmo:{day}"):                # ritmo di ingresso: lo decide una riunione (ogni 7 giorni o se cambia il mercato)
+        try:
+            from . import desk
+            r = desk.refresh_pace()
+            notes.append(f"ritmo di ingresso: {r['max_turnover'] * 100:.0f}% del conto al giorno" + (" (nuova riunione)" if r.get("nuova_riunione") else ""))
+        except Exception as e:
+            notes.append(f"ritmo non deciso: {str(e)[:60]}")
     if now.hour >= 7 and _once(f"desk:{day}"):               # i capi desk propongono posizioni per il conto
         from . import desk
         try:
             r = desk.cycle()
-            try:
-                notes.append(f"leva gestita: x{desk.refresh_scale()['mult']}")
-            except Exception:
-                pass
-            try:
-                notes.append(f"ritmo di ingresso: {desk.refresh_pace()['max_turnover'] * 100:.0f}% del conto al giorno")
-            except Exception:
-                pass
             woke += r.get("desk", [])
             notes.append(f"desk: {len(r.get('targets', {}))} titoli proposti" if r.get("ok") else f"desk: {r.get('nota', '')}")
         except Exception as e:                               # un errore del desk non ferma il battito

@@ -260,6 +260,19 @@ def cmd_crypto_venue(a):
     print(json.dumps(r, ensure_ascii=False, indent=1))
 
 
+def cmd_ritmo(_):
+    """Convoca adesso il comitato sul ritmo di ingresso (quanto GERVA-Q puo' comprare al giorno) e scrive la decisione per GERVA-Q."""
+    from firm import desk, db
+    r = desk.refresh_pace(force=True)
+    print(json.dumps(r, ensure_ascii=False, indent=1))
+    last = db.runtime_get("pace.last") or {}
+    m = db.one("SELECT transcript FROM meetings WHERE id=?", (last.get("riunione"),)) if last.get("riunione") else None
+    if m:
+        tr = json.loads(m["transcript"] or "{}")
+        for p, v in (tr.get("repliche") or {}).items():
+            print(f"\n{p}: {v.get('posizione_finale')}% al giorno (fiducia {v.get('fiducia')})\n  {str(v.get('replica'))[:500]}")
+
+
 def cmd_idee(a):
     """Idee degli agenti: senza opzioni fa un giro adesso (cercano, i superiori valutano, il comitato vota); --lista le mostra."""
     from firm import ideas, db
@@ -512,7 +525,7 @@ def main():
     ap = argparse.ArgumentParser(description="GERVA Capital")
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name in ["init", "portal", "heartbeat", "run", "status", "verify", "demo", "release", "data", "research", "report",
-                 "set-password", "ibkr-check", "observe", "check-backtest", "shadow", "comitato-lungo", "desk", "live-nav", "aspettative", "kelly", "volgest", "idee", "regole", "imposta", "crypto-venue", "telegram-login", "telegram"]:
+                 "set-password", "ibkr-check", "observe", "check-backtest", "shadow", "comitato-lungo", "desk", "live-nav", "aspettative", "kelly", "volgest", "idee", "regole", "ritmo", "imposta", "crypto-venue", "telegram-login", "telegram"]:
         sp = sub.add_parser(name)
         sp.add_argument("--demo", action="store_true", help="usa il database dimostrativo var/demo/")
         if name == "idee":
