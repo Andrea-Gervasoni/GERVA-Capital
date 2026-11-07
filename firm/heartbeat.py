@@ -55,6 +55,12 @@ def beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
         S.refresh_defaults()
     except Exception:
         pass
+    try:
+        from . import crypto_venue
+        if crypto_venue.configured():
+            crypto_venue.rebalance()                       # crypto: 24 ore su 24, a ogni battito
+    except Exception:
+        pass
     registry.sync_if_profiles_changed()
     if os.environ.get("IBKR_CHALLENGE_ACCOUNT") and pods.enabled():
         if not os.environ.get("IBKR_FIRM_ACCOUNT"):

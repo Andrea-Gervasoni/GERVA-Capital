@@ -23,7 +23,11 @@ firm:
   heartbeat_minutes: 15
 
 crypto:
-  eseguibile: false          # IBKR paper rifiuta le crypto (6/11: 'calcolo del margine non disponibile'): si seguono e si misurano, non si eseguono
+  eseguibile: false          # IBKR paper rifiuta le crypto (6/11: 'calcolo del margine non disponibile'): sul conto IBKR non si eseguono
+  venue: none                # 'alpaca' = le crypto si eseguono sul conto PAPER di Alpaca, 24 ore su 24 (servono le chiavi paper in .env)
+  venue_max_frac: 0.60       # al massimo il 60% del valore del conto Alpaca in crypto
+  venue_mirror_model: true   # la sede replica anche il modello crypto di GERVA-Q (oltre ai segnali accettati)
+  venue_min_trade_usd: 25.0  # ordini sotto 25 dollari non si inviano
 
 signals:                    # sala segnali crypto: gli agenti analizzano, il codice limita
   risk_frac: 0.005           # si rischia al massimo lo 0,5% del conto per segnale (dimensione = rischio / distanza dello stop)

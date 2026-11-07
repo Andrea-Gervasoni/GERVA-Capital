@@ -25,7 +25,7 @@ import re
 
 import pandas as pd
 
-from . import charts, db, events, scorekeeper as SK
+from . import charts, crypto_venue, db, events, scorekeeper as SK
 from . import settings as S
 
 COINS = ["BTC", "ETH", "SOL", "XRP", "ADA", "DOGE", "LTC", "LINK", "AVAX", "BCH", "SUI"]
@@ -168,8 +168,8 @@ def process(sid: int, close: pd.DataFrame | None = None, execute: bool = True) -
                 veto = bool(rv["output"]["veto"])
                 analysis["veto"] = dict(bloccato=veto, motivo=rv["output"]["motivo"])
             state, weight, why = _decide(analysis, ctl, veto)
-            if state == "accettato" and not S.get("crypto.eseguibile", False):
-                state, weight, why = "osservato", 0.0, "il conto paper di IBKR non puo' comprare crypto: si segue e si misura, non si esegue"
+            if state == "accettato" and not crypto_venue.accepting():
+                state, weight, why = "osservato", 0.0, "nessuna sede per le crypto (IBKR paper le rifiuta; Alpaca non attiva): si segue e si misura, non si esegue"
             if state == "accettato" and not execute:
                 state, weight, why = "osservato", 0.0, "esecuzione dei segnali di questa fonte spenta (signals.telegram_execute): si segue senza eseguire"
             p_tp = min(max(float(analysis.get("probabilita_tp1", 0.5)), 0.02), 0.98)
@@ -184,6 +184,10 @@ def process(sid: int, close: pd.DataFrame | None = None, execute: bool = True) -
     events.publish("signal.decided", "senior_crypto", dict(id=sid, stato=state, moneta=p.get("moneta"), peso=weight))
     if state == "accettato":
         refresh_overlay()
+        try:
+            crypto_venue.rebalance()                      # il segnale entra subito, senza aspettare il prossimo battito
+        except Exception:
+            pass
     return dict(id=sid, stato=state, peso=weight, motivo=why)
 
 

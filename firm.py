@@ -229,6 +229,19 @@ def cmd_live_nav(_):
     ibkr.live_loop()
 
 
+def cmd_crypto_venue(a):
+    """Prova la sede crypto Alpaca (paper): saldo, piano degli ordini. --attiva la accende, --invia manda gli ordini ora."""
+    from firm import crypto_venue as V, settings
+    cap = settings.AndreaCapability(settings.ensure_token())
+    if a.attiva:
+        settings.set("crypto.venue", "alpaca", cap)
+        print("sede crypto Alpaca (paper) ATTIVA: da ora i segnali accettati e il modello crypto si eseguono li', a ogni battito")
+    if not (os.environ.get("ALPACA_PAPER_KEY") and os.environ.get("ALPACA_PAPER_SECRET")):
+        print("Mancano ALPACA_PAPER_KEY e ALPACA_PAPER_SECRET nel file .env (le chiavi del conto PAPER di Alpaca)."); return
+    r = V.rebalance(dry=not a.invia) if V.configured() else dict(ok=False, nota="accendila con: firm.py crypto-venue --attiva")
+    print(json.dumps(r, ensure_ascii=False, indent=1))
+
+
 def cmd_kelly(_):
     """Quale leva fa crescere di piu' il fondo (Kelly) con i dati storici veri, a edge pieno e a mezzo edge."""
     from firm import fundrisk
@@ -415,9 +428,12 @@ def main():
     ap = argparse.ArgumentParser(description="GERVA Capital")
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name in ["init", "portal", "heartbeat", "run", "status", "verify", "demo", "release", "data", "research", "report",
-                 "set-password", "ibkr-check", "observe", "check-backtest", "shadow", "comitato-lungo", "desk", "live-nav", "aspettative", "kelly", "telegram-login", "telegram"]:
+                 "set-password", "ibkr-check", "observe", "check-backtest", "shadow", "comitato-lungo", "desk", "live-nav", "aspettative", "kelly", "crypto-venue", "telegram-login", "telegram"]:
         sp = sub.add_parser(name)
         sp.add_argument("--demo", action="store_true", help="usa il database dimostrativo var/demo/")
+        if name == "crypto-venue":
+            sp.add_argument("--attiva", action="store_true", help="accende la sede crypto Alpaca (paper)")
+            sp.add_argument("--invia", action="store_true", help="invia davvero gli ordini ora (senza: solo il piano)")
         if name == "telegram-login":
             sp.add_argument("--qr", action="store_true", help="accesso con codice QR (nessun codice da ricevere)")
             sp.add_argument("--sms", action="store_true", help="manda il codice per SMS invece che nell'app di Telegram")
