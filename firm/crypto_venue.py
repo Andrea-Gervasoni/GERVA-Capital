@@ -82,7 +82,7 @@ def snapshots(stocks: list[str], coins: list[str]) -> list[dict]:
     out = []
     try:
         if stocks:
-            d = _data("/v2/stocks/snapshots?feed=iex&symbols=" + ",".join(stocks[:60]))
+            d = _data("/v2/stocks/snapshots?feed=iex&symbols=" + ",".join(stocks[:120]))
             for k, v in d.items():
                 px = (v.get("latestTrade") or {}).get("p")
                 prev = (v.get("prevDailyBar") or {}).get("c")
@@ -98,6 +98,32 @@ def snapshots(stocks: list[str], coins: list[str]) -> list[dict]:
                 prev = (v.get("prevDailyBar") or {}).get("c")
                 mb = v.get("minuteBar") or {}
                 out.append(dict(s=k.split("/")[0], px=px, giorno_pct=round((px / prev - 1) * 100, 2) if px and prev else None, min_o=mb.get("o"), min_c=mb.get("c"), min_vol=mb.get("v")))
+    except Exception:
+        pass
+    return out
+
+
+def clock() -> dict:
+    """Mercato azionario aperto o chiuso, prossima apertura (le crypto sono sempre aperte)."""
+    try:
+        c = _req("GET", "/v2/clock")
+        return dict(azioni_aperte=bool(c.get("is_open")), prossima_apertura=c.get("next_open"), prossima_chiusura=c.get("next_close"), crypto="aperte 24 ore su 24")
+    except Exception:
+        return dict(crypto="aperte 24 ore su 24")
+
+
+def scan() -> dict:
+    """Cio' che si muove adesso sul mercato azionario USA (titoli piu' scambiati e maggiori rialzi/ribassi): per trovare occasioni fuori dalla nostra tabella."""
+    out = {}
+    try:
+        d = _data("/v1beta1/screener/stocks/most-actives?by=volume&top=25")
+        out["piu_scambiati"] = [dict(s=x.get("symbol"), volume=x.get("volume")) for x in d.get("most_actives", [])]
+    except Exception:
+        pass
+    try:
+        d = _data("/v1beta1/screener/stocks/movers?top=25")
+        out["maggiori_rialzi"] = [dict(s=x.get("symbol"), pct=x.get("percent_change"), px=x.get("price")) for x in d.get("gainers", [])]
+        out["maggiori_ribassi"] = [dict(s=x.get("symbol"), pct=x.get("percent_change"), px=x.get("price")) for x in d.get("losers", [])]
     except Exception:
         pass
     return out

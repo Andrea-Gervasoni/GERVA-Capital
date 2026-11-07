@@ -264,13 +264,17 @@ def cycle(runtime=None) -> dict:
         mine = db.q("SELECT symbol, side, notional, status, pnl, esito FROM free_trades WHERE agent=? ORDER BY id DESC LIMIT 15", (a,))
         news = [dict(titolo=n["title"], sintesi=(n["summary"] or "")[:160]) for n in db.q("SELECT title, summary FROM news WHERE status='verificata' ORDER BY id DESC LIMIT 6")]
         try:
-            scr = [dict(s=r["chiave"], r1m=r["r1m"], rsi=r["rsi"], trend=r["trend"], tipo=r["tipo"]) for r in charts.screener(limit=60)[:60]]
+            scr = [dict(s=r["chiave"], tipo=r["tipo"], r1m=r["r1m"], r3m=r["r3m"], rsi=r["rsi"], vol=r["vol"], trend=r["trend"]) for r in charts.screener(limit=400)]
         except Exception:
             scr = []
-        live = V.snapshots([x["s"] for x in scr if x.get("tipo") != "crypto"], [x["s"] for x in scr if x.get("tipo") == "crypto"])
-        r = runtime.call(a, STATUTO + "Hai LIBERTA' TOTALE sul conto paper. Cosa fai adesso? Puoi aprire quanti trade vuoi, anche di pochi minuti (tieni_minuti), "
+        scan = V.scan()
+        wanted = [x["s"] for x in scr if x.get("tipo") != "crypto"][:100] + [x["s"] for k in ("piu_scambiati", "maggiori_rialzi", "maggiori_ribassi") for x in scan.get(k, [])][:60]
+        live = V.snapshots(list(dict.fromkeys(wanted)), [x["s"] for x in scr if x.get("tipo") == "crypto"])
+        r = runtime.call(a, STATUTO + "Hai LIBERTA' TOTALE sul conto paper. Puoi operare su QUALSIASI simbolo che Alpaca negozia, anche fuori dalla nostra tabella (universo_nostro e' solo un aiuto: "
+                            "cosa_si_muove_ora mostra i titoli piu' scambiati e i maggiori rialzi/ribassi). Controlla l'orologio: se le azioni sono chiuse un ordine azionario resta in coda "
+                            "fino all'apertura, mentre le crypto si negoziano sempre. Cosa fai adesso? Puoi aprire quanti trade vuoi, anche di pochi minuti (tieni_minuti), "
                             "con stop e obiettivo in %. Se la tua analisi sostiene un trade, aprilo; altrimenti puoi non fare niente.",
-                         data=dict(conto=st, regole_di_casa=rules_detail(), tuoi_ultimi_trade=mine, regime=charts.regime(), screener=scr, mercato_ora=live, notizie_verificate=news),
+                         data=dict(conto=st, regole_di_casa=rules_detail(), tuoi_ultimi_trade=mine, regime=charts.regime(), orologio=V.clock(), universo_nostro=scr, mercato_ora=live, cosa_si_muove_ora=scan, notizie_verificate=news),
                          schema=W.FREE_TRADES, purpose="banco-libero", status_label="trada")
         tried[a] = db.now_iso()
         if not r["ok"]:
