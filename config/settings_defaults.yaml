@@ -57,9 +57,9 @@ pace:                      # ritmo di ingresso: quanto puo' COMPRARE GERVA-Q in 
 
 ideas:                     # ogni agente cerca idee e le presenta al superiore; il comitato approva; i fatti decidono il premio
   enabled: true
-  agents_per_day: 4          # quanti agenti (a rotazione) cercano un'idea ogni giorno
+  agents_per_day: 3          # quanti agenti (a rotazione) cercano un'idea ogni giorno (ogni giro costa: Opus)
   max_per_agent_week: 2
-  committee_per_day: 3
+  committee_per_day: 2
   max_name_frac: 0.03        # al massimo il 3% del conto su una singola idea
   max_total_frac: 0.15       # al massimo il 15% del conto su tutte le idee aperte
   horizon_days: 20
