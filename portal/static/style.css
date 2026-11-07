@@ -429,3 +429,64 @@ body.login { background: var(--paper); }
 .login-sub { font-size: .66rem; letter-spacing: .3em; color: var(--muted); }
 .loginbox button { border-radius: 8px; letter-spacing: .1em; text-transform: uppercase; font-size: .8rem; }
 @media (max-width: 760px) { .nav { height: auto; } #tape-items { display: none; } .tape { justify-content: center; } }
+
+
+/* ═════════════════════════ MOVIMENTO ═════════════════════════
+   Misurato, mai decorativo a vuoto: ogni movimento dice che qualcosa e' arrivato o e' cambiato. Si spegne con "riduci movimento". */
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes shimmer { from { background-position: -400px 0; } to { background-position: 400px 0; } }
+@keyframes tape { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes flash { 0% { box-shadow: inset 3px 0 0 var(--signal); background: rgba(242, 106, 61, .10); } 100% { box-shadow: inset 0 0 0 transparent; background: transparent; } }
+@keyframes draw { from { stroke-dashoffset: var(--len, 1000); } to { stroke-dashoffset: 0; } }
+@keyframes breathe { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+
+.page.enter > *, .page.enter .grid > *, .page.enter .kgrid > * { animation: rise .7s var(--ease) both; }
+.page.enter .grid > *:nth-child(2), .page.enter .kgrid > *:nth-child(2) { animation-delay: .06s; }
+.page.enter .grid > *:nth-child(3), .page.enter .kgrid > *:nth-child(3) { animation-delay: .12s; }
+.page.enter .grid > *:nth-child(4), .page.enter .kgrid > *:nth-child(4) { animation-delay: .18s; }
+.page.enter .grid > *:nth-child(5), .page.enter .kgrid > *:nth-child(5) { animation-delay: .24s; }
+.page.enter .grid > *:nth-child(n+6), .page.enter .kgrid > *:nth-child(n+6) { animation-delay: .3s; }
+.page-head { animation: rise .6s var(--ease) both; }
+
+.skeleton { display: grid; gap: 14px; grid-template-columns: repeat(4, 1fr); }
+.skeleton i { display: block; height: 120px; border-radius: var(--r); background: linear-gradient(90deg, var(--hair) 0, rgba(255, 255, 255, .5) 40%, var(--hair) 80%) var(--sheet); background-size: 800px 100%; animation: shimmer 1.3s linear infinite; }
+.skeleton i.w { grid-column: 1 / -1; height: 260px; }
+
+/* nastro che scorre */
+#tape-items { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); }
+#tape-items .run { display: flex; gap: 28px; width: max-content; animation: tape 48s linear infinite; }
+#tape-items:hover .run { animation-play-state: paused; }
+
+/* indicatore della sezione attiva che scivola */
+.tabs { position: relative; }
+.tabs .slider { position: absolute; left: 0; top: 50%; height: 34px; margin-top: -17px; border-radius: 10px; background: var(--ink); z-index: 0; transition: transform .5s var(--ease), width .5s var(--ease); pointer-events: none; }
+:root[data-theme="dark"] .tabs .slider { background: #ECE9E1; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tabs .slider { background: #ECE9E1; } }
+.tabs button { position: relative; z-index: 1; transition: color .35s var(--ease), opacity .2s; }
+.tabs.has-slider button.on { background: transparent; }
+
+/* schede vive */
+.lg.card, .kcard, .person, .idea, .mail { transition: transform .45s var(--ease), box-shadow .45s var(--ease); }
+.lg.card:hover, .kcard:hover, .idea:hover { transform: translateY(-2px); box-shadow: inset 0 0 0 1px var(--rule), 0 18px 36px -24px rgba(15, 18, 34, .55); }
+.kcard { position: relative; overflow: hidden; }
+.kcard::after { content: ''; position: absolute; left: 0; bottom: 0; height: 2px; width: 100%; background: var(--signal); transform: scaleX(0); transform-origin: left; transition: transform .6s var(--ease); }
+.kcard:hover::after { transform: scaleX(1); }
+.tbl tr.op td:first-child { box-shadow: inset 0 0 0 transparent; transition: box-shadow .3s; }
+.tbl tr.op:hover td:first-child { box-shadow: inset 3px 0 0 var(--signal); }
+.feed li.new { animation: rise .6s var(--ease) both, flash 2.4s ease-out both; }
+.dot.on { animation: breathe 2s ease-in-out infinite; }
+.btn, .subnav button, .cbar button { transition: transform .25s var(--ease), background .25s, color .25s; }
+.btn:active, .subnav button:active, .cbar button:active { transform: scale(.97); }
+
+/* curva del fondo nella scheda principale */
+.spark { display: block; width: 100%; height: 54px; margin: 10px 0 2px; overflow: visible; }
+.spark path.l { fill: none; stroke: var(--cobalt); stroke-width: 1.6; stroke-dasharray: var(--len, 1000); animation: draw 1.6s var(--ease) both; }
+.spark path.a { fill: url(#sparkfill); opacity: .9; }
+.spark circle { fill: var(--signal); animation: breathe 2s ease-in-out infinite; }
+html { transition: background-color .5s var(--ease); }
+body, .lg.card, .kcard, .tape, .nav { transition: background-color .5s var(--ease), color .5s var(--ease); }
+
+@media (prefers-reduced-motion: reduce) {
+  .page.enter > *, .page.enter .grid > *, .page.enter .kgrid > *, .page-head, .feed li.new, .spark path.l, #tape-items .run, .skeleton i, .dot.on { animation: none !important; }
+}
+@media (max-width: 1100px) { .skeleton { grid-template-columns: 1fr 1fr; } }

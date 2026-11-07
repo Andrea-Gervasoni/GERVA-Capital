@@ -70,16 +70,52 @@ async function refreshState() {
   } catch (e) { console.warn(e); }
 }
 
+// ---------------------------------------------------------------- movimento
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function countUp(root) {
+  if (REDUCED) return;
+  root.querySelectorAll(".big, .mid, .kcard .kv").forEach((el) => {
+    const txt = el.textContent, m = txt.match(/[+-]?\d{1,3}(?:\.\d{3})+(?:,\d+)?|[+-]?\d+(?:,\d+)?/);
+    if (!m || el.children.length > 1) return;
+    const raw = m[0], dec = (raw.split(",")[1] || "").length, target = parseFloat(raw.replace(/\./g, "").replace(",", "."));
+    if (!isFinite(target) || Math.abs(target) < 2) return;
+    const fmt = (v) => (v < 0 ? "-" : raw.startsWith("+") ? "+" : "") + Math.abs(v).toLocaleString("it-IT", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+    const t0 = performance.now(), dur = 900, html = el.innerHTML;
+    const step = (now) => { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      el.innerHTML = html.replace(raw, fmt(target * e)); if (k < 1) requestAnimationFrame(step); else el.innerHTML = html; };
+    requestAnimationFrame(step);
+  });
+}
+function moveSlider() {
+  const tabs = document.getElementById("tabs"), on = tabs.querySelector("button.on");
+  let sl = tabs.querySelector(".slider");
+  if (!sl) { sl = document.createElement("span"); sl.className = "slider"; tabs.prepend(sl); tabs.classList.add("has-slider"); }
+  if (!on) { sl.style.width = "0px"; return; }
+  sl.style.width = on.offsetWidth + "px"; sl.style.transform = `translateX(${on.offsetLeft}px)`;
+  tabs.querySelectorAll("button").forEach((b) => (b.style.color = b === on ? (getComputedStyle(document.documentElement).getPropertyValue("--paper").trim()) : ""));
+}
+window.addEventListener("resize", () => moveSlider());
+function sparkSvg(series) {
+  if (!series || series.length < 3) return "";
+  const vs = series.map((p) => p.v), lo = Math.min(...vs), hi = Math.max(...vs), sp = hi - lo || 1, W = 300, H = 54;
+  const pts = vs.map((v, i) => [(i / (vs.length - 1)) * W, H - 6 - ((v - lo) / sp) * (H - 12)]);
+  const d = pts.map((p, i) => `${i ? "L" : "M"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(""), last = pts[pts.length - 1];
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="sparkfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(27,63,216,.18)"/><stop offset="1" stop-color="rgba(27,63,216,0)"/></linearGradient></defs>` +
+    `<path class="a" d="${d}L${W},${H}L0,${H}Z"/><path class="l" d="${d}"/><circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="3"/></svg>`;
+}
+
 // ---------------------------------------------------------------- nastro di mercato
 async function refreshTape() {
   try {
     const t = await api("/api/tape"), s = STATE || {}, pf = s.portafogli || {}, tt = pf.totale || {};
     const it = (k, v, cls = "") => `<span><b>${esc(k)}</b><span class="${cls}">${v}</span></span>`, ch = (v) => (v == null ? "" : `${v >= 0 ? "▲" : "▼"} ${Math.abs(v * 100).toFixed(2).replace(".", ",")}%`);
-    document.getElementById("tape-items").innerHTML = [
+    const items = [
       tt.nav_eur ? it("FONDO", eur(tt.nav_eur) + " " + ch(tt.pnl_eur / ((tt.nav_eur - tt.pnl_eur) || 1)), tt.pnl_eur >= 0 ? "up" : "dn") : "",
       ...(t.voci || []).map((x) => it(x.nome, `${num(x.valore, x.dec ?? 2)} ${ch(x.var)}`, x.var >= 0 ? "up" : "dn")),
       t.regime ? it("REGIME", esc(t.regime)) : "", (pf.ibkr || {}).leva != null ? it("LEVA", num(pf.ibkr.leva, 2) + "×") : "",
+      s.telegram ? it("TELEGRAM", (Date.now() - Date.parse(s.telegram.ts) < 10 * 60000 && s.telegram.collegato !== false) ? "IN ASCOLTO" : "NON ASCOLTA", (Date.now() - Date.parse(s.telegram.ts) < 10 * 60000 && s.telegram.collegato !== false) ? "up" : "dn") : "",
     ].join("");
+    document.getElementById("tape-items").innerHTML = `<div class="run">${items}${items}</div>`;
     document.getElementById("tape-clock").textContent = t.mercato || "";
   } catch (_) { /* il nastro e' un di piu' */ }
 }
@@ -106,13 +142,14 @@ function feedText(ev) {
 }
 function addFeed(ev, front = true) {
   const t = feedText(ev); if (!t) return;
-  const item = { ts: ev.ts, t, id: ev.id };
+  const item = { ts: ev.ts, t, id: ev.id, fresh: front };
   if (front) FEED.unshift(item); else FEED.push(item);
   while (FEED.length > 80) FEED.pop();
 }
 function renderFeed() {
   const ul = document.getElementById("feed"); if (!ul) return;
-  ul.innerHTML = FEED.slice(0, 40).map((f) => `<li><span class="tm">${esc((f.ts || "").slice(11, 16))}</span><span>${esc(f.t)}</span></li>`).join("") || "<li class='empty'>Ancora niente di nuovo: qui compaiono idee, trade, riunioni e allarmi appena succedono.</li>";
+  setTimeout(() => FEED.forEach((f) => (f.fresh = false)), 2500);
+  ul.innerHTML = FEED.slice(0, 40).map((f) => `<li class="${f.fresh ? "new" : ""}"><span class="tm">${esc((f.ts || "").slice(11, 16))}</span><span>${esc(f.t)}</span></li>`).join("") || "<li class='empty'>Ancora niente di nuovo: qui compaiono idee, trade, riunioni e allarmi appena succedono.</li>";
 }
 function connectWS() {
   const ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`);
@@ -143,10 +180,13 @@ async function render(page, arg, keepScroll = false) {
   stage.classList.toggle("hidden", page !== "ufficio");
   if (page === "ufficio") { try { resizeCanvas(); } catch (_) { /* il mondo si sta ancora caricando */ } }
   let t, h;
+  if (!keepScroll) { body.classList.remove("enter"); body.innerHTML = `<div class="skeleton"><i></i><i></i><i></i><i></i><i class="w"></i></div>`; }
   try { [t, h] = await PANELS[page](arg); }
   catch (err) { t = "Qualcosa non va"; h = `<p class="err">Non riesco a caricare questa pagina: ${esc(err.message)}</p>`; }
   if (CUR.page !== page) return;                          // nel frattempo si e' cambiata pagina
   title.innerHTML = t; body.innerHTML = h; applyWidths(body);
+  if (!keepScroll) { body.classList.remove("enter"); void body.offsetWidth; body.classList.add("enter"); countUp(body); }
+  moveSlider();
   const gi = Object.keys(GROUPS).indexOf(g) + 1;
   document.getElementById("eyebrow").innerHTML = `<b>${String(gi).padStart(2, "0")}</b> · ${esc(document.querySelector(`#tabs [data-go="${GROUPS[g][0]}"]`)?.textContent.trim() || "")}`;
   if (AFTER[page]) { try { await AFTER[page](arg); } catch (err) { body.insertAdjacentHTML("beforeend", `<p class="err">Grafico non disponibile: ${esc(err.message)}</p>`); } }
@@ -402,6 +442,9 @@ AFTER.panoramica = async () => {
   if (STATE) fillOverviewTop(STATE);
   renderFeed();
   const eq = await api("/api/equity"), c = document.getElementById("o-eq");
+  const hero = document.querySelector("#o-top .card.fringe");
+  if (hero && eq.conto && eq.conto.length > 2 && !hero.querySelector(".spark")) { hero.insertAdjacentHTML("beforeend", sparkSvg(eq.conto.slice(-200)));
+    const pth = hero.querySelector(".spark path.l"); if (pth) pth.style.setProperty("--len", Math.ceil(pth.getTotalLength())); }
   if (c && eq.conto && eq.conto.length > 1) QC.equity(c, eq); else if (c) { c.classList.add("hidden"); document.getElementById("o-eq-note").textContent = eq.nota || "Servono almeno due letture del conto."; }
 };
 AFTER.segnali = async () => {
