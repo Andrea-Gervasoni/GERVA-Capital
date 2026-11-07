@@ -49,7 +49,8 @@ FREE_TRADES = obj({"trades": arr(obj({
     "stop_pct": {"type": "number", "description": "stop in PERCENTUALE contro di te (0 = nessuno): 0.5 significa 0,5%"},
     "take_pct": {"type": "number", "description": "obiettivo in PERCENTUALE a tuo favore (0 = nessuno)"},
     "tieni_minuti": {"type": "integer", "description": "chiusura automatica dopo questi minuti (0 = tieni finche' vuoi)"},
-    "motivo": S_STR, "probabilita": {"type": "number", "description": "probabilita' che il trade chiuda in guadagno"}})), "nota": S_STR})
+    "motivo": S_STR, "probabilita": {"type": "number", "description": "probabilita' che il trade chiuda in guadagno"}})), "nota": S_STR,
+    "richiamami_tra_minuti": {"type": "integer", "description": "tra quanti minuti vuoi essere richiamato per decidere di nuovo (1-1440); 0 = al giro normale. Ogni chiamata costa."}})
 IDEA_REVIEW = obj({"decisione": {"type": "string", "enum": ["porta_su", "rimanda", "scarta"]}, "motivo": S_STR,
                    "miglioramenti": S_STR, "probabilita_successo": {"type": "number"}})
 PACE = obj({"ritmo_pct": {"type": "number"}, "motivo": S_STR})

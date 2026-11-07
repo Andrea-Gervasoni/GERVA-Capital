@@ -258,7 +258,26 @@ def pick_agents(n: int) -> list[str]:
     return ag[:n]
 
 
-def cycle(runtime=None) -> dict:
+def _wake() -> dict:
+    return db.runtime_get("free.wake") or {}
+
+
+def due_agents() -> list[str]:
+    """Agenti che hanno chiesto di essere richiamati e il cui momento e' arrivato (decidono loro QUANDO tornare a decidere)."""
+    now = db.now_iso()
+    return [a for a, t in _wake().items() if t <= now]
+
+
+def _set_wake(agent: str, minutes: int | None) -> None:
+    w = _wake()
+    if minutes and minutes >= 1:
+        w[agent] = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=min(int(minutes), 1440))).strftime("%Y-%m-%dT%H:%M:%SZ")
+    else:
+        w.pop(agent, None)
+    db.runtime_set("free.wake", w)
+
+
+def cycle(runtime=None, agents: list[str] | None = None) -> dict:
     if not S.get("free.enabled", True) or not V.keys_ok():
         return dict(nota="banco libero spento o chiavi Alpaca mancanti")
     if runtime is None:
@@ -270,7 +289,9 @@ def cycle(runtime=None) -> dict:
         return dict(nota=f"conto non raggiungibile: {str(e)[:100]}")
     res = dict(agenti=[], trade=[], rifiutati=[])
     tried = db.runtime_get("free.last_try") or {}
-    for a in pick_agents(int(S.get("free.agents_per_cycle", 1))):
+    spent = (db.one("SELECT COALESCE(SUM(cost_eur),0) e FROM llm_calls WHERE day=?", (db.today(),)) or {}).get("e", 0.0)
+    cost = dict(spesa_oggi_eur=round(float(spent), 2), tetto_giornaliero_eur=float(S.get("budget.daily_eur", 4.0)), costo_medio_chiamata_eur=0.035)
+    for a in (agents if agents is not None else pick_agents(int(S.get("free.agents_per_cycle", 1)))):
         mine = db.q("SELECT symbol, side, notional, status, pnl, esito FROM free_trades WHERE agent=? ORDER BY id DESC LIMIT 15", (a,))
         news = [dict(titolo=n["title"], sintesi=(n["summary"] or "")[:160]) for n in db.q("SELECT title, summary FROM news WHERE status='verificata' ORDER BY id DESC LIMIT 6")]
         try:
@@ -284,12 +305,15 @@ def cycle(runtime=None) -> dict:
                             "cosa_si_muove_ora mostra i titoli piu' scambiati e i maggiori rialzi/ribassi). Controlla l'orologio: se le azioni sono chiuse un ordine azionario resta in coda "
                             "fino all'apertura, mentre le crypto si negoziano sempre. Cosa fai adesso? Puoi aprire quanti trade vuoi, anche di pochi minuti (tieni_minuti), "
                             "con stop e obiettivo in %. Se la tua analisi sostiene un trade, aprilo; altrimenti puoi non fare niente.",
-                         data=dict(conto=st, regole_di_casa=rules_detail(), tuoi_ultimi_trade=mine, regime=charts.regime(), orologio=V.clock(), universo_nostro=scr, mercato_ora=live, cosa_si_muove_ora=scan, notizie_verificate=news),
+                         data=dict(conto=st, regole_di_casa=rules_detail(), tuoi_ultimi_trade=mine, regime=charts.regime(), orologio=V.clock(), costo=cost, universo_nostro=scr, mercato_ora=live, cosa_si_muove_ora=scan, notizie_verificate=news),
                          schema=W.FREE_TRADES, purpose="banco-libero", status_label="trada")
         tried[a] = db.now_iso()
         if not r["ok"]:
+            if a in _wake():
+                _set_wake(a, 15)                                    # budget esaurito o errore: non si martella, si riprova tra un quarto d'ora
             res["agenti"].append(dict(agente=a, esito=f"nessuna risposta: {str(r.get('motivo', ''))[:80]}"))
             continue
+        _set_wake(a, int(r["output"].get("richiamami_tra_minuti") or 0))
         trades = (r["output"].get("trades") or [])[:int(S.get("free.max_intents", 20))]
         res["agenti"].append(dict(agente=a, esito=f"{len(trades)} trade proposti", nota=str(r["output"].get("nota", ""))[:200]))
         for t in trades:
@@ -332,6 +356,9 @@ def run_loop(max_iter: int | None = None, sleep=time.sleep) -> None:
         n += 1
         try:
             monitor()
+            due = due_agents()
+            if due:
+                cycle(agents=due[:max(1, int(S.get("free.agents_per_cycle", 1)))])
             if time.time() - last_cycle >= float(S.get("free.cycle_minutes", 30)) * 60:
                 last_cycle = time.time()
                 cycle()

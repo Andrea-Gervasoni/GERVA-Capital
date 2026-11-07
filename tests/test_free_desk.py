@@ -176,3 +176,21 @@ def test_class_share_symbol_and_hold_timer_starts_at_fill(broker):
     assert FD.monitor() == []                                                  # riempito adesso: le 2 ore partono da adesso, non e' gia' scaduto
     row = db.one("SELECT * FROM free_trades")
     assert row["status"] == "aperta" and row["hold_until"] > dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def test_agent_chooses_when_to_be_called_again(broker, monkeypatch):
+    import llm.runtime as rt
+    out = dict(trades=[], nota="aspetto", richiamami_tra_minuti=5)
+    monkeypatch.setattr(rt, "call", lambda *a, **k: dict(ok=True, output=out))
+    FD.cycle(agents=["pod_crypto"])
+    assert "pod_crypto" in FD._wake() and FD.due_agents() == []                         # richiamato tra 5 minuti, non adesso
+    db.runtime_set("free.wake", {"pod_crypto": "2000-01-01T00:00:00Z"})
+    assert FD.due_agents() == ["pod_crypto"]                                            # il suo momento e' arrivato
+    monkeypatch.setattr(rt, "call", lambda *a, **k: dict(ok=False, motivo="budget"))
+    FD.cycle(agents=["pod_crypto"])
+    assert FD.due_agents() == []                                                        # budget finito: non si martella, riprova tra 15 minuti
+    out["richiamami_tra_minuti"] = 0
+    monkeypatch.setattr(rt, "call", lambda *a, **k: dict(ok=True, output=out))
+    db.runtime_set("free.wake", {"pod_crypto": "2000-01-01T00:00:00Z"})
+    FD.cycle(agents=["pod_crypto"])
+    assert FD._wake() == {}                                                              # 0 = torna al giro normale

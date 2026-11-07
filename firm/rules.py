@@ -24,7 +24,8 @@ from . import settings as S
 RULES = {                                  # impostazione -> (minimo, massimo): solo limiti "fisici", la scelta e' del comitato
     "desk.max_name_frac": (0.01, 0.25), "desk.max_total_frac": (0.05, 1.0),
     "ideas.max_name_frac": (0.005, 0.25), "ideas.max_total_frac": (0.02, 1.0), "ideas.horizon_days": (3, 120),
-    "ideas.agents_per_day": (1, 20), "rules.review_days": (1, 365), "ideas.committee_per_day": (1, 10), "pace.meeting_every_days": (1, 30),
+    "ideas.agents_per_day": (1, 20), "free.cycle_minutes": (1, 1440), "free.agents_per_cycle": (1, 20), "free.max_intents": (1, 200),
+    "free.monitor_seconds": (5, 3600), "free.riesame_loss_frac": (0.005, 1.0), "rules.review_days": (1, 365), "ideas.committee_per_day": (1, 10), "pace.meeting_every_days": (1, 30),
     "volmgmt.lo": (0.1, 1.0), "volmgmt.hi": (1.0, 3.0),
     "signals.risk_frac": (0.001, 0.05), "signals.max_frac": (0.005, 0.25), "signals.max_total_frac": (0.02, 1.0),
     "crypto.venue_max_frac": (0.0, 1.0), "expectations.haircut": (0.1, 1.0),
