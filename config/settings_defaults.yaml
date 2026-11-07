@@ -79,6 +79,10 @@ free:                      # banco libero: gli agenti aprono e chiudono trade qu
   monitor_seconds: 15        # ogni quanto il codice controlla stop, obiettivi e tempi di chiusura
   riesame_loss_frac: 0.03    # una perdita di giornata oltre il 3% convoca il riesame (non e' un limite: serve a far parlare)
 
+lessons:                   # dopo la chiusura di un'operazione: cosa e' successo, errore da non ripetere o tecnica vincente da tenere
+  enabled: true
+  agents_per_day: 3          # quanti agenti rivedono le loro operazioni chiuse ogni sera (una chiamata ciascuno)
+
 release:
   any_day: true               # scelta di Andrea del 6/11: i rilasci di GERVA-Q si applicano quando serve (sempre backup, changelog e audit)
   weekday: 6                 # 0 = lunedi' ... 6 = domenica (REGOLE_SFIDA regola 7)

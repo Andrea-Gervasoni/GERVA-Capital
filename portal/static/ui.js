@@ -46,6 +46,11 @@ async function refreshState() {
     document.getElementById("k-navsub").innerHTML = fromIb && s.nav_pod_simulati > 1 ? `conto IBKR ${eur(s.nav_conto)} · pod simulati +${eur(s.nav_pod_simulati)}` : "";
     const lv = s.diretta || {};
     if (!s.nav_pod_simulati || s.nav_pod_simulati <= 1) document.getElementById("k-navsub").innerHTML = lv.fresca ? `<span class="pos">● in diretta</span>${lv.stima ? " (stima)" : ""}` : `<span class="muted">aggiornato ${lv.eta_s != null ? Math.round(lv.eta_s / 60) + " min fa" : "al battito"}</span>`;
+    const pf = s.portafogli || {}, al = pf.alpaca || {}, tt = pf.totale || {};
+    kpi("k-alp", al.disponibile ? eur(al.nav_eur) : "—");
+    document.getElementById("k-alpsub").innerHTML = al.disponibile ? `${num(al.equity_usd, 0)} $ · <span class="${al.pnl_eur >= 0 ? "pos" : "neg"}">${al.pnl_eur >= 0 ? "+" : ""}${eur(al.pnl_eur)}</span>` : `<span class="muted">non collegato</span>`;
+    kpi("k-tot", tt.nav_eur ? eur(tt.nav_eur) : "—");
+    document.getElementById("k-totsub").innerHTML = tt.nav_eur ? `<span class="${tt.pnl_eur >= 0 ? "pos" : "neg"}">${tt.pnl_eur >= 0 ? "+" : ""}${eur(tt.pnl_eur)}</span> · IBKR + Alpaca` : "";
     kpi("k-pnl", (s.pnl >= 0 ? "+" : "") + eur(s.pnl) + ` <small>${pct(s.pnl / (s.capitale_iniziale || 100000), 2)}</small>`, s.pnl >= 0 ? "pos" : "neg");
     kpi("k-risk", `<i class="light ${s.semaforo}"></i>${s.kill ? "KILL" : s.semaforo}`);
     kpi("k-bud", `${num(s.budget_oggi, 3)} / ${num(s.tetto_oggi, 2)} €`);
@@ -205,6 +210,7 @@ const tag = (v) => `<span class="tag ${esc(v)}">${esc(v)}</span>`;
 let peopleSort = ["punteggio", -1];
 
 const AFTER = {};
+let PLANCIA_FILTER = { venue: "", stato: "" };
 AFTER.segnali = async () => {
   const b = document.getElementById("sig-send"); if (!b) return;
   b.onclick = async () => {
@@ -314,6 +320,30 @@ const PANELS = {
     return ["Grafici: il nostro fondo e i titoli",
       `<div class="cbar"><button data-ctab="fondo">Il nostro fondo</button><button data-ctab="titoli">Titoli e indicatori</button></div>` +
       `<div id="sec-fondo"><p class="muted">Calcolo il portafoglio atteso e il Monte Carlo…</p></div><div id="sec-titoli" class="hidden">${titoli}</div>`];
+  },
+  async plancia(arg) {
+    const f = PLANCIA_FILTER = Object.assign(PLANCIA_FILTER, typeof arg === "object" && arg ? arg : {});
+    const q = new URLSearchParams(); if (f.venue) q.set("venue", f.venue); if (f.stato) q.set("stato", f.stato);
+    const d = await api("/api/blotter?" + q), r = d.riepilogo, t = d.totali;
+    const sg = (v, dec = 0) => (v == null ? "—" : `<span class="${v >= 0 ? "pos" : "neg"}">${v >= 0 ? "+" : ""}${eur(v, dec)}</span>`);
+    const btn = (k, v, label) => `<button data-pf="${k}:${v}" class="${(f[k] || "") === v ? "on" : ""}">${label}</button>`;
+    const rows = d.operazioni.map((o) => {
+      const eurv = o.aperta ? o.non_realizzato_eur : o.realizzato_eur, pc = o.pnl_pct;
+      const who = o.origine && o.origine.kind ? ({ idea: "idea", free: "banco libero", desk: "capo desk", modello: "modello GERVA-Q", lungo: "lungo periodo", segnale: "segnale", sconosciuta: "?" }[o.origine.kind] || o.origine.kind) : "?";
+      return `<tr class="op" data-trade="${esc(o.chiave)}"><td>${esc((o.aperta_il || "").slice(5, 16).replace("T", " "))}</td><td>${o.venue === "ibkr" ? "IBKR" : "Alpaca"}</td><td><b>${esc(o.simbolo)}</b></td>` +
+        `<td><span class="tag ${o.lato === "long" ? "aumenta" : "riduci"}">${esc(o.lato)}</span></td><td>${num(o.qty, o.qty < 10 ? 4 : 0)}</td><td>${o.peso_conto_pct == null ? "—" : num(o.peso_conto_pct, 1) + "%"}</td>` +
+        `<td>${num(o.ingresso, 2)} ${esc(o.valuta)}</td><td>${o.aperta ? `<span class="muted">ora</span> ${o.attuale == null ? "—" : num(o.attuale, 2)}` : num(o.uscita, 2)}</td>` +
+        `<td>${sg(eurv, 2)} <small class="${(pc || 0) >= 0 ? "pos" : "neg"}">${pc == null ? "" : (pc >= 0 ? "+" : "") + num(pc, 2) + "%"}</small></td><td>${o.aperta ? `<span class="tag in_corso">aperta</span>` : `<span class="tag chiuso">chiusa</span>`}</td>` +
+        `<td>${esc(who)}${o.agente ? ` · ${esc(o.agente)}` : ""}</td></tr><tr class="story hidden" data-for="${esc(o.chiave)}"><td colspan="11"><div class="sbox muted">Carico la storia…</div></td></tr>`;
+    }).join("");
+    return ["Plancia: tutte le operazioni",
+      `<div class="kgrid">${card("Totale (IBKR + Alpaca)", eur(t.totale.nav_eur), sg(t.totale.pnl_eur) + " dall'inizio")}${card("IBKR · azioni", eur(t.ibkr.nav_eur), `leva sul conto ${t.ibkr.leva == null ? "—" : num(t.ibkr.leva, 2) + "x"}`)}` +
+      `${card("Alpaca · crypto e banco libero", t.alpaca.disponibile ? eur(t.alpaca.nav_eur) : "—", `leva sul conto ${t.alpaca.leva == null ? "—" : num(t.alpaca.leva, 2) + "x"}`)}` +
+      `${card("Realizzato (chiuse)", sg(r.realizzato_eur), `${r.vincenti} in guadagno · ${r.perdenti} in perdita`)}${card("In corso (aperte)", sg(r.non_realizzato_eur), `${r.aperte} posizioni`)}</div>` +
+      `<div class="cbar">${btn("stato", "", "Tutte")}${btn("stato", "aperta", "Aperte")}${btn("stato", "chiusa", "Chiuse")} <span class="muted">·</span> ${btn("venue", "", "Tutti i conti")}${btn("venue", "ibkr", "IBKR")}${btn("venue", "alpaca", "Alpaca")}</div>` +
+      (d.operazioni.length ? `<div class="scroll"><table class="tbl"><tr><th>Aperta</th><th>Conto</th><th>Titolo</th><th>Lato</th><th>Qtà</th><th>Peso</th><th>Ingresso</th><th>Uscita / ora</th><th>Risultato</th><th>Stato</th><th>Deciso da</th></tr>${rows}</table></div>` :
+        "<p class='muted'>Ancora nessuna operazione registrata. Le esecuzioni di IBKR arrivano a ogni battito (15 minuti, con Trader Workstation collegata); quelle di Alpaca dopo il primo ordine.</p>") +
+      `<p class="muted">Clic su una riga: come è nata la decisione (chi l'ha pensata, chi l'ha controllata, il comitato, il rischio) e cosa se ne è imparato. Il peso è sul valore del conto. La <b>leva</b> è l'esposizione lorda diviso il valore del conto (non esiste per singola operazione). Le commissioni di Alpaca sulle crypto non sono ancora lette: il risultato crypto è lordo. Il cambio USD/EUR è quello di IBKR (${num(t.cambio_usd_eur, 4)}).</p>`];
   },
   async segnali() {
     const d = await api("/api/signals"), st = d.statistiche, tag2 = (v) => `<span class="tag ${esc(v)}">${esc(v)}</span>`;
@@ -456,11 +486,26 @@ document.querySelectorAll("[data-close]").forEach((b) => (b.onclick = () => clos
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") ["dialog", "panel"].forEach(closeWin); });
 document.getElementById("sound").onclick = (e) => { soundOn = !soundOn; e.target.textContent = "Suoni " + (soundOn ? "ON" : "OFF"); beep(880); };
 
+async function toggleStory(key) {
+  const row = [...document.querySelectorAll("tr.story")].find((r) => r.dataset.for === key); if (!row) return;
+  row.classList.toggle("hidden"); if (row.classList.contains("hidden") || row.dataset.loaded) return;
+  const box = row.querySelector(".sbox"), d = await api("/api/blotter/story?key=" + encodeURIComponent(key));
+  if (!d.ok) { box.textContent = "Storia non disponibile."; return; }
+  const o = d.operazione, l = d.lezione;
+  const steps = d.passi.map((p, i) => `<div class="step"><b>${i + 1}. ${p.chi.nome ? esc(p.chi.nome) : esc(p.chi.id || "")}</b>${p.chi.ruolo ? ` <span class="muted">${esc(p.chi.ruolo)}</span>` : ""} — ${esc(p.cosa)}` +
+    (p.testo ? `<p>${esc(p.testo)}</p>` : "") + ((p.evidenze || []).length ? `<ul>${p.evidenze.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : "") +
+    (p.dati && Object.keys(p.dati).filter((k) => p.dati[k] != null).length ? `<p class="muted">${Object.entries(p.dati).filter(([, v]) => v != null).map(([k, v]) => `${esc(k)}: ${esc(typeof v === "object" ? JSON.stringify(v) : v)}`).join(" · ")}</p>` : "") + `</div>`).join("");
+  const les = l ? `<div class="lesson ${esc(l.giudizio)}"><b>Cosa si è imparato</b> <span class="tag ${l.giudizio === "errore" ? "riduci" : l.giudizio === "tecnica_vincente" ? "aumenta" : "mantieni"}">${esc(l.giudizio.replace("_", " "))}</span><p>${esc(l.cosa)}</p><p><b>Lezione:</b> ${esc(l.lezione)}</p>${l.regola ? `<p><b>Per il futuro:</b> ${esc(l.regola)}</p>` : ""}</div>` :
+    (o.aperta ? `<p class="muted">Operazione ancora aperta: la lezione si scrive dopo la chiusura (ogni sera, dall'agente che l'ha decisa).</p>` : `<p class="muted">La lezione non è ancora stata scritta (ogni sera, dopo le 21 UTC).</p>`);
+  box.className = "sbox"; box.innerHTML = `<h4>Come è nata la decisione</h4>${steps}${les}`; row.dataset.loaded = "1";
+}
 document.getElementById("pnl-body").addEventListener("click", async (e) => {
-  const t = e.target.closest("[data-agent],[data-cmd],[data-mail],[data-save],[data-report],[data-sort],#strikebtn,#killbtn");
+  const t = e.target.closest("[data-agent],[data-cmd],[data-mail],[data-save],[data-report],[data-sort],[data-pf],[data-trade],#strikebtn,#killbtn");
   if (!t) return;
   e.preventDefault();
   try {
+    if (t.dataset.pf) { const [k, v] = t.dataset.pf.split(":"); openPanel("plancia", { [k]: v }); return; }
+    if (t.dataset.trade) { await toggleStory(t.dataset.trade); return; }
     if (t.dataset.agent) openAgent(t.dataset.agent);
     if (t.dataset.cmd) openPanel("compiti", +t.dataset.cmd);
     if (t.dataset.report) openPanel("report", t.dataset.report);

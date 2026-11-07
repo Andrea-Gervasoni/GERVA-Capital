@@ -139,6 +139,13 @@ CREATE TABLE IF NOT EXISTS free_trades (
 CREATE TABLE IF NOT EXISTS house_rules (
   id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, kind TEXT, value REAL, who TEXT, idea INTEGER, status TEXT
 );
+CREATE TABLE IF NOT EXISTS fills_all (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, ext_id TEXT UNIQUE, venue TEXT, ts TEXT, symbol TEXT, side TEXT, qty REAL, price REAL,
+  fee REAL, currency TEXT, status TEXT, order_id TEXT, origine TEXT, agent TEXT
+);
+CREATE TABLE IF NOT EXISTS lessons (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, trade_key TEXT UNIQUE, agent TEXT, giudizio TEXT, cosa TEXT, lezione TEXT, regola TEXT
+);
 CREATE TABLE IF NOT EXISTS rules_log (
   id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, kind TEXT, key TEXT, old TEXT, new TEXT, who TEXT, idea INTEGER, status TEXT
 );

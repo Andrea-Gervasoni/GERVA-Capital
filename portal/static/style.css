@@ -129,3 +129,10 @@ body.login { align-items: center; justify-content: center; }
 .cbar button.on { border-color: var(--gold); color: var(--gold); }
 #pnl-body canvas.chart { display: block; width: 100%; margin: 6px 0; border: 2px solid var(--edge); }
 #pnl-body textarea { width: 100%; font-family: "VT323", monospace; font-size: 18px; background: var(--panel2); color: var(--paper); border: 2px solid var(--edge); padding: 6px; }
+
+/* plancia */
+.tbl { width: 100%; border-collapse: collapse; } .tbl th { text-align: left; color: var(--muted); font-weight: normal; padding: 2px 6px; white-space: nowrap; } .tbl td { padding: 3px 6px; white-space: nowrap; }
+.tbl tr.op { cursor: pointer; } .tbl tr.op:hover td { background: #243a6e; } .scroll { overflow-x: auto; }
+tr.story td { white-space: normal; background: #16264d; } .sbox { padding: 6px 8px; } .sbox h4 { margin: 4px 0; } .step { border-left: 3px solid var(--amber); padding: 2px 8px; margin: 6px 0; } .step p { margin: 3px 0; }
+.lesson { border: 1px solid var(--amber); padding: 4px 8px; margin-top: 8px; } .lesson.errore { border-color: var(--red); } .lesson.tecnica_vincente { border-color: var(--green); }
+.cbar button.on { background: var(--amber); color: var(--ink); }

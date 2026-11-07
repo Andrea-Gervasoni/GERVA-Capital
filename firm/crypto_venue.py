@@ -243,6 +243,13 @@ def rebalance(dry: bool = False) -> dict:
             else:
                 r = _req("POST", "/v2/orders", dict(symbol=f"{o['coin']}/USD", side=o["side"], type="market", time_in_force="gtc", notional=f"{o['usd']:.2f}"))
             sent.append(dict(o, esito="inviato", id=str(r.get("id", ""))[:36]))
+            try:
+                from . import blotter
+                sg = db.one("SELECT id FROM signals WHERE stato='accettato' AND parsed LIKE ? ORDER BY id DESC LIMIT 1", (f'%"moneta": "{o["coin"]}"%',))
+                blotter.record_alpaca_order(str(r.get("id", "")), o["coin"], o["side"], o["usd"],
+                                            dict(kind="segnale", ref=sg["id"]) if sg else dict(kind="modello"))
+            except Exception:
+                pass
         except Exception as e:
             sent.append(dict(o, esito="rifiutato", motivo=str(e)[:150]))
     state = dict(ts=db.now_iso(), equity=round(equity, 2), cash=round(float(acc.get("cash", 0)), 2), posizioni={k: round(v, 2) for k, v in have.items()},

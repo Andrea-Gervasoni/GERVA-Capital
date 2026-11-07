@@ -170,6 +170,11 @@ def execute(agent: str, t: dict, st: dict) -> dict:
                 (db.now_iso(), agent, sym, side, usd, kind, body["time_in_force"], float(t.get("stop_pct") or 0), float(t.get("take_pct") or 0), until,
                  str(t.get("motivo", ""))[:300], t.get("probabilita"), "inviato", str(r.get("id", ""))))
     events.publish("free.trade", agent, dict(id=tid, simbolo=sym, lato=side, usd=usd, minuti=hold))
+    try:
+        from . import blotter
+        blotter.record_alpaca_order(str(r.get("id", "")), sym, side, usd, dict(kind="free", ref=tid, agent=agent), agent)
+    except Exception:
+        pass
     return dict(ok=True, id=tid)
 
 
@@ -178,8 +183,13 @@ def _close_trade(row: dict, price: float | None, why: str, qty: float | None = N
     is_crypto = sym in charts.CRYPTO
     q = qty if qty is not None else row["qty"]
     try:
-        V._req("POST", "/v2/orders", dict(symbol=f"{sym}/USD" if is_crypto else sym, side="sell" if row["side"] == "buy" else "buy", type="market",
-                                           time_in_force="gtc" if is_crypto else "day", qty=f"{q:.6f}".rstrip("0").rstrip(".")))
+        cr = V._req("POST", "/v2/orders", dict(symbol=f"{sym}/USD" if is_crypto else sym, side="sell" if row["side"] == "buy" else "buy", type="market",
+                                                time_in_force="gtc" if is_crypto else "day", qty=f"{q:.6f}".rstrip("0").rstrip(".")))
+        try:
+            from . import blotter
+            blotter.record_alpaca_order(str(cr.get("id", "")), sym, "sell" if row["side"] == "buy" else "buy", (price or 0) * q, dict(kind="free", ref=row["id"], agent=row["agent"]), row["agent"])
+        except Exception:
+            pass
     except Exception as e:
         db.ex("UPDATE free_trades SET esito=? WHERE id=?", (f"chiusura non riuscita: {str(e)[:120]}", row["id"]))
         return
@@ -305,7 +315,7 @@ def cycle(runtime=None, agents: list[str] | None = None) -> dict:
                             "cosa_si_muove_ora mostra i titoli piu' scambiati e i maggiori rialzi/ribassi). Controlla l'orologio: se le azioni sono chiuse un ordine azionario resta in coda "
                             "fino all'apertura, mentre le crypto si negoziano sempre. Cosa fai adesso? Puoi aprire quanti trade vuoi, anche di pochi minuti (tieni_minuti), "
                             "con stop e obiettivo in %. Se la tua analisi sostiene un trade, aprilo; altrimenti puoi non fare niente.",
-                         data=dict(conto=st, regole_di_casa=rules_detail(), tuoi_ultimi_trade=mine, regime=charts.regime(), orologio=V.clock(), costo=cost, universo_nostro=scr, mercato_ora=live, cosa_si_muove_ora=scan, notizie_verificate=news),
+                         data=dict(conto=st, regole_di_casa=rules_detail(), tuoi_ultimi_trade=mine, regime=charts.regime(), orologio=V.clock(), costo=cost, manuale_lezioni=__import__('firm.lessons', fromlist=['x']).recent(12), universo_nostro=scr, mercato_ora=live, cosa_si_muove_ora=scan, notizie_verificate=news),
                          schema=W.FREE_TRADES, purpose="banco-libero", status_label="trada")
         tried[a] = db.now_iso()
         if not r["ok"]:

@@ -173,6 +173,13 @@ def beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
             signals.track()
         except Exception as e:
             notes.append(f"segnali: {str(e)[:80]}")
+    if now.hour >= 21 and _once(f"lezioni:{day}"):             # a fine giornata: cosa si e' imparato dalle operazioni chiuse
+        try:
+            from . import lessons
+            r = lessons.daily()
+            notes.append(f"lezioni: {r.get('lezioni', 0)} da {len(r.get('agenti', []))} agenti")
+        except Exception as e:
+            notes.append(f"lezioni non scritte: {str(e)[:60]}")
     if now.hour >= 8 and _once(f"ideas:{day}"):                # ogni agente cerca idee, i superiori le portano su, il comitato vota
         try:
             from . import ideas
@@ -181,6 +188,11 @@ def beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
             woke += [n["a"] for n in r.get("nuove", []) if n.get("a")]
         except Exception as e:
             notes.append(f"idee non eseguite: {str(e)[:80]}")
+    try:                                                       # plancia: fill e conto Alpaca aggiornati ad ogni battito
+        from . import blotter
+        blotter.sync_alpaca()
+    except Exception:
+        pass
     if now.hour >= 7 and _once(f"scala:{day}"):                # leva gestita per volatilita' (se accesa)
         try:
             from . import desk

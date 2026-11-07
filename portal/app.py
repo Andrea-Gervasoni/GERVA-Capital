@@ -243,7 +243,7 @@ def state():
     return _json(dict(
         modalita="PAPER", live_bloccato=True, sciopero=st["strike"], motivo_sciopero=st["strike_reason"],
         simulato=not os.environ.get("ANTHROPIC_API_KEY"), demo=bool(db.runtime_get("demo", False)),
-        diretta=_live_state(), nav=fb["nav"], nav_conto=gateway.pod_zero_nav(), nav_pod_simulati=fb["nav"] - gateway.pod_zero_nav(),
+        diretta=_live_state(), portafogli=__import__("firm.blotter", fromlist=["x"]).totals(), nav=fb["nav"], nav_conto=gateway.pod_zero_nav(), nav_pod_simulati=fb["nav"] - gateway.pod_zero_nav(),
         pnl=fb["pnl"], capitale=gateway.capital_source(), capitale_iniziale=fb["capitale_iniziale"],
         semaforo=rk["semaforo"], kill=rk["kill"], allarmi=rk["allarmi"],
         budget_oggi=st["spent_today"], tetto_oggi=st["daily_cap"], budget_totale=st["spent_total"],
@@ -495,6 +495,31 @@ def fund_kelly(haircut: float = 0.5):
         return _json(fundrisk.growth_curve(pf["pesi"], haircut=haircut) if pf["pesi"] else dict(ok=False, motivo="nessun peso"))
     except Exception as e:
         return _json(dict(ok=False, motivo=f"{type(e).__name__}: {str(e)[:160]}"))
+
+
+@app.get("/api/blotter")
+def api_blotter(venue: str = "", stato: str = ""):
+    """La plancia: tutte le operazioni (azioni su IBKR, crypto su Alpaca), aperte e chiuse, con il valore dei due conti e il totale."""
+    from firm import blotter as BL
+    if venue not in ("", "ibkr", "alpaca") or stato not in ("", "aperta", "chiusa"):
+        raise HTTPException(400, "filtro non valido")
+    try:
+        BL.sync_alpaca_throttled()
+    except Exception:
+        pass
+    return _json(BL.overview(venue or None, stato or None))
+
+
+@app.get("/api/blotter/story")
+def api_blotter_story(key: str):
+    """Come e' nata una operazione: chi l'ha pensata, chi l'ha controllata, il comitato, e cosa se n'e' imparato."""
+    from firm import blotter as BL
+    return _json(BL.story(key))
+
+
+@app.get("/api/lessons")
+def api_lessons(limit: int = 50):
+    return _json(db.q("SELECT * FROM lessons ORDER BY id DESC LIMIT ?", (min(max(limit, 1), 200),)))
 
 
 @app.get("/api/free")

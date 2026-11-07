@@ -135,7 +135,7 @@ def market_open(symbol: str, kind: str, now: dt.datetime | None = None) -> bool:
 # ---------------------------------------------------------------------------
 class _ReadOnlyIB:
     """Involucro dell'osservatore: solo letture. placeOrder/cancelOrder e tutto il resto sono vietati."""
-    _ALLOWED = frozenset({"connect", "disconnect", "managedAccounts", "accountValues", "positions", "fills", "sleep", "reqPnL", "cancelPnL"})
+    _ALLOWED = frozenset({"connect", "disconnect", "managedAccounts", "accountValues", "positions", "fills", "portfolio", "sleep", "reqPnL", "cancelPnL"})
 
     def __init__(self, ib):
         object.__setattr__(self, "_ib", ib)
@@ -174,6 +174,12 @@ def observe_challenge(factory=_default_factory, timeout: float = 15) -> dict:
                 pos = [dict(simbolo=p.contract.localSymbol or p.contract.symbol, tipo=p.contract.secType,
                             qty=float(p.position), costo_medio=float(p.avgCost)) for p in ib.positions(acct)]
                 snap.update(ok=True, conto=mask(acct), nav_eur=nav, posizioni=pos, eseguiti_oggi=len(ib.fills()))
+                try:                                   # plancia: le esecuzioni, i prezzi di mercato e la leva del conto (sola lettura)
+                    from . import blotter
+                    blotter.ingest_ibkr(ib.fills())
+                    blotter.snapshot_ibkr(ib, acct, vals)
+                except Exception:
+                    pass
     except Exception as e:                       # gateway spento, rete, login: si registra, non si crasha
         snap.update(errore=f"{type(e).__name__}: {str(e)[:160]}")
     finally:

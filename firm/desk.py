@@ -216,7 +216,7 @@ def cycle(today: dt.date | None = None) -> dict:
     news = [dict(titolo=n["title"], sintesi=(n["summary"] or "")[:200])
             for n in db.q("SELECT title, summary FROM news WHERE status='verificata' ORDER BY id DESC LIMIT 8")]
     libro, reale = W.libro_posizioni(), W.dati_reali()
-    by_desk = {}
+    by_desk, motivi = {}, {}
     for desk in DESKS:
         a = registry.get(desk)
         if not a or a["kind"] != "llm" or a["status"] not in ("attivo", "in_prova"):
@@ -231,6 +231,7 @@ def cycle(today: dt.date | None = None) -> dict:
             schema=W.DESK_PROPOSAL, purpose="desk", status_label="pensa")
         if r["ok"]:
             by_desk[desk] = r["output"]["proposte"][:MAX_PROPOSALS]
+            motivi.setdefault(desk, {}).update({str(p.get("simbolo", "")).upper(): dict(peso_pct=p.get("peso_pct"), motivo=str(p.get("motivo", ""))[:500]) for p in by_desk[desk]})
     try:
         from . import ideas
         props = ideas.proposals()
@@ -242,5 +243,6 @@ def cycle(today: dt.date | None = None) -> dict:
     if not by_desk:
         return dict(nota="nessun desk ha risposto")
     result = merge(by_desk, allowed, c)
+    db.runtime_set("desk.proposals", dict(day=(today or dt.date.today()).isoformat(), per_desk=motivi))     # per la plancia: perche' l'ha proposta
     doc = write_overlay(result, today)
     return dict(ok=True, desk=list(by_desk), targets=doc["targets"], scartate=result["scartate"])
