@@ -164,3 +164,15 @@ def test_agent_can_change_or_revoke_rule_anytime_and_rule_is_binding_meanwhile(b
     assert not FD.execute("a1", _trade(usd=90000), FD.state())["ok"]       # finche' e' in vigore, il codice la fa rispettare
     FD.set_house_rule("max_leverage", 5, "comitato#2")                     # riportata in consiglio e cambiata: nessuna pausa imposta
     assert FD.execute("a1", _trade(usd=90000), FD.state())["ok"]
+
+
+def test_class_share_symbol_and_hold_timer_starts_at_fill(broker):
+    assert FD._norm("BRK-B") == ("BRK.B", False) and FD._norm("btc/usd") == ("BTC", True) and FD._norm("SOL") == ("SOL", True)
+    assert FD.execute("pod_trend", _trade("BRK-B", 1000, hold=120), FD.state())["ok"]
+    assert broker.orders[0]["symbol"] == "BRK.B"
+    old = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=2)).strftime("%Y-%m-%dT%H:%M:%SZ")      # ordine inviato sabato, riempito lunedi'
+    until = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=2) + dt.timedelta(minutes=120)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    db.ex("UPDATE free_trades SET ts=?, hold_until=?", (old, until))
+    assert FD.monitor() == []                                                  # riempito adesso: le 2 ore partono da adesso, non e' gia' scaduto
+    row = db.one("SELECT * FROM free_trades")
+    assert row["status"] == "aperta" and row["hold_until"] > dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")

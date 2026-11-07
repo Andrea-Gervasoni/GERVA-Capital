@@ -128,8 +128,12 @@ def check_trade(agent: str, t: dict, st: dict) -> tuple[bool, str]:
 
 # ---------------------------------------------------------------------------------------------- esecuzione
 def _norm(sym: str) -> tuple[str, bool]:
-    s = str(sym).upper().strip().replace("/USD", "").replace("USD", "") if str(sym).upper().strip() in charts.CRYPTO or str(sym).upper().endswith("/USD") else str(sym).upper().strip()
-    return s, s in charts.CRYPTO
+    """Simbolo come lo vuole Alpaca: azioni con il punto per le classi (BRK.B, non BRK-B), crypto senza /USD."""
+    s = str(sym).upper().strip()
+    if s in charts.CRYPTO or s.endswith("/USD"):
+        s = s.replace("/USD", "")
+        return s, s in charts.CRYPTO
+    return s.replace("-", "."), False
 
 
 def execute(agent: str, t: dict, st: dict) -> dict:
@@ -200,8 +204,14 @@ def monitor(now: dt.datetime | None = None) -> list[dict]:
             if row["status"] == "inviato":
                 o = V._req("GET", f"/v2/orders/{row['order_id']}")
                 if o.get("status") == "filled":
-                    db.ex("UPDATE free_trades SET status='aperta', entry_px=?, qty=? WHERE id=?", (float(o["filled_avg_price"]), float(o["filled_qty"]), row["id"]))
-                    row = dict(row, status="aperta", entry_px=float(o["filled_avg_price"]), qty=float(o["filled_qty"]))
+                    hold_until = row["hold_until"]
+                    if hold_until:                                  # il tempo di tenuta parte dal RIEMPIMENTO (un ordine in coda per il weekend non scade prima di aprire)
+                        fmt = "%Y-%m-%dT%H:%M:%SZ"
+                        dur = dt.datetime.strptime(hold_until, fmt) - dt.datetime.strptime(row["ts"][:19] + "Z", fmt)
+                        hold_until = (now + dur).strftime(fmt)
+                    db.ex("UPDATE free_trades SET status='aperta', entry_px=?, qty=?, hold_until=? WHERE id=?",
+                          (float(o["filled_avg_price"]), float(o["filled_qty"]), hold_until, row["id"]))
+                    row = dict(row, status="aperta", entry_px=float(o["filled_avg_price"]), qty=float(o["filled_qty"]), hold_until=hold_until)
                 elif o.get("status") in ("canceled", "expired", "rejected"):
                     db.ex("UPDATE free_trades SET status='rifiutato', esito=? WHERE id=?", (o.get("status"), row["id"]))
                     continue
