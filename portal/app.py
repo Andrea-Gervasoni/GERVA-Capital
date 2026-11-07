@@ -497,6 +497,13 @@ def fund_kelly(haircut: float = 0.5):
         return _json(dict(ok=False, motivo=f"{type(e).__name__}: {str(e)[:160]}"))
 
 
+@app.get("/api/ideas")
+def api_ideas(limit: int = 40):
+    """Le idee degli agenti con il loro percorso (chi le ha portate su, chi le ha votate, che esito hanno avuto) e le regole votate."""
+    from firm import ideas as ID, rules as RU
+    return _json(dict(idee=ID.listing(min(max(limit, 1), 100)), regole=RU.history(30)))
+
+
 @app.get("/api/fund/expectation")
 def fund_expectation():
     """I due ventagli registrati prima (modello e realistico), il valore reale del conto, e le previsioni del Capo."""

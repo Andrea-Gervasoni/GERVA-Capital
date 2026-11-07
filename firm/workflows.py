@@ -35,6 +35,12 @@ def arr(items: dict) -> dict:
 # 1. REDAZIONE: triage -> verifica su seconda fonte -> bollettino
 # ===========================================================================
 DESK_PROPOSAL = obj({"proposte": arr(obj({"simbolo": S_STR, "peso_pct": {"type": "number"}, "motivo": S_STR})), "nota": S_STR})
+IDEA = obj({"ho_un_idea": {"type": "boolean"}, "tipo": {"type": "string", "enum": ["posizione", "regola", "motore"]},
+            "titolo": S_STR, "tesi": S_STR, "evidenze": arr(S_STR), "simbolo": S_STR, "peso_pct": {"type": "number"},
+            "orizzonte_giorni": {"type": "integer"}, "stop_pct": {"type": "number"}, "obiettivo_pct": {"type": "number"},
+            "chiave": S_STR, "valore": {"type": "number"}, "probabilita_successo": {"type": "number"}})
+IDEA_REVIEW = obj({"decisione": {"type": "string", "enum": ["porta_su", "rimanda", "scarta"]}, "motivo": S_STR,
+                   "miglioramenti": S_STR, "probabilita_successo": {"type": "number"}})
 PACE = obj({"ritmo_pct": {"type": "number"}, "motivo": S_STR})
 OUTLOOK = obj({"previsioni": arr(obj({"orizzonte_giorni": {"type": "integer"}, "p_sopra": {"type": "number"}, "mediana_pct": {"type": "number"}})), "motivo": S_STR})
 SIGNAL_PARSE = obj({"moneta": S_STR, "direzione": {"type": "string", "enum": ["long", "short"]}, "ingresso": {"type": "number"},

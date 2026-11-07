@@ -53,6 +53,10 @@ KINDS = {
     "ricerca": dict(options=["respingi", "approva"], days=60,
                     criterion="Sharpe in avanti della strategia in paper a 60 giorni > 0 -> 'approva' era giusto."),
     # quota di lungo periodo: il primo elemento e' la scelta prudente (in caso di pareggio vince "rinvia")
+    "idee": dict(options=["respingi", "approva"], days=25,
+                 criterion="L'idea approvata rende piu' dell'S&P 500 nella sua finestra (alpha > 0) -> 'approva' era giusto."),
+    "regola": dict(options=["respingi", "approva"], days=30,
+                   criterion="Nessun esito misurabile: la regola si giudica nel tempo dal conto, non dal voto."),
     "lungo": dict(options=["rinvia", "compra"], days=90,
                   criterion="Il paniere della rata (pesi uguali) rende piu' di 0 nei 90 giorni -> 'compra' era giusto."),
 }
@@ -159,6 +163,9 @@ def correct_option(m: dict) -> str | None:
             return None
         d = r - z
         return "riduci" if d < -0.005 else "aumenta" if d > 0.005 else "mantieni"
+    if m["kind"] == "idee" and ctx.get("idea"):
+        from . import ideas
+        return ideas.verdict(int(ctx["idea"]))
     if m["kind"] == "lungo" and ctx.get("prezzi"):
         now = db.runtime_get("lt.prezzi") or {}
         r = [now[s] / p - 1 for s, p in ctx["prezzi"].items() if s in now and p]

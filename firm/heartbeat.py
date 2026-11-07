@@ -173,6 +173,14 @@ def beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
             signals.track()
         except Exception as e:
             notes.append(f"segnali: {str(e)[:80]}")
+    if now.hour >= 8 and _once(f"ideas:{day}"):                # ogni agente cerca idee, i superiori le portano su, il comitato vota
+        try:
+            from . import ideas
+            r = ideas.daily()
+            notes.append(f"idee: {len(r.get('nuove', []))} nuove, {r.get('salite', 0)} valutazioni, {len(r.get('comitato', []))} al comitato, {len(r.get('chiuse', []))} chiuse")
+            woke += [n["a"] for n in r.get("nuove", []) if n.get("a")]
+        except Exception as e:
+            notes.append(f"idee non eseguite: {str(e)[:80]}")
     if now.hour >= 7 and _once(f"desk:{day}"):               # i capi desk propongono posizioni per il conto
         from . import desk
         try:

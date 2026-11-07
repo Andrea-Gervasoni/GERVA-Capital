@@ -55,6 +55,21 @@ pace:                      # ritmo di ingresso: quanto puo' COMPRARE GERVA-Q in 
   enabled: true
   min_pct: 15                # il Capo non puo' scendere sotto il 15% del conto al giorno
 
+ideas:                     # ogni agente cerca idee e le presenta al superiore; il comitato approva; i fatti decidono il premio
+  enabled: true
+  agents_per_day: 4          # quanti agenti (a rotazione) cercano un'idea ogni giorno
+  max_per_agent_week: 2
+  committee_per_day: 3
+  max_name_frac: 0.03        # al massimo il 3% del conto su una singola idea
+  max_total_frac: 0.15       # al massimo il 15% del conto su tutte le idee aperte
+  horizon_days: 20
+  share_up: 0.15             # quota del bonus che va a ogni superiore che l'ha portata su
+
+rules:                       # regole votate dal comitato (dentro la Costituzione: firm/rules.py)
+  enabled: true
+  cooldown_days: 3           # la stessa regola non si cambia due volte in tre giorni
+  max_per_day: 3
+
 release:
   any_day: true               # scelta di Andrea del 6/11: i rilasci di GERVA-Q si applicano quando serve (sempre backup, changelog e audit)
   weekday: 6                 # 0 = lunedi' ... 6 = domenica (REGOLE_SFIDA regola 7)

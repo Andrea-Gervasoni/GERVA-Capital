@@ -126,6 +126,14 @@ CREATE TABLE IF NOT EXISTS signals (
   id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, fonte TEXT, testo TEXT, stato TEXT, parsed TEXT, controlli TEXT, analisi TEXT,
   peso REAL, motivo TEXT, scade TEXT, forecast TEXT, esito TEXT, r_multiple REAL, chiuso_ts TEXT
 );
+CREATE TABLE IF NOT EXISTS ideas (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, author TEXT, holder TEXT, kind TEXT, title TEXT, tesi TEXT, evidenze TEXT,
+  azione TEXT, p_success REAL, status TEXT, history TEXT, forecast TEXT, meeting INTEGER, open_ts TEXT, close_ts TEXT,
+  entry_px REAL, result TEXT, reward TEXT
+);
+CREATE TABLE IF NOT EXISTS rules_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, kind TEXT, key TEXT, old TEXT, new TEXT, who TEXT, idea INTEGER, status TEXT
+);
 CREATE TABLE IF NOT EXISTS expectations (
   id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, nav0 REAL, params TEXT, modello TEXT, realistico TEXT, hash TEXT
 );

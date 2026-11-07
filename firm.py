@@ -260,6 +260,27 @@ def cmd_crypto_venue(a):
     print(json.dumps(r, ensure_ascii=False, indent=1))
 
 
+def cmd_idee(a):
+    """Idee degli agenti: senza opzioni fa un giro adesso (cercano, i superiori valutano, il comitato vota); --lista le mostra."""
+    from firm import ideas
+    if not a.lista:
+        print(json.dumps(ideas.daily(), ensure_ascii=False, indent=1, default=str))
+    for i in ideas.listing(25):
+        act = i["azione"] or {}
+        what = f"{act.get('simbolo', '')} {act.get('peso_pct', '')}%" if i["kind"] == "posizione" else f"{act.get('chiave', '')} -> {act.get('valore', '')}"
+        res = f" | alpha {i['result']['alpha']:+.1%} ({i['result']['motivo']})" if i["result"] and "alpha" in i["result"] else ""
+        print(f"#{i['id']:<3} {i['status']:<14} {i['author']:<16} {i['kind']:<9} {i['title'][:50]:<50} {what}{res}")
+
+
+def cmd_regole(a):
+    """Regole cambiate dal comitato (con vecchio e nuovo valore); --annulla ID ripristina il valore precedente."""
+    from firm import rules
+    if a.annulla:
+        print(rules.revert(a.annulla)); return
+    for r in rules.history(30):
+        print(f"#{r['id']:<3} {r['ts'][:16]} {r['status']:<9} {r['key']:<28} {r['old']} -> {r['new']}  ({r['who']})")
+
+
 def cmd_imposta(a):
     """Cambia un'impostazione dal Mac (come dal pannello Impostazioni): firm.py imposta volmgmt.enabled true"""
     from firm import settings
@@ -474,9 +495,13 @@ def main():
     ap = argparse.ArgumentParser(description="GERVA Capital")
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name in ["init", "portal", "heartbeat", "run", "status", "verify", "demo", "release", "data", "research", "report",
-                 "set-password", "ibkr-check", "observe", "check-backtest", "shadow", "comitato-lungo", "desk", "live-nav", "aspettative", "kelly", "volgest", "imposta", "crypto-venue", "telegram-login", "telegram"]:
+                 "set-password", "ibkr-check", "observe", "check-backtest", "shadow", "comitato-lungo", "desk", "live-nav", "aspettative", "kelly", "volgest", "idee", "regole", "imposta", "crypto-venue", "telegram-login", "telegram"]:
         sp = sub.add_parser(name)
         sp.add_argument("--demo", action="store_true", help="usa il database dimostrativo var/demo/")
+        if name == "idee":
+            sp.add_argument("--lista", action="store_true", help="mostra solo le idee, senza fare un giro")
+        if name == "regole":
+            sp.add_argument("--annulla", type=int, default=0, help="ripristina il valore precedente della regola con questo numero")
         if name == "imposta":
             sp.add_argument("chiave"); sp.add_argument("valore")
         if name == "crypto-venue":

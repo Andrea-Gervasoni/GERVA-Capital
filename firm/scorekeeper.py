@@ -34,6 +34,8 @@ ROLE_METRICS = {
     "direzione": [("brier", -1)],
     "lungo": [("brier", -1)],
 }
+for _k in list(ROLE_METRICS):                         # le idee portate al comitato e riuscite contano per ogni reparto (1 = battuto l'S&P 500)
+    ROLE_METRICS[_k] = ROLE_METRICS[_k] + [("idee_riuscite", +1)]
 
 
 # ---------------------------------------------------------------------------

@@ -188,6 +188,21 @@ def refresh_pace(today: dt.date | None = None) -> dict:
     return dict(max_turnover=round(pick, 3), fonte=fonte, motivo=motivo, limiti=[lo, hi], vix_percentile=vp)
 
 
+def refresh_ideas() -> dict:
+    """Riscrive il file dei desk includendo le posizioni delle idee in corso (senza richiamare i capi desk): un'idea approvata
+    entra nel conto senza aspettare il giro del giorno dopo. Il codice rifa' tetti e limiti."""
+    from . import ideas
+    prev = db.runtime_get("desk.overlay") or {}
+    by_desk = {d: [dict(simbolo=k, peso_pct=v * 100.0) for k, v in (w or {}).items()] for d, w in (prev.get("per_desk") or {}).items() if d != "idee"}
+    props = ideas.proposals()
+    if props:
+        by_desk["idee"] = props
+    rows = table()
+    allowed = {r["simbolo"] for r in rows} | {p["simbolo"] for p in props}
+    result = merge(by_desk, allowed, caps()) if by_desk else dict(targets={}, per_desk={}, scartate=[])
+    return write_overlay(result)
+
+
 def cycle(today: dt.date | None = None) -> dict:
     """Un giro dei capi desk: ognuno propone fino a 5 posizioni; il codice valida e scrive il file per GERVA-Q."""
     if not S.get("desk.enabled", True):
@@ -217,6 +232,14 @@ def cycle(today: dt.date | None = None) -> dict:
             schema=W.DESK_PROPOSAL, purpose="desk", status_label="pensa")
         if r["ok"]:
             by_desk[desk] = r["output"]["proposte"][:MAX_PROPOSALS]
+    try:
+        from . import ideas
+        props = ideas.proposals()
+        if props:
+            by_desk["idee"] = props                           # le idee approvate dal comitato entrano come un desk in piu'
+            allowed |= {p["simbolo"] for p in props}
+    except Exception:
+        pass
     if not by_desk:
         return dict(nota="nessun desk ha risposto")
     result = merge(by_desk, allowed, c)
