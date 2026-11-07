@@ -77,3 +77,25 @@ def test_save_keys_paper_only_and_private(tmp_path):
         V.save_keys("AK" + "A1" * 10, "s" * 30, str(env))                 # chiave del conto reale: rifiutata
     with pytest.raises(ValueError):
         V.save_keys("PK" + "A1" * 10, "corta", str(env))
+
+
+def test_rebalance_does_not_sell_what_the_free_desk_bought(firm_env, monkeypatch):
+    monkeypatch.setenv("ALPACA_PAPER_KEY", "k" * 12); monkeypatch.setenv("ALPACA_PAPER_SECRET", "s" * 12)
+    S.set("crypto.venue", "alpaca", _cap()); S.set("crypto.venue_mirror_model", False, _cap())
+    db.runtime_set("desk.overlay", dict(crypto_targets={}))
+    db.ex("INSERT INTO free_trades(ts,agent,symbol,side,notional,status,qty,entry_px) VALUES(?,?,?,?,?,?,?,?)",
+          (db.now_iso(), "pod_crypto", "SOL", "buy", 5000, "aperta", 33.3333, 150.0))
+    posted = []
+
+    def fake(method, path, body=None, timeout=15):
+        if path == "/v2/account":
+            return dict(equity="100000", cash="95000")
+        if path == "/v2/positions":
+            return [dict(symbol="SOLUSD", asset_class="crypto", market_value="5000")]
+        if path.startswith("/v2/assets"):
+            return [dict(symbol="SOL/USD", tradable=True)]
+        posted.append((method, path))
+        return dict(id="x")
+    monkeypatch.setattr(V, "_req", fake)
+    r = V.rebalance()
+    assert r["ok"] and r["ordini"] == [] and posted == []                  # SOL e' del banco libero: nessuna vendita

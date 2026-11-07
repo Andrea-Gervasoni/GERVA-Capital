@@ -194,11 +194,22 @@ def targets() -> dict[str, float]:
     ov = db.runtime_get("desk.overlay") or {}
     for k, v in (ov.get("crypto_targets") or {}).items():
         t[k] = t.get(k, 0.0) + float(v)
+    for k, v in (db.runtime_get("algo.crypto_targets") or {}).items():          # strategie in codice (firm/strategies.py), se accese dal comitato
+        t[k] = t.get(k, 0.0) + max(float(v), 0.0)
     cap = float(S.get("crypto.venue_max_frac", 0.60))
     tot = sum(t.values())
     if tot > cap > 0:
         t = {k: v * cap / tot for k, v in t.items()}
     return {k: round(v, 5) for k, v in t.items() if v > 0}
+
+
+def free_exposure() -> dict[str, float]:
+    """Valore (all'ingresso) delle posizioni crypto aperte dal banco libero: sono degli agenti, il ribilanciamento non le tocca."""
+    out: dict[str, float] = {}
+    for r in db.q("SELECT symbol, side, qty, entry_px, notional, status FROM free_trades WHERE status IN ('inviato','aperta')"):
+        v = (r["qty"] * r["entry_px"]) if (r["qty"] and r["entry_px"]) else (r["notional"] or 0.0)
+        out[r["symbol"]] = out.get(r["symbol"], 0.0) + (v if r["side"] == "buy" else -v)
+    return out
 
 
 def plan(equity: float, have: dict[str, float], tgt: dict[str, float], ok_coins: set[str]) -> tuple[list[dict], list[str]]:
@@ -212,7 +223,7 @@ def plan(equity: float, have: dict[str, float], tgt: dict[str, float], ok_coins:
                 skipped.append(f"{coin}: non supportata da Alpaca")
             continue
         diff = want - have.get(coin, 0.0)
-        if abs(diff) < max(min_usd, BAND * equity) and not (want == 0 and have.get(coin, 0.0) > 0):
+        if abs(diff) < max(min_usd, BAND * equity) and not (want == 0 and have.get(coin, 0.0) > min_usd):
             continue
         orders.append(dict(coin=coin, side="buy" if diff > 0 else "sell", usd=round(abs(diff), 2), chiudi=want == 0))
     orders.sort(key=lambda o: o["side"] != "sell")
@@ -228,7 +239,12 @@ def rebalance(dry: bool = False) -> dict:
         if acc.get("trading_blocked") or acc.get("account_blocked") or equity <= 0:
             return dict(ok=False, nota="conto Alpaca bloccato o senza valore: nessun ordine")
         have, tgt = positions(), targets()
+        fx = free_exposure()                                           # quello che e' del banco libero non si rivende
+        have = {k: v - fx.get(k, 0.0) for k, v in have.items()}
         orders, skipped = plan(equity, have, tgt, supported())
+        for o in orders:                                               # chiudere tutta la posizione toglierebbe anche quella del banco libero
+            if fx.get(o["coin"], 0.0) > 0:
+                o["chiudi"] = False
     except Exception as e:                                             # fail-closed: non si opera al buio
         db.runtime_set("alpaca.state", dict(ts=db.now_iso(), errore=str(e)[:200]))
         return dict(ok=False, nota=f"sede crypto non raggiungibile: {str(e)[:120]}")
