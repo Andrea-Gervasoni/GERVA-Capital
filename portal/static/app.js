@@ -102,14 +102,14 @@ function renderFeed() {
 }
 function connectWS() {
   const ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`);
-  ws.onmessage = (m) => { JSON.parse(m.data).forEach((ev) => addFeed(ev)); renderFeed(); };
+  ws.onmessage = (m) => { JSON.parse(m.data).forEach((ev) => { addFeed(ev); try { onWorldEvent(ev); } catch (_) { /* ufficio non pronto */ } if (ev.kind.startsWith("career") || ev.kind === "meeting.end") refreshWorld(); }); renderFeed(); };
   ws.onclose = () => setTimeout(connectWS, 3000);
 }
 
 // ---------------------------------------------------------------- navigazione
-const GROUPS = { panoramica: ["panoramica"], plancia: ["plancia"], azienda: ["persone", "org", "riunioni", "compiti", "report"], idee: ["idee", "regole", "banco"],
-  mercati: ["grafici", "desk"], segnali: ["segnali"], ricerca: ["ricerca", "strategie"], posta: ["posta"], impostazioni: ["impostazioni"] };
-const LABEL = { persone: "Persone", org: "Organigramma", riunioni: "Riunioni", compiti: "Compiti", report: "Report", idee: "Idee", regole: "Regole", banco: "Banco libero", grafici: "Il fondo e i titoli", desk: "Desk", ricerca: "Prove e fascicoli", strategie: "Strategie dai paper" };
+const GROUPS = { panoramica: ["panoramica"], plancia: ["plancia"], azienda: ["ufficio", "conversazioni", "persone", "org", "riunioni", "compiti", "report"], idee: ["idee", "regole", "banco"],
+  mercati: ["grafici", "desk"], segnali: ["segnali"], ricerca: ["tecniche", "strategie", "ricerca"], posta: ["posta"], impostazioni: ["impostazioni"] };
+const LABEL = { ufficio: "Ufficio", conversazioni: "Conversazioni", tecniche: "Tecniche del fondo", persone: "Persone", org: "Organigramma", riunioni: "Riunioni", compiti: "Compiti", report: "Report", idee: "Idee", regole: "Regole", banco: "Banco libero", grafici: "Il fondo e i titoli", desk: "Desk", ricerca: "Prove e fascicoli", strategie: "Strategie dai paper" };
 const groupOf = (p) => Object.keys(GROUPS).find((g) => GROUPS[g].includes(p)) || "panoramica";
 const CUR = { page: "panoramica", arg: null };
 function go(page, arg) { CUR.arg = arg ?? null; if (location.hash !== "#/" + page) location.hash = "#/" + page; else render(page, CUR.arg); }
@@ -125,6 +125,9 @@ async function render(page, arg, keepScroll = false) {
   document.getElementById("subnav").innerHTML = GROUPS[g].length > 1 ? GROUPS[g].map((p) => `<button data-go="${p}" class="${p === page ? "on" : ""}">${esc(LABEL[p] || p)}</button>`).join("") : "";
   const body = document.getElementById("pnl-body"), title = document.getElementById("pnl-title");
   if (!keepScroll) window.scrollTo({ top: 0 });
+  const stage = document.getElementById("stage");
+  stage.classList.toggle("hidden", page !== "ufficio");
+  if (page === "ufficio") { try { resizeCanvas(); } catch (_) { /* il mondo si sta ancora caricando */ } }
   let t, h;
   try { [t, h] = await PANELS[page](arg); }
   catch (err) { t = "Qualcosa non va"; h = `<p class="err">Non riesco a caricare questa pagina: ${esc(err.message)}</p>`; }
@@ -154,6 +157,27 @@ function fillOverviewTop(s) {
 }
 
 const PANELS = {
+  async ufficio() {
+    return ["Ufficio", `<p class="muted">L'azienda dal vivo. Le persone si muovono <b>solo per eventi veri</b>: un'idea portata al superiore, un compito affidato, una riunione con le parole dette, un trade aperto o chiuso, un segnale deciso, una regola votata. Se nessuno lavora, nessuno si muove. Clic su una persona per la sua scheda; tutto ciò che si dicono è in <a href="#/conversazioni">Conversazioni</a>.</p>`];
+  },
+  async conversazioni(arg) {
+    const ag = typeof arg === "string" ? arg : "";
+    const d = await api("/api/conversations?limit=80" + (ag ? "&agent=" + encodeURIComponent(ag) : ""));
+    const opts = Object.entries(NAMES).sort((a, b) => a[1].name.localeCompare(b[1].name)).map(([id, v]) => `<option value="${esc(id)}" ${id === ag ? "selected" : ""}>${esc(v.name)}</option>`).join("");
+    const msg = (m) => `<div class="msg"><div class="mh2">${m.chi && NAMES[m.chi] ? avatar(m.chi) : '<span class="av d-x">' + esc(initials(m.nome)) + "</span>"}<b>${esc(m.nome)}</b> <span class="tag">${esc(m.fase)}</span></div>` +
+      `<p>${esc(m.testo)}</p>${(m.evidenze || []).length ? `<ul>${m.evidenze.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}${m.cambierei ? `<p class="muted">Cambierei idea se: ${esc(m.cambierei)}</p>` : ""}</div>`;
+    return ["Conversazioni", `<div class="cbar"><select id="conv-agent"><option value="">Tutte le persone</option>${opts}</select><span class="muted">${d.length} conversazioni, le più recenti in alto</span></div>` +
+      (d.map((c) => `<details class="mail conv"><summary class="mh"><span class="tag">${esc(c.tipo)}</span><b>${esc(c.titolo)}</b><span class="muted">${esc(when(c.ts))} · ${esc(c.motivo || "")} · ${c.messaggi.length} messaggi</span></summary>${c.messaggi.map(msg).join("")}</details>`).join("") ||
+        "<p class='muted'>Ancora nessuna conversazione.</p>")];
+  },
+  async tecniche() {
+    const d = await api("/api/techniques");
+    const order = ["adottata", "approvata", "in attesa del voto", "in prova", "provata", "registrata", "bocciata"];
+    const groups = {}; d.forEach((t) => (groups[t.stato] = groups[t.stato] || []).push(t));
+    const keys = Object.keys(groups).sort((a, b) => (order.indexOf(a) + 99) % 99 - (order.indexOf(b) + 99) % 99);
+    return ["Tecniche del fondo", `<div class="kgrid">${keys.map((k) => card(k, groups[k].length)).join("")}</div><p class="muted">Tutto ciò che il fondo usa, ha approvato, sta provando o ha bocciato, con la fonte. Le strategie dai paper si provano con <b>firm.py strategie --backtest tutte</b>; le regole le vota il comitato.</p>` +
+      keys.map((k) => `<h3>${esc(k.charAt(0).toUpperCase() + k.slice(1))} (${groups[k].length})</h3>` + table(groups[k], [["nome", "Tecnica", (v) => `<b>${esc(v)}</b>`], ["tipo", "Tipo"], ["fonte", "Fonte", (v) => `<span class="muted">${esc(v)}</span>`], ["nota", "Stato e numeri"]])).join("")];
+  },
   async panoramica() {
     const [office, blot, ideas] = await Promise.all([api("/api/office"), api("/api/blotter?stato=aperta").catch(() => null), api("/api/ideas?limit=8").catch(() => null)]);
     office.forEach((a) => (NAMES[a.id] = { name: a.name, role: a.role, dept: a.dept }));
@@ -445,7 +469,17 @@ async function toggleStory(key) {
   const o = d.operazione, l = d.lezione;
   const les = l ? `<div class="lesson ${esc(l.giudizio)}"><b>Cosa si è imparato</b> ${tag(l.giudizio === "errore" ? "errore" : l.giudizio === "tecnica_vincente" ? "approva" : "mantieni")} <span class="muted">${esc(l.giudizio.replace("_", " "))}</span><p>${esc(l.cosa)}</p><p><b>Lezione:</b> ${esc(l.lezione)}</p>${l.regola ? `<p><b>Per il futuro:</b> ${esc(l.regola)}</p>` : ""}</div>` :
     `<p class="muted">${o.aperta ? "Operazione aperta: la lezione si scrive dopo la chiusura." : "La lezione si scrive la sera, dopo le 21 UTC."}</p>`;
-  box.className = "sbox"; box.innerHTML = `<h4>Come è nata la decisione</h4>${stepsHtml(d.passi)}${les}`; row.dataset.loaded = "1";
+  const D = d.dossier || {}, I = D.indicatori || {}, F = D.previsione || {}, R = D.regime || {}, V = D.revisione || {};
+  const ind = D.indicatori ? `<div class="kgrid">${card("Prezzo quel giorno", num(I.ultimo, 2), esc(I.data || ""))}${card("Trend", esc(I.trend || "—"), "prezzo, media 50, media 200")}${card("RSI 14", num(I.rsi, 0), esc(I.segnale_rsi || ""))}` +
+    `${card("Rendimenti 1/3/12 mesi", [I.r1m, I.r3m, I.r12m].map((v) => (v == null ? "—" : pct(v, 0))).join(" · "))}${card("Volatilità 20 giorni", pct(I.vol20, 0), "annua")}${card("Distanza dalla media 200", pct(I.vs_ema200, 1))}${card("Bollinger %B", num(I.pct_b, 2))}` +
+    `${card("Mercato", esc(R.lettura || "—"), R.vix != null ? `VIX ${num(R.vix, 1)} (${Math.round((R.vix_percentile || 0) * 100)}° percentile)` : "")}</div>` : "";
+  const fc = F.ok ? `<div class="kgrid">${card(`Previsione a ${F.orizzonte_giorni} giorni`, pct(F.condizionata.p_sale, 0) + " sale", `quando il trend era «${esc(F.trend_oggi)}» · ${F.condizionata.casi} casi`)}${card("Mediana attesa", pct(F.condizionata.mediana, 2), `90% tra ${pct(F.condizionata.p5, 1)} e ${pct(F.condizionata.p95, 1)}`)}${card("Senza condizione", pct(F.tutte.p_sale, 0) + " sale", `${F.tutte.casi} casi`)}${D.modello ? card("Peso nel modello", pct(D.modello.peso_nel_conto, 2), "GERVA-Q, con la leva") : ""}</div>` : (D.previsione ? `<p class="muted">Previsione: ${esc(F.motivo || "non disponibile")}</p>` : "");
+  const rv = (V.pro || V.contro) ? `<div class="grid g-2">${["pro", "contro"].map((k) => `<div class="lg card"><h3>${k === "pro" ? "A favore" : "Contro"}</h3>${(V[k] || []).map((x) => `<p><b>${esc(nm(x.agente))}</b> <span class="muted">probabilità di guadagno ${x.probabilita == null ? "—" : pct(x.probabilita, 0)}</span></p><p>${esc(x.testo)}</p><p class="muted">Indicatori usati: ${esc((x.indicatori || []).join(", "))}</p>`).join("") || "<p class='muted'>—</p>"}</div>`).join("")}</div>` :
+    `<p class="muted">Argomenti a favore e contro: si scrivono la sera (dopo le 20 UTC) per ogni operazione nuova.</p>`;
+  box.className = "sbox"; box.innerHTML = `<h4>Come è nata la decisione</h4>${stepsHtml(d.passi)}` + (d.grafico ? `<h4>Il grafico, con ingresso${o.aperta ? "" : " e uscita"}</h4><canvas class="chart" data-tradechart="1"></canvas>` : "") +
+    (D.indicatori || D.previsione ? `<h4>Le prove al momento della decisione</h4>${ind}${fc}` : `<p class="muted">Dossier non disponibile: operazione registrata prima che i dossier esistessero.</p>`) + `<h4>Pro e contro</h4>${rv}${les}`;
+  row.dataset.loaded = "1";
+  const cv = box.querySelector("[data-tradechart]"); if (cv && d.grafico) QC.trade(cv, d.grafico);
 }
 async function toggleIdea(id, el) {
   const box = el.querySelector(".detail"); if (!box) { go("idee"); return; }
@@ -497,6 +531,7 @@ document.querySelector("[data-close='dialog']").onclick = closeSheet;
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheet(); });
 
 // ---------------------------------------------------------------- clic nelle pagine
+document.getElementById("pnl-body").addEventListener("change", (e) => { if (e.target.id === "conv-agent") render("conversazioni", e.target.value, true); });
 document.getElementById("pnl-body").addEventListener("click", async (e) => {
   const t = e.target.closest("[data-agent],[data-cmd],[data-mail],[data-save],[data-report],[data-sort],[data-pf],[data-trade],[data-idea],#strikebtn,#killbtn");
   if (!t || e.target.closest("a[href^='#/']")) return;
@@ -542,13 +577,32 @@ document.getElementById("cmd").addEventListener("submit", async (e) => {
   const poll = setInterval(async () => { if (++n > 60 || CUR.page !== "compiti") return clearInterval(poll); render("compiti", r.id, true); }, 3000);
 });
 
+// ---------------------------------------------------------------- ufficio pixel (sim.js): eventi veri, clic, zoom
+async function refreshWorld() { try { buildWorld(await api("/api/world")); } catch (e) { console.warn(e); } }
+(function officeControls() {
+  const cvs = document.getElementById("office"), tip = document.getElementById("tip");
+  const entAt = (e) => { const [x, y] = screenToWorld(e); return Object.values(ENT).find((en) => x >= en.x - 9 && x <= en.x + 9 && y >= en.y - 26 && y <= en.y + 2); };
+  cvs.addEventListener("mousemove", (e) => {
+    const en = entAt(e); cvs.style.cursor = en ? "pointer" : "grab";
+    if (!en) return tip.classList.add("hidden");
+    tip.innerHTML = `<b>${esc(en.a.name)}</b><br>${esc(en.a.role)}<br><span class="muted">${esc(en.a.grade_name)} · ${esc(en.a.kind === "code" ? "automa (codice)" : en.a.stato)}</span>`;
+    tip.style.left = e.clientX + 14 + "px"; tip.style.top = e.clientY + 10 + "px"; tip.classList.remove("hidden");
+  });
+  cvs.addEventListener("mouseleave", () => tip.classList.add("hidden"));
+  cvs.addEventListener("click", (e) => { if (cam.drag && cam.drag.moved) return; const en = entAt(e); if (en) openAgent(en.id); });
+  document.querySelectorAll("#zoom button").forEach((b) => (b.onclick = () => { const z = b.dataset.z; if (z === "fit") cam.z = 1; else zoomAt(cam.z * (+z), cam.cx, cam.cy); }));
+})();
+
 // ---------------------------------------------------------------- avvio
 (async function start() {
   try { (await api("/api/office")).forEach((a) => (NAMES[a.id] = { name: a.name, role: a.role, dept: a.dept })); } catch (_) { /* il resto funziona lo stesso */ }
   try { (await api("/api/feed?limit=60")).forEach((ev) => addFeed(ev, false)); } catch (_) { /* idem */ }
   await refreshState();
+  try { await document.fonts.load("11px VT323"); } catch (_) { /* carattere dell'ufficio */ }
+  resizeCanvas(); await refreshWorld(); requestAnimationFrame(renderWorld);
   render(location.hash.replace("#/", "") || "panoramica");
   connectWS();
   setInterval(refreshState, 8000);
+  setInterval(refreshWorld, 15000);
   setInterval(() => { if (CUR.page === "panoramica") renderFeed(); }, 8000);
 })();

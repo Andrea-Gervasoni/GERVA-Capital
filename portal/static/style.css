@@ -7,6 +7,8 @@
 @font-face { font-family: 'General Sans'; src: url('/static/fonts/general-sans-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
 @font-face { font-family: 'General Sans'; src: url('/static/fonts/general-sans-500.woff2') format('woff2'); font-weight: 500; font-display: swap; }
 @font-face { font-family: 'General Sans'; src: url('/static/fonts/general-sans-600.woff2') format('woff2'); font-weight: 600; font-display: swap; }
+@font-face { font-family: 'VT323'; src: url('/static/fonts/VT323.woff2') format('woff2'); }
+@font-face { font-family: 'PressStart'; src: url('/static/fonts/PressStart2P.woff2') format('woff2'); }
 @font-face { font-family: 'Bodoni Moda'; src: url('/static/fonts/bodoni-moda-italic.woff2') format('woff2'); font-weight: 400 900; font-style: italic; font-display: swap; }
 
 :root {
@@ -295,3 +297,17 @@ details[open] > summary::after { transform: rotate(90deg); }
 @media (max-width: 760px) { .banner { margin: 8px 8px 0; } }
 
 .page > .lg.card + .lg.card { margin-top: 14px; }
+
+/* ufficio pixel (la vita dell'azienda: si muove solo per eventi veri) */
+.office { position: relative; margin: 6px 0 16px; border-radius: var(--r); overflow: hidden; background: #000; box-shadow: var(--shadow); }
+#office { display: block; width: 100%; aspect-ratio: 1152 / 720; max-height: calc(100vh - 230px); image-rendering: pixelated; cursor: grab; }
+#zoom { position: absolute; left: 10px; top: 10px; display: flex; gap: 6px; align-items: center; }
+#zoom button { width: 34px; height: 34px; border-radius: 10px; border: 0; background: rgba(20, 21, 31, .7); color: #EDEBE0; cursor: pointer; }
+#zoom span { font-size: .75rem; color: #EDEBE0; background: rgba(20, 21, 31, .6); padding: 3px 8px; border-radius: 8px; }
+#tip { position: fixed; z-index: 30; background: var(--glass-strong); padding: 6px 10px; border-radius: 10px; font-size: .82rem; pointer-events: none; box-shadow: var(--shadow); }
+@media (max-width: 760px) { #zoom span { display: none; } }
+
+.msg { padding: 8px 0 8px 0; border-top: 1px solid var(--hair); }
+.msg .mh2 { display: flex; align-items: center; gap: 8px; } .msg .av { width: 28px; height: 28px; font-size: .7rem; }
+.msg p { margin: 4px 0 0 36px; } .msg ul { margin: 4px 0 0 36px; }
+.conv summary .tag { flex: none; }

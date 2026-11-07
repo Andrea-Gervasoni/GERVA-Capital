@@ -119,3 +119,18 @@ def test_alpaca_history_is_backfilled_once(firm_env, monkeypatch):
     monkeypatch.setattr(V, "_req", req)
     B.sync_alpaca(); B.sync_alpaca()
     assert len(calls) == 1 and len(B.trades()) == 1 and B.trades()[0]["simbolo"] == "BTC" and B.trades()[0]["origine"]["kind"] == "modello"
+
+
+def test_conversations_and_techniques_endpoints(firm_env):
+    from fastapi.testclient import TestClient
+    org_seed.seed(); registry.sync()
+    db.ex("INSERT INTO ideas(ts,author,holder,kind,title,tesi,evidenze,azione,p_success,status,history) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+          (db.now_iso(), "senior_crypto", "capo", "posizione", "t", "tesi vera", "[]", json.dumps(dict(simbolo="V", peso_pct=2)), 0.6, "al_comitato",
+           json.dumps([dict(ts="t", chi="head_research", cosa="portata su", motivo="controllato RSI")])))
+    from portal.app import app
+    c = TestClient(app)
+    conv = c.get("/api/conversations").json()
+    assert conv and conv[0]["tipo"] == "idea" and [m["chi"] for m in conv[0]["messaggi"]] == ["senior_crypto", "head_research"]
+    assert c.get("/api/conversations?agent=head_research").json() and c.get("/api/conversations?agent=nessuno").json() == []
+    tech = c.get("/api/techniques").json()
+    assert any(t["stato"] == "adottata" for t in tech) and any(t["tipo"] == "strategia dai paper" for t in tech)

@@ -127,7 +127,8 @@ _scrypt_slots = asyncio.Semaphore(2)     # scrypt costa ~50 ms e 16 MB: al massi
 # senza sessione si serve SOLO cio' che serve alla pagina di accesso (percorsi esatti, niente prefissi)
 PUBLIC_PATHS = frozenset({"/login", "/logout", "/healthz", "/static/style.css", "/static/favicon.svg",
                           "/static/fonts/general-sans-400.woff2", "/static/fonts/general-sans-500.woff2",
-                          "/static/fonts/general-sans-600.woff2", "/static/fonts/bodoni-moda-italic.woff2"})
+                          "/static/fonts/general-sans-600.woff2", "/static/fonts/bodoni-moda-italic.woff2",
+                          "/static/fonts/PressStart2P.woff2", "/static/fonts/VT323.woff2"})
 
 
 @app.middleware("http")
@@ -536,6 +537,20 @@ def api_strategies():
     """Strategie in codice dai paper: fonte, ipotesi, backtest, accesa o spenta (lo decide il comitato)."""
     from firm import strategies as ST
     return _json(ST.overview())
+
+
+@app.get("/api/conversations")
+def api_conversations(limit: int = 60, agent: str = ""):
+    """Tutte le conversazioni vere: riunioni, idee, ordini e compiti, segnali, banco libero, lezioni."""
+    from firm import journal
+    return _json(journal.conversations(min(max(limit, 1), 200), agent or None))
+
+
+@app.get("/api/techniques")
+def api_techniques():
+    """Le tecniche del fondo: adottate, approvate, in prova, bocciate, con fonte."""
+    from firm import journal
+    return _json(journal.techniques())
 
 
 @app.get("/api/feed")

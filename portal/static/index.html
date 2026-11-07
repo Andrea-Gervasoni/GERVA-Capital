@@ -42,8 +42,13 @@
 
 <main class="view">
   <div class="subnav" id="subnav" role="tablist"></div>
+  <div id="tip" class="hidden"></div>
   <h1 id="pnl-title" class="page-title"></h1>
   <section id="pnl-body" class="page"></section>
+  <section id="stage" class="office hidden">
+    <canvas id="office" tabindex="0" role="img" aria-label="Ufficio di GERVA Capital: le persone si muovono solo per eventi veri"></canvas>
+    <div id="zoom"><button data-z="1.25" title="Avvicina">+</button><button data-z="0.8" title="Allontana">-</button><button data-z="fit" title="Tutto l'edificio">[ ]</button><span>rotella: zoom · trascina · clic su una persona</span></div>
+  </section>
 </main>
 
 <form id="cmd" class="lg cmd" autocomplete="off">
@@ -60,6 +65,9 @@
   <div class="sheet-body" id="dlg-body"></div>
 </aside>
 
+<script src="/static/gfx.js"></script>
+<script src="/static/world.js"></script>
+<script src="/static/sim.js"></script>
 <script src="/static/charts.js"></script>
 <script src="/static/app.js"></script>
 </body>

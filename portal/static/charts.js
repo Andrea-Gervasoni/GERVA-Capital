@@ -172,5 +172,20 @@ const QC = (() => {
     [0, 0.25, 0.5, 0.75, 1].forEach((f) => { const d = new Date(T0 + f * (T1 - T0)); x.fillText(d.getUTCDate() + "/" + (d.getUTCMonth() + 1), g.L + f * (g.R - g.L), h - 10); });
     legend(x, [["conto reale", K.paper], ["aspettativa del modello", K.cyan], ["aspettativa realistica", K.gold], ["capitale di partenza", K.grid]], g.L, 0);
   }
-  return { price, rsi, vol, drawdown, equity, heat, fan, hist, bars, expect };
+  function trade(canvas, g, w = 860, h = 260) {
+    w = Math.max(320, canvas.clientWidth || canvas.parentElement.clientWidth || w);
+    const x = setup(canvas, w, h), n = g.close.length;
+    const all = finite(g.close.concat(g.bb_su || [], g.bb_giu || [], (g.segni || []).map((m) => m.px)));
+    const lo = Math.min(...all), hi = Math.max(...all), pad = (hi - lo) * 0.06;
+    const f = frame(x, w, h, lo - pad, hi + pad, 4, (v) => v >= 1000 ? v.toFixed(0) : v.toFixed(2), { l: 64, r: 12, t: 24, b: 26 });
+    const xf = xs(n, f.L, f.R);
+    if (g.bb_su) { x.beginPath(); g.bb_su.forEach((v, i) => v != null && (i ? x.lineTo(xf(i), f.y(v)) : x.moveTo(xf(i), f.y(v))));
+      for (let i = n - 1; i >= 0; i--) if (g.bb_giu[i] != null) x.lineTo(xf(i), f.y(g.bb_giu[i])); x.closePath(); x.fillStyle = K.band; x.fill(); }
+    line(x, g.ema200, xf, f.y, K.red, 1.2); line(x, g.ema50, xf, f.y, K.gold, 1.2); line(x, g.close, xf, f.y, K.paper, 1.8);
+    (g.segni || []).forEach((m) => { const i = g.date.indexOf(m.d); if (i < 0 || m.px == null) return; const X = xf(i), Y = f.y(m.px);
+      x.fillStyle = m.tipo === "ingresso" ? K.cyan : K.green; x.beginPath(); x.moveTo(X, Y - 9); x.lineTo(X - 6, Y - 18); x.lineTo(X + 6, Y - 18); x.closePath(); x.fill();
+      x.beginPath(); x.arc(X, Y, 4, 0, 7); x.fill(); x.fillStyle = K.text; x.textAlign = "center"; x.fillText(m.tipo, X, Y - 24); });
+    dates(x, g.date, f.L, f.R, f.B, h); legend(x, [["prezzo", K.paper], ["media 50", K.gold], ["media 200", K.red], ["Bollinger", K.bandLine]], f.L, 0);
+  }
+  return { price, rsi, vol, drawdown, equity, heat, fan, hist, bars, expect, trade };
 })();
