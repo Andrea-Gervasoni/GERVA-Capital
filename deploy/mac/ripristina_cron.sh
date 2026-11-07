@@ -1,0 +1,17 @@
+#!/bin/bash
+# Rimette la pianificazione automatica del Mac (cron), SENZA le crypto (il conto paper non le compra).
+# Sicuro da rilanciare: sostituisce la pianificazione con quella corretta e ne salva una copia.
+set -e
+Q="$HOME/Documents/GERVA-Q"
+FIRM="$HOME/Documents/GERVA-Capital"
+PORT=7497
+mkdir -p "$FIRM/var" "$Q/logs"
+crontab -l > "$FIRM/var/crontab.prima.$(date +%Y%m%d-%H%M%S)" 2>/dev/null || true
+{
+  echo "*/15 * * * * cd $FIRM && .venv/bin/python firm.py heartbeat >> var/heartbeat.log 2>&1"
+  echo "35 22 * * 1-5 cd $Q && mkdir -p logs && GERVAQ_IB_PORT=$PORT .venv/bin/python -W ignore live.py --mode paper >> logs/live.log 2>&1"
+  echo "* * * * * pgrep -f 'firm.py [t]elegram' >/dev/null || (cd $FIRM && nohup .venv/bin/python -u firm.py telegram >> var/telegram.log 2>&1 &)"
+  echo "* * * * * pgrep -f 'firm.py live-[n]av' >/dev/null || (cd $FIRM && nohup .venv/bin/python -u firm.py live-nav >> var/live-nav.log 2>&1 &)"
+} | crontab -
+echo "Pianificazione ripristinata:"
+crontab -l
