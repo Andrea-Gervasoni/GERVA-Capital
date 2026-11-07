@@ -11,57 +11,81 @@
 </head>
 <body>
 <div class="paper-grid" aria-hidden="true"></div>
+<div class="progress" id="progress" aria-hidden="true"></div>
 
 <div class="tape" id="tape" aria-label="Mercato in breve">
   <span class="tape-brand">GERVA CAPITAL · SYSTEMATIC MULTI-AGENT FUND · PAPER</span>
   <span id="tape-items"></span>
   <span class="tape-clock" id="tape-clock"></span>
 </div>
-<header class="topbar">
-  <nav class="lg nav" aria-label="Sezioni">
+
+<div class="shell">
+  <aside class="side" id="side" aria-label="Sezioni">
     <a class="brand" href="#/panoramica" aria-label="GERVA Capital, panoramica">
       <svg class="mono" viewBox="0 0 40 40" width="34" height="34" aria-hidden="true"><rect x="0.5" y="0.5" width="39" height="39" rx="9" class="mono-bg"/><text x="20" y="29.5" text-anchor="middle" class="mono-g">G</text><circle cx="32.5" cy="8" r="2.8" class="mono-dot"/></svg>
-      <span class="wordmark"><b>GERVA</b><i></i><span>CAPITAL</span></span>
+      <span class="wordmark"><b>GERVA</b><span>CAPITAL</span></span>
     </a>
-    <div class="tabs" id="tabs" role="tablist">
-      <button data-go="panoramica">Panoramica</button>
-      <button data-go="plancia">Plancia</button>
-      <button data-go="ufficio">Azienda</button>
-      <button data-go="idee">Idee</button>
-      <button data-go="grafici">Mercati</button>
-      <button data-go="segnali">Segnali</button>
-      <button data-go="ricerca">Ricerca</button>
-      <button data-go="posta">Posta <em id="mailn" class="count"></em></button>
-      <button data-go="impostazioni" aria-label="Impostazioni">Impostazioni</button>
+    <nav class="tabs" id="tabs">
+      <p class="side-h">Il fondo</p>
+      <button data-go="panoramica"><span class="n">01</span>Panoramica<kbd>1</kbd></button>
+      <button data-go="plancia"><span class="n">02</span>Plancia<kbd>2</kbd></button>
+      <button data-go="grafici"><span class="n">03</span>Mercati<kbd>3</kbd></button>
+      <button data-go="segnali"><span class="n">04</span>Segnali<kbd>4</kbd></button>
+      <p class="side-h">L'azienda</p>
+      <button data-go="ufficio"><span class="n">05</span>Azienda<kbd>5</kbd></button>
+      <button data-go="idee"><span class="n">06</span>Idee e regole<kbd>6</kbd></button>
+      <button data-go="tecniche"><span class="n">07</span>Ricerca<kbd>7</kbd></button>
+      <p class="side-h">Tu</p>
+      <button data-go="posta"><span class="n">08</span>Posta <em id="mailn" class="count"></em><kbd>8</kbd></button>
+      <button data-go="impostazioni"><span class="n">09</span>Impostazioni<kbd>9</kbd></button>
+    </nav>
+    <div class="side-foot">
+      <div class="session" id="session" title="La seduta di Wall Street, ora di New York"></div>
+      <div class="systems" id="systems" aria-label="Programmi"></div>
+      <div class="badges"><span id="banner-demo" class="badge hidden" title="Database di prova, mercato sintetico, nessun dato reale">Demo</span><span id="banner-sim" class="badge hidden" title="Nessuna chiave API: gli agenti rispondono in modo prudente e finto (costo zero)">Simulazione</span></div>
     </div>
-    <div class="status">
-      <span class="pill paper" title="Conto simulato: nessun soldo vero">Paper</span>
-      <span class="clock" id="clock" title="L'ora corre solo se Telegram, IBKR, il battito e il banco libero sono vivi">--:--:--</span>
-      <span class="pill" id="live-pill"><i class="dot"></i><span id="live-txt">—</span></span>
-      <button class="pill theme" id="theme" aria-label="Cambia tema chiaro/scuro" title="Tema chiaro o scuro"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 2v16a8 8 0 0 1 0-16z"/></svg></button>
-    </div>
-  </nav>
-</header>
+  </aside>
 
-<div id="banner-demo" class="banner hidden">Demo: database di prova, mercato sintetico, nessun dato reale.</div>
-<div id="banner-sim" class="banner hidden">Simulazione: nessuna chiave API, gli agenti rispondono in modo prudente e finto (costo zero).</div>
+  <div class="main">
+    <header class="topline">
+      <button class="iconbtn menu" id="menu" aria-label="Apri le sezioni"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg></button>
+      <div class="crumb" id="crumb"></div>
+      <button class="ask" id="ask" aria-label="Chiedi al Capo o vai a una pagina"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><span>Chiedi al Capo o vai a…</span><kbd>⌘K</kbd></button>
+      <div class="status">
+        <span class="pill paper" title="Conto simulato: nessun soldo vero">Paper</span>
+        <span class="clock" id="clock" title="L'ora corre solo se Telegram, IBKR, il battito e il banco libero sono vivi">--:--:--</span>
+        <span class="pill" id="live-pill"><i class="dot"></i><span id="live-txt">—</span></span>
+        <button class="iconbtn theme" id="theme" aria-label="Cambia tema chiaro/scuro" title="Tema chiaro o scuro"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 2v16a8 8 0 0 1 0-16z"/></svg></button>
+      </div>
+    </header>
 
-<main class="view">
-  <div class="subnav" id="subnav" role="tablist"></div>
-  <div id="tip" class="hidden"></div>
-  <div class="page-head"><span class="eyebrow" id="eyebrow"></span><h1 id="pnl-title" class="page-title"></h1></div>
-  <section id="pnl-body" class="page"></section>
-  <section id="stage" class="office hidden">
-    <canvas id="office" tabindex="0" role="img" aria-label="Ufficio di GERVA Capital: le persone si muovono solo per eventi veri"></canvas>
-    <div id="zoom"><button data-z="1.25" title="Avvicina">+</button><button data-z="0.8" title="Allontana">-</button><button data-z="fit" title="Tutto l'edificio">[ ]</button><span>rotella: zoom · trascina · clic su una persona</span></div>
-  </section>
-</main>
+    <main class="view">
+      <div class="page-head">
+        <span class="ghost" id="ghost" aria-hidden="true"></span>
+        <span class="eyebrow" id="eyebrow"></span>
+        <h1 id="pnl-title" class="page-title"></h1>
+        <p class="lede hidden" id="lede" title="Clic per leggere tutto"></p>
+      </div>
+      <div class="subnav" id="subnav" role="tablist"></div>
+      <div id="tip" class="hidden"></div>
+      <section id="pnl-body" class="page"></section>
+      <section id="stage" class="office hidden">
+        <canvas id="office" tabindex="0" role="img" aria-label="Ufficio di GERVA Capital: le persone si muovono solo per eventi veri"></canvas>
+        <div id="zoom"><button data-z="1.25" title="Avvicina">+</button><button data-z="0.8" title="Allontana">-</button><button data-z="fit" title="Tutto l'edificio">[ ]</button><span>rotella: zoom · trascina · clic su una persona</span></div>
+      </section>
+    </main>
 
-<form id="cmd" class="lg cmd" autocomplete="off">
-  <label for="cmdtext">Parla al Capo</label>
-  <input id="cmdtext" maxlength="2000" placeholder="Es. «Fammi un riepilogo del rischio di oggi»">
-  <button class="btn primary">Invia</button>
-</form>
+    <footer class="colophon"><span>GERVA <i>Capital</i></span><span>Ricerca sistematica · società di agenti · ogni decisione registrata e verificabile</span><span>Conto simulato. Nessun soldo vero finché Andrea non lo decide.</span></footer>
+  </div>
+</div>
+
+<div class="palette hidden" id="palette" role="dialog" aria-modal="true" aria-label="Chiedi al Capo o vai a una pagina">
+  <form id="cmd" class="pal-box" autocomplete="off">
+    <div class="pal-in"><label for="cmdtext">Parla al Capo</label><input id="cmdtext" maxlength="2000" placeholder="Scrivi una domanda, o il nome di una pagina"><kbd>Esc</kbd></div>
+    <ul class="pal-list" id="pal-list" role="listbox"></ul>
+    <div class="pal-foot"><span><kbd>↵</kbd> invia al Capo o apri</span><span><kbd>↑</kbd><kbd>↓</kbd> scegli</span><span><kbd>1</kbd>…<kbd>9</kbd> sezioni, fuori dalla palette</span></div>
+  </form>
+</div>
 
 <div id="toast" role="alert" hidden></div>
 <div id="scrim" class="scrim hidden"></div>
@@ -71,7 +95,6 @@
   <div class="sheet-body" id="dlg-body"></div>
 </aside>
 
-<footer class="colophon"><span>GERVA <i>Capital</i></span><span>Ricerca sistematica · società di agenti · ogni decisione registrata e verificabile</span><span>Conto simulato. Nessun soldo vero finché Andrea non lo decide.</span></footer>
 <script src="/static/gfx.js"></script>
 <script src="/static/world.js"></script>
 <script src="/static/sim.js"></script>

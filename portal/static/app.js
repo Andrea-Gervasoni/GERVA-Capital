@@ -90,9 +90,8 @@ function moveSlider() {
   const tabs = document.getElementById("tabs"), on = tabs.querySelector("button.on");
   let sl = tabs.querySelector(".slider");
   if (!sl) { sl = document.createElement("span"); sl.className = "slider"; tabs.prepend(sl); tabs.classList.add("has-slider"); }
-  if (!on) { sl.style.width = "0px"; return; }
-  sl.style.width = on.offsetWidth + "px"; sl.style.transform = `translateX(${on.offsetLeft}px)`;
-  tabs.querySelectorAll("button").forEach((b) => (b.style.color = b === on ? (getComputedStyle(document.documentElement).getPropertyValue("--paper").trim()) : ""));
+  if (!on) { sl.style.height = "0px"; return; }
+  sl.style.height = on.offsetHeight + "px"; sl.style.transform = `translateY(${on.offsetTop}px)`;
 }
 window.addEventListener("resize", () => moveSlider());
 function sparkSvg(series) {
@@ -113,9 +112,12 @@ async function refreshHealth() {
     const down = h.parti.filter((p) => !p.ok);
     CLOCK.ok = h.ok; CLOCK.frozen = h.ok ? null : (h.bloccato_a ? new Date(h.bloccato_a) : CLOCK.frozen);   // mai partito: --:--:--
     CLOCK.why = h.ok ? "Tutto vivo: " + h.parti.map((p) => p.nome).join(", ") : "FERMO: " + down.map((p) => `${p.nome} (${p.motivo}; ultimo segnale ${p.ultimo ? when(p.ultimo) : "mai"})`).join(" · ");
+    document.getElementById("systems").innerHTML = `<p class="side-h">Programmi</p>` + h.parti.map((p) =>
+      `<div class="sys ${p.ok ? "ok" : "ko"}" title="${esc(p.ok ? "vivo" : p.motivo)}"><i></i><span>${esc(p.nome)}</span><time>${p.ultimo ? esc(new Date(p.ultimo).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })) : "mai"}</time></div>`).join("");
   } catch (e) {                                                        // il portale stesso non risponde: si blocca anche cosi'
     if (CLOCK.ok !== false) { CLOCK.ok = false; CLOCK.frozen = new Date(); CLOCK.why = "FERMO: il portale non risponde"; }
   }
+  document.title = CLOCK.ok === false ? "■ FERMO · GERVA Capital" : "GERVA Capital";
   tickClock();
 }
 function tickClock() {
@@ -124,6 +126,36 @@ function tickClock() {
   else { el.classList.remove("stop"); el.textContent = hms(new Date()); }
   el.title = CLOCK.why || el.title;
 }
+
+// ---------------------------------------------------------------- seduta di Wall Street, ora di New York
+function nyNow() {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false })
+    .formatToParts(new Date()).map((x) => [x.type, x.value]));
+  return { wd: parts.weekday, min: (+parts.hour % 24) * 60 + +parts.minute };
+}
+const dur = (m) => (m >= 60 ? `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, "0")}` : `${m} min`);
+function refreshSession() {
+  const el = document.getElementById("session"); if (!el) return;
+  const { wd, min } = nyNow(), O = 570, C = 960, weekend = wd === "Sat" || wd === "Sun";
+  let st, sub, k = 0;
+  if (weekend) { st = "Chiusa"; sub = "weekend · crypto aperte 24/7"; }
+  else if (min < O) { st = "Pre-mercato"; sub = `apre tra ${dur(O - min)}`; }
+  else if (min < C) { st = "Aperta"; sub = `chiude tra ${dur(C - min)}`; k = (min - O) / (C - O); }
+  else { st = "Chiusa"; sub = wd === "Fri" ? "riapre lunedì" : `riapre tra ${dur(24 * 60 - min + O)}`; k = 1; }
+  el.innerHTML = `<p class="side-h">Wall Street</p><div class="sess-row"><b class="${st === "Aperta" ? "pos" : ""}">${st}</b><span>${k > 0 && k < 1 ? Math.round(k * 100) + "%" : ""}</span></div><div class="sess-sub">${sub}</div><div class="sess-bar"><i></i></div><div class="sess-ticks"><span>9:30</span><span>12:45</span><span>16:00</span></div>`;
+  el.querySelector(".sess-bar i").style.width = (k * 100).toFixed(1) + "%";
+}
+// la luce segue il puntatore sulle schede
+document.addEventListener("pointermove", (e) => {
+  const el = e.target.closest && e.target.closest(".lg.card, .kcard, .person, .idea"); if (!el) return;
+  const r = el.getBoundingClientRect();
+  el.style.setProperty("--mx", (e.clientX - r.left).toFixed(0) + "px"); el.style.setProperty("--my", (e.clientY - r.top).toFixed(0) + "px");
+}, { passive: true });
+// filo di avanzamento della lettura
+window.addEventListener("scroll", () => {
+  const h = document.documentElement, k = h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight);
+  document.getElementById("progress").style.transform = `scaleX(${Math.min(1, k).toFixed(4)})`;
+}, { passive: true });
 
 // ---------------------------------------------------------------- nastro di mercato
 async function refreshTape() {
@@ -134,7 +166,6 @@ async function refreshTape() {
       tt.nav_eur ? it("FONDO", eur(tt.nav_eur) + " " + ch(tt.pnl_eur / ((tt.nav_eur - tt.pnl_eur) || 1)), tt.pnl_eur >= 0 ? "up" : "dn") : "",
       ...(t.voci || []).map((x) => it(x.nome, `${num(x.valore, x.dec ?? 2)} ${ch(x.var)}`, x.var >= 0 ? "up" : "dn")),
       t.regime ? it("REGIME", esc(t.regime)) : "", (pf.ibkr || {}).leva != null ? it("LEVA", num(pf.ibkr.leva, 2) + "×") : "",
-      s.telegram ? it("TELEGRAM", (Date.now() - Date.parse(s.telegram.ts) < 10 * 60000 && s.telegram.collegato !== false) ? "IN ASCOLTO" : "NON ASCOLTA", (Date.now() - Date.parse(s.telegram.ts) < 10 * 60000 && s.telegram.collegato !== false) ? "up" : "dn") : "",
     ].join("");
     document.getElementById("tape-items").innerHTML = `<div class="run">${items}${items}</div>`;
     document.getElementById("tape-clock").textContent = t.mercato || "";
@@ -163,6 +194,7 @@ function feedText(ev) {
 }
 function addFeed(ev, front = true) {
   const t = feedText(ev); if (!t) return;
+  if (ev.id != null && FEED.some((f) => f.id === ev.id)) return;       // gia' visto (riconnessione o primo caricamento)
   const item = { ts: ev.ts, t, id: ev.id, fresh: front };
   if (front) FEED.unshift(item); else FEED.push(item);
   while (FEED.length > 80) FEED.pop();
@@ -179,14 +211,18 @@ function connectWS() {
 }
 
 // ---------------------------------------------------------------- navigazione
-const GROUPS = { panoramica: ["panoramica"], plancia: ["plancia"], azienda: ["ufficio", "conversazioni", "persone", "org", "riunioni", "compiti", "report"], idee: ["idee", "regole", "banco"],
-  mercati: ["grafici", "desk"], segnali: ["segnali"], ricerca: ["tecniche", "strategie", "ricerca"], posta: ["posta"], impostazioni: ["impostazioni"] };
+const GROUPS = { panoramica: ["panoramica"], plancia: ["plancia"], mercati: ["grafici", "desk"], segnali: ["segnali"],
+  azienda: ["ufficio", "conversazioni", "persone", "org", "riunioni", "compiti", "report"], idee: ["idee", "regole", "banco"], ricerca: ["tecniche", "strategie", "ricerca"],
+  posta: ["posta"], impostazioni: ["impostazioni"] };
+const GROUP_NAME = { panoramica: "Panoramica", plancia: "Plancia", mercati: "Mercati", segnali: "Segnali", azienda: "Azienda", idee: "Idee e regole", ricerca: "Ricerca", posta: "Posta", impostazioni: "Impostazioni" };
+const SECTION = { panoramica: "Il fondo", plancia: "Il fondo", mercati: "Il fondo", segnali: "Il fondo", azienda: "L'azienda", idee: "L'azienda", ricerca: "L'azienda", posta: "Tu", impostazioni: "Tu" };
 const LABEL = { ufficio: "Ufficio", conversazioni: "Conversazioni", tecniche: "Tecniche del fondo", persone: "Persone", org: "Organigramma", riunioni: "Riunioni", compiti: "Compiti", report: "Report", idee: "Idee", regole: "Regole", banco: "Banco libero", grafici: "Il fondo e i titoli", desk: "Desk", ricerca: "Prove e fascicoli", strategie: "Strategie dai paper" };
 const groupOf = (p) => Object.keys(GROUPS).find((g) => GROUPS[g].includes(p)) || "panoramica";
 const CUR = { page: "panoramica", arg: null };
 function go(page, arg) { CUR.arg = arg ?? null; if (location.hash !== "#/" + page) location.hash = "#/" + page; else render(page, CUR.arg); }
 window.addEventListener("hashchange", () => render(location.hash.replace("#/", "") || "panoramica", CUR.arg));
-document.getElementById("tabs").addEventListener("click", (e) => { const b = e.target.closest("[data-go]"); if (b) go(b.dataset.go); });
+document.getElementById("tabs").addEventListener("click", (e) => { const b = e.target.closest("[data-go]"); if (b) { go(b.dataset.go); document.body.classList.remove("side-open"); } });
+document.getElementById("menu").onclick = () => document.body.classList.toggle("side-open");
 document.getElementById("subnav").addEventListener("click", (e) => { const b = e.target.closest("[data-go]"); if (b) go(b.dataset.go); });
 
 async function render(page, arg, keepScroll = false) {
@@ -205,13 +241,27 @@ async function render(page, arg, keepScroll = false) {
   try { [t, h] = await PANELS[page](arg); }
   catch (err) { t = "Qualcosa non va"; h = `<p class="err">Non riesco a caricare questa pagina: ${esc(err.message)}</p>`; }
   if (CUR.page !== page) return;                          // nel frattempo si e' cambiata pagina
-  title.innerHTML = t; body.innerHTML = h; applyWidths(body);
+  title.innerHTML = t; body.innerHTML = h; applyWidths(body); tidy(body);
   if (!keepScroll) { body.classList.remove("enter"); void body.offsetWidth; body.classList.add("enter"); countUp(body); }
   moveSlider();
-  const gi = Object.keys(GROUPS).indexOf(g) + 1;
-  document.getElementById("eyebrow").innerHTML = `<b>${String(gi).padStart(2, "0")}</b> · ${esc(document.querySelector(`#tabs [data-go="${GROUPS[g][0]}"]`)?.textContent.trim() || "")}`;
+  const gi = String(Object.keys(GROUPS).indexOf(g) + 1).padStart(2, "0");
+  document.getElementById("eyebrow").innerHTML = `<b>${gi}</b> · ${esc(SECTION[g])}`;
+  document.getElementById("ghost").textContent = gi;
+  const crumbs = [SECTION[g], SECTION[g].toLowerCase().includes(GROUP_NAME[g].toLowerCase()) ? null : GROUP_NAME[g], GROUPS[g].length > 1 ? LABEL[page] || page : null].filter(Boolean);
+  document.getElementById("crumb").innerHTML = crumbs.map((c, i) => i === crumbs.length - 1 ? `<b>${esc(c)}</b>` : `<span>${esc(c)}</span>`).join("<i>/</i>");
   if (AFTER[page]) { try { await AFTER[page](arg); } catch (err) { body.insertAdjacentHTML("beforeend", `<p class="err">Grafico non disponibile: ${esc(err.message)}</p>`); } }
 }
+
+// ---------------------------------------------------------------- ordine nella pagina
+const EMPTY = /^(nessun|ancora nessun|ancora niente|nulla)/i;
+function tidy(body) {
+  const lede = document.getElementById("lede");
+  lede.classList.add("hidden"); lede.classList.remove("open"); lede.innerHTML = "";
+  body.querySelectorAll(":scope > p.muted, .card p.muted, .lg p.muted").forEach((p) => { if (EMPTY.test(p.textContent.trim())) p.classList.add("empty"); });
+  const intro = [...body.querySelectorAll(":scope > p.muted")].find((p) => !p.id && !p.classList.contains("empty") && p.textContent.trim().length > 70);
+  if (intro) { lede.innerHTML = intro.innerHTML; lede.classList.remove("hidden"); intro.remove(); }
+}
+document.getElementById("lede").addEventListener("click", (e) => { if (!e.target.closest("a")) e.currentTarget.classList.toggle("open"); });
 
 // ---------------------------------------------------------------- pagine
 const AFTER = {};
@@ -219,9 +269,12 @@ let PLANCIA_FILTER = { venue: "", stato: "" };
 let peopleSort = ["punteggio", -1];
 const KIND_LABEL = { algo: "strategia in codice", idea: "idea", free: "banco libero", desk: "capo desk", modello: "modello GERVA-Q", lungo: "lungo periodo", segnale: "segnale", sconosciuta: "?" };
 
+let LAST_NAV = null;
 function fillOverviewTop(s) {
   const el = document.getElementById("o-top"); if (!el) return;
   const pf = s.portafogli || {}, ib = pf.ibkr || {}, al = pf.alpaca || {}, tt = pf.totale || {}, lv = s.diretta || {};
+  const navNow = tt.nav_eur || s.nav, moved = LAST_NAV != null && navNow != null && Math.round(navNow) !== Math.round(LAST_NAV) ? (navNow > LAST_NAV ? "tick-up" : "tick-dn") : "";
+  LAST_NAV = navNow; setTimeout(() => { const b = el.querySelector(".big"); if (b && moved) b.classList.add(moved); }, 0);
   const base = (ib.nav_eur || 0) - (ib.pnl_eur || 0) + (al.disponibile ? (al.nav_eur || 0) - (al.pnl_eur || 0) : 0);
   el.innerHTML =
     `<div class="lg card fringe"><div class="lbl">Valore totale</div><div class="big">${tt.nav_eur ? eur(tt.nav_eur) : eur(s.nav)}</div>` +
@@ -262,7 +315,8 @@ const PANELS = {
     const busy = office.filter((a) => a.kind === "llm" && recent(a.ts) && a.stato !== "dorme");
     const ops = blot ? blot.operazioni.slice(0, 8) : [];
     const ID = ideas ? ideas.idee.slice(0, 6) : [];
-    return [`Buongiorno, <em>Andrea</em>`,
+    const hr = new Date().getHours(), hello = hr < 5 ? "Buonanotte" : hr < 13 ? "Buongiorno" : hr < 18 ? "Buon pomeriggio" : "Buonasera";
+    return [`${hello}, <em>Andrea</em>`,
       `<div class="grid g-hero" id="o-top"></div>` +
       `<div class="grid g-2"><div class="lg card"><h3>Il conto contro l'S&P 500 <span class="sub">base 100</span></h3><canvas class="chart" id="o-eq"></canvas><p class="muted" id="o-eq-note"></p></div>` +
       `<div class="lg card"><h3>Cosa succede <span class="sub">in diretta</span></h3><ul class="feed" id="feed"></ul></div></div>` +
@@ -608,7 +662,8 @@ async function openAgent(id) {
 function closeSheet() { document.getElementById("dialog").classList.add("hidden"); document.getElementById("scrim").classList.add("hidden"); }
 document.getElementById("scrim").onclick = closeSheet;
 document.querySelector("[data-close='dialog']").onclick = closeSheet;
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheet(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeSheet(); palClose(); document.body.classList.remove("side-open"); } });
+document.addEventListener("click", (e) => { if (document.body.classList.contains("side-open") && !e.target.closest("#side, #menu")) document.body.classList.remove("side-open"); });
 
 // ---------------------------------------------------------------- clic nelle pagine
 document.getElementById("pnl-body").addEventListener("change", (e) => { if (e.target.id === "conv-agent") render("conversazioni", e.target.value, true); });
@@ -643,6 +698,47 @@ document.getElementById("pnl-body").addEventListener("click", async (e) => {
   } catch (err) { toast(err.message); }
 });
 
+// ---------------------------------------------------------------- palette (⌘K): chiedi al Capo o vai a una pagina
+const PAL = { sel: 0, items: [] };
+const ASK = ["Chi ha aperto le posizioni crypto e perché?", "Fammi un riepilogo del rischio di oggi", "Cosa ha fatto il banco libero oggi?", "Quale idea sta andando meglio?"];
+function palPages() {
+  return Object.keys(GROUPS).flatMap((g) => GROUPS[g].map((p) => ({ go: p, t: LABEL[p] && GROUPS[g].length > 1 ? `${GROUP_NAME[g]} · ${LABEL[p]}` : GROUP_NAME[g], n: String(Object.keys(GROUPS).indexOf(g) + 1).padStart(2, "0") })));
+}
+function palRender() {
+  const q = document.getElementById("cmdtext").value.trim(), ql = q.toLowerCase();
+  const pages = palPages().filter((x) => !ql || x.t.toLowerCase().includes(ql)).slice(0, 7);
+  PAL.items = q ? [{ ask: q }, ...pages] : [...ASK.map((a) => ({ ask: a, hint: true })), ...pages];
+  PAL.sel = Math.min(PAL.sel, PAL.items.length - 1);
+  document.getElementById("pal-list").innerHTML = (q ? "" : `<li class="pal-h">Domande al Capo</li>`) + PAL.items.map((x, i) =>
+    (x.go && (i === 0 || !PAL.items[i - 1].go) ? `<li class="pal-h">Vai a</li>` : "") +
+    `<li role="option" data-i="${i}" class="${i === PAL.sel ? "on" : ""}">${x.go ? `<span class="n">${x.n}</span>${esc(x.t)}<kbd>apri</kbd>` : `<span class="n">›</span>${x.hint ? "" : "Chiedi al Capo: "}<b>${esc(x.ask)}</b><kbd>invia</kbd>`}</li>`).join("");
+}
+function palOpen() {
+  document.getElementById("palette").classList.remove("hidden"); PAL.sel = 0; palRender();
+  setTimeout(() => document.getElementById("cmdtext").focus(), 10);
+}
+function palClose() { document.getElementById("palette").classList.add("hidden"); }
+function palPick(i) {
+  const x = PAL.items[i]; if (!x) return;
+  if (x.go) { palClose(); go(x.go); return; }
+  document.getElementById("cmdtext").value = x.ask; document.getElementById("cmd").requestSubmit();
+}
+document.getElementById("ask").onclick = palOpen;
+document.getElementById("palette").addEventListener("click", (e) => { if (e.target.id === "palette") return palClose(); const li = e.target.closest("li[data-i]"); if (li) palPick(+li.dataset.i); });
+document.getElementById("cmdtext").addEventListener("input", () => { PAL.sel = 0; palRender(); });
+document.getElementById("cmdtext").addEventListener("keydown", (e) => {
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); PAL.sel = (PAL.sel + (e.key === "ArrowDown" ? 1 : -1) + PAL.items.length) % PAL.items.length; palRender(); }
+  else if (e.key === "Enter") { e.preventDefault(); palPick(PAL.sel); }
+  else if (e.key === "Escape") palClose();
+});
+document.addEventListener("keydown", (e) => {
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test((e.target || {}).tagName || "");
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); return document.getElementById("palette").classList.contains("hidden") ? palOpen() : palClose(); }
+  if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === "/") { e.preventDefault(); palOpen(); }
+  else if (/^[1-9]$/.test(e.key)) { const g = Object.keys(GROUPS)[+e.key - 1]; if (g) go(GROUPS[g][0]); }
+});
+
 // ---------------------------------------------------------------- parla al Capo
 document.getElementById("cmd").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -651,7 +747,7 @@ document.getElementById("cmd").addEventListener("submit", async (e) => {
   let r;
   try { r = await api("/api/command", { method: "POST", body: JSON.stringify({ text }) }); }
   catch (err) { toast("Ordine non inviato: " + err.message); return; }
-  inp.value = ""; toast("Ricevuto: il Capo sta lavorando.", false);
+  inp.value = ""; palClose(); toast("Ricevuto: il Capo sta lavorando.", false);
   go("compiti", r.id);
   let n = 0;
   const poll = setInterval(async () => { if (++n > 60 || CUR.page !== "compiti") return clearInterval(poll); render("compiti", r.id, true); }, 3000);
@@ -686,5 +782,6 @@ async function refreshWorld() { try { buildWorld(await api("/api/world")); } cat
   setInterval(refreshWorld, 15000);
   refreshTape(); setInterval(refreshTape, 60000);
   refreshHealth(); setInterval(refreshHealth, 15000); setInterval(tickClock, 1000);
+  refreshSession(); setInterval(refreshSession, 30000);
   setInterval(() => { if (CUR.page === "panoramica") renderFeed(); }, 8000);
 })();
