@@ -277,6 +277,19 @@ def cmd_free_desk(a):
     print("banco libero acceso (Ctrl+C per fermarlo)"); free_desk.run_loop()
 
 
+def cmd_strategie(a):
+    """Strategie dai paper: senza opzioni le elenca; --backtest NOME (o 'tutte') scarica i dati da Alpaca, fa il backtest, registra la prova e la porta al comitato."""
+    from firm import strategies as ST
+    if a.backtest:
+        names = list(ST.STRATS) if a.backtest == "tutte" else [a.backtest]
+        for n in names:
+            print(f"\n== {n}: scarico i dati e faccio il backtest (qualche minuto)...")
+            r = ST.backtest(n)
+            print(json.dumps(r, ensure_ascii=False, indent=1, default=str))
+        return
+    print(json.dumps(ST.overview(), ensure_ascii=False, indent=1, default=str))
+
+
 def cmd_ritmo(_):
     """Convoca adesso il comitato sul ritmo di ingresso (quanto GERVA-Q puo' comprare al giorno) e scrive la decisione per GERVA-Q."""
     from firm import desk, db
@@ -542,9 +555,11 @@ def main():
     ap = argparse.ArgumentParser(description="GERVA Capital")
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name in ["init", "portal", "heartbeat", "run", "status", "verify", "demo", "release", "data", "research", "report",
-                 "set-password", "ibkr-check", "observe", "check-backtest", "shadow", "comitato-lungo", "desk", "live-nav", "aspettative", "kelly", "volgest", "idee", "regole", "ritmo", "free-desk", "imposta", "crypto-venue", "telegram-login", "telegram"]:
+                 "set-password", "ibkr-check", "observe", "check-backtest", "shadow", "comitato-lungo", "desk", "live-nav", "aspettative", "kelly", "volgest", "idee", "regole", "ritmo", "strategie", "free-desk", "imposta", "crypto-venue", "telegram-login", "telegram"]:
         sp = sub.add_parser(name)
         sp.add_argument("--demo", action="store_true", help="usa il database dimostrativo var/demo/")
+        if name == "strategie":
+            sp.add_argument("--backtest", default="", help="nome della strategia (crypto_tsmom, spy_intraday_momentum) oppure 'tutte'")
         if name == "free-desk":
             sp.add_argument("--una-volta", action="store_true", help="un solo giro: controlla i trade aperti e chiama gli agenti")
             sp.add_argument("--stato", action="store_true", help="conto, regole di casa e ultimi trade")

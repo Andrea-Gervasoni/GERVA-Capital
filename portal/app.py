@@ -531,6 +531,13 @@ def api_free():
                       storia_regole=db.q("SELECT * FROM house_rules ORDER BY id DESC LIMIT 30")))
 
 
+@app.get("/api/strategies")
+def api_strategies():
+    """Strategie in codice dai paper: fonte, ipotesi, backtest, accesa o spenta (lo decide il comitato)."""
+    from firm import strategies as ST
+    return _json(ST.overview())
+
+
 @app.get("/api/feed")
 def api_feed(limit: int = 60):
     """Gli ultimi eventi (piu' recenti per primi) per la Panoramica."""

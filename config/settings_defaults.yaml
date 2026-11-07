@@ -57,7 +57,7 @@ pace:                      # ritmo di ingresso: quanto puo' COMPRARE GERVA-Q in 
 
 ideas:                     # ogni agente cerca idee e le presenta al superiore; il comitato approva; i fatti decidono il premio
   enabled: true
-  agents_per_day: 3          # quanti agenti (a rotazione) cercano un'idea ogni giorno (ogni giro costa: Opus)
+  agents_per_day: 4          # quanti agenti (a rotazione) cercano un'idea ogni giorno (ogni giro costa: Opus)
   max_per_agent_week: 2
   committee_per_day: 2
   max_name_frac: 0.03        # al massimo il 3% del conto su una singola idea
@@ -74,7 +74,7 @@ rules:                       # regole votate dal comitato (dentro la Costituzion
 free:                      # banco libero: gli agenti aprono e chiudono trade quando vogliono sul conto paper di Alpaca; nessuna regola finche' non la votano
   enabled: true
   cycle_minutes: 30          # ogni quanti minuti gli agenti sono chiamati a decidere (costo: Opus). Lo decidono loro con una regola
-  agents_per_cycle: 1
+  agents_per_cycle: 2         # quanti agenti decidono a ogni giro del banco (il risparmio sui compiti di routine paga il secondo)
   max_intents: 20            # trade per chiamata (puo' essere tanti: la chiusura e' del codice, non serve richiamare l'agente)
   monitor_seconds: 15        # ogni quanto il codice controlla stop, obiettivi e tempi di chiusura
   riesame_loss_frac: 0.03    # una perdita di giornata oltre il 3% convoca il riesame (non e' un limite: serve a far parlare)
@@ -82,6 +82,14 @@ free:                      # banco libero: gli agenti aprono e chiudono trade qu
 lessons:                   # dopo la chiusura di un'operazione: cosa e' successo, errore da non ripetere o tecnica vincente da tenere
   enabled: true
   agents_per_day: 3          # quanti agenti rivedono le loro operazioni chiuse ogni sera (una chiamata ciascuno)
+
+algo:                      # strategie in codice dai paper (firm/strategies.py): 'on' lo decide il comitato dopo il backtest
+  crypto_tsmom:
+    on: 0                    # 1 = accesa
+    capital_frac: 0.3        # quota del conto Alpaca che usa
+  spy_intraday_momentum:
+    on: 0
+    capital_frac: 0.3
 
 release:
   any_day: true               # scelta di Andrea del 6/11: i rilasci di GERVA-Q si applicano quando serve (sempre backup, changelog e audit)
@@ -98,6 +106,14 @@ models:
     "4": claude-opus-5-5   # Senior
     "5": claude-opus-5-5   # Manager
     "6": claude-opus-5-5   # Head
+  by_purpose_map:            # compiti di routine (molto frequenti) su Sonnet; le decisioni (trade, idee, riunioni, segnali) restano su Opus
+    triage: claude-sonnet-5-5
+    verifica: claude-sonnet-5-5
+    bollettino: claude-sonnet-5-5
+    sintesi: claude-sonnet-5-5
+    relazione: claude-sonnet-5-5
+    lezioni: claude-sonnet-5-5
+    segnale-lettura: claude-sonnet-5-5
   ceo_committee: claude-opus-5-5
   deep_validation: claude-opus-5-5
 

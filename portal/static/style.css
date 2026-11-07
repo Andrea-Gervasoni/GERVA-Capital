@@ -294,3 +294,5 @@ details[open] > summary::after { transform: rotate(90deg); }
 .feed li.empty { display: block; color: var(--muted); border: 0; }
 .pill.theme svg { width: 16px; height: 16px; } .pill.theme svg path { fill: currentColor; }
 @media (max-width: 760px) { .banner { margin: 8px 8px 0; } }
+
+.page > .lg.card + .lg.card { margin-top: 14px; }

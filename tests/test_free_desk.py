@@ -115,7 +115,7 @@ def test_cycle_agent_sends_many_intents_and_riesame_on_loss(broker, monkeypatch)
     monkeypatch.setattr(rt, "call", lambda agent, task, data=None, schema=None, purpose="", **k: dict(
         ok=True, output=dict(trades=[dict(_trade("AAPL", 1000), tipo_ordine="market") for _ in range(12)], nota="scalping")))
     r = FD.cycle()
-    assert len(r["trade"]) == 12 and not r["rifiutati"]                    # 12 trade in una chiamata
+    assert len(r["trade"]) == 12 * len(r["agenti"]) and not r["rifiutati"]     # 12 trade per chiamata
     broker.equity, broker.last_equity = 94000.0, 100000.0                  # -6% di giornata
     seen = []
     monkeypatch.setattr(ID, "generate", lambda a, rows=None, runtime=None, note=None: (seen.append((a, note)) or dict(ok=False, motivo="x")))

@@ -86,3 +86,11 @@ def test_mailbox_only_big_requests(firm_env):
         mailbox.decide(r["id"], "si", cap=None)
     mailbox.decide(r["id"], "__rimanda__", S.AndreaCapability(S.ensure_token()))
     assert mailbox.items()[0]["status"] == "rimandata"
+
+
+def test_routine_tasks_use_a_cheaper_model(firm_env):
+    from firm import org_seed, registry
+    org_seed.seed(); registry.sync()
+    a = registry.get("news_analyst")
+    assert registry.model_for(a, "triage") == "claude-sonnet-5-5" and registry.model_for(a, "banco-libero") == "claude-opus-5-5"
+    assert registry.model_for(registry.get("cro"), "riunione:idee") == "claude-opus-5-5"

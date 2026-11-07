@@ -282,6 +282,14 @@ def story(key: str) -> dict:
         steps.append(dict(chi=_who("senior_crypto"), cosa="ha analizzato il segnale ricevuto", testo=a.get("motivo"), evidenze=a.get("rischi") or [], dati=dict(probabilita_obiettivo=a.get("probabilita_tp1"))))
         if a.get("veto"):
             steps.append(dict(chi=_who("cro"), cosa="ha controllato e " + ("BLOCCATO" if a["veto"].get("bloccato") else "non ha posto il veto"), testo=a["veto"].get("motivo"), evidenze=[], dati={}))
+    elif kind == "algo":
+        from . import strategies
+        sp = strategies.STRATS.get(o.get("strategia"), {})
+        bt = db.runtime_get(f"algo.{o.get('strategia')}.backtest") or {}
+        steps.append(dict(chi=_who(sp.get("autore")), cosa=f"strategia in codice: {sp.get('nome', o.get('strategia'))}", testo=sp.get("ipotesi"),
+                          evidenze=[sp.get("fonte", "")], dati=dict(sharpe_backtest=(bt.get("risultati") or {}).get("sharpe"), dsr=(bt.get("deflated") or {}).get("dsr"))))
+        steps.append(dict(chi=dict(id="comitato", nome="Comitato", ruolo=""), cosa="l'ha accesa con un voto dopo il backtest; da li' decide il codice, alla velocita' di una macchina",
+                          testo="", evidenze=[], dati={}))
     elif kind == "lungo":
         steps.append(dict(chi=_who("lt_head"), cosa="rata del lungo periodo decisa dal comitato di lungo periodo", testo="vedi la sezione Riunioni (tipo 'lungo')", evidenze=[], dati={}))
     elif kind == "modello":

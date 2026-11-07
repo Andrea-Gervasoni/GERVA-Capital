@@ -361,11 +361,23 @@ def riesame_if_needed(st: dict | None = None) -> dict | None:
 def run_loop(max_iter: int | None = None, sleep=time.sleep) -> None:
     """Processo che resta acceso: controlla stop/tempi ogni monitor_seconds e chiama gli agenti ogni cycle_minutes."""
     last_cycle = 0.0
+    last_hour = None
     n = 0
     while max_iter is None or n < max_iter:
         n += 1
         try:
             monitor()
+            try:                                                         # strategie in codice accese dal comitato (firm/strategies.py)
+                from . import strategies
+                hour = time.strftime("%Y-%m-%dT%H")
+                if hour != last_hour:
+                    last_hour = hour
+                    r = strategies.live_crypto()
+                    if r.get("obiettivi") is not None and V.configured():
+                        V.rebalance()
+                strategies.live_spy()
+            except Exception:
+                pass
             due = due_agents()
             if due:
                 cycle(agents=due[:max(1, int(S.get("free.agents_per_cycle", 1)))])

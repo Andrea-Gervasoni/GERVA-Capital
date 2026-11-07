@@ -106,6 +106,10 @@ def model_for(agent: dict, purpose: str = "") -> str:
         return S.get("models.ceo_committee")
     if purpose == "deep_validation":
         return S.get("models.deep_validation")
+    by_purpose = S.get("models.by_purpose_map") or {}
+    key = (purpose or "").split(":")[0]
+    if key in by_purpose:                      # compiti di routine su un modello piu' economico: il credito rende di piu' dove si decide
+        return by_purpose[key]
     return (S.get("models.by_grade_map") or {})[str(agent["grade"])]
 
 

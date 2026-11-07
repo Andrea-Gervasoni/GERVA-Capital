@@ -108,8 +108,8 @@ function connectWS() {
 
 // ---------------------------------------------------------------- navigazione
 const GROUPS = { panoramica: ["panoramica"], plancia: ["plancia"], azienda: ["persone", "org", "riunioni", "compiti", "report"], idee: ["idee", "regole", "banco"],
-  mercati: ["grafici", "desk"], segnali: ["segnali"], ricerca: ["ricerca"], posta: ["posta"], impostazioni: ["impostazioni"] };
-const LABEL = { persone: "Persone", org: "Organigramma", riunioni: "Riunioni", compiti: "Compiti", report: "Report", idee: "Idee", regole: "Regole", banco: "Banco libero", grafici: "Il fondo e i titoli", desk: "Desk" };
+  mercati: ["grafici", "desk"], segnali: ["segnali"], ricerca: ["ricerca", "strategie"], posta: ["posta"], impostazioni: ["impostazioni"] };
+const LABEL = { persone: "Persone", org: "Organigramma", riunioni: "Riunioni", compiti: "Compiti", report: "Report", idee: "Idee", regole: "Regole", banco: "Banco libero", grafici: "Il fondo e i titoli", desk: "Desk", ricerca: "Prove e fascicoli", strategie: "Strategie dai paper" };
 const groupOf = (p) => Object.keys(GROUPS).find((g) => GROUPS[g].includes(p)) || "panoramica";
 const CUR = { page: "panoramica", arg: null };
 function go(page, arg) { CUR.arg = arg ?? null; if (location.hash !== "#/" + page) location.hash = "#/" + page; else render(page, CUR.arg); }
@@ -137,7 +137,7 @@ async function render(page, arg, keepScroll = false) {
 const AFTER = {};
 let PLANCIA_FILTER = { venue: "", stato: "" };
 let peopleSort = ["punteggio", -1];
-const KIND_LABEL = { idea: "idea", free: "banco libero", desk: "capo desk", modello: "modello GERVA-Q", lungo: "lungo periodo", segnale: "segnale", sconosciuta: "?" };
+const KIND_LABEL = { algo: "strategia in codice", idea: "idea", free: "banco libero", desk: "capo desk", modello: "modello GERVA-Q", lungo: "lungo periodo", segnale: "segnale", sconosciuta: "?" };
 
 function fillOverviewTop(s) {
   const el = document.getElementById("o-top"); if (!el) return;
@@ -328,6 +328,14 @@ const PANELS = {
     const d = await api("/api/research");
     return ["Ricerca", `<div class="kgrid">${card("Prove registrate", d.prove.n_trials, "contano nel Deflated Sharpe")}${card("Con Sharpe", d.prove.n_with_sharpe)}</div>` +
       table(d.fascicoli, [["title", "Fascicolo"], ["stage", "Fase", tag], ["gate", "Cancello", (v) => v ? (v.passa ? "passa" : "non passa") + (v.deflated ? ` · DSR ${num(v.deflated.dsr, 3)}` : "") : "—"], ["validation", "Validazione", (v) => v ? esc(v.esito) : "—"], ["decision", "Comitato", (v) => v && v.esito ? esc(v.esito) : "—"]])];
+  },
+  async strategie() {
+    const d = await api("/api/strategies");
+    return ["Strategie dai paper", `<p class="muted">Strategie scritte in codice a partire da studi pubblicati. Prima il backtest sui dati storici di Alpaca al netto dei costi, poi la prova entra nel registro (conta nel Deflated Sharpe), poi il comitato vota se accenderla. Accesa, gira da sola alla velocità di una macchina sul conto paper di Alpaca. Per il backtest: <b>firm.py strategie --backtest tutte</b>.</p>` +
+      Object.entries(d).map(([k, v]) => { const b = v.backtest || {}, r = b.risultati || {};
+        return `<div class="lg card"><h3>${esc(v.nome)} ${v.accesa ? tag("attivo") : '<span class="tag">spenta</span>'} <span class="sub">${esc(k)}</span></h3><p>${esc(v.ipotesi)}</p><p class="muted">Fonte: ${esc(v.fonte)}</p>` +
+          (b.ok ? `<div class="kgrid">${card("Sharpe (netto costi)", num(r.sharpe, 2), `a costi doppi ${num((b.costi_doppi || {}).sharpe, 2)}`)}${card("Rendimento annuo", pct(r.rendimento_annuo, 1), `dal ${esc(r.dal)} al ${esc(r.al)}`)}${card("Calo massimo", pct(r.dd_max, 1))}${card("Deflated Sharpe", num((b.deflated || {}).dsr, 3), `${(b.deflated || {}).prove_totali} prove registrate`)}${card("Cancello statistico", (b.cancello || {}).passa ? "superato" : "non superato", "informazione per il voto")}${b.confronto ? card("Comprare e tenere", num(b.confronto.sharpe, 2), "Sharpe a confronto") : ""}</div>` : `<p class="muted">Backtest non ancora fatto.</p>`) +
+          `<p class="muted">Capitale se accesa: ${pct(v.capitale, 0)} del conto Alpaca.</p></div>`; }).join("")];
   },
   async posta() {
     const items = await api("/api/mailbox");
