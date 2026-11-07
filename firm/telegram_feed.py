@@ -84,7 +84,8 @@ def _client():
     except ImportError:
         raise SystemExit("serve telethon: .venv/bin/pip install telethon")
     api_id, api_hash, session = _creds()
-    return TelegramClient(session, api_id, api_hash)
+    # rete del Mac che cade (stop, Wi-Fi): si riprova all'infinito invece di uscire, e al ritorno si recuperano i messaggi persi
+    return TelegramClient(session, api_id, api_hash, connection_retries=None, retry_delay=10, auto_reconnect=True, catch_up=True)
 
 
 def _qr_login(client, run) -> None:

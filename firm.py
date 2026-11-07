@@ -552,6 +552,8 @@ def cmd_demo(_):
 
 def main():
     _load_env()
+    import logging                     # ogni riga dei registri con data e ora (prima i messaggi di IBKR e Telegram non l'avevano)
+    logging.basicConfig(level=logging.WARNING, format="%(asctime)s %(name)s %(levelname)s %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
     ap = argparse.ArgumentParser(description="GERVA Capital")
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name in ["init", "portal", "heartbeat", "run", "status", "verify", "demo", "release", "data", "research", "report",
