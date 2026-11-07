@@ -224,23 +224,43 @@ CEO_SUMMARY = obj({"sintesi": S_STR, "stato": {"type": "string", "enum": ["fatto
 
 
 def libro_posizioni() -> dict:
-    """Fatti per gli agenti, presi dal codice (mai inventati): posizioni del conto osservato su IBKR e libri dei pod.
-    Niente numero di conto e niente NAV assoluto del conto reale (regola 6): solo simboli, quantita' e costi medi.
-    I pod operano su un broker SIMULATO: i loro valori non sono soldi del conto."""
+    """I FATTI per gli agenti, presi dal codice (mai inventati): i due conti, tutte le operazioni con CHI le ha decise, le posizioni con il
+    guadagno del momento, le strategie accese, il banco libero e le sue regole. Prima vedevano solo l'osservatore IBKR dei vecchi pod:
+    per questo il Capo non sapeva chi aveva aperto le crypto (8/11)."""
+    out = {}
+    try:
+        from . import blotter
+        ov = blotter.overview()
+        T = ov["totali"]                                        # niente valori assoluti dei conti (regola 6): solo % e leva; i totali passano da dati_reali
+        pc = lambda d: round(d.get("pnl_eur", 0) / (d.get("nav_eur", 0) - d.get("pnl_eur", 0)), 4) if (d.get("nav_eur") or 0) - (d.get("pnl_eur") or 0) else None
+        out["conti"] = dict(ibkr=dict(rendimento_dal_via=pc(T["ibkr"]), leva=T["ibkr"].get("leva")),
+                            alpaca=dict(rendimento_dal_via=pc(T["alpaca"]), leva=T["alpaca"].get("leva"), collegato=T["alpaca"].get("disponibile")))
+        out["riepilogo_operazioni"] = ov["riepilogo"]
+        out["operazioni"] = [dict(conto=o["venue"], simbolo=o["simbolo"], lato=o["lato"], aperta=o["aperta"], aperta_il=o["aperta_il"], chiusa_il=o["chiusa_il"],
+                                  ingresso=o["ingresso"], uscita=o["uscita"], attuale=o["attuale"], risultato_pct=o["pnl_pct"],
+                                  risultato_eur=o["non_realizzato_eur"] if o["aperta"] else o["realizzato_eur"], peso_conto_pct=o["peso_conto_pct"],
+                                  deciso_da=(o["origine"] or {}).get("kind"), agente=o["agente"], strategia=(o["origine"] or {}).get("strategia"),
+                                  idea=(o["origine"] or {}).get("ref") if (o["origine"] or {}).get("kind") == "idea" else None) for o in ov["operazioni"][:40]]
+    except Exception as e:
+        out["operazioni_errore"] = str(e)[:120]
     ch = db.runtime_get("ibkr.challenge") or {}
-    zero = dict(fonte="IBKR, sola lettura", aggiornato=ch.get("ts"), collegato=bool(ch.get("ok")),
-                posizioni=[dict(simbolo=x.get("simbolo"), quantita=x.get("qty"), costo_medio=round(float(x.get("costo_medio") or 0), 2))
-                           for x in (ch.get("posizioni") or [])],
-                eseguiti_oggi=ch.get("eseguiti_oggi"),
-                nota="gli ordini ancora in coda su IBKR non sono visibili all'osservatore")
-    simulati = []
-    for p in pods.all_pods():
-        if p["id"] == "pod_zero":
-            continue
-        b = gateway.pod_book(p["id"])
-        simulati.append(dict(pod=p["id"], stato=p["status"], simulato=True, rendimento=round(b["pnl"] / b["base"], 4) if b["base"] else 0.0,
-                             drawdown=round(b["drawdown"], 4), posizioni=b["posizioni"]))
-    return dict(pod_zero=zero, pod_simulati=simulati, limiti_di_rischio=risk.limits())
+    port = (db.runtime_get("ibkr.portfolio") or {}).get("posizioni") or []
+    out["ibkr"] = dict(fonte="IBKR, sola lettura", aggiornato=ch.get("ts"), collegato=bool(ch.get("ok")), errore=ch.get("errore"),
+                       posizioni=port or [dict(simbolo=x.get("simbolo"), quantita=x.get("qty"), costo_medio=round(float(x.get("costo_medio") or 0), 2)) for x in (ch.get("posizioni") or [])],
+                       eseguiti_oggi=ch.get("eseguiti_oggi"), leva=(db.runtime_get("ibkr.account") or {}).get("leva"))
+    al = db.runtime_get("alpaca.account") or {}
+    out["alpaca"] = dict(fonte="Alpaca paper (crypto, banco libero, strategie)", aggiornato=al.get("ts"),
+                         posizioni=[{k: v for k, v in p.items() if k != "valore"} for p in (al.get("posizioni") or [])], leva=round(al.get("lordo", 0) / al["equity"], 3) if al.get("equity") else None,
+                         chi_compra_crypto="modello crypto di GERVA-Q (replicato su Alpaca dalla sede crypto), segnali accettati, strategie accese, banco libero: vedi 'deciso_da' in operazioni")
+    try:
+        from . import crypto_venue, free_desk, strategies
+        out["crypto_obiettivi"] = crypto_venue.targets()
+        out["strategie"] = {k: dict(accesa=v["accesa"], sharpe_backtest=((v.get("backtest") or {}).get("risultati") or {}).get("sharpe")) for k, v in strategies.overview().items()}
+        out["banco_libero"] = dict(regole_di_casa=free_desk.active_rules(), ultimi_trade=db.q("SELECT ts, agent, symbol, side, notional, status, pnl, motivo FROM free_trades ORDER BY id DESC LIMIT 15"))
+    except Exception:
+        pass
+    out["limiti_di_rischio"] = risk.limits()
+    return out
 
 
 def dati_reali() -> dict:
@@ -250,7 +270,12 @@ def dati_reali() -> dict:
     if os.environ.get("GERVA_LLM_REAL_NUMBERS") != "1":
         return {}
     ch = db.runtime_get("ibkr.challenge") or {}
-    return dict(conto_paper=os.environ.get("IBKR_CHALLENGE_ACCOUNT"), totale_eur=ch.get("nav_eur"),
+    try:
+        from . import blotter
+        conti = blotter.totals()
+    except Exception:
+        conti = None
+    return dict(conto_paper=os.environ.get("IBKR_CHALLENGE_ACCOUNT"), totale_eur=ch.get("nav_eur"), conti=conti,
                 aggiornato=ch.get("ts"))
 
 

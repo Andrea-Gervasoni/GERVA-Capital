@@ -8,7 +8,7 @@ def test_pods_off_nav_is_the_account(firm_env):
     assert [p["id"] for p in pods.all_pods()] == ["pod_zero"]
     assert pods.sim_pod_ids() == []
     assert gateway.firm_nav_estimate() == gateway.pod_zero_nav()
-    assert workflows.libro_posizioni()["pod_simulati"] == []
+    assert "pod_simulati" not in workflows.libro_posizioni()
 
 
 def test_existing_pods_get_closed_when_switched_off(firm_env):

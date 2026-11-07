@@ -84,7 +84,7 @@ def get(key: str, default=None):
 
 # Valori che una versione nuova del file di default deve far valere UNA volta sola anche se il database ne ha uno vecchio
 # (scelte di Andrea dette in chat: la migrazione le applica, poi il pannello Impostazioni torna a comandare).
-DEFAULT_REFRESH = {"2026-11-07-opus": ["models.by_grade_map", "budget.daily_eur"]}
+DEFAULT_REFRESH = {"2026-11-07-opus": ["models.by_grade_map", "budget.daily_eur"], "2026-11-08-reparti": ["budget.per_dept_daily_eur_map"]}
 
 
 def refresh_defaults() -> list[str]:

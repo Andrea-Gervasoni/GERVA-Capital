@@ -7,15 +7,15 @@ budget:
   downgrade_at: 0.80         # oltre l'80% del tetto giornaliero il Governor scala i modelli verso il basso
   alert_days_left: 7         # sotto 7 giorni di autonomia il Capo bussa ad Andrea (grande richiesta n.3)
   usd_eur: 0.894             # cambio per convertire i prezzi in USD (EURUSD 1,1183 in GERVA-Q state/ al 30/10/2026)
-  per_dept_daily_eur_map:    # tetti per reparto (somma > daily_eur di proposito: e' il tetto globale a vincolare)
-    direzione: 0.60
-    rischio: 0.30
-    ricerca: 0.60
-    validazione: 0.45
-    redazione: 0.50
-    pod: 0.60
-    talent: 0.10
-    lungo: 0.25               # Comitato di lungo periodo (Head + due analisti)
+  per_dept_daily_eur_map:    # tetti per reparto (somma > daily_eur di proposito: e' il tetto globale a vincolare). 8/11: rialzati per Opus
+    direzione: 1.50
+    rischio: 1.00
+    ricerca: 1.50
+    validazione: 0.80
+    redazione: 0.80
+    pod: 1.50
+    talent: 0.20
+    lungo: 0.50
 
 firm:
   strike: false              # Sciopero: agenti fermi, codice deterministico attivo
