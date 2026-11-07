@@ -177,6 +177,10 @@ def beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
         from . import desk
         try:
             r = desk.cycle()
+            try:
+                notes.append(f"leva gestita: x{desk.refresh_scale()['mult']}")
+            except Exception:
+                pass
             woke += r.get("desk", [])
             notes.append(f"desk: {len(r.get('targets', {}))} titoli proposti" if r.get("ok") else f"desk: {r.get('nota', '')}")
         except Exception as e:                               # un errore del desk non ferma il battito

@@ -117,13 +117,30 @@ def write_overlay(result: dict, today: dt.date | None = None) -> dict:
     today = today or dt.date.today()
     prev = db.runtime_get("desk.overlay") or {}
     doc = dict(data=today.isoformat(), targets=result["targets"], per_desk=result["per_desk"], regole=caps(),
-               crypto_targets=prev.get("crypto_targets", {}), crypto_data=prev.get("crypto_data"))   # le posizioni dei segnali non si perdono
+               crypto_targets=prev.get("crypto_targets", {}), crypto_data=prev.get("crypto_data"),   # le posizioni dei segnali non si perdono
+               scale_mult=prev.get("scale_mult"), scale_data=prev.get("scale_data"))
     save_overlay(doc)
     audit.log("desk", "desk.overlay", dict(data=doc["data"], titoli=len(doc["targets"]), totale=round(sum(doc["targets"].values()), 4),
                                            scartate=len(result["scartate"])))
     events.publish("desk.overlay", "desk", dict(titoli=len(doc["targets"]), totale=round(sum(doc["targets"].values()), 4),
                                                  targets=doc["targets"]))
     return doc
+
+
+def refresh_scale(today: dt.date | None = None) -> dict:
+    """Leva gestita per volatilita': se acceso (volmgmt.enabled), scrive il moltiplicatore nel file letto da GERVA-Q.
+    Spento: scrive 1.0, cosi' un valore vecchio non resta in giro. GERVA-Q lo limita a [0,6; 1,4] e al tetto assoluto di esposizione."""
+    from . import fundrisk
+    today = today or dt.date.today()
+    mult, info = 1.0, dict(ok=False, motivo="spento")
+    if S.get("volmgmt.enabled", False):
+        pf = fundrisk.portfolio()
+        info = fundrisk.vol_scale(pf["pesi"], lo=float(S.get("volmgmt.lo", 0.6)), hi=float(S.get("volmgmt.hi", 1.4))) if pf["pesi"] else dict(ok=False)
+        mult = info["mult"] if info.get("ok") else 1.0
+    doc = db.runtime_get("desk.overlay") or dict(data=today.isoformat(), targets={}, per_desk={}, regole=caps())
+    save_overlay(dict(doc, scale_mult=mult, scale_data=today.isoformat()))
+    audit.log("desk", "desk.scale", dict(mult=mult, info=info))
+    return dict(mult=mult, **{k: v for k, v in info.items() if k != "mult"})
 
 
 def cycle(today: dt.date | None = None) -> dict:

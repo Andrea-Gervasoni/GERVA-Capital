@@ -46,6 +46,11 @@ desk:                        # desk di trading: gli agenti propongono, il codice
   max_name_frac: 0.05        # al massimo il 5% del NAV su un titolo
   max_total_frac: 0.30       # al massimo il 30% del NAV in totale su tutti i desk
 
+volmgmt:                   # leva gestita per volatilita' (prova con: firm.py volgest)
+  enabled: false             # false = GERVA-Q usa la leva fissa; true = la leva segue la volatilita' recente
+  lo: 0.6                    # moltiplicatore minimo (mercato agitato)
+  hi: 1.4                    # moltiplicatore massimo (mercato calmo)
+
 release:
   any_day: true               # scelta di Andrea del 6/11: i rilasci di GERVA-Q si applicano quando serve (sempre backup, changelog e audit)
   weekday: 6                 # 0 = lunedi' ... 6 = domenica (REGOLE_SFIDA regola 7)

@@ -242,6 +242,24 @@ def cmd_crypto_venue(a):
     print(json.dumps(r, ensure_ascii=False, indent=1))
 
 
+def cmd_volgest(_):
+    """Leva fissa contro leva gestita per volatilita' sui dati veri (stesso rischio medio), a edge pieno e dimezzato."""
+    from firm import fundrisk
+    pf = fundrisk.portfolio()
+    if not pf["pesi"]:
+        print("GERVA-Q non ha ancora scritto i suoi pesi."); return
+    print("moltiplicatore di oggi:", fundrisk.vol_scale(pf["pesi"]))
+    for h in (1.0, 0.5):
+        r = fundrisk.vol_managed_test(pf["pesi"], haircut=h)
+        if not r.get("ok"):
+            print(r); return
+        print(f"\n== leva media {r['leva']}x | edge {'pieno' if h == 1.0 else 'dimezzato'} | {r['giorni']} giorni dal {r['dal']}")
+        print(" tipo      crescita_log  sharpe   vol    dd_max  peggior_mese")
+        for k, v in r["risultati"].items():
+            print(f" {k:<9} {v['crescita_log']:>11.1%} {v['sharpe']:>7.2f} {v['vol']:>6.1%} {v['dd_max']:>8.1%} {v['peggior_mese']:>11.1%}")
+    print("\nPer accenderla: dal portale, Impostazioni, volmgmt.enabled = true (poi serve il rilascio v3.7 di GERVA-Q).")
+
+
 def cmd_kelly(_):
     """Quale leva fa crescere di piu' il fondo (Kelly) con i dati storici veri, a edge pieno e a mezzo edge."""
     from firm import fundrisk
@@ -428,7 +446,7 @@ def main():
     ap = argparse.ArgumentParser(description="GERVA Capital")
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name in ["init", "portal", "heartbeat", "run", "status", "verify", "demo", "release", "data", "research", "report",
-                 "set-password", "ibkr-check", "observe", "check-backtest", "shadow", "comitato-lungo", "desk", "live-nav", "aspettative", "kelly", "crypto-venue", "telegram-login", "telegram"]:
+                 "set-password", "ibkr-check", "observe", "check-backtest", "shadow", "comitato-lungo", "desk", "live-nav", "aspettative", "kelly", "volgest", "crypto-venue", "telegram-login", "telegram"]:
         sp = sub.add_parser(name)
         sp.add_argument("--demo", action="store_true", help="usa il database dimostrativo var/demo/")
         if name == "crypto-venue":

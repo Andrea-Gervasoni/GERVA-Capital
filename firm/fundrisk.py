@@ -305,3 +305,54 @@ def growth_curve(weights: dict[str, float], close: pd.DataFrame | None = None, g
                 migliore_con_freno=best_safe["leva"] if best_safe else None, max_p_kill=max_p_kill,
                 mu_ann=round(mu, 4), sigma_ann=round(sg, 4), rf=round(rf, 4), giorni=int(len(r1)),
                 dal=str(r1.index[0].date()), copertura=bc["copertura"])
+
+
+# ---------------------------------------------------------------------------------------------- leva gestita per volatilita'
+VOL_LO, VOL_HI = 0.6, 1.4
+
+
+def _unlevered(weights: dict[str, float], close: pd.DataFrame | None):
+    close = charts.load_close() if close is None else close
+    gross = sum(abs(v) for v in weights.values())
+    if close is None or gross <= 0:
+        return None, None
+    r1 = backcast({k: v / gross for k, v in weights.items()}, returns_matrix(list(weights), close), None)["serie"].dropna()
+    irx = close["^IRX"] if close is not None and "^IRX" in close else None
+    fin = ((irx.reindex(r1.index, method="ffill").bfill().fillna(4.0) / 100.0 if irx is not None else 0.04) + MARGIN_SPREAD) / TD
+    return r1, fin
+
+
+def vol_scale(weights: dict[str, float], close: pd.DataFrame | None = None, halflife: int = 21,
+              lo: float = VOL_LO, hi: float = VOL_HI) -> dict:
+    """Moltiplicatore della leva: volatilita' di lungo periodo / volatilita' recente (media esponenziale, emivita 21 giorni),
+    limitato a [lo, hi]. Mercato agitato -> meno leva; mercato calmo -> piu' leva (Moreira e Muir, J. of Finance 2017)."""
+    r1, _ = _unlevered(weights, close)
+    if r1 is None or len(r1) < 504:
+        return dict(ok=False, motivo="storia insufficiente")
+    lr = float(r1.std())
+    rec = float(np.sqrt((r1 ** 2).ewm(halflife=halflife).mean().iloc[-1]))
+    raw = lr / rec if rec > 0 else 1.0
+    return dict(ok=True, mult=round(float(min(max(raw, lo), hi)), 3), grezzo=round(raw, 3), vol_recente=round(rec * math.sqrt(TD), 4),
+                vol_lungo=round(lr * math.sqrt(TD), 4), asof=str(r1.index[-1].date()))
+
+
+def vol_managed_test(weights: dict[str, float], close: pd.DataFrame | None = None, L0: float = 1.5, haircut: float = 1.0,
+                     halflife: int = 21, lo: float = VOL_LO, hi: float = VOL_HI) -> dict:
+    """Leva fissa L0 contro leva L0*m(t), con m(t) calcolato SOLO con dati fino al giorno prima e normalizzato perche' l'esposizione
+    media sia la stessa (stesso rischio medio): confronta Sharpe, crescita composta, drawdown e peggior mese."""
+    r1, fin = _unlevered(weights, close)
+    if r1 is None or len(r1) < 504:
+        return dict(ok=False, motivo="storia insufficiente")
+    r1 = r1 - (1.0 - haircut) * float(r1.mean())
+    vol_t = np.sqrt((r1 ** 2).ewm(halflife=halflife).mean()).shift(1)
+    m = (float(r1.std()) / vol_t).clip(lo, hi).fillna(1.0)
+    m = m / float(m.mean())
+    out = {}
+    for name, expo in (("fissa", pd.Series(L0, index=r1.index)), ("gestita", L0 * m)):
+        r = (expo * r1 - (expo - 1.0).clip(lower=0) * fin).clip(lower=-0.95)
+        eq = (1 + r).cumprod()
+        mo = (1 + r).groupby([r.index.year, r.index.month]).prod() - 1
+        out[name] = dict(crescita_log=round(float(np.log1p(r).mean() * TD), 4), sharpe=round(float(r.mean() / r.std() * math.sqrt(TD)), 3),
+                         vol=round(float(r.std() * math.sqrt(TD)), 4), dd_max=round(float((eq / eq.cummax() - 1).min()), 4),
+                         peggior_mese=round(float(mo.min()), 4), esposizione_media=round(float(expo.mean()), 3))
+    return dict(ok=True, leva=L0, haircut=haircut, risultati=out, dal=str(r1.index[0].date()), giorni=int(len(r1)))

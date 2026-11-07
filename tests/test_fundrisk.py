@@ -94,3 +94,12 @@ def test_growth_curve_kelly_shape_and_haircut():
     g = [r["crescita_log"] for r in full["righe"]]
     assert max(g) > g[-1] or full["kelly_empirico"] == full["righe"][-1]["leva"]  # la curva ha un massimo (o e' ancora in salita)
     assert all(0 <= r["p_kill"] <= 1 for r in full["righe"])
+
+
+def test_vol_scale_and_managed_test_shapes():
+    c = _close(n=1500)
+    v = F.vol_scale({"SPY": 0.5, "AAA": 0.5}, c)
+    assert v["ok"] and 0.6 <= v["mult"] <= 1.4
+    t = F.vol_managed_test({"SPY": 0.5, "AAA": 0.5}, c)
+    assert t["ok"] and set(t["risultati"]) == {"fissa", "gestita"}
+    assert abs(t["risultati"]["fissa"]["esposizione_media"] - t["risultati"]["gestita"]["esposizione_media"]) < 0.05   # stesso rischio medio
