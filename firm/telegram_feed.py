@@ -194,9 +194,18 @@ def run() -> None:
     print("ascolto (solo lettura):", ", ".join(ids.values()), flush=True)
     db.runtime_set("telegram.alive", dict(ts=db.now_iso(), sale=list(ids.values())))
 
+    from .selfupdate import Watch
+    watch = Watch("telegram")
+
     async def alive():                                                       # battito del lettore: il portale e il battito sanno se ascolta
         import asyncio
         while True:
+            if watch.changed():
+                try:
+                    client.disconnect()
+                except Exception:
+                    pass
+                watch.last = 0; watch.check()
             try:
                 db.runtime_set("telegram.alive", dict(ts=db.now_iso(), sale=list(ids.values()), collegato=client.is_connected()))
             except Exception:

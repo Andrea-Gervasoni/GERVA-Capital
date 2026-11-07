@@ -611,3 +611,6 @@ p.empty::before, .feed li.empty::before { content: '∅'; flex: none; font: 400 
 .sess-sub { padding: 2px 10px 0; font-size: .72rem; color: var(--muted); }
 .page > * + .kgrid, .page > .kgrid + .lg.card, .page > .kgrid + .grid { margin-top: 16px; }
 .g-2 .feed { max-height: 330px; }
+.sys.rest i { background: var(--muted); } .sys.rest span, .sys.rest time { color: var(--muted); }
+.sys.ko time { color: var(--neg); font-weight: 500; }
+.sys-why { margin: 0 10px 6px 28px; font-size: .68rem; line-height: 1.35; color: var(--muted); }

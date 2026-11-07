@@ -109,11 +109,13 @@ const hms = (d) => d.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-d
 async function refreshHealth() {
   try {
     const h = await api("/api/health");
-    const down = h.parti.filter((p) => !p.ok);
+    const down = h.parti.filter((p) => !p.ok && p.stato !== "riposo");
     CLOCK.ok = h.ok; CLOCK.frozen = h.ok ? null : (h.bloccato_a ? new Date(h.bloccato_a) : CLOCK.frozen);   // mai partito: --:--:--
     CLOCK.why = h.ok ? "Tutto vivo: " + h.parti.map((p) => p.nome).join(", ") : "FERMO: " + down.map((p) => `${p.nome} (${p.motivo}; ultimo segnale ${p.ultimo ? when(p.ultimo) : "mai"})`).join(" · ");
     document.getElementById("systems").innerHTML = `<p class="side-h">Programmi</p>` + h.parti.map((p) =>
-      `<div class="sys ${p.ok ? "ok" : "ko"}" title="${esc(p.ok ? "vivo" : p.motivo)}"><i></i><span>${esc(p.nome)}</span><time>${p.ultimo ? esc(new Date(p.ultimo).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })) : "mai"}</time></div>`).join("");
+      `<div class="sys ${p.ok ? "ok" : p.stato === "riposo" ? "rest" : "ko"}" title="${esc(p.ok ? "vivo" : p.motivo)}"><i></i><span>${esc(p.nome)}</span>` +
+      `<time>${p.ok || !p.breve ? (p.ultimo ? esc(new Date(p.ultimo).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })) : "mai") : esc(p.breve)}</time></div>` +
+      (!p.ok && p.stato !== "riposo" && p.motivo ? `<p class="sys-why">${esc(p.motivo)}</p>` : "")).join("");
   } catch (e) {                                                        // il portale stesso non risponde: si blocca anche cosi'
     if (CLOCK.ok !== false) { CLOCK.ok = false; CLOCK.frozen = new Date(); CLOCK.why = "FERMO: il portale non risponde"; }
   }

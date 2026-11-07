@@ -379,8 +379,12 @@ def run_loop(max_iter: int | None = None, sleep=time.sleep) -> None:
     last_cycle = 0.0
     last_hour = None
     n = 0
+    from .selfupdate import Watch
+    watch = Watch("banco libero") if max_iter is None else None
     while max_iter is None or n < max_iter:
         n += 1
+        if watch:
+            watch.check()
         try:
             db.runtime_set("free.alive", db.now_iso())                 # l'orologio del portale: il banco libero e' acceso
             monitor()

@@ -231,7 +231,11 @@ def live_loop(factory=_default_factory, interval: float = 5.0, max_iter: int | N
     ep = challenge_endpoint()
     client_id = int(os.environ.get("IBKR_LIVE_CLIENT_ID", ep.client_id + 1))
     n, last_tick = 0, 0.0
+    from .selfupdate import Watch
+    watch = Watch("lettura IBKR") if max_iter is None else None
     while max_iter is None or n < max_iter:
+        if watch:
+            watch.check()
         ib = _ReadOnlyIB(factory())
         try:
             ib.connect(ep.host, ep.port, clientId=client_id, timeout=15, readonly=True)
@@ -243,6 +247,8 @@ def live_loop(factory=_default_factory, interval: float = 5.0, max_iter: int | N
             while max_iter is None or n < max_iter:
                 ib.sleep(interval)
                 n += 1
+                if watch and watch.changed():
+                    ib.disconnect(); watch.last = 0; watch.check()
                 vals = {(v.tag, v.currency): v.value for v in ib.accountValues(acct)}
                 exact = float(vals.get(("NetLiquidation", "EUR")) or vals.get(("NetLiquidation", "BASE")) or 0)
                 if exact <= 0:
