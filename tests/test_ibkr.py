@@ -282,3 +282,13 @@ def test_stale_orders_expire(env):
     db.ex("UPDATE gateway_orders SET ts='2020-01-01T00:00:00+00:00'")
     assert gateway.expire_stale() == 1
     assert db.one("SELECT status FROM gateway_orders")["status"] == "scaduto"
+
+
+def test_default_factory_does_not_resubscribe_account_summary_on_1102():
+    pytest.importorskip("ib_async")
+    from firm import ibkr
+    ib = ibkr._default_factory()
+    calls = []
+    ib.reqAccountSummaryAsync = lambda: calls.append(1)
+    ib.errorEvent.emit(-1, 1102, "Connessione ripristinata", None)
+    assert calls == []                                                   # nessun abbonamento superfluo

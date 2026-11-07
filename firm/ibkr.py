@@ -72,7 +72,14 @@ def firm_endpoint() -> Endpoint:
 
 def _default_factory():
     from ib_async import IB          # installato sul server / sul Mac (requirements-ibkr.txt)
-    return IB()
+    ib = IB()
+    try:
+        # ib_async, a ogni avviso 1102 ("connessione ripristinata"), apre da solo un abbonamento al riepilogo del conto:
+        # noi non lo usiamo, e TWS ne concede pochissimi (errore 322): occuparli puo' togliere il posto a GERVA-Q.
+        ib.errorEvent -= ib._onError
+    except Exception:
+        pass
+    return ib
 
 
 # ---------------------------------------------------------------------------
