@@ -260,6 +260,23 @@ def cmd_crypto_venue(a):
     print(json.dumps(r, ensure_ascii=False, indent=1))
 
 
+def cmd_free_desk(a):
+    """Banco libero (Alpaca paper): senza opzioni resta acceso (controlla stop/tempi e chiama gli agenti); --una-volta fa un giro; --stato mostra conto, regole e trade."""
+    from firm import free_desk, db
+    if a.stato:
+        try:
+            print(json.dumps(free_desk.state(), ensure_ascii=False, indent=1))
+        except Exception as e:
+            print("conto non raggiungibile:", e)
+        print("\nregole di casa:", free_desk.active_rules() or "nessuna (liberta' totale)")
+        for r in db.q("SELECT * FROM free_trades ORDER BY id DESC LIMIT 25"):
+            print(f"#{r['id']:<4} {r['status']:<9} {r['agent']:<14} {r['side']:<4} {r['symbol']:<6} {r['notional']:>9.0f}$ pnl {r['pnl'] if r['pnl'] is not None else '-'}  {r['esito'] or ''}")
+        return
+    if a.una_volta:
+        print(json.dumps(dict(chiusi=free_desk.monitor(), giro=free_desk.cycle()), ensure_ascii=False, indent=1, default=str)); return
+    print("banco libero acceso (Ctrl+C per fermarlo)"); free_desk.run_loop()
+
+
 def cmd_ritmo(_):
     """Convoca adesso il comitato sul ritmo di ingresso (quanto GERVA-Q puo' comprare al giorno) e scrive la decisione per GERVA-Q."""
     from firm import desk, db
@@ -525,9 +542,12 @@ def main():
     ap = argparse.ArgumentParser(description="GERVA Capital")
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name in ["init", "portal", "heartbeat", "run", "status", "verify", "demo", "release", "data", "research", "report",
-                 "set-password", "ibkr-check", "observe", "check-backtest", "shadow", "comitato-lungo", "desk", "live-nav", "aspettative", "kelly", "volgest", "idee", "regole", "ritmo", "imposta", "crypto-venue", "telegram-login", "telegram"]:
+                 "set-password", "ibkr-check", "observe", "check-backtest", "shadow", "comitato-lungo", "desk", "live-nav", "aspettative", "kelly", "volgest", "idee", "regole", "ritmo", "free-desk", "imposta", "crypto-venue", "telegram-login", "telegram"]:
         sp = sub.add_parser(name)
         sp.add_argument("--demo", action="store_true", help="usa il database dimostrativo var/demo/")
+        if name == "free-desk":
+            sp.add_argument("--una-volta", action="store_true", help="un solo giro: controlla i trade aperti e chiama gli agenti")
+            sp.add_argument("--stato", action="store_true", help="conto, regole di casa e ultimi trade")
         if name == "idee":
             sp.add_argument("--lista", action="store_true", help="mostra solo le idee, senza fare un giro")
             sp.add_argument("--dettaglio", type=int, default=0, help="tesi, percorso e voti della riunione di una idea")

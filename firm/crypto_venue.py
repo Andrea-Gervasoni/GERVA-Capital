@@ -47,6 +47,36 @@ def save_keys(key: str, secret: str, env_path: str) -> None:
     os.chmod(env_path, 0o600)
 
 
+def keys_ok() -> bool:
+    return bool(os.environ.get("ALPACA_PAPER_KEY")) and bool(os.environ.get("ALPACA_PAPER_SECRET"))
+
+
+DATA = "https://data.alpaca.markets"
+
+
+def _data(path: str, timeout: int = 10):
+    """Prezzi (sola lettura) dal servizio dati di Alpaca, con le stesse chiavi paper."""
+    req = urllib.request.Request(DATA + path, headers={"APCA-API-KEY-ID": os.environ["ALPACA_PAPER_KEY"],
+                                                         "APCA-API-SECRET-KEY": os.environ["ALPACA_PAPER_SECRET"], "Accept": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout, context=_ctx()) as r:
+            return json.loads(r.read() or b"{}")
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"Alpaca dati {e.code}: {e.read().decode('utf-8', 'replace')[:160]}") from None
+
+
+def last_price(sym: str) -> float | None:
+    from . import charts
+    try:
+        if sym in charts.CRYPTO:
+            d = _data(f"/v1beta3/crypto/us/latest/trades?symbols={sym}%2FUSD")
+            return float(d["trades"][f"{sym}/USD"]["p"])
+        d = _data(f"/v2/stocks/{sym}/trades/latest?feed=iex")
+        return float(d["trade"]["p"])
+    except Exception:
+        return None
+
+
 def configured() -> bool:
     return S.get("crypto.venue", "none") == "alpaca" and bool(os.environ.get("ALPACA_PAPER_KEY")) and bool(os.environ.get("ALPACA_PAPER_SECRET"))
 

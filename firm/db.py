@@ -131,6 +131,14 @@ CREATE TABLE IF NOT EXISTS ideas (
   azione TEXT, p_success REAL, status TEXT, history TEXT, forecast TEXT, meeting INTEGER, open_ts TEXT, close_ts TEXT,
   entry_px REAL, result TEXT, reward TEXT
 );
+CREATE TABLE IF NOT EXISTS free_trades (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, agent TEXT, symbol TEXT, side TEXT, notional REAL, kind TEXT, tif TEXT,
+  stop_pct REAL, take_pct REAL, hold_until TEXT, motivo TEXT, p REAL, status TEXT, order_id TEXT, entry_px REAL, qty REAL,
+  close_ts TEXT, close_px REAL, pnl REAL, esito TEXT
+);
+CREATE TABLE IF NOT EXISTS house_rules (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, kind TEXT, value REAL, who TEXT, idea INTEGER, status TEXT
+);
 CREATE TABLE IF NOT EXISTS rules_log (
   id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, kind TEXT, key TEXT, old TEXT, new TEXT, who TEXT, idea INTEGER, status TEXT
 );

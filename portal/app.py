@@ -497,6 +497,14 @@ def fund_kelly(haircut: float = 0.5):
         return _json(dict(ok=False, motivo=f"{type(e).__name__}: {str(e)[:160]}"))
 
 
+@app.get("/api/free")
+def api_free():
+    """Banco libero: regole di casa attive (all'inizio nessuna) e ultimi trade degli agenti."""
+    from firm import free_desk as FD
+    return _json(dict(regole=FD.active_rules(), trade=db.q("SELECT * FROM free_trades ORDER BY id DESC LIMIT 60"),
+                      storia_regole=db.q("SELECT * FROM house_rules ORDER BY id DESC LIMIT 30")))
+
+
 @app.get("/api/ideas")
 def api_ideas(limit: int = 40):
     """Le idee degli agenti con il loro percorso (chi le ha portate su, chi le ha votate, che esito hanno avuto) e le regole votate."""

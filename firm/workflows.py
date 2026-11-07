@@ -35,13 +35,21 @@ def arr(items: dict) -> dict:
 # 1. REDAZIONE: triage -> verifica su seconda fonte -> bollettino
 # ===========================================================================
 DESK_PROPOSAL = obj({"proposte": arr(obj({"simbolo": S_STR, "peso_pct": {"type": "number"}, "motivo": S_STR})), "nota": S_STR})
-IDEA = obj({"ho_un_idea": {"type": "boolean"}, "tipo": {"type": "string", "enum": ["posizione", "regola", "motore"]},
+IDEA = obj({"ho_un_idea": {"type": "boolean"}, "tipo": {"type": "string", "enum": ["posizione", "regola", "motore", "regola_casa"]},
             "titolo": S_STR, "tesi": S_STR, "evidenze": arr(S_STR), "simbolo": S_STR,
             "peso_pct": {"type": "number", "description": "peso in PERCENTUALE del conto: 2.5 significa 2,5%"},
             "orizzonte_giorni": {"type": "integer"},
             "stop_pct": {"type": "number", "description": "stop in PERCENTUALE sotto l'ingresso, tra 1 e 30: 8 significa -8% (non 0.08)"},
             "obiettivo_pct": {"type": "number", "description": "obiettivo in PERCENTUALE sopra l'ingresso, tra 1 e 100: 12 significa +12%"},
             "chiave": S_STR, "valore": {"type": "number"}, "probabilita_successo": {"type": "number"}})
+FREE_TRADES = obj({"trades": arr(obj({
+    "simbolo": S_STR, "lato": {"type": "string", "enum": ["buy", "sell"]},
+    "importo_usd": {"type": "number", "description": "importo del trade in DOLLARI"},
+    "tipo_ordine": {"type": "string", "enum": ["market", "limit"]}, "prezzo_limite": {"type": "number", "description": "solo per limit, altrimenti 0"},
+    "stop_pct": {"type": "number", "description": "stop in PERCENTUALE contro di te (0 = nessuno): 0.5 significa 0,5%"},
+    "take_pct": {"type": "number", "description": "obiettivo in PERCENTUALE a tuo favore (0 = nessuno)"},
+    "tieni_minuti": {"type": "integer", "description": "chiusura automatica dopo questi minuti (0 = tieni finche' vuoi)"},
+    "motivo": S_STR, "probabilita": {"type": "number", "description": "probabilita' che il trade chiuda in guadagno"}})), "nota": S_STR})
 IDEA_REVIEW = obj({"decisione": {"type": "string", "enum": ["porta_su", "rimanda", "scarta"]}, "motivo": S_STR,
                    "miglioramenti": S_STR, "probabilita_successo": {"type": "number"}})
 PACE = obj({"ritmo_pct": {"type": "number"}, "motivo": S_STR})
