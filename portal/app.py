@@ -575,6 +575,13 @@ def api_tape():
     return _json(out)
 
 
+@app.get("/api/health")
+def api_health():
+    """L'orologio del portale: tutti i programmi vivi? Se no, da quando e cosa manca."""
+    from firm import health
+    return _json(health.status())
+
+
 @app.get("/api/feed")
 def api_feed(limit: int = 60):
     """Gli ultimi eventi (piu' recenti per primi) per la Panoramica."""

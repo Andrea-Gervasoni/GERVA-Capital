@@ -31,6 +31,7 @@ def _once(key: str) -> bool:
 
 def beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
     now = now or dt.datetime.now(dt.timezone.utc)
+    db.runtime_set("heartbeat.alive", db.now_iso())                    # l'orologio del portale: il battito gira
     day = now.strftime("%Y-%m-%d")
     woke, notes = [], []
     # ---- codice deterministico, sempre

@@ -382,6 +382,7 @@ def run_loop(max_iter: int | None = None, sleep=time.sleep) -> None:
     while max_iter is None or n < max_iter:
         n += 1
         try:
+            db.runtime_set("free.alive", db.now_iso())                 # l'orologio del portale: il banco libero e' acceso
             monitor()
             try:                                                         # strategie in codice accese dal comitato (firm/strategies.py)
                 from . import strategies

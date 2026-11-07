@@ -104,6 +104,27 @@ function sparkSvg(series) {
     `<path class="a" d="${d}L${W},${H}L0,${H}Z"/><path class="l" d="${d}"/><circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="3"/></svg>`;
 }
 
+// ---------------------------------------------------------------- orologio "uomo morto"
+const CLOCK = { ok: null, frozen: null, why: "" };
+const hms = (d) => d.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+async function refreshHealth() {
+  try {
+    const h = await api("/api/health");
+    const down = h.parti.filter((p) => !p.ok);
+    CLOCK.ok = h.ok; CLOCK.frozen = h.ok ? null : (h.bloccato_a ? new Date(h.bloccato_a) : CLOCK.frozen);   // mai partito: --:--:--
+    CLOCK.why = h.ok ? "Tutto vivo: " + h.parti.map((p) => p.nome).join(", ") : "FERMO: " + down.map((p) => `${p.nome} (${p.motivo}; ultimo segnale ${p.ultimo ? when(p.ultimo) : "mai"})`).join(" · ");
+  } catch (e) {                                                        // il portale stesso non risponde: si blocca anche cosi'
+    if (CLOCK.ok !== false) { CLOCK.ok = false; CLOCK.frozen = new Date(); CLOCK.why = "FERMO: il portale non risponde"; }
+  }
+  tickClock();
+}
+function tickClock() {
+  const el = document.getElementById("clock"); if (!el) return;
+  if (CLOCK.ok === false) { el.classList.add("stop"); el.textContent = CLOCK.frozen ? hms(CLOCK.frozen) : "--:--:--"; }
+  else { el.classList.remove("stop"); el.textContent = hms(new Date()); }
+  el.title = CLOCK.why || el.title;
+}
+
 // ---------------------------------------------------------------- nastro di mercato
 async function refreshTape() {
   try {
@@ -664,5 +685,6 @@ async function refreshWorld() { try { buildWorld(await api("/api/world")); } cat
   setInterval(refreshState, 8000);
   setInterval(refreshWorld, 15000);
   refreshTape(); setInterval(refreshTape, 60000);
+  refreshHealth(); setInterval(refreshHealth, 15000); setInterval(tickClock, 1000);
   setInterval(() => { if (CUR.page === "panoramica") renderFeed(); }, 8000);
 })();

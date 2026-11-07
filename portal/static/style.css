@@ -490,3 +490,12 @@ body, .lg.card, .kcard, .tape, .nav { transition: background-color .5s var(--eas
   .page.enter > *, .page.enter .grid > *, .page.enter .kgrid > *, .page-head, .feed li.new, .spark path.l, #tape-items .run, .skeleton i, .dot.on { animation: none !important; }
 }
 @media (max-width: 1100px) { .skeleton { grid-template-columns: 1fr 1fr; } }
+
+/* orologio "uomo morto": corre se tutto e' vivo, si ferma e diventa rosso se qualcosa si blocca */
+.clock { font: 500 1.05rem/1 var(--f-accent); letter-spacing: .04em; padding: 0 10px; height: 30px; display: inline-flex; align-items: center; gap: 7px; border-radius: 8px; box-shadow: inset 0 0 0 1px var(--rule); white-space: nowrap; cursor: help; }
+.clock::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--pos); animation: breathe 2s ease-in-out infinite; }
+.clock.stop { color: #fff; background: var(--neg); box-shadow: none; animation: alarm 1.6s ease-in-out infinite; }
+.clock.stop::before { background: #fff; animation: none; }
+@keyframes alarm { 0%, 100% { box-shadow: 0 0 0 0 rgba(180, 55, 43, .55); } 50% { box-shadow: 0 0 0 6px rgba(180, 55, 43, 0); } }
+@media (max-width: 760px) { .clock { font-size: .9rem; } }
+@media (prefers-reduced-motion: reduce) { .clock.stop { animation: none; } }

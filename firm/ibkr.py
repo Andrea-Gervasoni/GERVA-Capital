@@ -254,6 +254,7 @@ def live_loop(factory=_default_factory, interval: float = 5.0, max_iter: int | N
                 est = exact + (tot - base[1])
                 now = db.now_iso()
                 db.runtime_set("ibkr.live", dict(ts=now, nav=round(est, 2), nav_exact=round(exact, 2), stima=abs(est - exact) > 0.005))
+                db.runtime_set("ibkr.live_ok", now)                     # l'orologio del portale: IBKR collegato e leggibile
                 db.ex("INSERT OR REPLACE INTO nav_marks(day,pod,nav,capital,gross) VALUES(?,?,?,?,?)",
                       (db.today(), "pod_zero", est, 1.0, 0.0))
                 if time.time() - last_tick >= 60:
