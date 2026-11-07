@@ -36,8 +36,11 @@ def arr(items: dict) -> dict:
 # ===========================================================================
 DESK_PROPOSAL = obj({"proposte": arr(obj({"simbolo": S_STR, "peso_pct": {"type": "number"}, "motivo": S_STR})), "nota": S_STR})
 IDEA = obj({"ho_un_idea": {"type": "boolean"}, "tipo": {"type": "string", "enum": ["posizione", "regola", "motore"]},
-            "titolo": S_STR, "tesi": S_STR, "evidenze": arr(S_STR), "simbolo": S_STR, "peso_pct": {"type": "number"},
-            "orizzonte_giorni": {"type": "integer"}, "stop_pct": {"type": "number"}, "obiettivo_pct": {"type": "number"},
+            "titolo": S_STR, "tesi": S_STR, "evidenze": arr(S_STR), "simbolo": S_STR,
+            "peso_pct": {"type": "number", "description": "peso in PERCENTUALE del conto: 2.5 significa 2,5%"},
+            "orizzonte_giorni": {"type": "integer"},
+            "stop_pct": {"type": "number", "description": "stop in PERCENTUALE sotto l'ingresso, tra 1 e 30: 8 significa -8% (non 0.08)"},
+            "obiettivo_pct": {"type": "number", "description": "obiettivo in PERCENTUALE sopra l'ingresso, tra 1 e 100: 12 significa +12%"},
             "chiave": S_STR, "valore": {"type": "number"}, "probabilita_successo": {"type": "number"}})
 IDEA_REVIEW = obj({"decisione": {"type": "string", "enum": ["porta_su", "rimanda", "scarta"]}, "motivo": S_STR,
                    "miglioramenti": S_STR, "probabilita_successo": {"type": "number"}})

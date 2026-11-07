@@ -42,8 +42,14 @@ def test_validate_enforces_limits(firm_env):
     allowed = {"AAA"}
     ok, _ = ID.validate(dict(ho_un_idea=True, tipo="posizione", titolo="t", tesi="x", evidenze=[], simbolo="AAA", peso_pct=50, orizzonte_giorni=999,
                              stop_pct=0, obiettivo_pct=500, chiave="", valore=0, probabilita_successo=0.99), allowed)
+    assert ok is None                                                    # stop 0 / obiettivo 500: fuori scala, si rifiuta (non si corregge in silenzio)
+    ok, _ = ID.validate(dict(ho_un_idea=True, tipo="posizione", titolo="t", tesi="x", evidenze=[], simbolo="AAA", peso_pct=50, orizzonte_giorni=999,
+                             stop_pct=8, obiettivo_pct=12, chiave="", valore=0, probabilita_successo=0.99), allowed)
     a = ok["azione"]
-    assert a["peso_pct"] == 3.0 and a["orizzonte_giorni"] == 60 and a["stop_pct"] >= 1 and a["obiettivo_pct"] <= 100 and ok["p"] <= 0.98   # tetti del codice
+    assert a["peso_pct"] == 3.0 and a["orizzonte_giorni"] == 60 and a["stop_pct"] == 8 and a["obiettivo_pct"] == 12 and ok["p"] <= 0.98   # tetti del codice
+    bad_unit, why = ID.validate(dict(ho_un_idea=True, tipo="posizione", titolo="t", tesi="x", evidenze=[], simbolo="AAA", peso_pct=2, orizzonte_giorni=20,
+                                     stop_pct=0.08, obiettivo_pct=12, chiave="", valore=0, probabilita_successo=0.5), allowed)
+    assert bad_unit is None and "PERCENTUALE" in why                    # 0.08 al posto di 8: l'autore lo viene a sapere
     assert ID.validate(dict(ho_un_idea=True, tipo="posizione", titolo="t", tesi="x", evidenze=[], simbolo="ZZZ", peso_pct=1, orizzonte_giorni=10,
                             stop_pct=5, obiettivo_pct=5, chiave="", valore=0, probabilita_successo=0.5), allowed)[0] is None            # fuori tabella
     bad = dict(ho_un_idea=True, tipo="regola", titolo="t", tesi="x", evidenze=[], simbolo="", peso_pct=0, orizzonte_giorni=0, stop_pct=0, obiettivo_pct=0,

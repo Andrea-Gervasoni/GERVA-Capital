@@ -81,8 +81,14 @@ def validate(o: dict, allowed: set[str]) -> tuple[dict | None, str]:
         if not (0 < w and math.isfinite(w)):
             return None, "peso non valido"
         hz = int(o.get("orizzonte_giorni") or S.get("ideas.horizon_days", 20))
-        act = dict(simbolo=sym, peso_pct=round(min(w, cap), 3), orizzonte_giorni=min(max(hz, 5), 60),
-                   stop_pct=min(max(float(o.get("stop_pct") or 8), 1.0), 30.0), obiettivo_pct=min(max(float(o.get("obiettivo_pct") or 12), 1.0), 100.0))
+        stop, tgt = float(o.get("stop_pct") or 0), float(o.get("obiettivo_pct") or 0)
+        # MAI correggere in silenzio i parametri di rischio: un valore fuori scala (per esempio 0.08 invece di 8) cambia il trade rispetto
+        # alla tesi. Si rifiuta e l'autore lo sa (e' successo il 7/11: stop dichiarato -8%, registrato 1%).
+        if not (1.0 <= stop <= 30.0):
+            return None, f"stop_pct={stop:g}: serve una PERCENTUALE tra 1 e 30 (8 significa 8%, non 0.08)"
+        if not (1.0 <= tgt <= 100.0):
+            return None, f"obiettivo_pct={tgt:g}: serve una PERCENTUALE tra 1 e 100 (12 significa 12%)"
+        act = dict(simbolo=sym, peso_pct=round(min(w, cap), 3), orizzonte_giorni=min(max(hz, 5), 60), stop_pct=stop, obiettivo_pct=tgt)
     elif kind in ("regola", "motore"):
         key = str(o.get("chiave", "")).strip()
         ok, why = rules.check(kind, key, o.get("valore"))
