@@ -63,3 +63,17 @@ def test_rebalance_sends_orders_and_fails_closed(firm_env, monkeypatch):
     monkeypatch.setattr(V, "_req", boom)
     r2 = V.rebalance()
     assert not r2["ok"] and "non raggiungibile" in r2["nota"]               # fail-closed
+
+
+def test_save_keys_paper_only_and_private(tmp_path):
+    import os, stat
+    env = tmp_path / ".env"
+    env.write_text("ANTHROPIC_API_KEY=abc\nALPACA_PAPER_KEY=old\n")
+    V.save_keys("PK" + "A1" * 10, "s" * 30, str(env))
+    txt = env.read_text()
+    assert "ANTHROPIC_API_KEY=abc" in txt and txt.count("ALPACA_PAPER_KEY=") == 1 and "old" not in txt
+    assert stat.S_IMODE(os.stat(env).st_mode) == 0o600
+    with pytest.raises(ValueError):
+        V.save_keys("AK" + "A1" * 10, "s" * 30, str(env))                 # chiave del conto reale: rifiutata
+    with pytest.raises(ValueError):
+        V.save_keys("PK" + "A1" * 10, "corta", str(env))

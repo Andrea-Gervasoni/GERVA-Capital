@@ -233,6 +233,24 @@ def cmd_crypto_venue(a):
     """Prova la sede crypto Alpaca (paper): saldo, piano degli ordini. --attiva la accende, --invia manda gli ordini ora."""
     from firm import crypto_venue as V, settings
     cap = settings.AndreaCapability(settings.ensure_token())
+    if a.chiavi:
+        import getpass
+        print("Incolla le chiavi del conto PAPER di Alpaca. Non si vedono mentre le scrivi e non finiscono in nessun registro.")
+        try:
+            k = getpass.getpass("Key ID (inizia con PK): ")
+            sec = getpass.getpass("Secret Key: ")
+            V.save_keys(k, sec, os.path.join(ROOT, ".env"))
+        except (ValueError, EOFError, KeyboardInterrupt) as e:
+            print(f"Non salvato: {e}"); return
+        os.environ["ALPACA_PAPER_KEY"], os.environ["ALPACA_PAPER_SECRET"] = k.strip(), sec.strip()
+        print("Salvate in .env (permessi 600). Provo il collegamento...")
+        try:
+            acc = V.account()
+            print(f"OK: conto paper {acc.get('account_number', '?')} | stato {acc.get('status')} | valore {float(acc['equity']):,.2f} USD")
+            print("Per accendere le crypto su Alpaca:  .venv/bin/python firm.py crypto-venue --attiva")
+        except Exception as e:
+            print(f"Le chiavi sono salvate ma il collegamento non riesce: {str(e)[:160]}")
+        return
     if a.attiva:
         settings.set("crypto.venue", "alpaca", cap)
         print("sede crypto Alpaca (paper) ATTIVA: da ora i segnali accettati e il modello crypto si eseguono li', a ogni battito")
@@ -450,6 +468,7 @@ def main():
         sp = sub.add_parser(name)
         sp.add_argument("--demo", action="store_true", help="usa il database dimostrativo var/demo/")
         if name == "crypto-venue":
+            sp.add_argument("--chiavi", action="store_true", help="chiede le chiavi paper nel terminale (nascoste) e le salva in .env")
             sp.add_argument("--attiva", action="store_true", help="accende la sede crypto Alpaca (paper)")
             sp.add_argument("--invia", action="store_true", help="invia davvero gli ordini ora (senza: solo il piano)")
         if name == "telegram-login":

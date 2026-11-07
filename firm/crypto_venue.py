@@ -28,6 +28,25 @@ BASE = "https://paper-api.alpaca.markets"
 BAND = 0.005
 
 
+def save_keys(key: str, secret: str, env_path: str) -> None:
+    """Scrive le chiavi PAPER nel file .env (permessi 600), sostituendo le righe vecchie. Rifiuta chiavi che non siano paper."""
+    key, secret = key.strip(), secret.strip()
+    if not (key.startswith("PK") and 16 <= len(key) <= 64 and key.isalnum()):
+        raise ValueError("la Key ID del conto paper inizia con PK (le chiavi del conto reale iniziano con AK e non sono ammesse)")
+    if not (20 <= len(secret) <= 128) or any(c.isspace() for c in secret):
+        raise ValueError("la Secret Key non sembra valida (niente spazi, almeno 20 caratteri)")
+    lines = []
+    if os.path.exists(env_path):
+        lines = [l for l in open(env_path).read().splitlines() if not l.strip().startswith(("ALPACA_PAPER_KEY", "ALPACA_PAPER_SECRET"))]
+    lines += [f"ALPACA_PAPER_KEY={key}", f"ALPACA_PAPER_SECRET={secret}"]
+    tmp = env_path + ".tmp"
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as f:
+        f.write("\n".join(lines) + "\n")
+    os.replace(tmp, env_path)
+    os.chmod(env_path, 0o600)
+
+
 def configured() -> bool:
     return S.get("crypto.venue", "none") == "alpaca" and bool(os.environ.get("ALPACA_PAPER_KEY")) and bool(os.environ.get("ALPACA_PAPER_SECRET"))
 
