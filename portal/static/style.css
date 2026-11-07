@@ -653,3 +653,33 @@ p.empty::before, .feed li.empty::before { content: '∅'; position: absolute; le
 .clock { height: 34px; }
 .pill.paper { font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-size: .7rem; }
 .iconbtn { width: 34px; height: 34px; }
+
+
+/* ═════════════════════════ IMPIANTO PIATTO ═════════════════════════
+   Meno scatole: pannelli con un filo sottile invece di ombre che fluttuano, cifre in fasce unite, il grafico del fondo come protagonista. */
+.lg.card, .mail, .meet, .fix, .pm, .idea, .person, .tablewrap, .scroll, canvas.chart, .lesson, .pal-box { box-shadow: inset 0 0 0 1px var(--hair); }
+.lg.card:hover, .kcard:hover, .idea:hover, .person:hover { transform: none; box-shadow: inset 0 0 0 1px var(--rule); background-image: none; }
+.lg.card.fringe { box-shadow: inset 0 0 0 1px var(--rule); }
+.kcard::after { display: none; }
+
+/* fasce di cifre: una sola cornice, divisori sottili, niente schede che galleggiano */
+.band, .kgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0; margin: 16px 0; background: var(--sheet); border-radius: var(--r);
+  border-top: 1px solid var(--hair); border-left: 1px solid var(--hair); overflow: hidden; }
+.band > .cell, .kgrid > .kcard { padding: 18px 22px 16px; border-radius: 0; background: transparent; box-shadow: inset -1px -1px 0 var(--hair); }
+.band .mid, .kgrid .kv { font: 500 1.7rem/1.15 var(--f-accent); margin: 6px 0 4px; }
+.band .cell p, .kgrid .ks { margin: 0; font-size: .8rem; }
+.kgrid { margin-top: 0; }
+
+/* la panoramica: il grafico e' il protagonista */
+.hero { padding: 24px 26px 18px; }
+.hero-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; flex-wrap: wrap; margin-bottom: 14px; }
+.hero .big { font-size: clamp(2.8rem, 5vw, 4.4rem); }
+.hero .lbl { color: var(--signal); }
+.delta { margin: 8px 0 0; font-size: 1rem; font-weight: 500; }
+.hero-meta { display: grid; gap: 4px; justify-items: end; font-size: .8rem; color: var(--muted); }
+.hero-meta span { display: inline-flex; align-items: center; gap: 7px; }
+.hero-sub { display: flex; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--hair); font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.hero canvas.chart { margin: 6px 0 0; box-shadow: none; background: transparent; }
+.g-2 { grid-template-columns: 1.75fr 1fr; }
+.g-2 .feed { max-height: 430px; }
+.sgn { font: 600 .78em/1 var(--f); font-style: normal; margin-right: .1em; vertical-align: .08em; }

@@ -26,7 +26,7 @@ const num = (x, d = 2) => (x == null ? "—" : (+x).toLocaleString("it-IT", { mi
 const pct = (x, d = 1) => (x == null ? "—" : (x * 100).toFixed(d).replace(".", ",") + "%");
 const day = (s) => (s || "").slice(0, 10);
 const when = (s) => (s || "").slice(5, 16).replace("T", " ");
-const sg = (v, d = 0) => (v == null ? "—" : `<span class="${v >= 0 ? "pos" : "neg"}">${v >= 0 ? "+" : ""}${eur(v, d)}</span>`);
+const sg = (v, d = 0) => (v == null ? "—" : `<span class="${v >= 0 ? "pos" : "neg"}"><i class="sgn">${v >= 0 ? "+" : "−"}</i>${eur(Math.abs(v), d)}</span>`);
 const nm = (id) => (NAMES[id] ? NAMES[id].name : id || "—");
 const initials = (n) => String(n || "?").split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 const avatar = (id, big = false) => `<span class="av d-${esc((NAMES[id] || {}).dept || "x")}${big ? " big" : ""}">${esc(initials(nm(id)))}</span>`;
@@ -278,15 +278,18 @@ function fillOverviewTop(s) {
   const navNow = tt.nav_eur || s.nav, moved = LAST_NAV != null && navNow != null && Math.round(navNow) !== Math.round(LAST_NAV) ? (navNow > LAST_NAV ? "tick-up" : "tick-dn") : "";
   LAST_NAV = navNow; setTimeout(() => { const b = el.querySelector(".big"); if (b && moved) b.classList.add(moved); }, 0);
   const base = (ib.nav_eur || 0) - (ib.pnl_eur || 0) + (al.disponibile ? (al.nav_eur || 0) - (al.pnl_eur || 0) : 0);
-  const acct = (name, a, ok = true) => ok ? `<div class="acct"><span class="an">${name}</span><b>${eur(a.nav_eur)}</b><span class="ad">${sg(a.pnl_eur)}${a.leva != null ? ` · leva ${num(a.leva, 2)}×` : ""}${a.equity_usd ? ` · ${num(a.equity_usd, 0)} $` : ""}</span></div>`
-    : `<div class="acct off"><span class="an">${name}</span><span class="ad">non collegato</span></div>`;
+  const pnl = tt.pnl_eur ?? s.pnl, up = (pnl || 0) >= 0;
   el.innerHTML =
-    `<div class="lg card fringe"><div class="lbl">Valore totale</div><div class="big">${tt.nav_eur ? eur(tt.nav_eur) : eur(s.nav)}</div>` +
-      `<p>${sg(tt.pnl_eur ?? s.pnl)} <span class="muted">${base ? pct((tt.pnl_eur ?? 0) / base, 2) : ""} dall'inizio</span></p>` +
-      `<p class="muted">${lv.fresca ? `<span class="busy">● in diretta</span>${lv.stima ? " (stima tra due letture esatte)" : ""}` : "aggiornato al battito"} · cambio ${num(pf.cambio_usd_eur, 4)} €/$</p></div>` +
-    `<div class="lg card"><div class="lbl">I due conti</div>${acct("IBKR · azioni", ib)}${acct("Alpaca · crypto e banco libero", al, !!al.disponibile)}</div>` +
-    `<div class="lg card"><div class="lbl">Rischio e risorse</div><div class="mid">${s.kill ? "<span class='neg'>KILL</span>" : `<span class="${s.semaforo === "verde" ? "pos" : s.semaforo === "rosso" ? "neg" : "gold"}">${esc(s.semaforo)}</span>`}</div>` +
-      `<p>Agenti oggi ${num(s.budget_oggi, 2)} / ${num(s.tetto_oggi, 2)} €</p><p class="muted">${s.sciopero ? "sciopero in corso" : `autonomia ${s.giorni_residui == null ? "illimitata" : num(s.giorni_residui, 1) + " giorni"}`} · audit ${s.catena ? "integro" : "<span class='neg'>ROTTO</span>"}</p></div>`;
+    `<div><div class="lbl">Valore totale del fondo</div><div class="big">${tt.nav_eur ? eur(tt.nav_eur) : eur(s.nav)}</div>` +
+    `<p class="delta ${up ? "pos" : "neg"}">${up ? "▲" : "▼"} ${eur(Math.abs(pnl || 0))}${base ? ` · ${pct(Math.abs((pnl ?? 0) / base), 2)}` : ""} <span class="muted">dall'inizio</span></p></div>` +
+    `<div class="hero-meta"><span>${lv.fresca ? `<i class="dot on"></i>in diretta${lv.stima ? " (stima)" : ""}` : `<i class="dot"></i>al battito`}</span><span>cambio ${num(pf.cambio_usd_eur, 4)} €/$</span></div>`;
+  const band = document.getElementById("o-band"); if (!band) return;
+  const cell = (lbl, val, sub) => `<div class="cell"><div class="lbl">${lbl}</div><div class="mid">${val}</div><p class="muted">${sub}</p></div>`;
+  band.innerHTML =
+    cell("IBKR · azioni", eur(ib.nav_eur || s.nav), `${sg(ib.pnl_eur)}${ib.leva != null ? ` · leva ${num(ib.leva, 2)}×` : ""}`) +
+    cell("Alpaca · crypto", al.disponibile ? eur(al.nav_eur) : "<span class='muted'>—</span>", al.disponibile ? `${sg(al.pnl_eur)}${al.leva != null ? ` · leva ${num(al.leva, 2)}×` : ""}` : "non collegato") +
+    cell("Rischio", s.kill ? "<span class='neg'>KILL</span>" : `<span class="${s.semaforo === "verde" ? "pos" : s.semaforo === "rosso" ? "neg" : "gold"}">${esc(s.semaforo)}</span>`, `audit ${s.catena ? "integro" : "<span class='neg'>ROTTO</span>"}`) +
+    cell("Agenti oggi", `${num(s.budget_oggi, 2)} €`, `su ${num(s.tetto_oggi, 2)} € · ${s.sciopero ? "sciopero" : s.giorni_residui == null ? "autonomia illimitata" : num(s.giorni_residui, 1) + " giorni"}`);
 }
 
 const GROUP_LABEL = { budget: "Budget degli agenti", firm: "Società", crypto: "Crypto", signals: "Segnali", expectations: "Aspettative", desk: "Desk", volmgmt: "Gestione della volatilità", pace: "Ritmo d'ingresso",
@@ -323,9 +326,9 @@ const PANELS = {
     const ID = ideas ? ideas.idee.slice(0, 6) : [];
     const hr = new Date().getHours(), hello = hr < 5 ? "Buonanotte" : hr < 13 ? "Buongiorno" : hr < 18 ? "Buon pomeriggio" : "Buonasera";
     return [`${hello}, <em>Andrea</em>`,
-      `<div class="grid g-hero" id="o-top"></div>` +
-      `<div class="grid g-2"><div class="lg card"><h3>Il conto contro l'S&P 500 <span class="sub">base 100</span></h3><canvas class="chart" id="o-eq"></canvas><p class="muted" id="o-eq-note"></p></div>` +
+      `<div class="grid g-2"><div class="lg card hero"><div class="hero-head" id="o-top"></div><div class="hero-sub">Il conto contro l'S&P 500 <span>base 100</span></div><canvas class="chart" id="o-eq"></canvas><p class="muted" id="o-eq-note"></p></div>` +
       `<div class="lg card"><h3>Cosa succede <span class="sub">in diretta</span></h3><ul class="feed" id="feed"></ul></div></div>` +
+      `<div class="band" id="o-band"></div>` +
       `<div class="grid g-3">` +
         `<div class="lg card"><h3>Posizioni aperte <span class="sub"><a href="#/plancia">tutte →</a></span></h3>${ops.length ? ops.map((o) =>
           `<div class="tbl-row"><b>${esc(o.simbolo)}</b> ${tag(o.lato)} <span class="muted">${o.venue === "ibkr" ? "IBKR" : "Alpaca"}</span><span class="r">${sg(o.non_realizzato_eur, 0)} <small class="muted">${o.pnl_pct == null ? "" : num(o.pnl_pct, 1) + "%"}</small></span></div>`).join("") : "<p class='muted'>Nessuna posizione registrata ancora nella plancia.</p>"}</div>` +
