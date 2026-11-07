@@ -103,3 +103,10 @@ def test_vol_scale_and_managed_test_shapes():
     t = F.vol_managed_test({"SPY": 0.5, "AAA": 0.5}, c)
     assert t["ok"] and set(t["risultati"]) == {"fissa", "gestita"}
     assert abs(t["risultati"]["fissa"]["esposizione_media"] - t["risultati"]["gestita"]["esposizione_media"]) < 0.05   # stesso rischio medio
+
+
+def test_vol_scale_never_levers_up_under_market_stress():
+    c = _close(n=1500)
+    c["^VIX"] = np.concatenate([np.full(1499, 15.0), [60.0]])                  # VIX all'ultimo giorno: oltre il 90° percentile
+    v = F.vol_scale({"SPY": 0.5, "AAA": 0.5}, c, hi=1.4)
+    assert v["tetto_per_tensione"] and v["mult"] <= 1.0

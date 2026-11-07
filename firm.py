@@ -260,6 +260,16 @@ def cmd_crypto_venue(a):
     print(json.dumps(r, ensure_ascii=False, indent=1))
 
 
+def cmd_imposta(a):
+    """Cambia un'impostazione dal Mac (come dal pannello Impostazioni): firm.py imposta volmgmt.enabled true"""
+    from firm import settings
+    try:
+        val = json.loads(a.valore)
+    except ValueError:
+        val = a.valore
+    print(settings.set(a.chiave, val, settings.AndreaCapability(settings.ensure_token())))
+
+
 def cmd_volgest(_):
     """Leva fissa contro leva gestita per volatilita' sui dati veri (stesso rischio medio), a edge pieno e dimezzato."""
     from firm import fundrisk
@@ -464,9 +474,11 @@ def main():
     ap = argparse.ArgumentParser(description="GERVA Capital")
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name in ["init", "portal", "heartbeat", "run", "status", "verify", "demo", "release", "data", "research", "report",
-                 "set-password", "ibkr-check", "observe", "check-backtest", "shadow", "comitato-lungo", "desk", "live-nav", "aspettative", "kelly", "volgest", "crypto-venue", "telegram-login", "telegram"]:
+                 "set-password", "ibkr-check", "observe", "check-backtest", "shadow", "comitato-lungo", "desk", "live-nav", "aspettative", "kelly", "volgest", "imposta", "crypto-venue", "telegram-login", "telegram"]:
         sp = sub.add_parser(name)
         sp.add_argument("--demo", action="store_true", help="usa il database dimostrativo var/demo/")
+        if name == "imposta":
+            sp.add_argument("chiave"); sp.add_argument("valore")
         if name == "crypto-venue":
             sp.add_argument("--chiavi", action="store_true", help="chiede le chiavi paper nel terminale (nascoste) e le salva in .env")
             sp.add_argument("--attiva", action="store_true", help="accende la sede crypto Alpaca (paper)")

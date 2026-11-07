@@ -322,6 +322,9 @@ def _unlevered(weights: dict[str, float], close: pd.DataFrame | None):
     return r1, fin
 
 
+VIX_STRESS = 0.90          # sopra il 90° percentile del VIX la leva non sale mai sopra la base
+
+
 def vol_scale(weights: dict[str, float], close: pd.DataFrame | None = None, halflife: int = 21,
               lo: float = VOL_LO, hi: float = VOL_HI) -> dict:
     """Moltiplicatore della leva: volatilita' di lungo periodo / volatilita' recente (media esponenziale, emivita 21 giorni),
@@ -332,7 +335,14 @@ def vol_scale(weights: dict[str, float], close: pd.DataFrame | None = None, half
     lr = float(r1.std())
     rec = float(np.sqrt((r1 ** 2).ewm(halflife=halflife).mean().iloc[-1]))
     raw = lr / rec if rec > 0 else 1.0
-    return dict(ok=True, mult=round(float(min(max(raw, lo), hi)), 3), grezzo=round(raw, 3), vol_recente=round(rec * math.sqrt(TD), 4),
+    c = charts.load_close() if close is None else close
+    vix_p = None
+    if c is not None and "^VIX" in c and c["^VIX"].dropna().shape[0] > 250:
+        v = c["^VIX"].dropna()
+        vix_p = float((v.tail(504) < v.iloc[-1]).mean())
+    top = min(hi, 1.0) if (vix_p is not None and vix_p >= VIX_STRESS) else hi      # mercato sotto tensione: si puo' solo scendere
+    return dict(ok=True, mult=round(float(min(max(raw, lo), top)), 3), grezzo=round(raw, 3), vix_percentile=None if vix_p is None else round(vix_p, 2),
+                tetto_per_tensione=top < hi, vol_recente=round(rec * math.sqrt(TD), 4),
                 vol_lungo=round(lr * math.sqrt(TD), 4), asof=str(r1.index[-1].date()))
 
 
