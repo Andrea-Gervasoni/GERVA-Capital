@@ -82,6 +82,25 @@ def get(key: str, default=None):
     return flat.get(key, default)
 
 
+# Valori che una versione nuova del file di default deve far valere UNA volta sola anche se il database ne ha uno vecchio
+# (scelte di Andrea dette in chat: la migrazione le applica, poi il pannello Impostazioni torna a comandare).
+DEFAULT_REFRESH = {"2026-11-07-opus": ["models.by_grade_map", "budget.daily_eur"]}
+
+
+def refresh_defaults() -> list[str]:
+    done = []
+    for rid, keys in DEFAULT_REFRESH.items():
+        flag = f"settings.refresh.{rid}"
+        if db.runtime_get(flag):
+            continue
+        for k in keys:
+            db.ex("DELETE FROM settings WHERE key=?", (k,))
+        db.runtime_set(flag, db.now_iso())
+        events.publish("settings.refresh", "system", dict(id=rid, keys=keys))
+        done.append(rid)
+    return done
+
+
 def all_settings() -> dict:
     flat = _flatten(defaults())
     for r in db.q("SELECT key, value FROM settings"):

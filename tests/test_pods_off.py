@@ -43,3 +43,13 @@ def test_building_level_restarts_after_pods_off(firm_env):
     db.runtime_set("building.level", 3)
     pods.ensure_pods()                                               # una volta sola: non azzera di nuovo
     assert db.runtime_get("building.level") == 3
+
+
+def test_refresh_defaults_overrides_old_db_value_once(firm_env):
+    from firm import db, settings as S
+    S.set("models.by_grade_map", {"0": "claude-sonnet-5-5"}, S.AndreaCapability(S.ensure_token())) if False else db.ex(
+        "INSERT OR REPLACE INTO settings(key,value,updated_ts,updated_by) VALUES(?,?,?,?)",
+        ("budget.daily_eur", db.dumps(0.5), db.now_iso(), "andrea"))
+    assert S.get("budget.daily_eur") == 0.5
+    assert S.refresh_defaults() and S.get("budget.daily_eur") == S.defaults()["budget"]["daily_eur"]
+    assert S.refresh_defaults() == []                                            # una volta sola

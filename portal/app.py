@@ -485,6 +485,18 @@ def fund_overview(years: int = 1):
         return _json(dict(ok=False, motivo=f"{type(e).__name__}: {str(e)[:160]}"))
 
 
+@app.get("/api/fund/kelly")
+def fund_kelly(haircut: float = 0.5):
+    """Leva ottima (Kelly) con i dati storici: crescita logaritmica, mediana a un anno e probabilita' di toccare il freno."""
+    if not 0.1 <= haircut <= 1.0:
+        raise HTTPException(400, "haircut tra 0,1 e 1")
+    try:
+        pf = fundrisk.portfolio()
+        return _json(fundrisk.growth_curve(pf["pesi"], haircut=haircut) if pf["pesi"] else dict(ok=False, motivo="nessun peso"))
+    except Exception as e:
+        return _json(dict(ok=False, motivo=f"{type(e).__name__}: {str(e)[:160]}"))
+
+
 @app.get("/api/fund/expectation")
 def fund_expectation():
     """I due ventagli registrati prima (modello e realistico), il valore reale del conto, e le previsioni del Capo."""

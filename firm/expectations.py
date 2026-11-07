@@ -82,6 +82,8 @@ def _dates(ts: str, steps: list[int]) -> list[str]:
 def _percentile(value: float, curve: dict[str, float]) -> float:
     pts = sorted((curve[q], int(q)) for q in QS)
     xs, ys = [p[0] for p in pts], [p[1] for p in pts]
+    if xs[-1] - xs[0] <= 1e-9 * max(abs(xs[0]), 1.0):                      # ventaglio ancora chiuso (partenza, weekend): al centro
+        return 50.0 if abs(value - xs[0]) <= 1e-6 * max(abs(xs[0]), 1.0) else (0.0 if value < xs[0] else 100.0)
     if value <= xs[0]:
         return float(ys[0] * max(value, 0) / xs[0]) if xs[0] > 0 else 0.0     # sotto il 5°: indicativo
     if value >= xs[-1]:

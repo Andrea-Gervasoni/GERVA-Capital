@@ -254,3 +254,54 @@ def overview(years: int = 1, nav0: float | None = None, weights: dict | None = N
     return dict(ok=True, nav=round(nav0, 0), portafoglio=pf, composizione=composition(pf["pesi"]), copertura=bc["copertura"],
                 senza_dati=bc["senza_dati"], kill=kill, rischio=risk_metrics(rp, rets, pf["pesi"], nav0, kill),
                 montecarlo=monte_carlo(rp, nav0, years, kill_dd=kill), stress=stress(rp, nav0), previsioni=forecasts_open())
+
+
+# ---------------------------------------------------------------------------------------------- leva ottima (Kelly)
+def growth_curve(weights: dict[str, float], close: pd.DataFrame | None = None, grid: list[float] | None = None,
+                 haircut: float = 1.0, years: int = 1, n: int = 3000, block: int = 21, seed: int = 20261107,
+                 kill_dd: float = 0.35, max_p_kill: float = 0.25) -> dict:
+    """Quanta leva fa crescere di piu' il fondo? Il portafoglio di oggi viene portato a esposizione 1,0 e poi moltiplicato per
+    L; la leva paga il tasso a breve USA + 1,5%. Per ogni L: crescita logaritmica annua (cio' che si compone davvero), mediana a un
+    anno, probabilita' di toccare il freno del -35% (kill) e drawdown storico.
+
+    Teoria (Kelly 1956; Thorp; MacLean-Thorp-Ziemba): la crescita attesa del logaritmo, g(L) = r + L*(mu-r) - L^2*sigma^2/2,
+    e' massima per L* = (mu-r)/sigma^2; oltre 2*L* la crescita diventa negativa anche con un edge positivo. Poiche' mu e' stimato
+    (e sovrastimato dal passato: titoli sopravvissuti), si tiene `haircut` del rendimento medio: con 0,5 e' il "mezzo edge".
+    Il miglior L con p_kill <= max_p_kill e' la leva piu' alta che non rompe il freno di sicurezza troppo spesso."""
+    close = charts.load_close() if close is None else close
+    gross = sum(abs(v) for v in weights.values())
+    if close is None or gross <= 0:
+        return dict(ok=False, motivo="mancano prezzi o pesi")
+    rets = returns_matrix(list(weights), close)
+    w1 = {k: v / gross for k, v in weights.items()}
+    bc = backcast(w1, rets, None)                                   # esposizione 1,0: nessun finanziamento
+    r1 = bc["serie"].dropna()
+    if len(r1) < 252:
+        return dict(ok=False, motivo="storia insufficiente")
+    irx = close["^IRX"] if "^IRX" in close else None
+    fin = pd.Series(((float(irx.dropna().iloc[-1]) if irx is not None and irx.notna().any() else 4.0) / 100 + MARGIN_SPREAD) / TD, index=r1.index)
+    if irx is not None:
+        fin = (irx.reindex(r1.index, method="ffill").bfill().fillna(4.0) / 100.0 + MARGIN_SPREAD) / TD
+    r1 = r1 - (1.0 - haircut) * float(r1.mean())                    # mezzo edge: si tiene solo `haircut` del rendimento medio
+    grid = grid or [round(0.5 + 0.25 * i, 2) for i in range(0, 15)]   # 0,5x ... 4,0x
+    rows = []
+    for L in grid:
+        rl = (L * r1 - max(L - 1.0, 0.0) * fin).clip(lower=-0.95)
+        g = float(np.log1p(rl).mean() * TD)
+        eq = (1.0 + rl).cumprod()
+        mdd = float((eq / eq.cummax() - 1.0).min())
+        mc = monte_carlo(rl, 1.0, years, n, block, seed, kill_dd)
+        rows.append(dict(leva=L, crescita_log=round(g, 4), media_ann=round(float(rl.mean() * TD), 4),
+                         vol_ann=round(float(rl.std() * math.sqrt(TD)), 4), dd_storico=round(mdd, 4),
+                         mediana=round(mc["rendimento_mediano"], 4), p_perdita=mc["p_perdita"], p_kill=mc["p_kill"],
+                         dd_95=mc["dd_95"]))
+    best = max(rows, key=lambda x: x["crescita_log"])
+    safe = [x for x in rows if x["p_kill"] <= max_p_kill]
+    best_safe = max(safe, key=lambda x: x["crescita_log"]) if safe else None
+    mu, sg = float(r1.mean() * TD), float(r1.std() * math.sqrt(TD))
+    rf = float(fin.mean() * TD - MARGIN_SPREAD)
+    return dict(ok=True, haircut=haircut, righe=rows, kelly_empirico=best["leva"],
+                kelly_formula=round((mu - rf) / (sg ** 2), 2) if sg > 0 else None,
+                migliore_con_freno=best_safe["leva"] if best_safe else None, max_p_kill=max_p_kill,
+                mu_ann=round(mu, 4), sigma_ann=round(sg, 4), rf=round(rf, 4), giorni=int(len(r1)),
+                dal=str(r1.index[0].date()), copertura=bc["copertura"])

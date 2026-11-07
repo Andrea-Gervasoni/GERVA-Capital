@@ -2,7 +2,7 @@
 # le modifiche vanno nella tabella `settings` (e nell'audit log), questo file resta il default.
 
 budget:
-  daily_eur: 2.00            # tetto giornaliero degli agenti (6/11: era 0,60; la spesa reale e' di pochi centesimi)
+  daily_eur: 4.00            # tetto giornaliero degli agenti (6/11: era 0,60; la spesa reale e' di pochi centesimi)
   total_eur: 20.0            # crediti Anthropic oggi: circa 20,7 EUR (23,11 USD)
   downgrade_at: 0.80         # oltre l'80% del tetto giornaliero il Governor scala i modelli verso il basso
   alert_days_left: 7         # sotto 7 giorni di autonomia il Capo bussa ad Andrea (grande richiesta n.3)
@@ -50,13 +50,13 @@ release:
 
 models:
   by_grade_map:              # livello di modello per grado (la promozione cambia il livello)
-    "0": claude-sonnet-5-5    # Stagista
-    "1": claude-sonnet-5-5    # Analista
-    "2": claude-sonnet-5-5    # Analista Senior
-    "3": claude-sonnet-5-5   # Ricercatore
-    "4": claude-sonnet-5-5   # Senior
-    "5": claude-sonnet-5-5   # Manager
-    "6": claude-sonnet-5-5   # Head
+    "0": claude-opus-5-5    # Stagista
+    "1": claude-opus-5-5    # Analista
+    "2": claude-opus-5-5    # Analista Senior
+    "3": claude-opus-5-5   # Ricercatore
+    "4": claude-opus-5-5   # Senior
+    "5": claude-opus-5-5   # Manager
+    "6": claude-opus-5-5   # Head
   ceo_committee: claude-opus-5-5
   deep_validation: claude-opus-5-5
 

@@ -10,7 +10,8 @@ from firm import db, org_seed, registry, signals as SG
 
 
 def _close(n=300, last=150.0):
-    idx = pd.bdate_range(end=dt.date.today(), periods=n)
+    d = dt.date.today()
+    idx = pd.bdate_range(end=d if d.weekday() < 5 else d + dt.timedelta(days=(7 - d.weekday())), periods=n)   # nel weekend l'ultima barra e' quella di lunedi'
     rng = np.random.default_rng(5)
     px = last * np.exp(np.cumsum(rng.normal(0, 0.02, n)))
     px = px * (last / px[-1])

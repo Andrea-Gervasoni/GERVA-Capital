@@ -229,6 +229,23 @@ def cmd_live_nav(_):
     ibkr.live_loop()
 
 
+def cmd_kelly(_):
+    """Quale leva fa crescere di piu' il fondo (Kelly) con i dati storici veri, a edge pieno e a mezzo edge."""
+    from firm import fundrisk
+    pf = fundrisk.portfolio()
+    if not pf["pesi"]:
+        print("GERVA-Q non ha ancora scritto i suoi pesi."); return
+    for h in (1.0, 0.5):
+        g = fundrisk.growth_curve(pf["pesi"], haircut=h)
+        if not g.get("ok"):
+            print(g); return
+        print(f"\n== edge {'pieno' if h == 1.0 else 'dimezzato'} | rendimento {g['mu_ann']:.1%} vol {g['sigma_ann']:.1%} | Kelly empirico {g['kelly_empirico']}x, "
+              f"formula {g['kelly_formula']}x, migliore con freno {g['migliore_con_freno']}x (p_kill<= {g['max_p_kill']:.0%}) | {g['giorni']} giorni dal {g['dal']}")
+        print(" leva  crescita_log  mediana1a  vol    p_kill  p_perdita  dd_storico")
+        for r in g["righe"]:
+            print(f" {r['leva']:>4}x {r['crescita_log']:>11.1%} {r['mediana']:>10.1%} {r['vol_ann']:>6.1%} {r['p_kill']:>7.1%} {r['p_perdita']:>9.1%} {r['dd_storico']:>10.1%}")
+
+
 def cmd_aspettative(_):
     """Scrive una NUOVA versione delle aspettative del fondo (le precedenti restano): da usare quando cambia la strategia."""
     from firm import expectations
@@ -398,7 +415,7 @@ def main():
     ap = argparse.ArgumentParser(description="GERVA Capital")
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name in ["init", "portal", "heartbeat", "run", "status", "verify", "demo", "release", "data", "research", "report",
-                 "set-password", "ibkr-check", "observe", "check-backtest", "shadow", "comitato-lungo", "desk", "live-nav", "aspettative", "telegram-login", "telegram"]:
+                 "set-password", "ibkr-check", "observe", "check-backtest", "shadow", "comitato-lungo", "desk", "live-nav", "aspettative", "kelly", "telegram-login", "telegram"]:
         sp = sub.add_parser(name)
         sp.add_argument("--demo", action="store_true", help="usa il database dimostrativo var/demo/")
         if name == "telegram-login":

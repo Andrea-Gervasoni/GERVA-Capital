@@ -83,3 +83,14 @@ def test_crypto_excluded_from_expected_portfolio_when_not_executable(firm_env):
     S.set("crypto.eseguibile", True, S.AndreaCapability(S.ensure_token()))
     on = F.portfolio(model_eq=eq, model_cr=cr, overlay=ov, lt_plan={})
     assert on["pesi"]["BTC"] == 0.2 and on["pesi"]["SOL"] == 0.02 and on["crypto_eseguibile"] is True
+
+
+def test_growth_curve_kelly_shape_and_haircut():
+    c = _close()
+    full = F.growth_curve({"SPY": 0.5, "AAA": 0.5}, c, haircut=1.0, n=300)
+    half = F.growth_curve({"SPY": 0.5, "AAA": 0.5}, c, haircut=0.5, n=300)
+    assert full["ok"] and half["ok"]
+    assert half["kelly_empirico"] <= full["kelly_empirico"]                     # meno edge, meno leva
+    g = [r["crescita_log"] for r in full["righe"]]
+    assert max(g) > g[-1] or full["kelly_empirico"] == full["righe"][-1]["leva"]  # la curva ha un massimo (o e' ancora in salita)
+    assert all(0 <= r["p_kill"] <= 1 for r in full["righe"])

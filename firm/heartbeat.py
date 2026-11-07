@@ -16,6 +16,7 @@ from __future__ import annotations
 import datetime as dt
 import re
 
+from . import settings as S
 from . import db, events, paths, risk, pods, budget, audit, gateway, news_feed, mailbox, workflows, economy, compensation, meetings, reports, registry
 
 
@@ -50,6 +51,10 @@ def beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
         if obs and obs.get("ok") and (obs.get("nav_eur") or 0) > 0:          # un punto per battito: serve al grafico del conto
             db.ex("INSERT INTO nav_ticks(ts,nav) VALUES(?,?)", (db.now_iso(), float(obs["nav_eur"])))
     pods.ensure_pods()
+    try:
+        S.refresh_defaults()
+    except Exception:
+        pass
     registry.sync_if_profiles_changed()
     if os.environ.get("IBKR_CHALLENGE_ACCOUNT") and pods.enabled():
         if not os.environ.get("IBKR_FIRM_ACCOUNT"):
