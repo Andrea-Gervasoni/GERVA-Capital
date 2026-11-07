@@ -129,7 +129,7 @@ def test_ideas_endpoint_and_heartbeat_job(firm_env, monkeypatch):
     _fake(monkeypatch)
     monkeypatch.setattr(ID, "_close", _close)
     monkeypatch.setattr("firm.desk.table", lambda *a, **k: ROWS)
-    S.set("ideas.agents_per_day", 2, S.AndreaCapability(S.ensure_token()))
+    monkeypatch.setattr(ID, "pick_authors", lambda n: ["senior_crypto"])           # risponde a head_research, non direttamente al Capo
     r = ID.daily(close=_close())
     assert r["nuove"] and r["salite"] >= 1 and r["comitato"]                          # un giro intero: cerca, sale, comitato
     from portal.app import app
