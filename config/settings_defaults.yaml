@@ -67,8 +67,9 @@ ideas:                     # ogni agente cerca idee e le presenta al superiore; 
 
 rules:                       # regole votate dal comitato (dentro la Costituzione: firm/rules.py)
   enabled: true
-  cooldown_days: 3           # la stessa regola non si cambia due volte in tre giorni
-  max_per_day: 3
+  cooldown_days: 0           # 0 = nessuna pausa: una regola si puo' riportare in consiglio quando si vuole
+  max_per_day: 0             # 0 = nessun limite
+  review_days: 14            # ogni regola torna in consiglio per essere riconfermata o lasciata decadere
 
 free:                      # banco libero: gli agenti aprono e chiudono trade quando vogliono sul conto paper di Alpaca; nessuna regola finche' non la votano
   enabled: true

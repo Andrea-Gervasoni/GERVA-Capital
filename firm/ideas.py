@@ -218,7 +218,9 @@ def committee(limit: int | None = None, runtime=None) -> list[dict]:
         if not res.get("ok"):
             continue
         db.ex("UPDATE ideas SET meeting=? WHERE id=?", (res["id"], i["id"]))
-        if res["decisione"] == "approva":
+        if i["kind"] == "riesame":
+            out.append(_renew(i, res["id"]) if res["decisione"] == "approva" else _lapse(i, res["id"]))
+        elif res["decisione"] == "approva":
             out.append(enter(i["id"], res["id"]))
         else:
             db.ex("UPDATE ideas SET status='respinta', close_ts=?, history=? WHERE id=?",
@@ -376,6 +378,47 @@ def detail(iid: int) -> dict:
     return dict(idea=i, riunione=m)
 
 
+# ---------------------------------------------------------------------------------------------- riesame delle regole
+def schedule_reviews(runtime=None) -> int:
+    """Ogni regola votata torna in consiglio ogni rules.review_days giorni: riconfermata se il consiglio approva, decade (si torna al valore
+    di prima / si revoca) se respinge. Se il consiglio non riesce a riunirsi la regola resta com'e': non decade per assenza."""
+    from . import free_desk
+    days = int(S.get("rules.review_days", 14))
+    n = 0
+    for d in rules.due(days) + free_desk.house_due(days):
+        key = f"{d['origine']}:{d['chiave']}"
+        if any((x["azione"] or {}).get("riesame") == key for x in listing(200) if x["status"] in OPEN):
+            continue
+        act = dict(riesame=key, origine=d["origine"], chiave=d["chiave"], valore=d["valore"], regola=d.get("regola"))
+        db.ex("INSERT INTO ideas(ts,author,holder,kind,title,tesi,evidenze,azione,p_success,status,history) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+              (db.now_iso(), "capo", "capo", "riesame", f"Riesame: {d['chiave']} = {d['valore']}", f"La regola e' in vigore dal {d.get('da', '?')}. Riconfermarla (approva) "
+               f"o lasciarla decadere (respingi)? Si puo' anche cambiare il valore proponendo un'idea sulla stessa chiave.", "[]", json.dumps(act), 0.5, "al_comitato",
+               json.dumps([dict(ts=db.now_iso(), chi="sistema", cosa="riesame periodico")])))
+        n += 1
+    return n
+
+
+def _renew(i: dict, meeting_id: int) -> dict:
+    from . import free_desk
+    a = i["azione"]
+    who = f"riconferma comitato#{meeting_id}"
+    res = (free_desk.set_house_rule(a["chiave"], a["valore"], who, i["id"]) if a["origine"] == "casa"
+           else rules.apply("motore" if a["origine"] == "motore" else "regola", a["chiave"], a["valore"], who, i["id"]))
+    db.ex("UPDATE ideas SET status='riconfermata', close_ts=?, result=?, history=? WHERE id=?",
+          (db.now_iso(), json.dumps(res, ensure_ascii=False), _hist(i, "comitato", "riconfermata", riunione=meeting_id), i["id"]))
+    return dict(id=i["id"], stato="riconfermata")
+
+
+def _lapse(i: dict, meeting_id: int) -> dict:
+    from . import free_desk
+    a = i["azione"]
+    who = f"decaduta comitato#{meeting_id}"
+    res = free_desk.set_house_rule(a["chiave"], 0, who, i["id"]) if a["origine"] == "casa" else (rules.revert(a["regola"], who) if a.get("regola") else dict(ok=False))
+    db.ex("UPDATE ideas SET status='decaduta', close_ts=?, result=?, history=? WHERE id=?",
+          (db.now_iso(), json.dumps(res, ensure_ascii=False), _hist(i, "comitato", "decaduta", riunione=meeting_id), i["id"]))
+    return dict(id=i["id"], stato="decaduta")
+
+
 # ---------------------------------------------------------------------------------------------- giro quotidiano
 def daily(runtime=None, close=None) -> dict:
     if not S.get("ideas.enabled", True):
@@ -397,6 +440,10 @@ def daily(runtime=None, close=None) -> dict:
             res["nuove"].append(g)
         res["esiti"].append(dict(agente=a, esito="idea presentata" if g.get("ok") else g.get("motivo", "")[:120]))
     db.runtime_set("ideas.last_try", tried)
+    try:
+        res["riesami"] = schedule_reviews()
+    except Exception as e:
+        res["errore_riesami"] = str(e)[:80]
     res["salite"] = advance(runtime=runtime)
     try:
         res["comitato"] = committee(runtime=runtime)

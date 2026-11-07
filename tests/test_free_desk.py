@@ -127,3 +127,40 @@ def test_cycle_agent_sends_many_intents_and_riesame_on_loss(broker, monkeypatch)
 def test_not_configured_is_a_noop(firm_env, monkeypatch):
     monkeypatch.delenv("ALPACA_PAPER_KEY", raising=False)
     assert "chiavi" in FD.cycle()["nota"] and FD.riesame_if_needed() is None
+
+
+def _age_rule(kind, days):
+    old = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    db.ex("UPDATE house_rules SET ts=? WHERE kind=?", (old, kind))
+
+
+def _vote(monkeypatch, decision):
+    import llm.runtime as rt
+
+    def call(agent, task, data=None, schema=None, purpose="", **k):
+        if purpose.endswith(":replica"):
+            return dict(ok=True, output=dict(replica="x", posizione_finale=decision, fiducia=0.7))
+        return dict(ok=True, output=dict(posizione=decision, argomento="a", evidenza=["x"], fiducia=0.7, cambierei_idea_se="b"))
+    monkeypatch.setattr(rt, "call", call)
+
+
+def test_rule_comes_back_to_council_to_be_reconfirmed_or_lapse(broker, monkeypatch):
+    FD.set_house_rule("max_trades_per_hour", 3, "comitato#1")
+    assert ID.schedule_reviews() == 0                                       # appena votata: nessun riesame
+    _age_rule("max_trades_per_hour", 20)
+    assert ID.schedule_reviews() == 1 and ID.schedule_reviews() == 0        # scaduta: va in consiglio (una sola volta)
+    _vote(monkeypatch, "approva")
+    out = ID.committee()
+    assert out[0]["stato"] == "riconfermata" and FD.active_rules() == {"max_trades_per_hour": 3.0}     # riconfermata: resta, e il riesame riparte
+    assert FD.rules_detail()[0]["voti"] == 2 and ID.schedule_reviews() == 0
+    _age_rule("max_trades_per_hour", 40)
+    assert ID.schedule_reviews() == 1
+    _vote(monkeypatch, "respingi")
+    assert ID.committee()[0]["stato"] == "decaduta" and FD.active_rules() == {}                        # respinta: la regola decade
+
+
+def test_agent_can_change_or_revoke_rule_anytime_and_rule_is_binding_meanwhile(broker):
+    FD.set_house_rule("max_leverage", 0.5, "comitato#1")
+    assert not FD.execute("a1", _trade(usd=90000), FD.state())["ok"]       # finche' e' in vigore, il codice la fa rispettare
+    FD.set_house_rule("max_leverage", 5, "comitato#2")                     # riportata in consiglio e cambiata: nessuna pausa imposta
+    assert FD.execute("a1", _trade(usd=90000), FD.state())["ok"]

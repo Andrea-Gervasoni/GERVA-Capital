@@ -123,10 +123,11 @@ def test_rule_by_vote_inside_constitution_and_revert(firm_env, monkeypatch, tmp_
     assert "SCALE_CAP = 1.8" in (gq / "config.py").read_text()
     assert list((gq / "backups").glob("voto-*/config.py"))                                 # copia di sicurezza
     rid = out[0]["regola"]
-    assert R.apply("motore", "SCALE_CAP", 1.9, "comitato#9")["ok"] is False                # cooldown: non si cambia due volte di fila
+    assert R.apply("motore", "SCALE_CAP", 1.9, "comitato#9")["ok"] is True                 # nessuna pausa: si puo' riportare in consiglio quando si vuole
+    assert "SCALE_CAP = 1.9" in (gq / "config.py").read_text()
     assert R.apply("motore", "SCALE_CAP", 5.0, "x")["ok"] is False                         # fuori limiti
     assert R.apply("regola", "firm.heartbeat_minutes", 1, "x")["ok"] is False              # fuori Costituzione
-    assert R.revert(rid)["ok"] and "SCALE_CAP = 1.5" in (gq / "config.py").read_text()     # annullabile
+    assert R.revert(rid)["ok"] and "SCALE_CAP = 1.8" not in (gq / "config.py").read_text()   # annullabile
 
 
 def test_ideas_endpoint_and_heartbeat_job(firm_env, monkeypatch):

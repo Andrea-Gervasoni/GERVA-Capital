@@ -24,7 +24,7 @@ from . import settings as S
 RULES = {                                  # impostazione -> (minimo, massimo): solo limiti "fisici", la scelta e' del comitato
     "desk.max_name_frac": (0.01, 0.25), "desk.max_total_frac": (0.05, 1.0),
     "ideas.max_name_frac": (0.005, 0.25), "ideas.max_total_frac": (0.02, 1.0), "ideas.horizon_days": (3, 120),
-    "ideas.agents_per_day": (1, 20), "ideas.committee_per_day": (1, 10), "pace.meeting_every_days": (1, 30),
+    "ideas.agents_per_day": (1, 20), "rules.review_days": (1, 365), "ideas.committee_per_day": (1, 10), "pace.meeting_every_days": (1, 30),
     "volmgmt.lo": (0.1, 1.0), "volmgmt.hi": (1.0, 3.0),
     "signals.risk_frac": (0.001, 0.05), "signals.max_frac": (0.005, 0.25), "signals.max_total_frac": (0.02, 1.0),
     "crypto.venue_max_frac": (0.0, 1.0), "expectations.haircut": (0.1, 1.0),
@@ -117,9 +117,10 @@ def apply(kind: str, key: str, value, who: str, idea: int | None = None) -> dict
     ok, why = check(kind, key, value)
     if not ok:
         return dict(ok=False, motivo=why)
-    if _recent_changes(f"{kind}:{key}", int(S.get("rules.cooldown_days", 3))):
+    cd, mx = int(S.get("rules.cooldown_days", 0)), int(S.get("rules.max_per_day", 0))      # 0 = nessun limite: una regola si puo' riportare in consiglio quando si vuole
+    if cd > 0 and _recent_changes(f"{kind}:{key}", cd):
         return dict(ok=False, motivo="questa regola e' stata cambiata da poco: si aspetta")
-    if _today_count() >= int(S.get("rules.max_per_day", 3)):
+    if mx > 0 and _today_count() >= mx:
         return dict(ok=False, motivo="troppe regole cambiate oggi")
     old = current(kind, key)
     v = float(value)
@@ -155,6 +156,19 @@ def revert(rule_id: int, who: str = "andrea") -> dict:
     db.ex("UPDATE rules_log SET status='annullata' WHERE id=?", (rule_id,))
     audit.log(who, "rule.reverted", dict(id=rule_id, chiave=r["key"], ripristinato=old))
     return dict(ok=True, ripristinato=old)
+
+
+def due(review_days: int, today=None) -> list[dict]:
+    """Regole votate (impostazioni e costanti del motore) in vigore da piu' di review_days senza essere state riconfermate."""
+    import datetime as dt
+    out = []
+    now = dt.datetime.now(dt.timezone.utc)
+    for r in db.q("SELECT * FROM rules_log WHERE status='applicata' AND id IN (SELECT MAX(id) FROM rules_log WHERE status='applicata' GROUP BY key)"):
+        t = dt.datetime.fromisoformat(r["ts"].replace("Z", "+00:00"))
+        if (now - t).days >= review_days:
+            kind, key = r["key"].split(":", 1)
+            out.append(dict(origine=kind, chiave=key, valore=json.loads(r["new"]), da=r["ts"][:10], regola=r["id"]))
+    return out
 
 
 def history(limit: int = 30) -> list[dict]:
