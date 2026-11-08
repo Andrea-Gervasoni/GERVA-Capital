@@ -116,7 +116,7 @@ def test_signals_are_only_observed_while_paper_cannot_trade_crypto(firm_env, mon
     S.set("crypto.eseguibile", False, S.AndreaCapability(S.ensure_token()))
     org_seed.seed(); registry.sync(); _fake(monkeypatch)
     r = SG.process(SG.create("BUY SOL entry 150 SL 140 TP1 165"), _close())
-    assert r["stato"] == "osservato" and SG.active_targets() == {} and "nessuna sede" in r["motivo"]
+    assert r["stato"] == "osservato" and SG.active_targets() == {} and "non e' attiva" in r["motivo"]
     assert db.one("SELECT * FROM forecasts WHERE criterion LIKE 'signal:%'")                 # la previsione resta: si misura comunque
 
 

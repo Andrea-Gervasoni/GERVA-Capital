@@ -96,7 +96,7 @@ def test_filtered_messages_leave_a_trace_and_diagnosis_reads_it(firm_env, monkey
     r = TG.handle_message("Che bella giornata oggi ragazzi, buon lavoro a tutti", "Sala filtro", NOW, NOW, background=False, ai=False)
     assert r["azione"] == "ignorato"
     x = db.runtime_get("telegram.ai_log")[0]
-    assert x["tipo"] == "filtrato" and "nessuna moneta ammessa" in x["motivo"]                      # il motivo e' scritto, non sparisce
+    assert x["tipo"] == "filtrato" and "nessuna moneta riconosciuta" in x["motivo"]                      # il motivo e' scritto, non sparisce
     out = TG.diagnose()
     assert "FILTRATO" in out and "Che bella giornata" in out
 
@@ -142,3 +142,58 @@ def test_any_alpaca_coin_is_accepted_with_alpaca_prices(firm_env, monkeypatch):
     row = db.one("SELECT stato, controlli FROM signals WHERE id=?", (sid,))
     assert "non negoziabile" not in (row["controlli"] or "") and "nessun dato di prezzo" not in (row["controlli"] or "")
     assert r["stato"] in ("osservato", "accettato")                                                 # analizzato davvero, non scartato per la moneta
+
+
+ATOM = ("ATOMUSDT ® Impostazioni di Trading Modalità Margine: Isolato Leva Consigliata: Minima: 3x Massima: 8x Tipo Ordine: Mercato "
+        "Range (CMP): 1.335-1.34 • Quantità da Investire: Inserisci l'importo desiderato. Stop Loss: 1.40 Take Profit: 0.8563 short")
+FIL = "FILUSDT Impostazioni di Trading Modalità Margine: Isolato Leva Consigliata: Minima: 3x Massima: 8x Tipo Ordine: Mercato Range (CMP): 0.77-0.775 long"
+
+
+def _futures_env(monkeypatch):
+    import numpy as np
+    import pandas as pd
+    from firm import crypto_venue as V
+    from llm import runtime
+    monkeypatch.setattr(V, "keys_ok", lambda: True)
+    monkeypatch.setattr(V, "supported", lambda: {"BTC", "ETH", "SOL"})                              # ATOM e FIL non sono su Alpaca
+    monkeypatch.setattr(V, "accepting", lambda: True)
+    idx = pd.bdate_range(end=dt.date.today(), periods=300)
+    rng = np.random.default_rng(4)
+    base = pd.DataFrame({"SOL": 150 * np.exp(np.cumsum(rng.normal(0, 0.02, 300))), "SPY": np.full(300, 500.0), "^VIX": np.full(300, 20.0)}, index=idx)
+    px = {"ATOM": 1.3375, "FIL": 0.7725}
+    pub = lambda c: pd.Series(px[c] * np.exp(np.cumsum(rng.normal(0, 0.03, 300)) - 0.0), index=idx) * (px[c] / 1.0) / (px[c]) if False else pd.Series(
+        px[c] * np.exp(np.cumsum(rng.normal(0, 0.03, 300))), index=idx).pipe(lambda s: s * (px[c] / float(s.iloc[-1])))
+    monkeypatch.setattr(SG.charts, "load_close", lambda: base)
+    monkeypatch.setattr(SG, "_alpaca_daily", lambda coin: None)
+    monkeypatch.setattr(SG, "_public_daily", lambda coin: pub(coin) if coin in px else None)
+
+    def call(agent, task, **kw):
+        if agent == "senior_crypto":
+            return dict(ok=True, output=dict(decisione="accetta", probabilita_tp1=0.5, peso_pct=1.0, motivo="ok", rischi=[], invalidazione="x"))
+        if agent == "cro":
+            return dict(ok=True, output=dict(veto=False, motivo="ok"))
+        return dict(ok=False, motivo="no")
+    monkeypatch.setattr(runtime, "call", call)
+
+
+def test_futures_signals_on_coins_alpaca_does_not_have_are_followed_not_discarded(firm_env, monkeypatch):
+    """ATOMUSDT (short) e FILUSDT (long, a mercato, senza stop ne' obiettivi): non si eseguono su Alpaca ma si seguono e si misurano."""
+    org_seed.seed(); registry.sync(); _reset(); _futures_env(monkeypatch)
+    assert SG.first_coin(ATOM) == "ATOM" and SG.first_coin(FIL) == "FIL"
+    p = SG.parse(ATOM)
+    assert p["moneta"] == "ATOM" and p["direzione"] == "short" and abs(p["ingresso"] - 1.3375) < 1e-6 and p["stop"] == 1.4        # "1.335-1.34": un intervallo, letto bene
+    for txt in (ATOM, FIL):
+        sid = SG.create(txt, "sala segnali")
+        r = SG.process(sid, execute=True)
+        row = db.one("SELECT parsed, controlli, motivo FROM signals WHERE id=?", (sid,))
+        assert r["stato"] == "osservato", (r, row["controlli"])
+        assert "IBKR" not in (r["motivo"] or "") and "non negoziabile su Alpaca" in r["motivo"] and "si segue e si misura" in r["motivo"]
+    import json
+    parsed = json.loads(db.one("SELECT parsed FROM signals WHERE id=?", (sid,))["parsed"])
+    assert parsed["ok"] and abs(parsed["ingresso"] - 0.7725) < 0.2 and parsed["stop"] < parsed["ingresso"] < parsed["obiettivi"][0]      # FIL: livelli calcolati dal desk
+
+
+def test_no_message_names_ibkr_for_crypto():
+    import inspect
+    src = inspect.getsource(SG)
+    assert "non ammessa su IBKR" not in src and "non su IBKR" not in src and "IBKR paper le rifiuta" not in src

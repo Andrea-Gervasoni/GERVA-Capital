@@ -481,7 +481,7 @@ const PANELS = {
     const px = (v) => (v == null ? "—" : Math.abs(v) < 0.01 ? String(+v.toPrecision(3)).replace(".", ",") : num(v, Math.abs(v) < 1 ? 4 : 2));   // PEPE vale 0,0000052: 4 decimali non bastano
     const card1 = (r) => { const p = r.parsed || {}, c = r.controlli || {}, a = r.analisi || {};
       return `<div class="mail"><div class="mh"><b>#${r.id} ${esc(p.moneta || "?")} ${esc(p.direzione || "")}</b> ${tag(r.stato)} ${r.esito ? tag(r.esito) : ""}<span class="muted">${esc(when(r.ts))} · ${esc(r.fonte || "")}</span></div>` +
-        `<p class="muted">${esc((r.testo || "").slice(0, 220))}</p>` +
+        `<p class="muted">${(r.testo || "").length > 220 ? `<details><summary>${esc((r.testo || "").slice(0, 220))}…</summary>${esc(r.testo)}</details>` : esc(r.testo || "")}</p>` +
         (p.ok ? `<p>Ingresso ${px(p.ingresso)} · stop ${px(p.stop)} · obiettivi ${(p.obiettivi || []).map(px).join(", ")}${c.rr ? ` · rischio/rendimento ${num(c.rr, 1)}` : ""}</p>` : "") +
         ((c.problemi || []).length ? `<p class="neg">Controlli: ${esc(c.problemi.join("; "))}</p>` : "") +
         (a.motivo ? `<p><b>Analisi:</b> ${esc(a.motivo)}</p><p>Probabilità di arrivare all'obiettivo prima dello stop: <b>${pct(a.probabilita_tp1, 0)}</b> · peso: <b>${pct(r.peso, 2)}</b>${a.veto && a.veto.bloccato ? ` · <span class="neg">veto del Rischio: ${esc(a.veto.motivo)}</span>` : ""}</p>` : "") +

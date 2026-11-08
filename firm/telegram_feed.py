@@ -92,23 +92,22 @@ def _note_update(chat: str, cls: dict, text: str) -> None:
 def looks_like_signal(text: str) -> bool:
     """Filtro economico prima di spendere una chiamata: moneta + azione + almeno un livello (ingresso, stop, obiettivo)."""
     u = text.upper()
-    coin = any(re.search(rf"(?<![A-Z]){c}(?![A-Z])", u) for c in signals.allowed_coins())
+    coin = signals.first_coin(text) is not None
     action = re.search(r"\b(BUY|LONG|SELL|SHORT|COMPRA|VENDI|ACQUISTA)\b", u)
     levels = re.search(r"\b(ENTRY|INGRESSO|ENTRATA|SL|STOP|TP\d?|TARGET|TAKE PROFIT|OBIETTIVO|MARKET|MERCATO|CMP|NOW|SUBITO)\b", u)
     return bool(coin and action and levels)
 
 
 def _mentions_coin(text: str) -> bool:
-    u = text.upper()
-    return any(re.search(rf"(?<![A-Z]){c}(?![A-Z])", u) for c in signals.allowed_coins())
+    return signals.first_coin(text) is not None
 
 
 def why_not_signal(text: str) -> str:
     """Il motivo, in italiano, per cui il filtro a parole chiave non l'ha riconosciuto come segnale."""
     u = text.upper()
     miss = []
-    if not any(re.search(rf"(?<![A-Z]){c}(?![A-Z])", u) for c in signals.allowed_coins()):
-        miss.append("nessuna moneta ammessa (" + ", ".join(signals.allowed_coins()) + ")")
+    if signals.first_coin(text) is None:
+        miss.append("nessuna moneta riconosciuta (ne' una crypto nota ne' una coppia XXXUSDT)")
     if not re.search(r"\b(BUY|LONG|SELL|SHORT|COMPRA|VENDI|ACQUISTA)\b", u):
         miss.append("nessuna parola d'azione (BUY, LONG, SELL, SHORT, COMPRA...)")
     if not re.search(r"\b(ENTRY|INGRESSO|ENTRATA|SL|STOP|TP\d?|TARGET|TAKE PROFIT|OBIETTIVO|MARKET|MERCATO|CMP|NOW|SUBITO)\b", u):

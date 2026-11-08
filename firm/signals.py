@@ -32,7 +32,7 @@ COINS = ["BTC", "ETH", "SOL", "XRP", "ADA", "DOGE", "LTC", "LINK", "AVAX", "BCH"
 
 
 def allowed_coins() -> list[str]:
-    """Le crypto si negoziano su Alpaca, non su IBKR: l'universo e' quello che Alpaca permette di negoziare (aggiornato ogni giorno), piu' le monete di base."""
+    """Le crypto si negoziano su Alpaca: l universo e' quello che Alpaca permette di negoziare (aggiornato ogni giorno), piu' le monete di base."""
     extra: set[str] = set()
     try:
         if crypto_venue.keys_ok():
@@ -50,6 +50,9 @@ def first_coin(text: str, coins: list[str] | None = None) -> str | None:
         m = re.search(rf"(?<![A-Z]){c}(?![A-Z])|(?<![A-Z]){c}/?USDT?(?![A-Z])", t)
         if m and (best is None or m.start() < best[0]):
             best = (m.start(), c)
+    g = re.search(r"(?<![A-Z0-9])([A-Z0-9]{2,10})/?USDT(?![A-Z])", t)          # ATOMUSDT, FIL/USDT: la moneta c'e' anche se non e' eseguibile su Alpaca
+    if g and (best is None or g.start() < best[0]):
+        best = (g.start(), g.group(1))
     return best[1] if best else None
 
 
@@ -77,12 +80,48 @@ def _alpaca_daily(coin: str) -> pd.Series | None:
         return None
 
 
+def _public_daily(coin: str) -> pd.Series | None:
+    """Chiusure giornaliere dalle API pubbliche di Binance (solo lettura, nessuna chiave): servono per SEGUIRE e MISURARE i segnali su monete che Alpaca non negozia."""
+    import time
+    import urllib.request
+    key = "pub:" + coin
+    hit = _ALP_CACHE.get(key)
+    if hit and time.time() - hit[0] < 3600:
+        return hit[1]
+    try:
+        with urllib.request.urlopen(f"https://api.binance.com/api/v3/klines?symbol={coin}USDT&interval=1d&limit=400", timeout=12) as r:
+            rows = json.loads(r.read())
+        s = pd.Series({pd.Timestamp(int(k[0]), unit="ms").normalize(): float(k[4]) for k in rows}).sort_index()
+        if len(s) < 30:
+            return None
+        _ALP_CACHE[key] = (time.time(), s)
+        return s
+    except Exception:
+        return None
+
+
+def _fix_scale(p: dict, last: float | None) -> dict:
+    """'1.335' puo' essere 1,335 o 1335: se un livello e' lontano dal prezzo ma diviso mille ci sta, era un decimale scritto con il punto."""
+    if not last or last <= 0:
+        return p
+    fix = lambda v: v / 1000 if v and abs(v / last - 1) > 0.5 and abs(v / 1000 / last - 1) < 0.5 else v
+    q = dict(p)
+    for k in ("ingresso", "stop"):
+        if q.get(k):
+            q[k] = fix(q[k])
+    if q.get("obiettivi"):
+        q["obiettivi"] = [fix(v) for v in q["obiettivi"]]
+    return q
+
+
 def _with_coin(close: pd.DataFrame | None, coin: str | None) -> pd.DataFrame | None:
     """Se il motore non ha i prezzi della moneta, si aggiungono quelli di Alpaca: controlli e analisi lavorano sugli stessi dati di sempre."""
     close = charts.load_close() if close is None else close
     if close is None or not coin or coin in close:
         return close
-    s = _alpaca_daily(coin)
+    s = _alpaca_daily(coin) if coin in allowed_coins() else None
+    if s is None or len(s) < 30:
+        s = _public_daily(coin)                                          # non eseguibile su Alpaca: si segue lo stesso, con prezzi pubblici
     if s is None or len(s) < 30:
         return close
     return close.join(s.rename(coin), how="left")
@@ -110,6 +149,15 @@ def _num(x: str) -> float:
     return float(x)
 
 
+def _range_mid(a: float, b: float) -> float:
+    """Centro di un intervallo ('1.335-1.34'). Se un estremo e' 50 volte l'altro, '1.335' era stato letto come 1335 (migliaia): era un decimale."""
+    if a and b and a / b > 50:
+        a /= 1000
+    elif a and b and b / a > 50:
+        b /= 1000
+    return (a + b) / 2
+
+
 def parse(text: str) -> dict:
     """Estrazione deterministica. 'ok' solo se ci sono moneta, direzione, ingresso, stop e almeno un obiettivo."""
     t = text.upper()
@@ -118,7 +166,8 @@ def parse(text: str) -> dict:
     short = bool(re.search(r"\b(SELL|SHORT|VENDI)\b", t))
     side = "short" if short and not long_ else "long" if long_ or not short else "short"
     pick = lambda rx: (lambda m: _num(m.group(1)) if m else None)(re.search(rx, t))
-    entry = pick(rf"(?:ENTRY|INGRESSO|ENTRATA|ENTER|@|BUY AT|ZONA)\s*[:=]?\s*\$?\s*{NUM}")
+    rng = re.search(rf"(?:RANGE|CMP|ZONA|ENTRY|INGRESSO|ENTRATA)[^0-9\n]{{0,25}}{NUM}\s*[-\u2013\u2014]\s*{NUM}", t)
+    entry = _range_mid(_num(rng.group(1)), _num(rng.group(2))) if rng else pick(rf"(?:ENTRY|INGRESSO|ENTRATA|ENTER|@|BUY AT|ZONA)\s*[:=]?\s*\$?\s*{NUM}")
     stop = pick(rf"(?:STOP(?: LOSS)?|SL)\s*[:=]?\s*\$?\s*{NUM}")
     tps = [_num(m) for m in re.findall(rf"(?:TP\d?|TARGET\s*\d?|OBIETTIVO\s*\d?|TAKE PROFIT\s*\d?)\s*[:=]?\s*\$?\s*{NUM}", t)]
     market = bool(re.search(r"\b(MARKET|MERCATO|CMP|NOW|SUBITO|PREZZO ATTUALE|CURRENT PRICE)\b", t))
@@ -167,8 +216,6 @@ def controls(p: dict, close: pd.DataFrame | None = None, nav: float | None = Non
         out["problemi"].append("segnale incompleto: servono moneta, ingresso, stop e almeno un obiettivo")
         return out
     coin, e, sl, tp = p["moneta"], p["ingresso"], p["stop"], p["obiettivi"][0]
-    if coin not in allowed_coins():
-        out["problemi"].append("moneta non negoziabile su Alpaca (le crypto si eseguono li', non su IBKR)")
     long_ = p["direzione"] == "long"
     if long_ and not (sl < e < tp) or (not long_ and not (tp < e < sl)):
         out["problemi"].append("i livelli non sono coerenti con la direzione (stop, ingresso, obiettivo)")
@@ -197,7 +244,12 @@ def controls(p: dict, close: pd.DataFrame | None = None, nav: float | None = Non
     out["peso_massimo"] = round(w, 4)
     if out["problemi"]:
         return out
-    out["esito"] = "ok" if long_ else "solo_osservazione"
+    if coin not in allowed_coins():
+        out["esito"] = "solo_osservazione"; out["motivo_osservazione"] = "moneta non negoziabile su Alpaca paper: si segue e si misura, non si esegue"
+    elif not long_:
+        out["esito"] = "solo_osservazione"; out["motivo_osservazione"] = "e' una posizione corta e le crypto su Alpaca non si vendono allo scoperto: si segue e si misura, non si esegue"
+    else:
+        out["esito"] = "ok"
     if not long_:
         out["note"].append("posizione corta: il motore compra soltanto, quindi si segue ma non si esegue")
     return out
@@ -216,7 +268,7 @@ def _decide(agent_out: dict, ctl: dict, veto: bool) -> tuple[str, float, str]:
     if dec == "scarta":
         return "scartato", 0.0, "scartato dall'analisi"
     if ctl["esito"] == "solo_osservazione" or dec == "osserva":
-        return "osservato", 0.0, "si segue senza eseguire"
+        return "osservato", 0.0, ctl.get("motivo_osservazione") or "si segue senza eseguire"
     if veto:
         return "osservato", 0.0, "bloccato dal veto del Rischio"
     w = min(max(float(agent_out.get("peso_pct", 0)) / 100.0, 0.0), ctl["peso_massimo"])
@@ -243,6 +295,8 @@ def process(sid: int, close: pd.DataFrame | None = None, execute: bool = True, p
             p = dict(ok=bool(o["moneta"] and o["ingresso"] > 0 and o["stop"] > 0 and [x for x in o["obiettivi"] if x > 0]), moneta=str(o["moneta"]).upper(),
                      direzione=o["direzione"], ingresso=o["ingresso"] or None, stop=o["stop"] or None, obiettivi=[x for x in o["obiettivi"] if x > 0][:4])
     close = _with_coin(close, p.get("moneta"))
+    s0 = _series(p.get("moneta"), close) if p.get("moneta") else None
+    p = _fix_scale(p, float(s0.iloc[-1]) if s0 is not None and len(s0) else None)
     p = complete_levels(p, close)
     ctl = controls(p, close)
     if p.get("livelli_calcolati"):
@@ -269,7 +323,7 @@ def process(sid: int, close: pd.DataFrame | None = None, execute: bool = True, p
                 analysis["veto"] = dict(bloccato=veto, motivo=rv["output"]["motivo"])
             state, weight, why = _decide(analysis, ctl, veto)
             if state == "accettato" and not crypto_venue.accepting():
-                state, weight, why = "osservato", 0.0, "nessuna sede per le crypto (IBKR paper le rifiuta; Alpaca non attiva): si segue e si misura, non si esegue"
+                state, weight, why = "osservato", 0.0, "la sede delle crypto (Alpaca) non e' attiva: si segue e si misura, non si esegue"
             if state == "accettato" and not execute:
                 state, weight, why = "osservato", 0.0, "esecuzione dei segnali di questa fonte spenta (signals.telegram_execute): si segue senza eseguire"
             p_tp = min(max(float(analysis.get("probabilita_tp1", 0.5)), 0.02), 0.98)
