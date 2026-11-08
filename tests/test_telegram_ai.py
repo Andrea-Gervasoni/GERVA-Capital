@@ -89,3 +89,23 @@ def test_health_counts_ai_rooms(firm_env, monkeypatch):
     from firm import health
     monkeypatch.delenv("TELEGRAM_CHATS", raising=False); monkeypatch.setenv("TELEGRAM_CHATS_AI", "Sala AI")
     assert any(p["nome"] == "Telegram" for p in health.status()["parti"])
+
+
+def test_filtered_messages_leave_a_trace_and_diagnosis_reads_it(firm_env, monkeypatch):
+    org_seed.seed(); registry.sync(); _reset()
+    r = TG.handle_message("Che bella giornata oggi ragazzi, buon lavoro a tutti", "Sala filtro", NOW, NOW, background=False, ai=False)
+    assert r["azione"] == "ignorato"
+    x = db.runtime_get("telegram.ai_log")[0]
+    assert x["tipo"] == "filtrato" and "nessuna moneta ammessa" in x["motivo"]                      # il motivo e' scritto, non sparisce
+    out = TG.diagnose()
+    assert "FILTRATO" in out and "Che bella giornata" in out
+
+
+def test_plain_room_gives_second_chance_to_a_coin_message(firm_env, monkeypatch):
+    """"Entrata a mercato su BTC adesso" non ha BUY/LONG: il filtro lo scarta, ma nomina una moneta, quindi lo legge l'AI."""
+    org_seed.seed(); registry.sync(); _reset()
+    _ai(monkeypatch, {"Entrata": dict(tipo="segnale", moneta="BTC", a_mercato=True, testo_segnale="BTC long a mercato adesso")})
+    got = []
+    monkeypatch.setattr(SG, "process", lambda sid, execute=True, pre=None: got.append(pre) or dict(id=sid))
+    r = TG.handle_message("Entrata a mercato su BTC adesso", "Sala filtro", NOW, NOW, background=False, ai=False)
+    assert r["azione"] == "inviato" and got[0]["a_mercato"] is True and got[0]["moneta"] == "BTC"

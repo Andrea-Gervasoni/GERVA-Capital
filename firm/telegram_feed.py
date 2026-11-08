@@ -98,6 +98,24 @@ def looks_like_signal(text: str) -> bool:
     return bool(coin and action and levels)
 
 
+def _mentions_coin(text: str) -> bool:
+    u = text.upper()
+    return any(re.search(rf"(?<![A-Z]){c}(?![A-Z])", u) for c in signals.COINS)
+
+
+def why_not_signal(text: str) -> str:
+    """Il motivo, in italiano, per cui il filtro a parole chiave non l'ha riconosciuto come segnale."""
+    u = text.upper()
+    miss = []
+    if not any(re.search(rf"(?<![A-Z]){c}(?![A-Z])", u) for c in signals.COINS):
+        miss.append("nessuna moneta ammessa (" + ", ".join(signals.COINS) + ")")
+    if not re.search(r"\b(BUY|LONG|SELL|SHORT|COMPRA|VENDI|ACQUISTA)\b", u):
+        miss.append("nessuna parola d'azione (BUY, LONG, SELL, SHORT, COMPRA...)")
+    if not re.search(r"\b(ENTRY|INGRESSO|ENTRATA|SL|STOP|TP\d?|TARGET|TAKE PROFIT|OBIETTIVO|MARKET|MERCATO|CMP|NOW|SUBITO)\b", u):
+        miss.append("nessun livello o 'a mercato' (ENTRY, SL, TP, MARKET, MERCATO, CMP, NOW...)")
+    return "il filtro a parole chiave non l'ha riconosciuto: " + "; ".join(miss) if miss else "troppo corto o troppo lungo"
+
+
 def _norm(t: str) -> str:
     return re.sub(r"\s+", " ", t).strip().upper()
 
@@ -119,6 +137,8 @@ def handle_message(text: str, chat: str, when: dt.datetime | None = None, now: d
     now = now or dt.datetime.now(dt.timezone.utc)
     text = (text or "").strip()
     pre = None
+    if not ai and 15 <= len(text) <= MAX_LEN and not looks_like_signal(text) and _mentions_coin(text):
+        ai = True                                                              # seconda possibilita': nomina una moneta ma il filtro non lo capisce (es. "Entrata a mercato su BTC"): lo legge l'AI
     if ai:
         if len(text) < 4 or len(text) > MAX_LEN:
             return dict(azione="ignorato")
@@ -156,6 +176,8 @@ def handle_message(text: str, chat: str, when: dt.datetime | None = None, now: d
             pre = cls
             text = (cls.get("testo_segnale") or text).strip()[:MAX_LEN]
     elif len(text) < 15 or len(text) > MAX_LEN or not looks_like_signal(text):
+        if len(text) >= 6:
+            _log_ai(chat, "filtrato", why_not_signal(text) if len(text) >= 15 else "messaggio troppo corto", text)
         return dict(azione="ignorato")
     if not ai and when and (now - when.astimezone(dt.timezone.utc)).total_seconds() > MAX_AGE_MIN * 60:
         _note_ignored(text, chat, "arrivato troppo tardi (il Mac era senza rete o spento): un segnale vecchio a quel prezzo non si esegue")
@@ -232,6 +254,26 @@ def _qr_login(client, run) -> None:
         except (asyncio.TimeoutError, TimeoutError):
             run(qr.recreate())
     raise SystemExit("codice QR scaduto troppe volte: riprova")
+
+
+def diagnose(minutes: int = 180) -> str:
+    """Cosa e' successo agli ultimi messaggi e segnali: sale ascoltate, messaggi letti (e perche' scartati), segnali e loro esito."""
+    out = []
+    al = db.runtime_get("telegram.alive") or {}
+    out.append(f"Sale ascoltate adesso: {', '.join(al.get('sale') or []) or 'nessuna'}  (ultimo segno di vita: {al.get('ts', 'mai')}, collegato: {al.get('collegato', '?')})")
+    out.append(f"Sale col filtro a parole chiave: {os.environ.get('TELEGRAM_CHATS') or '-'}")
+    out.append(f"Sale lette dall'AI:             {os.environ.get('TELEGRAM_CHATS_AI') or '-'}")
+    since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=minutes)).strftime("%Y-%m-%dT%H:%M:%S")
+    out.append(f"\nMessaggi arrivati e come sono stati trattati (ultimi {minutes} minuti):")
+    log = [x for x in (db.runtime_get("telegram.ai_log") or []) if x["ts"][:19] >= since]
+    for x in log[:25]:
+        out.append(f"  {x['ts'][11:16]} [{x['sala'][:22]}] {x['tipo'].upper():12} {x['testo'][:90]!r}\n        perche': {x['motivo'][:170]}")
+    if not log:
+        out.append("  NESSUNO. Se la sala ha scritto, il lettore non l'ha vista: la sala non e' in elenco, oppure il lettore era spento o senza rete.")
+    out.append("\nSegnali entrati nella sala segnali (ultimi 8):")
+    for r in db.q("SELECT id, ts, fonte, stato, motivo, testo FROM signals ORDER BY id DESC LIMIT 8"):
+        out.append(f"  #{r['id']} {r['ts'][5:16]} {r['stato']:9} [{(r['fonte'] or '')[:30]}] {(r['testo'] or '')[:70]!r}\n        {(r['motivo'] or '')[:200]}")
+    return "\n".join(out)
 
 
 def _set_env(key: str, value: str) -> None:
