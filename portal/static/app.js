@@ -260,7 +260,7 @@ function tidy(body) {
   const lede = document.getElementById("lede");
   lede.classList.add("hidden"); lede.classList.remove("open"); lede.innerHTML = "";
   body.querySelectorAll(":scope > p.muted, .card p.muted, .lg p.muted").forEach((p) => { if (EMPTY.test(p.textContent.trim())) p.classList.add("empty"); });
-  const intro = [...body.querySelectorAll(":scope > p.muted")].find((p) => !p.id && !p.classList.contains("empty") && p.textContent.trim().length > 70);
+  const intro = [...body.querySelectorAll(":scope > p.muted")].find((p) => !p.id && !p.classList.contains("empty") && !p.classList.contains("keep") && p.textContent.trim().length > 70);
   if (intro) { lede.innerHTML = intro.innerHTML; lede.classList.remove("hidden"); intro.remove(); }
 }
 document.getElementById("lede").addEventListener("click", (e) => { if (!e.target.closest("a")) e.currentTarget.classList.toggle("open"); });
@@ -474,7 +474,10 @@ const PANELS = {
       `<div id="sec-fondo"><p class="muted">Calcolo il portafoglio atteso e il Monte Carlo…</p></div><div id="sec-titoli" class="hidden">${titoli}</div>`];
   },
   async segnali() {
-    const d = await api("/api/signals"), st = d.statistiche;
+    const d = await api("/api/signals"), st = d.statistiche, tg = await api("/api/telegram/letti").catch(() => null);
+    const TIPO = { segnale: "segnale", aggiornamento: "aggiornamento", chiusura: "chiusura", risultato: "risultato", analisi: "analisi", chiacchiere: "chiacchiere", pubblicita: "pubblicità", dubbio: "dubbio", saltato: "saltato", non_letto: "non letto" };
+    const letti = tg && (tg.sale_ai.length || tg.letti.length) ? `<h3>Sale con l'AI: come sono stati capiti i messaggi</h3><p class="muted keep">${tg.sale_ai.length ? `Sale: ${esc(tg.sale_ai.join(", "))}. ` : ""}L'AI legge ogni messaggio e decide se è un segnale; solo i segnali passano ai controlli, all'analisi e al veto del Rischio. Aggiornamenti e chiusure vengono annotati sul segnale aperto.</p>` +
+      (tg.letti.length ? table(tg.letti, [["ts", "Ora", (v) => esc(when(v))], ["sala", "Sala"], ["tipo", "Capito come", (v) => tag(TIPO[v] || v)], ["testo", "Messaggio", (v) => `<span class="muted">${esc(v.slice(0, 140))}</span>`], ["motivo", "Perché"]]) : "<p class='muted empty'>Nessun messaggio letto finora.</p>") : "";
     const card1 = (r) => { const p = r.parsed || {}, c = r.controlli || {}, a = r.analisi || {};
       return `<div class="mail"><div class="mh"><b>#${r.id} ${esc(p.moneta || "?")} ${esc(p.direzione || "")}</b> ${tag(r.stato)} ${r.esito ? tag(r.esito) : ""}<span class="muted">${esc(when(r.ts))} · ${esc(r.fonte || "")}</span></div>` +
         `<p class="muted">${esc((r.testo || "").slice(0, 220))}</p>` +
@@ -486,7 +489,7 @@ const PANELS = {
       `<textarea id="sig-text" rows="4" placeholder="Es.: BUY SOL  entry 150  SL 140  TP1 165  TP2 180"></textarea><div class="cbar"><button id="sig-send" class="btn primary">Invia al desk crypto</button><span id="sig-msg" class="muted"></span></div></div>` +
       `<div class="kgrid">${card("Ricevuti", st.totale)}${card("Chiusi", st.chiusi, `${st.obiettivo} all'obiettivo · ${st.stop} allo stop · ${st.scaduti} scaduti`)}` +
       `${card("Arrivano all'obiettivo", st.tasso_obiettivo == null ? "—" : pct(st.tasso_obiettivo, 0), "sui segnali chiusi")}${card("Risultato medio", st.r_medio == null ? "—" : num(st.r_medio, 2) + " R", "R = rischio preso")}` +
-      `${card("In posizione", Object.keys(d.posizioni).length ? Object.entries(d.posizioni).map(([k, v]) => `${esc(k)} ${pct(v, 1)}`).join(" · ") : "nessuna")}</div>` + d.segnali.map(card1).join("")];
+      `${card("In posizione", Object.keys(d.posizioni).length ? Object.entries(d.posizioni).map(([k, v]) => `${esc(k)} ${pct(v, 1)}`).join(" · ") : "nessuna")}</div>` + d.segnali.map(card1).join("") + letti];
   },
   async ricerca() {
     const d = await api("/api/research");

@@ -640,6 +640,17 @@ async def signals_new(request: Request):
     return _json(dict(id=sid))
 
 
+@app.get("/api/telegram/letti")
+def telegram_letti():
+    """Sale con AI: come e' stato capito ogni messaggio (segnale, aggiornamento, chiacchiere...) e perche'."""
+    import os as _os
+    log = db.runtime_get("telegram.ai_log") or []
+    conta: dict = {}
+    for x in log:
+        conta[x["tipo"]] = conta.get(x["tipo"], 0) + 1
+    return _json(dict(sale_ai=[s for s in _os.environ.get("TELEGRAM_CHATS_AI", "").split(",") if s.strip()], letti=log[:40], conteggio=conta))
+
+
 @app.get("/api/signals")
 def signals_list():
     return _json(dict(segnali=signals.listing(), statistiche=signals.stats(), posizioni=signals.active_targets()))

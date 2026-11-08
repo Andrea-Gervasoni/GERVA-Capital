@@ -399,6 +399,12 @@ def cmd_telegram_login(a):
     telegram_feed.login(sms=getattr(a, "sms", False), qr=getattr(a, "qr", False))
 
 
+def cmd_telegram_sale(_):
+    """Sceglie le sale Telegram in cui l'AI deve capire i messaggi (non tutti sono segnali)."""
+    from firm import telegram_feed
+    telegram_feed.choose_ai_rooms()
+
+
 def cmd_telegram(_):
     """Ascolta le sale segnali di Telegram (sola lettura) e le passa alla sala segnali."""
     from firm import telegram_feed
@@ -557,7 +563,7 @@ def main():
     ap = argparse.ArgumentParser(description="GERVA Capital")
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name in ["init", "portal", "heartbeat", "run", "status", "verify", "demo", "release", "data", "research", "report",
-                 "set-password", "ibkr-check", "observe", "check-backtest", "shadow", "comitato-lungo", "desk", "live-nav", "aspettative", "kelly", "volgest", "idee", "regole", "ritmo", "strategie", "free-desk", "imposta", "crypto-venue", "telegram-login", "telegram"]:
+                 "set-password", "ibkr-check", "observe", "check-backtest", "shadow", "comitato-lungo", "desk", "live-nav", "aspettative", "kelly", "volgest", "idee", "regole", "ritmo", "strategie", "free-desk", "imposta", "crypto-venue", "telegram-login", "telegram", "telegram-sale"]:
         sp = sub.add_parser(name)
         sp.add_argument("--demo", action="store_true", help="usa il database dimostrativo var/demo/")
         if name == "strategie":

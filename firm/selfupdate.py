@@ -14,7 +14,7 @@ _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def stamp() -> float:
-    files = glob.glob(os.path.join(_ROOT, "firm", "*.py")) + [os.path.join(_ROOT, "firm.py")]
+    files = glob.glob(os.path.join(_ROOT, "firm", "*.py")) + [os.path.join(_ROOT, "firm.py"), os.path.join(_ROOT, ".env")]      # anche una sala nuova in .env
     return max((os.path.getmtime(f) for f in files if os.path.exists(f)), default=0.0)
 
 

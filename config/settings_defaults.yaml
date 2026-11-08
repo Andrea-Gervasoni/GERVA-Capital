@@ -35,6 +35,8 @@ signals:                    # sala segnali crypto: gli agenti analizzano, il cod
   max_total_frac: 0.10       # al massimo il 10% del conto su tutti i segnali insieme
   telegram_execute: true      # i segnali che arrivano da Telegram possono entrare nel conto (analisi, veto e tetti permettendo); false = solo si seguono
   telegram_max_per_hour: 10   # al massimo 10 segnali all'ora dalle sale: oltre si ignorano (anti-spam, anti-manipolazione)
+  telegram_ai_max_per_hour: 60       # messaggi letti dall'AI all'ora nelle sale 'intelligenti' (tetto di costo); oltre, solo il filtro a parole chiave
+  telegram_ai_min_confidence: 0.6    # sotto questa sicurezza un 'segnale' non entra: resta annotato
   ttl_days: 7                # un segnale non raggiunto in 7 giorni scade
 
 expectations:               # aspettative del fondo: il caso realistico riduce il rendimento storico
@@ -114,6 +116,7 @@ models:
     sintesi: claude-sonnet-5-5
     relazione: claude-sonnet-5-5
     lezioni: claude-sonnet-5-5
+    interpreta: claude-sonnet-5-5     # leggere un messaggio di Telegram e dire che cos'e': routine frequente
     segnale-lettura: claude-sonnet-5-5
   ceo_committee: claude-opus-5-5
   deep_validation: claude-opus-5-5

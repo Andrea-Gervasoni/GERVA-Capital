@@ -203,7 +203,7 @@ def beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
         pass
     try:                                                       # Telegram deve ascoltare: se tace da piu' di 10 minuti lo si dice (una volta l'ora)
         tg = db.runtime_get("telegram.alive") or {}
-        if os.environ.get("TELEGRAM_CHATS") and (not tg.get("ts") or (now - dt.datetime.fromisoformat(tg["ts"].replace("Z", "+00:00"))).total_seconds() > 600 or tg.get("collegato") is False):
+        if (os.environ.get("TELEGRAM_CHATS") or os.environ.get("TELEGRAM_CHATS_AI")) and (not tg.get("ts") or (now - dt.datetime.fromisoformat(tg["ts"].replace("Z", "+00:00"))).total_seconds() > 600 or tg.get("collegato") is False):
             if _once(f"telegram-giu:{now:%Y-%m-%dT%H}"):
                 events.publish("risk.alert", "telegram", dict(cosa="il lettore di Telegram non ascolta da piu' di 10 minuti: i segnali si perdono (rete del Mac? processo fermo?)", gravita=3))
                 notes.append("ATTENZIONE: Telegram non ascolta")

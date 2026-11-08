@@ -51,7 +51,7 @@ def status(now: dt.datetime | None = None) -> dict:
     now = now or dt.datetime.now(dt.timezone.utc)
     parts, lasts = [], []
     for name, key, tol, proc, why in PARTS:
-        if name == "Telegram" and not os.environ.get("TELEGRAM_CHATS"):
+        if name == "Telegram" and not (os.environ.get("TELEGRAM_CHATS") or os.environ.get("TELEGRAM_CHATS_AI")):
             continue                                                        # Telegram non configurato: non conta
         raw = db.runtime_get(key)
         t = _parse(raw.get("ts") if isinstance(raw, dict) else raw)

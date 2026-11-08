@@ -163,13 +163,17 @@ def _decide(agent_out: dict, ctl: dict, veto: bool) -> tuple[str, float, str]:
     return "accettato", round(w, 4), "tenuto in considerazione ed eseguibile"
 
 
-def process(sid: int, close: pd.DataFrame | None = None, execute: bool = True) -> dict:
+def process(sid: int, close: pd.DataFrame | None = None, execute: bool = True, pre: dict | None = None) -> dict:
     """Legge, controlla, fa analizzare e decide. Un errore dell'agente non lascia mai il segnale 'accettato'."""
     from . import workflows as W
     from llm import runtime
     sig = db.one("SELECT * FROM signals WHERE id=?", (sid,))
     p = parse(sig["testo"])
-    if not p["ok"]:                                              # l'analista legge il testo (dato non fidato) e prova a estrarre i livelli
+    if not p["ok"] and pre and pre.get("moneta"):                # sala "intelligente": l'AI ha gia' letto il messaggio (e quelli vicini)
+        ent, stp, tps = pre.get("ingresso") or None, pre.get("stop") or None, [x for x in (pre.get("obiettivi") or []) if x and x > 0][:4]
+        p = dict(ok=bool(ent and stp and tps), moneta=str(pre["moneta"]).upper().replace("USDT", "").replace("/", "").strip(), direzione=pre.get("direzione") or "long",
+                 ingresso=ent, stop=stp, obiettivi=tps, a_mercato=bool(pre.get("a_mercato")) and not ent)
+    if not p["ok"] and not (pre and pre.get("moneta")):          # l'analista legge il testo (dato non fidato) e prova a estrarre i livelli
         r = runtime.call("crypto_analyst", "Estrai da questo segnale moneta, direzione, ingresso, stop e obiettivi. Se un livello non c'e', "
                          "mettilo a 0: non inventare numeri.", untrusted=sig["testo"], schema=W.SIGNAL_PARSE, purpose="segnale-lettura", status_label="legge")
         if r["ok"]:
