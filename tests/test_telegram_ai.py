@@ -197,3 +197,12 @@ def test_no_message_names_ibkr_for_crypto():
     import inspect
     src = inspect.getsource(SG)
     assert "non ammessa su IBKR" not in src and "non su IBKR" not in src and "IBKR paper le rifiuta" not in src
+
+
+def test_intraday_touch_catches_a_fast_move_that_daily_closes_miss():
+    """+6% in meno di un'ora e poi il prezzo torna indietro: la chiusura giornaliera non lo vede, i massimi di 15 minuti si'."""
+    rows = [[0, "1.00", "1.01", "0.99", "1.00"], [900_000, "1.00", "1.02", "1.00", "1.02"], [1_800_000, "1.02", "1.065", "1.02", "1.06"], [2_700_000, "1.06", "1.06", "0.97", "0.98"]]
+    assert SG.first_touch(rows, True, 0.95, 1.06) == ("obiettivo", 1_800_000)                      # obiettivo +6% toccato alla terza candela
+    assert SG.first_touch(rows, False, 1.05, 0.97) == ("stop", 1_800_000)                          # per uno short lo stop sopra viene toccato prima
+    both = [[0, "1", "1.07", "0.94", "1"]]
+    assert SG.first_touch(both, True, 0.95, 1.06) == ("stop", 0)                                   # entrambi nella stessa candela: stima prudente

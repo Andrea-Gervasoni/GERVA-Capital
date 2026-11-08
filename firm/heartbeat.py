@@ -169,7 +169,7 @@ def beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
             woke.append("capo")
     except Exception as e:                                    # le aspettative non devono fermare il battito
         notes.append(f"aspettative: {str(e)[:80]}")
-    if _once(f"signals-track:{day}:{now.hour // 4}"):                 # ogni 4 ore: obiettivo, stop, scadenza dei segnali
+    if _once(f"signals-track:{day}:{now.hour}:{now.minute // 15}"):    # a ogni battito (15 minuti): obiettivo, stop, scadenza dei segnali
         try:
             from . import signals
             signals.track()

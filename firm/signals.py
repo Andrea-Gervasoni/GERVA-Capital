@@ -366,6 +366,68 @@ def refresh_overlay() -> None:
     desk.save_overlay(doc)
 
 
+_NET_DOWN = [0.0]                                                       # se la rete pubblica non risponde si aspetta due minuti prima di riprovare
+
+
+def _get_json(url: str, timeout: int = 6):
+    import time
+    import urllib.request
+    if time.time() < _NET_DOWN[0]:
+        return None
+    try:
+        with urllib.request.urlopen(url, timeout=timeout) as r:
+            return json.loads(r.read())
+    except Exception:
+        _NET_DOWN[0] = time.time() + 120
+        return None
+
+
+def _candles(coin: str, since_iso: str) -> list | None:
+    """Candele da 15 minuti dal momento del segnale (massimo ~10 giorni), dalle API pubbliche di Binance. None se non disponibili."""
+    import calendar
+    import time
+    t0 = calendar.timegm(time.strptime(since_iso[:19], "%Y-%m-%dT%H:%M:%S")) * 1000
+    rows = _get_json(f"https://api.binance.com/api/v3/klines?symbol={coin}USDT&interval=15m&startTime={t0}&limit=1000")
+    return rows or None
+
+
+def first_touch(rows: list, long_: bool, sl: float, tp: float) -> tuple[str, int] | None:
+    """Il primo livello toccato, guardando massimi e minimi di ogni candela (non solo la chiusura). Se in una stessa candela si toccano entrambi
+    non si sa quale prima: si assume lo stop (stima prudente)."""
+    for k in rows:
+        hi, lo = float(k[2]), float(k[3])
+        hit_tp = hi >= tp if long_ else lo <= tp
+        hit_sl = lo <= sl if long_ else hi >= sl
+        if hit_sl:
+            return "stop", int(k[0])
+        if hit_tp:
+            return "obiettivo", int(k[0])
+    return None
+
+
+_PX: dict = {}
+
+
+def live_price(coin: str) -> float | None:
+    """Il prezzo di adesso (Alpaca se la moneta e' li', altrimenti Binance), per far vedere quanto sta andando un segnale. In cache un minuto."""
+    import time
+    hit = _PX.get(coin)
+    if hit and time.time() - hit[0] < 60:
+        return hit[1]
+    px = None
+    try:
+        if coin in allowed_coins() and crypto_venue.keys_ok():
+            px = crypto_venue.last_price(coin)
+    except Exception:
+        px = None
+    if px is None:
+        d = _get_json(f"https://api.binance.com/api/v3/ticker/price?symbol={coin}USDT", 4)
+        px = float(d["price"]) if d and d.get("price") else None
+    if px is not None:
+        _PX[coin] = (time.time(), px)
+    return px
+
+
 def track(close: pd.DataFrame | None = None) -> int:
     """Chiude i segnali aperti che hanno toccato obiettivo o stop (prezzi di chiusura) o sono scaduti. Ritorna quanti."""
     n = 0
@@ -379,18 +441,26 @@ def track(close: pd.DataFrame | None = None) -> int:
         e, sl, tp = p["ingresso"], p["stop"], p["obiettivi"][0]
         long_ = p["direzione"] == "long"
         hit = None
-        for d, px in s.items():
-            if (long_ and px >= tp) or (not long_ and px <= tp):
-                hit = ("obiettivo", abs(tp - e) / abs(e - sl), d)
-                break
-            if (long_ and px <= sl) or (not long_ and px >= sl):
-                hit = ("stop", -1.0, d)
-                break
+        rows = _candles(p["moneta"], r["ts"])
+        if rows:                                           # massimi e minimi ogni 15 minuti: un +6% in un'ora si vede anche se poi il prezzo torna indietro
+            ft = first_touch(rows, long_, sl, tp)
+            if ft:
+                when = dt.datetime.fromtimestamp(ft[1] / 1000, dt.timezone.utc)
+                hit = (ft[0], abs(tp - e) / abs(e - sl) if ft[0] == "obiettivo" else -1.0, when)
+        else:
+            for d, px in s.items():
+                if (long_ and px >= tp) or (not long_ and px <= tp):
+                    hit = ("obiettivo", abs(tp - e) / abs(e - sl), d)
+                    break
+                if (long_ and px <= sl) or (not long_ and px >= sl):
+                    hit = ("stop", -1.0, d)
+                    break
         if not hit and r["scade"] and dt.date.today().isoformat() > r["scade"]:
             px = float(s.iloc[-1]) if len(s) else e
             hit = ("scaduto", ((px - e) if long_ else (e - px)) / abs(e - sl), None)
         if hit:
-            db.ex("UPDATE signals SET stato='chiuso', esito=?, r_multiple=?, chiuso_ts=? WHERE id=?", (hit[0], round(hit[1], 3), db.now_iso(), r["id"]))
+            closed = hit[2].strftime("%Y-%m-%dT%H:%M:%SZ") if hasattr(hit[2], "strftime") and hasattr(hit[2], "hour") and hit[0] != "scaduto" else db.now_iso()
+            db.ex("UPDATE signals SET stato='chiuso', esito=?, r_multiple=?, chiuso_ts=? WHERE id=?", (hit[0], round(hit[1], 3), closed, r["id"]))
             if r["forecast"]:
                 try:
                     SK.resolve_forecast(r["forecast"], hit[0] == "obiettivo", "sala segnali")
@@ -419,5 +489,11 @@ def listing(limit: int = 30) -> list[dict]:
         r["parsed"] = json.loads(r["parsed"] or "{}")
         r["controlli"] = json.loads(r["controlli"] or "{}")
         r["analisi"] = json.loads(r["analisi"] or "{}")
+        p = r["parsed"]
+        if r["stato"] in OPEN_STATES and p.get("ok") and p.get("moneta"):
+            px = live_price(p["moneta"])
+            if px and p.get("ingresso"):
+                move = (px / p["ingresso"] - 1) * (1 if p.get("direzione") != "short" else -1)
+                r["ora"] = dict(prezzo=px, pct=round(move, 4))                    # + = a favore del segnale
         out.append(r)
     return out
