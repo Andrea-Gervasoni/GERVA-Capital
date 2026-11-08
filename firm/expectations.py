@@ -111,6 +111,8 @@ def realized(exp: dict, max_points: int = 400) -> list[dict]:
         pts.append((live["ts"][:19], float(live["nav"])))
     if not pts or pts[0][0] > exp["ts"][:19]:
         pts.insert(0, (exp["ts"][:19], float(exp["nav0"])))
+    from . import navclean
+    pts = navclean.clean(pts)
     if len(pts) > max_points:
         k = math.ceil(len(pts) / max_points)
         pts = pts[::k] + ([pts[-1]] if pts[-1] not in pts[::k] else [])

@@ -176,6 +176,8 @@ def equity_vs_benchmark(close: pd.DataFrame | None = None) -> dict:
         pts = [(r["day"] + "T21:00", float(r["nav"])) for r in marks]
     if not pts:
         return dict(conto=[], spy=[], nota="ancora nessun valore del conto registrato")
+    from . import navclean
+    pts = navclean.clean(pts)                                              # niente picchi di lettura, un punto ogni quarto d'ora
     base = pts[0][1]
     conto = [dict(t=t, v=round(100 * n / base, 3)) for t, n in pts]
     spy = []

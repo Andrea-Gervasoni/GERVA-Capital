@@ -231,6 +231,9 @@ def live_loop(factory=_default_factory, interval: float = 5.0, max_iter: int | N
     ep = challenge_endpoint()
     client_id = int(os.environ.get("IBKR_LIVE_CLIENT_ID", ep.client_id + 1))
     n, last_tick = 0, 0.0
+    from collections import deque
+    import statistics
+    recent = deque(maxlen=15)                                   # gli ultimi punti scritti: una lettura lontana dalla loro mediana e' quasi sempre un errore
     from .selfupdate import Watch
     watch = Watch("lettura IBKR") if max_iter is None else None
     while max_iter is None or n < max_iter:
@@ -264,7 +267,10 @@ def live_loop(factory=_default_factory, interval: float = 5.0, max_iter: int | N
                 db.ex("INSERT OR REPLACE INTO nav_marks(day,pod,nav,capital,gross) VALUES(?,?,?,?,?)",
                       (db.today(), "pod_zero", est, 1.0, 0.0))
                 if time.time() - last_tick >= 60:
-                    db.ex("INSERT INTO nav_ticks(ts,nav) VALUES(?,?)", (now, est))
+                    med = statistics.median(recent) if len(recent) >= 8 else None
+                    if not (med and abs(est / med - 1) > 0.015):        # oltre l'1,5% dai vicini: non entra nel grafico (se dura davvero, la mediana si sposta e passa)
+                        db.ex("INSERT INTO nav_ticks(ts,nav) VALUES(?,?)", (now, est))
+                    recent.append(est)
                     last_tick = time.time()
         except Exception as e:                                 # TWS spento o in riavvio: si registra e si riprova
             prev = db.runtime_get("ibkr.live") or {}                          # l'ultimo valore noto resta: l'errore si aggiunge, non lo cancella

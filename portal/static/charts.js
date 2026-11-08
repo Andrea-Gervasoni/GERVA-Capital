@@ -8,7 +8,7 @@ const QC = (() => {
     const st = getComputedStyle(document.documentElement), v = (n, d) => (st.getPropertyValue(n) || "").trim() || d;
     const c1 = v("--c1", "#0A3AE5");
     Object.assign(K, { grid: v("--chart-grid", "rgba(0,0,0,.1)"), text: v("--chart-text", "rgba(0,0,0,.55)"), paper: v("--text", "#14151F"), cyan: c1, gold: v("--c2", "#FC6C3A"),
-      red: v("--c4", "#c6362b"), green: v("--c3", "#12804a"), band: "rgba(10,58,229,0.10)", bandLine: "rgba(10,58,229,0.45)" });
+      red: v("--c4", "#c6362b"), green: v("--c3", "#12804a"), band: "rgba(10,58,229,0.10)", bandLine: "rgba(10,58,229,0.45)", bg: v("--paper", "#fff") });
     FONT = '12px "General Sans", -apple-system, sans-serif';
   }
   function setup(canvas, w, h) {
@@ -44,6 +44,42 @@ const QC = (() => {
     items.forEach(([name, col]) => { x.fillStyle = col; x.fillRect(px, T + 4, 12, 4); x.fillStyle = K.text; x.fillText(name, px + 16, T + 8); px += 24 + x.measureText(name).width + 6; });
   }
   const f0 = (v) => v.toFixed(0), f1 = (v) => v.toFixed(1), pc = (v) => (v * 100).toFixed(0) + "%";
+  // tacche "tonde": 99,5 · 100 · 100,5 invece di 99,9 · 101,4 · 102,8
+  function niceTicks(lo, hi, want = 5) {
+    const span = hi - lo || 1, raw = span / want, mag = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / mag;
+    const step = (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * mag, a = Math.floor(lo / step) * step, out = [];
+    for (let v = a; v <= hi + step * 1e-6; v += step) out.push(+v.toFixed(10));
+    return { ticks: out, step };
+  }
+  const dec = (step) => (step >= 1 ? 0 : Math.min(3, Math.ceil(-Math.log10(step))));
+  const it = (v, d) => v.toFixed(d).replace(".", ",");
+  function frameT(x, w, h, lo, hi, ticks, fmt, pad) {
+    const L = pad.l, R = w - pad.r, T = pad.t, B = h - pad.b, y = (v) => B - ((v - lo) / (hi - lo || 1)) * (B - T);
+    x.strokeStyle = K.grid; x.fillStyle = K.text; x.lineWidth = 1; x.textAlign = "right";
+    ticks.forEach((v) => { const yy = Math.round(y(v)) + 0.5; x.beginPath(); x.moveTo(L, yy); x.lineTo(R, yy); x.stroke(); x.fillText(fmt(v), L - 8, yy); });
+    return { L, R, T, B, y };
+  }
+  // una scala "robusta": i valori anomali non schiacciano il resto
+  function robustRange(vals, keep = [], q = 0.01) {
+    const s = vals.filter(isFinite).slice().sort((a, b) => a - b), n = s.length;
+    const lo = Math.min(s[Math.floor(q * (n - 1))], ...keep), hi = Math.max(s[Math.ceil((1 - q) * (n - 1))], ...keep), pad = (hi - lo) * 0.12 || 0.5;
+    return [lo - pad, hi + pad];
+  }
+  const MESI = ["gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"];
+  function dayTicks(t0, t1, maxN) {
+    const day = 86400000, out = [], first = Math.ceil(t0 / day) * day, span = Math.max(1, Math.round((t1 - t0) / day)), every = Math.max(1, Math.ceil(span / maxN));
+    for (let t = first, k = 0; t <= t1; t += day, k++) if (k % every === 0) out.push(t);
+    return out;
+  }
+  const dlabel = (t) => { const d = new Date(t); return d.getUTCDate() + " " + MESI[d.getUTCMonth()]; };
+  // etichette sul bordo destro che non si toccano
+  function sideLabels(x, items, xpos, T, B) {
+    items.sort((a, b) => a.y - b.y); let prev = -1e9;
+    items.forEach((it2) => { it2.y = Math.max(it2.y, prev + 14); prev = it2.y; });
+    const over = items.length ? items[items.length - 1].y - B : 0; if (over > 0) items.forEach((it2) => (it2.y -= over));
+    x.textAlign = "left"; items.forEach((it2) => { x.fillStyle = it2.c; x.font = (it2.bold ? "600 " : "") + FONT; x.fillText(it2.t, xpos, it2.y); x.font = FONT; });
+  }
+
 
   function price(canvas, d, w = 860, h = 320) {
     w = Math.max(320, canvas.clientWidth || canvas.parentElement.clientWidth || w);   // la larghezza vera: niente stiramenti
@@ -85,19 +121,48 @@ const QC = (() => {
     x.fillStyle = "rgba(198,54,43,0.35)"; x.fill(); line(x, d.drawdown, xf, g.y, K.red, 1.4);
     x.fillStyle = K.text; x.textAlign = "left"; x.fillText("drawdown dal massimo del periodo", g.L + 6, 8);
   }
-  function equity(canvas, e, w = 860, h = 240) {
+  function equity(canvas, e, w = 860, h = 300) {
     w = Math.max(320, canvas.clientWidth || canvas.parentElement.clientWidth || w);   // la larghezza vera: niente stiramenti
-    const x = setup(canvas, w, h), pad = { l: 56, r: 12, t: 22, b: 24 };
-    const all = [...e.conto, ...e.spy], tt = (p) => new Date(p.t).getTime();
-    if (!e.conto.length) { x.fillStyle = K.text; x.fillText("Il grafico parte appena la società ha letto il conto da IBKR.", 20, h / 2); return; }
-    const t0 = Math.min(...all.map(tt)), t1 = Math.max(...all.map(tt)), vals = all.map((p) => p.v);
-    const lo = Math.min(...vals, 100) - 0.3, hi = Math.max(...vals, 100) + 0.3, g = frame(x, w, h, lo, hi, 4, (v) => v.toFixed(1), pad);
-    const xf = (p) => g.L + ((tt(p) - t0) / Math.max(t1 - t0, 1)) * (g.R - g.L);
-    const draw = (arr, col, wd) => { x.beginPath(); x.strokeStyle = col; x.lineWidth = wd; arr.forEach((p, i) => (i ? x.lineTo(xf(p), g.y(p.v)) : x.moveTo(xf(p), g.y(p.v)))); x.stroke(); arr.forEach((p) => { x.fillStyle = col; x.fillRect(xf(p) - 2, g.y(p.v) - 2, 4, 4); }); };
-    x.strokeStyle = K.grid; x.setLineDash([3, 3]); x.beginPath(); x.moveTo(g.L, g.y(100)); x.lineTo(g.R, g.y(100)); x.stroke(); x.setLineDash([]);
-    draw(e.spy, K.cyan, 1.6); draw(e.conto, K.gold, 2.2);
-    legend(x, [["il conto", K.gold], ["S&P 500 (SPY)", K.cyan]], g.L, 0);
-    x.fillStyle = K.text; x.textAlign = "center"; [0, 0.5, 1].forEach((f) => x.fillText(new Date(t0 + f * (t1 - t0)).toISOString().slice(5, 10), g.L + f * (g.R - g.L), h - 10));
+    const tt = (p) => new Date(p.t.length <= 16 ? p.t + ":00Z" : p.t.replace(/Z?$/, "Z")).getTime();
+    const paint = (hx) => {
+      const x = setup(canvas, w, h), pad = { l: 52, r: 74, t: 26, b: 28 };
+      if (!e.conto.length) { x.fillStyle = K.text; x.fillText("Il grafico parte appena la società ha letto il conto da IBKR.", 20, h / 2); return; }
+      const C = e.conto.map((p) => ({ t: tt(p), v: p.v })), t00 = C[0].t, S = (e.spy || []).map((p) => ({ t: tt(p), v: p.v })).filter((p) => p.t >= t00);   // niente punti prima dell'inizio del conto
+      const t0 = C[0].t, t1 = Math.max(C[C.length - 1].t, S.length ? S[S.length - 1].t : 0, t0 + 3600000);
+      const [lo, hi] = robustRange([...C.map((p) => p.v), ...S.filter((p) => p.t <= t1).map((p) => p.v)], [100]);
+      const nt = niceTicks(lo, hi, 4), d = dec(nt.step), g = frameT(x, w, h, nt.ticks[0], nt.ticks[nt.ticks.length - 1], nt.ticks, (v) => it(v, d), pad);
+      const xf = (t) => g.L + ((t - t0) / Math.max(t1 - t0, 1)) * (g.R - g.L), yc = (v) => Math.max(g.T - 4, Math.min(g.B + 4, g.y(v)));
+      // base 100
+      x.strokeStyle = K.text; x.globalAlpha = 0.5; x.setLineDash([3, 4]); x.beginPath(); x.moveTo(g.L, g.y(100)); x.lineTo(g.R, g.y(100)); x.stroke(); x.setLineDash([]); x.globalAlpha = 1;
+      // area sotto il conto
+      const grad = x.createLinearGradient(0, g.T, 0, g.B); grad.addColorStop(0, "rgba(242,106,61,0.20)"); grad.addColorStop(1, "rgba(242,106,61,0)");
+      x.beginPath(); C.forEach((p, i) => (i ? x.lineTo(xf(p.t), yc(p.v)) : x.moveTo(xf(p.t), yc(p.v)))); x.lineTo(xf(C[C.length - 1].t), g.B); x.lineTo(xf(C[0].t), g.B); x.closePath(); x.fillStyle = grad; x.fill();
+      // S&P 500: pochi punti (chiusure giornaliere), si vedono come punti uniti
+      if (S.length) { x.beginPath(); x.strokeStyle = K.cyan; x.lineWidth = 1.5; S.forEach((p, i) => (i ? x.lineTo(xf(p.t), yc(p.v)) : x.moveTo(xf(p.t), yc(p.v)))); x.stroke(); S.forEach((p) => { x.fillStyle = K.cyan; x.beginPath(); x.arc(xf(p.t), yc(p.v), 2.6, 0, 7); x.fill(); }); }
+      x.beginPath(); x.strokeStyle = K.gold; x.lineWidth = 2.2; x.lineJoin = "round"; C.forEach((p, i) => (i ? x.lineTo(xf(p.t), yc(p.v)) : x.moveTo(xf(p.t), yc(p.v)))); x.stroke();
+      if (C.length < 40) C.forEach((p) => { x.fillStyle = K.gold; x.beginPath(); x.arc(xf(p.t), yc(p.v), 2.6, 0, 7); x.fill(); });
+      // ultimo valore, in chiaro, a destra
+      const q = C[C.length - 1], items = [{ t: it(q.v, 2), y: yc(q.v), c: K.gold, bold: true }];
+      const sl = S[S.length - 1]; if (sl) items.push({ t: it(sl.v, 2), y: yc(sl.v), c: K.cyan });
+      x.fillStyle = K.gold; x.beginPath(); x.arc(xf(q.t), yc(q.v), 4, 0, 7); x.fill();
+      sideLabels(x, items, g.R + 10, g.T, g.B);
+      // giorni sull'asse
+      x.fillStyle = K.text; x.textAlign = "center"; dayTicks(t0, t1, Math.max(2, Math.floor((g.R - g.L) / 90))).forEach((t) => x.fillText(dlabel(t), xf(t), h - 11));
+      legend(x, [["il conto (IBKR)", K.gold], ["S&P 500 (SPY)", K.cyan]], g.L, 0);
+      // cursore: data e valore del punto piu' vicino
+      if (hx != null && hx >= g.L && hx <= g.R) {
+        const tm = t0 + ((hx - g.L) / (g.R - g.L)) * (t1 - t0); let best = C[0]; C.forEach((p) => { if (Math.abs(p.t - tm) < Math.abs(best.t - tm)) best = p; });
+        const X = xf(best.t), Y = yc(best.v);
+        x.strokeStyle = K.text; x.globalAlpha = 0.45; x.beginPath(); x.moveTo(X, g.T); x.lineTo(X, g.B); x.stroke(); x.globalAlpha = 1;
+        x.fillStyle = K.paper; x.beginPath(); x.arc(X, Y, 4.5, 0, 7); x.fill();
+        const dt0 = new Date(best.t), txt = `${dt0.getUTCDate()} ${MESI[dt0.getUTCMonth()]} ${String(dt0.getUTCHours()).padStart(2, "0")}:${String(dt0.getUTCMinutes()).padStart(2, "0")}  ·  ${it(best.v, 2)}  (${best.v >= 100 ? "+" : "−"}${it(Math.abs(best.v - 100), 2)}%)`;
+        const bw = x.measureText(txt).width + 18, bx = Math.min(Math.max(X - bw / 2, g.L), g.R - bw), by = g.T + 6;
+        x.fillStyle = K.paper; x.fillRect(bx, by, bw, 24); x.fillStyle = K.bg; x.textAlign = "left"; x.fillText(txt, bx + 9, by + 12);
+      }
+    };
+    paint(null);
+    canvas.onmousemove = (ev) => paint(ev.clientX - canvas.getBoundingClientRect().left);
+    canvas.onmouseleave = () => paint(null);
   }
   function heat(canvas, c, w = 860) {
     w = Math.max(320, canvas.clientWidth || canvas.parentElement.clientWidth || w);   // la larghezza vera: niente stiramenti
@@ -149,28 +214,38 @@ const QC = (() => {
 
   function expect(canvas, e, zoom, w = 860, h = 340) {
     w = Math.max(320, canvas.clientWidth || canvas.parentElement.clientWidth || w);   // la larghezza vera: niente stiramenti
-    const x = setup(canvas, w, h), pad = { l: 64, r: 76, t: 24, b: 26 }, T0 = new Date(e.registrata.slice(0, 19) + "Z").getTime(), T1 = T0 + zoom * 86400000;
+    const x = setup(canvas, w, h), pad = { l: 58, r: 124, t: 42, b: 28 }, T0 = new Date(e.registrata.slice(0, 19) + "Z").getTime(), T1 = T0 + zoom * 86400000;
     const tm = (iso) => new Date(iso.slice(0, 19) + (iso.endsWith("Z") ? "" : "Z")).getTime();
     const idx = e.date.map((d, i) => [tm(d), i]).filter(([t]) => t <= T1 + 86400000).map(([, i]) => i);
     const cut = (arr) => idx.map((i) => arr[i]), ts = idx.map((i) => tm(e.date[i]));
     const real = e.realizzato.map((p) => ({ t: tm(p.t), v: p.v })).filter((p) => p.t <= T1);
-    const vals = [...cut(e.modello["5"]), ...cut(e.modello["95"]), ...cut(e.realistico["5"]), ...cut(e.realistico["95"]), ...real.map((p) => p.v), e.nav0];
-    const lo = Math.min(...vals) * 0.995, hi = Math.max(...vals) * 1.005, g = frame(x, w, h, lo, hi, 5, eur, pad);
+    const vals = [...cut(e.realistico["5"]), ...cut(e.realistico["95"]), ...cut(e.modello["50"]), ...real.map((p) => p.v), e.nav0];
+    const [lo0, hi0] = [Math.min(...vals), Math.max(...vals)], pd = (hi0 - lo0) * 0.06;
+    const nt = niceTicks(lo0 - pd, hi0 + pd, 5), g = frameT(x, w, h, nt.ticks[0], nt.ticks[nt.ticks.length - 1], nt.ticks, eur, pad);
     const xf = (t) => g.L + ((t - T0) / (T1 - T0)) * (g.R - g.L);
     const band = (a, b, col) => { x.beginPath(); a.forEach((v, i) => (i ? x.lineTo(xf(ts[i]), g.y(v)) : x.moveTo(xf(ts[i]), g.y(v)))); for (let i = a.length - 1; i >= 0; i--) x.lineTo(xf(ts[i]), g.y(b[i])); x.closePath(); x.fillStyle = col; x.fill(); };
-    band(cut(e.modello["95"]), cut(e.modello["5"]), "rgba(10,58,229,0.10)"); band(cut(e.modello["75"]), cut(e.modello["25"]), "rgba(10,58,229,0.20)");
-    band(cut(e.realistico["95"]), cut(e.realistico["5"]), "rgba(252,108,58,0.12)"); band(cut(e.realistico["75"]), cut(e.realistico["25"]), "rgba(252,108,58,0.26)");
     const ln = (arr, col, wd, dash) => { x.beginPath(); x.strokeStyle = col; x.lineWidth = wd; x.setLineDash(dash || []); arr.forEach((v, i) => (i ? x.lineTo(xf(ts[i]), g.y(v)) : x.moveTo(xf(ts[i]), g.y(v)))); x.stroke(); x.setLineDash([]); };
-    ln(cut(e.modello["50"]), K.cyan, 1.6, [6, 4]); ln(cut(e.realistico["50"]), K.gold, 2);
-    x.setLineDash([3, 4]); x.strokeStyle = K.grid; x.beginPath(); x.moveTo(g.L, g.y(e.nav0)); x.lineTo(g.R, g.y(e.nav0)); x.stroke(); x.setLineDash([]);
+    x.save(); x.beginPath(); x.rect(g.L, g.T, g.R - g.L, g.B - g.T); x.clip();                          // niente esce dalla cornice
+    // UNA nuvola (la stima realistica); il modello e' solo la sua mediana e i suoi estremi, a linee: due nuvole sovrapposte diventano una macchia
+    band(cut(e.realistico["95"]), cut(e.realistico["5"]), "rgba(242,106,61,0.12)"); band(cut(e.realistico["75"]), cut(e.realistico["25"]), "rgba(242,106,61,0.24)");
+    ln(cut(e.modello["95"]), K.cyan, 1, [2, 4]); ln(cut(e.modello["5"]), K.cyan, 1, [2, 4]); ln(cut(e.modello["50"]), K.cyan, 1.8, [6, 4]); ln(cut(e.realistico["50"]), K.gold, 2.2);
+    // capitale di partenza
+    x.strokeStyle = K.text; x.globalAlpha = 0.4; x.setLineDash([3, 4]); x.beginPath(); x.moveTo(g.L, g.y(e.nav0)); x.lineTo(g.R, g.y(e.nav0)); x.stroke(); x.setLineDash([]); x.globalAlpha = 1;
+    x.restore();
+    // il conto reale, in primo piano, con il punto di oggi
     if (real.length) {
-      x.beginPath(); x.strokeStyle = K.paper; x.lineWidth = 2.6; real.forEach((p, i) => (i ? x.lineTo(xf(p.t), g.y(p.v)) : x.moveTo(xf(p.t), g.y(p.v)))); x.stroke();
-      const q = real[real.length - 1]; x.fillStyle = K.paper; x.beginPath(); x.arc(xf(q.t), g.y(q.v), 4, 0, 7); x.fill();
-      x.textAlign = "left"; x.fillText(eur(q.v), Math.min(xf(q.t) + 8, g.R + 4), g.y(q.v));
+      x.beginPath(); x.strokeStyle = K.paper; x.lineWidth = 2.6; x.lineJoin = "round"; real.forEach((p, i) => (i ? x.lineTo(xf(p.t), g.y(p.v)) : x.moveTo(xf(p.t), g.y(p.v)))); x.stroke();
+      const q = real[real.length - 1], X = xf(q.t), Y = g.y(q.v);
+      x.strokeStyle = K.text; x.globalAlpha = 0.35; x.beginPath(); x.moveTo(X, g.T); x.lineTo(X, g.B); x.stroke(); x.globalAlpha = 1;
+      x.fillStyle = K.paper; x.beginPath(); x.arc(X, Y, 5, 0, 7); x.fill(); x.textAlign = "left"; x.fillStyle = K.text; x.fillText("oggi · " + eur(q.v), Math.min(X + 10, g.R - 80), g.T - 8);
     }
-    x.textAlign = "center"; x.fillStyle = K.text;
-    [0, 0.25, 0.5, 0.75, 1].forEach((f) => { const d = new Date(T0 + f * (T1 - T0)); x.fillText(d.getUTCDate() + "/" + (d.getUTCMonth() + 1), g.L + f * (g.R - g.L), h - 10); });
-    legend(x, [["conto reale", K.paper], ["aspettativa del modello", K.cyan], ["aspettativa realistica", K.gold], ["capitale di partenza", K.grid]], g.L, 0);
+    // valori finali sul bordo destro, senza sovrapposizioni
+    const last = ts.length - 1, R = e.realistico;
+    sideLabels(x, [{ t: "95° " + eur(R["95"][last]), y: g.y(R["95"][last]), c: K.text }, { t: "mediana " + eur(R["50"][last]), y: g.y(R["50"][last]), c: K.gold, bold: true }, { t: "5° " + eur(R["5"][last]), y: g.y(R["5"][last]), c: K.text }, { t: "modello " + eur(e.modello["50"][last]), y: g.y(e.modello["50"][last]), c: K.cyan }], g.R + 8, g.T, g.B);
+    // date: la prima a sinistra, l'ultima a destra, niente tagli
+    x.fillStyle = K.text; const fl = (t) => { const d = new Date(t); return d.getUTCDate() + " " + MESI[d.getUTCMonth()]; };
+    [[0, "left"], [0.25, "center"], [0.5, "center"], [0.75, "center"], [1, "right"]].forEach(([f, al]) => { x.textAlign = al; x.fillText(fl(T0 + f * (T1 - T0)), g.L + f * (g.R - g.L) + (al === "right" ? 0 : 0), h - 11); });
+    legend(x, [["conto reale", K.paper], ["stima realistica (50% e 90% dei casi)", "rgba(242,106,61,0.55)"], ["modello (mediana ed estremi)", K.cyan]], g.L, 0);
   }
   function trade(canvas, g, w = 860, h = 260) {
     w = Math.max(320, canvas.clientWidth || canvas.parentElement.clientWidth || w);
