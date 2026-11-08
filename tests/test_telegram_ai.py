@@ -109,3 +109,36 @@ def test_plain_room_gives_second_chance_to_a_coin_message(firm_env, monkeypatch)
     monkeypatch.setattr(SG, "process", lambda sid, execute=True, pre=None: got.append(pre) or dict(id=sid))
     r = TG.handle_message("Entrata a mercato su BTC adesso", "Sala filtro", NOW, NOW, background=False, ai=False)
     assert r["azione"] == "inviato" and got[0]["a_mercato"] is True and got[0]["moneta"] == "BTC"
+
+
+def test_any_alpaca_coin_is_accepted_with_alpaca_prices(firm_env, monkeypatch):
+    """Le crypto si negoziano su Alpaca: una moneta fuori dalla lista di base (PEPE) non e' 'non ammessa su IBKR'."""
+    import numpy as np
+    import pandas as pd
+    from firm import crypto_venue as V
+    from llm import runtime
+    org_seed.seed(); registry.sync(); _reset()
+    monkeypatch.setattr(V, "keys_ok", lambda: True)
+    monkeypatch.setattr(V, "supported", lambda: {"BTC", "PEPE", "SOL"})
+    monkeypatch.setattr(V, "accepting", lambda: False)                                             # nessuna esecuzione: qui si prova l'ammissione
+    assert "PEPE" in SG.allowed_coins() and SG.first_coin("buy pepe e anche btc, entry 1") == "PEPE"        # la prima nominata e' quella del segnale
+    idx = pd.bdate_range(end=dt.date.today(), periods=300)
+    rng = np.random.default_rng(2)
+    base = pd.DataFrame({"SOL": 150 * np.exp(np.cumsum(rng.normal(0, 0.02, 300))), "SPY": np.full(300, 500.0), "^VIX": np.full(300, 20.0)}, index=idx)
+    pepe = pd.Series(0.00001 * np.exp(np.cumsum(rng.normal(0, 0.04, 300))), index=idx)
+    monkeypatch.setattr(SG.charts, "load_close", lambda: base)
+    monkeypatch.setattr(SG, "_alpaca_daily", lambda coin: pepe if coin == "PEPE" else None)
+    monkeypatch.setattr(V, "last_price", lambda s: float(pepe.iloc[-1]))
+
+    def call(agent, task, **kw):
+        if agent == "senior_crypto":
+            return dict(ok=True, output=dict(decisione="accetta", probabilita_tp1=0.55, peso_pct=1.0, motivo="ok", rischi=[], invalidazione="x"))
+        if agent == "cro":
+            return dict(ok=True, output=dict(veto=False, motivo="ok"))
+        return dict(ok=False, motivo="no")
+    monkeypatch.setattr(runtime, "call", call)
+    sid = SG.create("PEPE long a mercato adesso", "Telegram: Sala")
+    r = SG.process(sid, execute=False, pre=dict(moneta="PEPE", direzione="long", ingresso=0, stop=0, obiettivi=[], a_mercato=True))
+    row = db.one("SELECT stato, controlli FROM signals WHERE id=?", (sid,))
+    assert "non negoziabile" not in (row["controlli"] or "") and "nessun dato di prezzo" not in (row["controlli"] or "")
+    assert r["stato"] in ("osservato", "accettato")                                                 # analizzato davvero, non scartato per la moneta

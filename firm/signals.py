@@ -28,9 +28,71 @@ import pandas as pd
 from . import charts, crypto_venue, db, events, scorekeeper as SK
 from . import settings as S
 
-COINS = ["BTC", "ETH", "SOL", "XRP", "ADA", "DOGE", "LTC", "LINK", "AVAX", "BCH", "SUI"]
+COINS = ["BTC", "ETH", "SOL", "XRP", "ADA", "DOGE", "LTC", "LINK", "AVAX", "BCH", "SUI"]     # le monete di base (hanno anche i prezzi storici del motore)
+
+
+def allowed_coins() -> list[str]:
+    """Le crypto si negoziano su Alpaca, non su IBKR: l'universo e' quello che Alpaca permette di negoziare (aggiornato ogni giorno), piu' le monete di base."""
+    extra: set[str] = set()
+    try:
+        if crypto_venue.keys_ok():
+            extra = crypto_venue.supported()
+    except Exception:
+        extra = set((db.runtime_get("alpaca.assets") or {}).get("coins", []))
+    return sorted(set(COINS) | extra)
+
+
+def first_coin(text: str, coins: list[str] | None = None) -> str | None:
+    """La moneta nominata per prima nel testo (se ne compaiono due, e' quella del segnale)."""
+    t = text.upper()
+    best = None
+    for c in coins or allowed_coins():
+        m = re.search(rf"(?<![A-Z]){c}(?![A-Z])|(?<![A-Z]){c}/?USDT?(?![A-Z])", t)
+        if m and (best is None or m.start() < best[0]):
+            best = (m.start(), c)
+    return best[1] if best else None
+
+
+_ALP_CACHE: dict = {}
+
+
+def _alpaca_daily(coin: str) -> pd.Series | None:
+    """Chiusure giornaliere di una moneta dai dati di Alpaca (per le monete che il motore non ha nei suoi dati)."""
+    import time
+    hit = _ALP_CACHE.get(coin)
+    if hit and time.time() - hit[0] < 3600:
+        return hit[1]
+    try:
+        if not crypto_venue.keys_ok():
+            return None
+        start = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=400)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        d = crypto_venue._data(f"/v1beta3/crypto/us/bars?symbols={coin}%2FUSD&timeframe=1Day&limit=400&start={start}", timeout=15)
+        bars = (d.get("bars") or {}).get(f"{coin}/USD") or []
+        if not bars:
+            return None
+        s = pd.Series({pd.Timestamp(b["t"]).tz_convert(None).normalize(): float(b["c"]) for b in bars}).sort_index()
+        _ALP_CACHE[coin] = (time.time(), s)
+        return s
+    except Exception:
+        return None
+
+
+def _with_coin(close: pd.DataFrame | None, coin: str | None) -> pd.DataFrame | None:
+    """Se il motore non ha i prezzi della moneta, si aggiungono quelli di Alpaca: controlli e analisi lavorano sugli stessi dati di sempre."""
+    close = charts.load_close() if close is None else close
+    if close is None or not coin or coin in close:
+        return close
+    s = _alpaca_daily(coin)
+    if s is None or len(s) < 30:
+        return close
+    return close.join(s.rename(coin), how="left")
 NUM = r"([0-9]{1,3}(?:[.,][0-9]{3})*(?:[.,][0-9]+)?|[0-9]+(?:[.,][0-9]+)?)"
 OPEN_STATES = ("accettato", "osservato")
+
+
+def _sig(x: float) -> float:
+    """Arrotonda per cifre significative: una moneta che vale 0,000005 non puo' essere arrotondata a 6 decimali."""
+    return float(f"{x:.8g}")
 
 
 def _num(x: str) -> float:
@@ -51,7 +113,7 @@ def _num(x: str) -> float:
 def parse(text: str) -> dict:
     """Estrazione deterministica. 'ok' solo se ci sono moneta, direzione, ingresso, stop e almeno un obiettivo."""
     t = text.upper()
-    coin = next((c for c in COINS if re.search(rf"(?<![A-Z]){c}(?![A-Z])|{c}/?USDT?", t)), None)
+    coin = first_coin(t)
     long_ = bool(re.search(r"\b(BUY|LONG|COMPRA|ACQUISTA)\b", t))
     short = bool(re.search(r"\b(SELL|SHORT|VENDI)\b", t))
     side = "short" if short and not long_ else "long" if long_ or not short else "short"
@@ -81,14 +143,14 @@ def complete_levels(p: dict, close: pd.DataFrame | None = None) -> dict:
         if px is None and s is not None and len(s):
             px = float(s.iloc[-1])
         if px:
-            q["ingresso"] = round(float(px), 6); q["livelli_calcolati"].append("ingresso = prezzo di adesso (segnale a mercato)")
+            q["ingresso"] = _sig(float(px)); q["livelli_calcolati"].append("ingresso = prezzo di adesso (segnale a mercato)")
     if q.get("ingresso") and s is not None and len(s) > 30:
         sig = float(s.pct_change().tail(30).std()) or 0.03
         long_ = q["direzione"] != "short"
         if not q.get("stop"):
-            q["stop"] = round(q["ingresso"] * (1 - 2.5 * sig if long_ else 1 + 2.5 * sig), 6); q["livelli_calcolati"].append("stop a 2,5 volte la volatilita' giornaliera")
+            q["stop"] = _sig(q["ingresso"] * (1 - 2.5 * sig if long_ else 1 + 2.5 * sig)); q["livelli_calcolati"].append("stop a 2,5 volte la volatilita' giornaliera")
         if not q.get("obiettivi"):
-            q["obiettivi"] = [round(q["ingresso"] + 2 * (q["ingresso"] - q["stop"]), 6)]; q["livelli_calcolati"].append("obiettivo a 2 volte il rischio")
+            q["obiettivi"] = [_sig(q["ingresso"] + 2 * (q["ingresso"] - q["stop"]))]; q["livelli_calcolati"].append("obiettivo a 2 volte il rischio")
     q["ok"] = bool(q.get("moneta") and q.get("ingresso") and q.get("stop") and q.get("obiettivi"))
     return q
 
@@ -105,8 +167,8 @@ def controls(p: dict, close: pd.DataFrame | None = None, nav: float | None = Non
         out["problemi"].append("segnale incompleto: servono moneta, ingresso, stop e almeno un obiettivo")
         return out
     coin, e, sl, tp = p["moneta"], p["ingresso"], p["stop"], p["obiettivi"][0]
-    if coin not in COINS:
-        out["problemi"].append("moneta non ammessa su IBKR")
+    if coin not in allowed_coins():
+        out["problemi"].append("moneta non negoziabile su Alpaca (le crypto si eseguono li', non su IBKR)")
     long_ = p["direzione"] == "long"
     if long_ and not (sl < e < tp) or (not long_ and not (tp < e < sl)):
         out["problemi"].append("i livelli non sono coerenti con la direzione (stop, ingresso, obiettivo)")
@@ -180,6 +242,7 @@ def process(sid: int, close: pd.DataFrame | None = None, execute: bool = True, p
             o = r["output"]
             p = dict(ok=bool(o["moneta"] and o["ingresso"] > 0 and o["stop"] > 0 and [x for x in o["obiettivi"] if x > 0]), moneta=str(o["moneta"]).upper(),
                      direzione=o["direzione"], ingresso=o["ingresso"] or None, stop=o["stop"] or None, obiettivi=[x for x in o["obiettivi"] if x > 0][:4])
+    close = _with_coin(close, p.get("moneta"))
     p = complete_levels(p, close)
     ctl = controls(p, close)
     if p.get("livelli_calcolati"):
@@ -252,9 +315,10 @@ def refresh_overlay() -> None:
 def track(close: pd.DataFrame | None = None) -> int:
     """Chiude i segnali aperti che hanno toccato obiettivo o stop (prezzi di chiusura) o sono scaduti. Ritorna quanti."""
     n = 0
+    close = charts.load_close() if close is None else close
     for r in db.q(f"SELECT * FROM signals WHERE stato IN ({','.join('?' * len(OPEN_STATES))})", OPEN_STATES):
         p, ts = json.loads(r["parsed"]), r["ts"][:10]
-        s = _series(p.get("moneta"), close)
+        s = _series(p.get("moneta"), _with_coin(close, p.get("moneta")))
         if s is None or not p.get("ok"):
             continue
         s = s[s.index >= pd.Timestamp(ts)]

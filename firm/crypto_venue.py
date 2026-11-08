@@ -68,7 +68,7 @@ def _data(path: str, timeout: int = 10):
 def last_price(sym: str) -> float | None:
     from . import charts
     try:
-        if sym in charts.CRYPTO:
+        if sym in charts.CRYPTO or sym in (db.runtime_get("alpaca.assets") or {}).get("coins", []):
             d = _data(f"/v1beta3/crypto/us/latest/trades?symbols={sym}%2FUSD")
             return float(d["trades"][f"{sym}/USD"]["p"])
         d = _data(f"/v2/stocks/{sym}/trades/latest?feed=iex")
