@@ -214,11 +214,11 @@ function connectWS() {
 
 // ---------------------------------------------------------------- navigazione
 const GROUPS = { panoramica: ["panoramica"], plancia: ["plancia"], mercati: ["grafici", "desk"], segnali: ["segnali"],
-  azienda: ["ufficio", "conversazioni", "persone", "org", "riunioni", "compiti", "report"], idee: ["idee", "regole", "banco"], ricerca: ["tecniche", "strategie", "ricerca"],
+  azienda: ["ufficio", "conversazioni", "persone", "org", "riunioni", "compiti", "report"], idee: ["idee", "regole", "banco"], ricerca: ["tecniche", "strategie", "portafoglio", "ricerca"],
   posta: ["posta"], impostazioni: ["impostazioni"] };
 const GROUP_NAME = { panoramica: "Panoramica", plancia: "Plancia", mercati: "Mercati", segnali: "Segnali", azienda: "Azienda", idee: "Idee e regole", ricerca: "Ricerca", posta: "Posta", impostazioni: "Impostazioni" };
 const SECTION = { panoramica: "Il fondo", plancia: "Il fondo", mercati: "Il fondo", segnali: "Il fondo", azienda: "L'azienda", idee: "L'azienda", ricerca: "L'azienda", posta: "Tu", impostazioni: "Tu" };
-const LABEL = { ufficio: "Ufficio", conversazioni: "Conversazioni", tecniche: "Tecniche del fondo", persone: "Persone", org: "Organigramma", riunioni: "Riunioni", compiti: "Compiti", report: "Report", idee: "Idee", regole: "Regole", banco: "Banco libero", grafici: "Grafici", desk: "Desk", ricerca: "Prove e fascicoli", strategie: "Strategie dai paper" };
+const LABEL = { ufficio: "Ufficio", conversazioni: "Conversazioni", tecniche: "Tecniche del fondo", persone: "Persone", org: "Organigramma", riunioni: "Riunioni", compiti: "Compiti", report: "Report", idee: "Idee", regole: "Regole", banco: "Banco libero", grafici: "Grafici", desk: "Desk", ricerca: "Prove e fascicoli", strategie: "Strategie dai paper", portafoglio: "Portafoglio di strategie" };
 const groupOf = (p) => Object.keys(GROUPS).find((g) => GROUPS[g].includes(p)) || "panoramica";
 const CUR = { page: "panoramica", arg: null };
 function go(page, arg) { CUR.arg = arg ?? null; if (location.hash !== "#/" + page) location.hash = "#/" + page; else render(page, CUR.arg); }
@@ -267,6 +267,10 @@ document.getElementById("lede").addEventListener("click", (e) => { if (!e.target
 
 // ---------------------------------------------------------------- pagine
 const AFTER = {};
+let SLEEVES = null;
+AFTER.portafoglio = async () => {
+  document.querySelectorAll("canvas[data-heat]").forEach((c) => { const g = SLEEVES.gruppi[+c.dataset.heat]; if (g) QC.heat(c, g.correlazioni); });
+};
 let PLANCIA_FILTER = { venue: "", stato: "" };
 let peopleSort = ["punteggio", -1];
 const KIND_LABEL = { algo: "strategia in codice", idea: "idea", free: "banco libero", desk: "capo desk", modello: "modello GERVA-Q", lungo: "lungo periodo", segnale: "segnale", sconosciuta: "?" };
@@ -504,6 +508,22 @@ const PANELS = {
     const d = await api("/api/research");
     return ["Ricerca", `<div class="kgrid">${card("Prove registrate", d.prove.n_trials, "contano nel Deflated Sharpe")}${card("Con Sharpe", d.prove.n_with_sharpe)}</div>` +
       table(d.fascicoli, [["title", "Fascicolo"], ["stage", "Fase", tag], ["gate", "Cancello", (v) => v ? (v.passa ? "passa" : "non passa") + (v.deflated ? ` · DSR ${num(v.deflated.dsr, 3)}` : "") : "—"], ["validation", "Validazione", (v) => v ? esc(v.esito) : "—"], ["decision", "Comitato", (v) => v && v.esito ? esc(v.esito) : "—"]])];
+  },
+  async portafoglio() {
+    const d = await api("/api/sleeves"); SLEEVES = d;
+    const P = (v, k = 1) => (v == null ? "—" : pct(v, k)), N = (v, k = 2) => (v == null ? "—" : num(v, k));
+    const stato = (s) => (s === "ok" ? "" : ` <span class="tag">${esc(s)}</span>`);
+    const grp = (g, i) => {
+      const c = g.combinato;
+      return `<h3>${esc(g.nome)}</h3><p class="muted keep">${esc(g.nota)}</p>` +
+        (c ? `<div class="kgrid">${card("Diversificazione", `${c.diversificazione}/100`, `voto ${c.voto}: misura solo la correlazione (media ${N(c.correlazione_media)}), non se guadagna`)}${card("Sharpe combinato", N(c.sharpe), `medio delle sleeve ${N(c.sharpe_medio_sleeve)}`)}` +
+          `${card("Strategie indipendenti", N(c.n_effettivo, 1), `su ${c.n_sleeve} sleeve`)}${card("Calo massimo", P(c.calo_massimo), `giorni vincenti ${P(c.giorni_vincenti, 0)}`)}${card("Giorni in comune", c.giorni, stato(c.stato))}</div>` :
+          `<p class="muted empty">Servono almeno due sleeve con ${d.regole.minimo} giorni in comune per calcolare diversificazione e Sharpe combinato.</p>`) +
+        table(g.sleeve, [["nome", "Sleeve", (v, r) => `<b>${esc(v)}</b>${stato(r.stato)}${r.scartati ? ` <span class="tag" title="Variazioni oltre il 20% in un giorno: quasi sempre una lettura sbagliata del conto">${r.scartati} giorni anomali scartati</span>` : ""}`], ["origine", "Origine", tag], ["giorni", "Giorni"], ["totale", "Totale", (v) => P(v, 2)], ["sharpe", "Sharpe", (v) => N(v)], ["calmar", "Calmar", (v) => N(v)],
+          ["calo_massimo", "Calo max", (v) => P(v)], ["profit_factor", "Profit factor", (v) => N(v)], ["giorni_vincenti", "Giorni +", (v) => P(v, 0)], ["miglior_giorno", "Miglior", (v) => P(v, 2)], ["peggior_giorno", "Peggior", (v) => P(v, 2)]]) +
+        (g.correlazioni.simboli.length >= 2 ? `<h4>Correlazioni tra sleeve (sui giorni in comune)</h4><canvas class="chart" data-heat="${i}"></canvas>` : "");
+    };
+    return ["Portafoglio di strategie", `<p class="muted">Quali parti del fondo guadagnano davvero, e quanto sono diverse tra loro: tante strategie poco correlate valgono più di una sola. Ogni numero dice da dove viene (reale, paper, simulato o backtest), i backtest non si mescolano con il vivo, e con meno di ${d.regole.minimo} giorni Sharpe e Calmar non si calcolano: pochi giorni non dimostrano niente.</p>` + d.gruppi.map(grp).join("")];
   },
   async strategie() {
     const d = await api("/api/strategies");

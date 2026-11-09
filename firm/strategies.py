@@ -195,6 +195,7 @@ def backtest(name: str, data=None, propose: bool = True) -> dict:
                cancello=dict(passa=bool(g.get("passa")), controlli={k: v for k, v in (g.get("controlli") or {}).items()}),
                confronto=stats(bench) if bench is not None else None, ts=db.now_iso())
     db.runtime_set(f"algo.{name}.backtest", res)
+    db.runtime_set(f"algo.{name}.serie", dict(d=[str(i)[:10] for i in daily.index], v=[round(float(x), 6) for x in daily.values]))      # per la pagina Portafoglio di strategie
     audit.log(spec["autore"], "algo.backtest", dict(strategia=name, sharpe=st.get("sharpe"), dsr=res["deflated"]["dsr"]))
     if propose and not enabled(name):
         res["idea"] = _propose(name, res)

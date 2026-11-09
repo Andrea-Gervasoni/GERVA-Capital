@@ -166,13 +166,18 @@ const QC = (() => {
   }
   function heat(canvas, c, w = 860) {
     w = Math.max(320, canvas.clientWidth || canvas.parentElement.clientWidth || w);   // la larghezza vera: niente stiramenti
-    const n = c.simboli.length, cell = Math.min(34, Math.floor((w - 70) / Math.max(n, 1))), h = 30 + n * cell + 8;
+    const n = c.simboli.length, mx = Math.max(...c.simboli.map((s) => s.length), 4), L0 = Math.max(70, 12 + mx * 7), T0 = Math.min(120, 22 + mx * 5);   // margini secondo la lunghezza dei nomi
+    const cell = Math.min(34, Math.floor((w - L0 - 10) / Math.max(n, 1))), h = T0 + n * cell + 8;
     const x = setup(canvas, w, h); x.textAlign = "center";
     const col = (v) => (v >= 0 ? `rgba(252,108,58,${0.12 + 0.88 * v})` : `rgba(10,58,229,${0.12 + 0.88 * -v})`);
     c.simboli.forEach((s, i) => {
-      x.fillStyle = K.text; x.textAlign = "right"; x.fillText(s, 62, 30 + i * cell + cell / 2);
-      x.save(); x.translate(70 + i * cell + cell / 2, 24); x.rotate(-Math.PI / 4); x.textAlign = "left"; x.fillText(s, 0, 0); x.restore();
-      c.matrice[i].forEach((v, j) => { x.fillStyle = col(v); x.fillRect(70 + j * cell, 30 + i * cell, cell - 1, cell - 1); if (cell >= 26) { x.fillStyle = Math.abs(v) > 0.5 ? "#fff" : K.paper; x.textAlign = "center"; x.fillText(v.toFixed(1), 70 + j * cell + cell / 2, 30 + i * cell + cell / 2); } });
+      x.fillStyle = K.text; x.textAlign = "right"; x.fillText(s, L0 - 8, T0 + i * cell + cell / 2);
+      x.save(); x.translate(L0 + i * cell + cell / 2, T0 - 6); x.rotate(-Math.PI / 4); x.textAlign = "left"; x.fillText(s, 0, 0); x.restore();
+      c.matrice[i].forEach((v, j) => {
+        if (v == null) { x.fillStyle = "rgba(128,128,128,0.18)"; x.fillRect(L0 + j * cell, T0 + i * cell, cell - 1, cell - 1); if (cell >= 20) { x.fillStyle = K.text; x.textAlign = "center"; x.fillText("—", L0 + j * cell + cell / 2, T0 + i * cell + cell / 2); } return; }
+        x.fillStyle = col(v); x.fillRect(L0 + j * cell, T0 + i * cell, cell - 1, cell - 1);
+        if (cell >= 26) { x.fillStyle = Math.abs(v) > 0.5 ? "#fff" : K.paper; x.textAlign = "center"; x.fillText(v.toFixed(1), L0 + j * cell + cell / 2, T0 + i * cell + cell / 2); }
+      });
     });
   }
 
