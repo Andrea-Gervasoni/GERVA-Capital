@@ -99,7 +99,8 @@ def probe_market_data(symbols=("AMD", "NVDA", "CSCO", "CRM", "AAPL"), factory=No
     raw: list[str] = []
     cap = type("Cap", (logging.Handler,), {"emit": lambda self, rec: raw.append(rec.getMessage())})()
     lg = logging.getLogger("ib_async.client")
-    old_level = lg.level
+    old_level, old_prop = lg.level, lg.propagate
+    lg.propagate = False                                                   # si registra soltanto: niente righe sul Terminale
     try:
         ib.connect(ep.host, ep.port, clientId=ep.client_id + 5, timeout=15, readonly=True)
         if stock is None:
@@ -153,7 +154,7 @@ def probe_market_data(symbols=("AMD", "NVDA", "CSCO", "CRM", "AAPL"), factory=No
     except Exception as e:
         out["errore"] = f"{type(e).__name__}: {str(e)[:160]}"
     finally:
-        lg.removeHandler(cap); lg.setLevel(old_level)
+        lg.removeHandler(cap); lg.setLevel(old_level); lg.propagate = old_prop
         try:
             ib.disconnect()
         except Exception:
