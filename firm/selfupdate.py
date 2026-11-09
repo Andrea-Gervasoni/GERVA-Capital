@@ -1,8 +1,8 @@
 """
 I processi che restano accesi (banco libero, lettura di IBKR, Telegram) si riavviano da soli quando il codice cambia.
 
-Dopo un git pull ognuno se ne accorge entro un minuto, scrive una riga nel suo log ed esce; il cron (ripristina_cron.sh) lo
-rialza entro un altro minuto con il codice nuovo. Cosi' basta aggiornare: niente pkill a mano, niente processi col codice vecchio.
+Dopo un git pull ognuno se ne accorge entro un minuto, scrive una riga nel suo log ed esce; launchd (deploy/mac/installa_launchd.py) lo
+rialza entro pochi secondi con il codice nuovo. Cosi' basta aggiornare: niente pkill a mano, niente processi col codice vecchio.
 """
 from __future__ import annotations
 
@@ -32,5 +32,5 @@ class Watch:
 
     def check(self) -> None:
         if self.changed():
-            print(f"[{self.name}] codice aggiornato: riparto con quello nuovo (lo rialza il cron entro un minuto)", flush=True)
+            print(f"[{self.name}] codice aggiornato: riparto con quello nuovo (lo rialza launchd entro pochi secondi)", flush=True)
             os._exit(0)

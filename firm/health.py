@@ -2,7 +2,7 @@
 La salute dei programmi, per l'orologio del portale.
 
 L'orologio segna l'ora giusta solo se tutto e' vivo: il lettore di Telegram, il collegamento a IBKR (Trader Workstation), il battito
-(cron ogni 15 minuti) e il banco libero. Se uno si ferma, l'orologio si blocca sull'ultimo istante in cui tutto funzionava e dice cosa manca.
+(ogni 15 minuti) e il banco libero. Se uno si ferma, l'orologio si blocca sull'ultimo istante in cui tutto funzionava e dice cosa manca.
 Nel weekend IBKR e' "a riposo" (le azioni non si scambiano, TWS spesso e' chiusa): si vede, ma non ferma l'orologio.
 Telegram e il banco libero contano sempre: le crypto girano 24/7.
 """
@@ -19,7 +19,7 @@ from . import db
 PARTS = [  # (nome, chiave runtime, secondi di tolleranza, processo da cercare, cosa fare)
     ("Telegram", "telegram.alive", 180, "firm.py [t]elegram", "il lettore dei segnali non ascolta"),
     ("IBKR", "ibkr.live_ok", 180, "firm.py live-[n]av", "Trader Workstation non risponde"),
-    ("Battito", "heartbeat.alive", 1200, None, "il cron non gira: Mac in stop o pianificazione cancellata (ripristina_cron.sh)"),
+    ("Battito", "heartbeat.alive", 1200, None, "il battito non gira: Mac in stop o servizi non installati (python3 deploy/mac/installa_launchd.py)"),
     ("Banco libero", "free.alive", 180, "firm.py free-[d]esk", "il banco libero non da' segni di vita"),
 ]
 
@@ -65,7 +65,7 @@ def status(now: dt.datetime | None = None) -> dict:
         if not ok and motivo is None:
             run = _running(proc)
             if run is False:
-                breve, motivo = "spento", f"{why}: il processo non e' acceso. Lo rialza il cron entro un minuto (se non succede: deploy/mac/ripristina_cron.sh)"
+                breve, motivo = "spento", f"{why}: il processo non e' acceso. Il sistema (launchd) lo rialza da solo entro pochi secondi; se non succede: python3 deploy/mac/installa_launchd.py"
             elif name == "IBKR":
                 err = (db.runtime_get("ibkr.live") or {}).get("errore")
                 breve = "TWS chiusa" if err else "fermo"
