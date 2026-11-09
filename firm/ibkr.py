@@ -82,6 +82,55 @@ def _default_factory():
     return ib
 
 
+def probe_market_data(symbols=("AMD", "NVDA", "CSCO", "CRM", "AAPL"), factory=None, stock=None, wait: float = 3.0) -> dict:
+    """SOLA LETTURA, nessun ordine. Perche' le azioni americane vengono annullate mentre gli ETF europei si eseguono?
+    Per ogni titolo chiede un'istantanea dei prezzi in tempo reale e poi ritardati, e raccoglie gli errori di IBKR (354, 10089, 10167...)."""
+    factory = factory or _default_factory
+    ep = challenge_endpoint()
+    ib = factory()
+    errors: list[dict] = []
+    try:
+        ib.errorEvent += lambda reqId=None, code=None, msg=None, *a: errors.append(dict(richiesta=reqId, codice=code, testo=str(msg)[:200]))
+    except Exception:
+        pass
+    out: dict = {}
+    try:
+        ib.connect(ep.host, ep.port, clientId=ep.client_id + 5, timeout=15, readonly=True)
+        if stock is None:
+            from ib_async import Stock as stock
+        clean = lambda v: None if v is None or (isinstance(v, float) and not math.isfinite(v)) or v == -1 else round(float(v), 4)
+        for sym in symbols:
+            c = stock(sym, "SMART", "USD")
+            try:
+                ib.qualifyContracts(c)
+            except Exception as e:
+                out[sym] = dict(errore=f"contratto non trovato: {e}")
+                continue
+            row = {}
+            for label, mtype in (("tempo_reale", 1), ("ritardati", 3)):
+                n0 = len(errors)
+                ib.reqMarketDataType(mtype)
+                t = ib.reqMktData(c, "", False, False)
+                ib.sleep(wait)
+                row[label] = dict(ultimo=clean(getattr(t, "last", None)), denaro=clean(getattr(t, "bid", None)), lettera=clean(getattr(t, "ask", None)),
+                                  chiusura=clean(getattr(t, "close", None)), tipo_dati=getattr(t, "marketDataType", None), errori=errors[n0:])
+                ib.cancelMktData(c)
+            live, dl = row["tempo_reale"], row["ritardati"]
+            has = lambda d: any(d[k] is not None for k in ("ultimo", "denaro", "lettera"))
+            row["lettura"] = ("prezzi in tempo reale disponibili" if has(live) and live["tipo_dati"] in (1, 2, None)
+                              else "SOLO prezzi ritardati: manca l'abbonamento ai dati americani in tempo reale" if has(dl) or has(live)
+                              else "nessun prezzo ricevuto (mercato chiuso, o nessun dato)")
+            out[sym] = row
+    except Exception as e:
+        out["errore"] = f"{type(e).__name__}: {str(e)[:160]}"
+    finally:
+        try:
+            ib.disconnect()
+        except Exception:
+            pass
+    return out
+
+
 # ---------------------------------------------------------------------------
 # Anagrafica degli strumenti (config/instruments.yaml)
 # ---------------------------------------------------------------------------

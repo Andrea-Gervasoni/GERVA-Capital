@@ -187,6 +187,22 @@ def cmd_ibkr_check(_):
     print(json.dumps(ibkr.observe_challenge(), ensure_ascii=False, indent=1, default=str))
 
 
+def cmd_ibkr_dati(_):
+    """Sola lettura, nessun ordine: perche' le azioni americane non vengono eseguite? Prova i dati di mercato e mostra gli errori di IBKR."""
+    from firm import ibkr
+    r = ibkr.probe_market_data()
+    for sym, row in r.items():
+        if sym == "errore" or "errore" in row:
+            print(f"{sym}: {row if sym == 'errore' else row['errore']}")
+            continue
+        print(f"\n{sym}: {row['lettura']}")
+        for k in ("tempo_reale", "ritardati"):
+            d = row[k]
+            print(f"   {k:12} ultimo={d['ultimo']} denaro={d['denaro']} lettera={d['lettera']} chiusura={d['chiusura']} tipo={d['tipo_dati']}")
+            for e in d["errori"]:
+                print(f"        IBKR {e['codice']}: {e['testo']}")
+
+
 def cmd_observe(_):
     """Osservatore del conto della sfida, da solo: sul server gira in un container senza agenti, senza internet,
     l'unico che raggiunge il gateway della sfida. Scrive solo l'istantanea (conto mascherato) e il NAV."""
@@ -570,7 +586,7 @@ def main():
     ap = argparse.ArgumentParser(description="GERVA Capital")
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name in ["init", "portal", "heartbeat", "run", "status", "verify", "demo", "release", "data", "research", "report",
-                 "set-password", "ibkr-check", "observe", "check-backtest", "shadow", "comitato-lungo", "desk", "live-nav", "aspettative", "kelly", "volgest", "idee", "regole", "ritmo", "strategie", "free-desk", "imposta", "crypto-venue", "telegram-login", "telegram", "telegram-sale", "telegram-diagnosi"]:
+                 "set-password", "ibkr-check", "ibkr-dati", "observe", "check-backtest", "shadow", "comitato-lungo", "desk", "live-nav", "aspettative", "kelly", "volgest", "idee", "regole", "ritmo", "strategie", "free-desk", "imposta", "crypto-venue", "telegram-login", "telegram", "telegram-sale", "telegram-diagnosi"]:
         sp = sub.add_parser(name)
         sp.add_argument("--demo", action="store_true", help="usa il database dimostrativo var/demo/")
         if name == "strategie":
