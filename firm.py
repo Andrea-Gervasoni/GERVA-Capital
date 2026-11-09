@@ -191,12 +191,21 @@ def cmd_ibkr_dati(_):
     """Sola lettura, nessun ordine: perche' le azioni americane non vengono eseguite? Prova i dati di mercato e mostra gli errori di IBKR."""
     from firm import ibkr
     r = ibkr.probe_market_data()
+    info = r.pop("_info", None)
+    if info:
+        print(f"Ora Mac {info['ora_mac']} · New York {info['ora_new_york']} · borsa USA aperta adesso: {'SI' if info['borsa_usa_aperta_ora'] else 'NO'} · conti: {info.get('conti')} · versione server: {info.get('versione_server')}")
+        print("Messaggi di IBKR alla connessione:")
+        for e in info["messaggi_connessione"] or [dict(codice="-", testo="(nessuno)")]:
+            print(f"   {e['codice']}: {e['testo']}")
     for sym, row in r.items():
         if sym == "errore" or "errore" in row:
             print(f"{sym}: {row if sym == 'errore' else row['errore']}")
             continue
         print(f"\n{sym}: {row['lettura']}")
-        for k in ("tempo_reale", "ritardati"):
+        sg = row.get("storico_giornaliero")
+        if sg:
+            print(f"   storico giornaliero: {sg}")
+        for k in ("tempo_reale", "ritardati", "ritardati_congelati"):
             d = row[k]
             print(f"   {k:12} ultimo={d['ultimo']} denaro={d['denaro']} lettera={d['lettera']} chiusura={d['chiusura']} tipo={d['tipo_dati']}")
             for e in d["errori"]:

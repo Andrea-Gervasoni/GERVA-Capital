@@ -82,7 +82,7 @@ def _default_factory():
     return ib
 
 
-def probe_market_data(symbols=("AMD", "NVDA", "CSCO", "CRM", "AAPL"), factory=None, stock=None, wait: float = 3.0) -> dict:
+def probe_market_data(symbols=("AMD", "NVDA", "CSCO", "CRM", "AAPL"), factory=None, stock=None, wait: float = 6.0) -> dict:
     """SOLA LETTURA, nessun ordine. Perche' le azioni americane vengono annullate mentre gli ETF europei si eseguono?
     Per ogni titolo chiede un'istantanea dei prezzi in tempo reale e poi ritardati, e raccoglie gli errori di IBKR (354, 10089, 10167...)."""
     factory = factory or _default_factory
@@ -98,6 +98,15 @@ def probe_market_data(symbols=("AMD", "NVDA", "CSCO", "CRM", "AAPL"), factory=No
         ib.connect(ep.host, ep.port, clientId=ep.client_id + 5, timeout=15, readonly=True)
         if stock is None:
             from ib_async import Stock as stock
+        now_ny = dt.datetime.now(ZoneInfo("America/New_York"))
+        open_us = now_ny.weekday() < 5 and dt.time(9, 30) <= now_ny.time() <= dt.time(16, 0)
+        info = dict(ora_mac=dt.datetime.now().strftime("%a %H:%M"), ora_new_york=now_ny.strftime("%a %H:%M"), borsa_usa_aperta_ora=open_us, messaggi_connessione=list(errors))
+        for k, fn in (("conti", lambda: list(ib.managedAccounts())), ("versione_server", lambda: ib.client.serverVersion())):
+            try:
+                info[k] = fn()
+            except Exception:
+                pass
+        out["_info"] = info
         clean = lambda v: None if v is None or (isinstance(v, float) and not math.isfinite(v)) or v == -1 else round(float(v), 4)
         for sym in symbols:
             c = stock(sym, "SMART", "USD")
@@ -107,7 +116,7 @@ def probe_market_data(symbols=("AMD", "NVDA", "CSCO", "CRM", "AAPL"), factory=No
                 out[sym] = dict(errore=f"contratto non trovato: {e}")
                 continue
             row = {}
-            for label, mtype in (("tempo_reale", 1), ("ritardati", 3)):
+            for label, mtype in (("tempo_reale", 1), ("ritardati", 3), ("ritardati_congelati", 4)):
                 n0 = len(errors)
                 ib.reqMarketDataType(mtype)
                 t = ib.reqMktData(c, "", False, False)
@@ -116,10 +125,18 @@ def probe_market_data(symbols=("AMD", "NVDA", "CSCO", "CRM", "AAPL"), factory=No
                                   chiusura=clean(getattr(t, "close", None)), tipo_dati=getattr(t, "marketDataType", None), errori=errors[n0:])
                 ib.cancelMktData(c)
             live, dl = row["tempo_reale"], row["ritardati"]
-            has = lambda d: any(d[k] is not None for k in ("ultimo", "denaro", "lettera"))
+            has = lambda d: any(d[k] is not None for k in ("ultimo", "denaro", "lettera", "chiusura"))
+            if sym == symbols[0]:                                    # lo storico giornaliero risponde anche senza prezzi in tempo reale
+                n0 = len(errors)
+                try:
+                    bars = ib.reqHistoricalData(c, "", "2 D", "1 day", "TRADES", True, 1, False)
+                    row["storico_giornaliero"] = dict(barre=len(bars or []), ultima_chiusura=clean(bars[-1].close) if bars else None, errori=errors[n0:])
+                except Exception as e:
+                    row["storico_giornaliero"] = dict(errore=f"{type(e).__name__}: {str(e)[:120]}", errori=errors[n0:])
             row["lettura"] = ("prezzi in tempo reale disponibili" if has(live) and live["tipo_dati"] in (1, 2, None)
                               else "SOLO prezzi ritardati: manca l'abbonamento ai dati americani in tempo reale" if has(dl) or has(live)
-                              else "nessun prezzo ricevuto (mercato chiuso, o nessun dato)")
+                              else "nessun prezzo ricevuto e nessun errore da IBKR: guarda i messaggi di connessione" if not any(row[k]["errori"] for k in ("tempo_reale", "ritardati"))
+                          else "nessun prezzo ricevuto: guarda gli errori di IBKR qui sotto")
             out[sym] = row
     except Exception as e:
         out["errore"] = f"{type(e).__name__}: {str(e)[:160]}"
