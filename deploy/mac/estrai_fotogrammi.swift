@@ -1,19 +1,22 @@
 // Estrae fotogrammi da un video, senza installare nulla (usa solo quello che il Mac ha gia').
 //
-// Uso:   swift deploy/mac/estrai_fotogrammi.swift "/percorso/del video.MP4" ~/Desktop/fotogrammi [secondi]
-//   secondi = ogni quanti secondi un fotogramma (predefinito 10). Se il video e' lungo, il passo cresce da solo: al massimo 40 immagini.
+// Uso:   swift deploy/mac/estrai_fotogrammi.swift "/percorso/del video.MP4" ~/Desktop/fotogrammi [secondi] [massimo]
+//   secondi = ogni quanti secondi un fotogramma (predefinito 10).
+//   massimo = quante immagini al massimo (predefinito 40): se il video e' lungo il passo cresce da solo per restare sotto questo numero.
+//   Esempio con tanti fotogrammi:  swift estrai_fotogrammi.swift "VIDEO" ~/Desktop/fotogrammi 2 200
 // Le immagini (f_001.jpg, f_002.jpg...) si trascinano nella chat. Solo lettura sul video: non lo modifica.
 import AVFoundation
 import AppKit
 
 let args = CommandLine.arguments
 guard args.count >= 3 else {
-    print("uso: swift estrai_fotogrammi.swift \"VIDEO\" CARTELLA [secondi]")
+    print("uso: swift estrai_fotogrammi.swift \"VIDEO\" CARTELLA [secondi] [massimo]")
     exit(1)
 }
 let url = URL(fileURLWithPath: (args[1] as NSString).expandingTildeInPath)
 let outDir = URL(fileURLWithPath: (args[2] as NSString).expandingTildeInPath)
-var step = args.count > 3 ? (Double(args[3]) ?? 10) : 10
+var step = args.count > 3 ? max(Double(args[3]) ?? 10, 0.5) : 10
+let maxFrames = args.count > 4 ? max(Double(args[4]) ?? 40, 1) : 40
 
 guard FileManager.default.fileExists(atPath: url.path) else {
     print("non trovo il file: \(url.path)")
@@ -27,7 +30,7 @@ guard duration.isFinite, duration > 0 else {
     print("non riesco a leggere la durata del video")
     exit(1)
 }
-step = max(step, duration / 40)            // al massimo ~40 fotogrammi
+step = max(step, duration / maxFrames)     // al massimo `maxFrames` fotogrammi
 
 let gen = AVAssetImageGenerator(asset: asset)
 gen.appliesPreferredTrackTransform = true  // rispetta la rotazione (video girati in verticale)
@@ -46,4 +49,4 @@ while t < duration {
     i += 1
     t += step
 }
-print("fatto: \(i - 1) fotogrammi (uno ogni \(Int(step)) secondi, video di \(Int(duration)) secondi) in \(outDir.path)")
+print("fatto: \(i - 1) fotogrammi (uno ogni \(String(format: "%.1f", step)) secondi, video di \(Int(duration)) secondi) in \(outDir.path)")
