@@ -94,6 +94,12 @@ def probe_market_data(symbols=("AMD", "NVDA", "CSCO", "CRM", "AAPL"), factory=No
     except Exception:
         pass
     out: dict = {}
+    import collections
+    import logging
+    raw: list[str] = []
+    cap = type("Cap", (logging.Handler,), {"emit": lambda self, rec: raw.append(rec.getMessage())})()
+    lg = logging.getLogger("ib_async.client")
+    old_level = lg.level
     try:
         ib.connect(ep.host, ep.port, clientId=ep.client_id + 5, timeout=15, readonly=True)
         if stock is None:
@@ -108,6 +114,7 @@ def probe_market_data(symbols=("AMD", "NVDA", "CSCO", "CRM", "AAPL"), factory=No
                 pass
         out["_info"] = info
         clean = lambda v: None if v is None or (isinstance(v, float) and not math.isfinite(v)) or v == -1 else round(float(v), 4)
+        lg.addHandler(cap); lg.setLevel(logging.DEBUG)                      # i messaggi veri tra noi e TWS, per capire se TWS risponde ai prezzi
         for sym in symbols:
             c = stock(sym, "SMART", "USD")
             try:
@@ -138,9 +145,15 @@ def probe_market_data(symbols=("AMD", "NVDA", "CSCO", "CRM", "AAPL"), factory=No
                               else "nessun prezzo ricevuto e nessun errore da IBKR: guarda i messaggi di connessione" if not any(row[k]["errori"] for k in ("tempo_reale", "ritardati"))
                           else "nessun prezzo ricevuto: guarda gli errori di IBKR qui sotto")
             out[sym] = row
+            if sym == symbols[0]:
+                ids = collections.Counter(m[4:].split(",")[0] for m in raw if m.startswith("<<<"))
+                pick = lambda pre, ids_: [m[:150] for m in raw if m.startswith(pre) and m[4:].split(",")[0] in ids_][:4]
+                out["_raw"] = dict(ricevuti_per_tipo=dict(ids), inviati_prezzi=pick(">>>", {"1", "59"}), ricevuti_prezzi=pick("<<<", {"1", "2", "45", "46", "58", "81"}), ricevuti_errori=pick("<<<", {"4"}))
+                lg.removeHandler(cap)
     except Exception as e:
         out["errore"] = f"{type(e).__name__}: {str(e)[:160]}"
     finally:
+        lg.removeHandler(cap); lg.setLevel(old_level)
         try:
             ib.disconnect()
         except Exception:

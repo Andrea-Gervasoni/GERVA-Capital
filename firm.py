@@ -191,12 +191,20 @@ def cmd_ibkr_dati(_):
     """Sola lettura, nessun ordine: perche' le azioni americane non vengono eseguite? Prova i dati di mercato e mostra gli errori di IBKR."""
     from firm import ibkr
     r = ibkr.probe_market_data()
+    raw = r.pop("_raw", None)
     info = r.pop("_info", None)
     if info:
         print(f"Ora Mac {info['ora_mac']} · New York {info['ora_new_york']} · borsa USA aperta adesso: {'SI' if info['borsa_usa_aperta_ora'] else 'NO'} · conti: {info.get('conti')} · versione server: {info.get('versione_server')}")
         print("Messaggi di IBKR alla connessione:")
         for e in info["messaggi_connessione"] or [dict(codice="-", testo="(nessuno)")]:
             print(f"   {e['codice']}: {e['testo']}")
+    if raw:
+        print("\nMessaggi veri tra noi e Trader Workstation (durante le richieste di AMD):")
+        print("   tipi ricevuti (id del messaggio -> quanti):", raw["ricevuti_per_tipo"], "  [1,2,45,46=prezzi; 58=tipo di dati; 4=errori/avvisi]")
+        for k in ("inviati_prezzi", "ricevuti_prezzi", "ricevuti_errori"):
+            print(f"   {k}:")
+            for m in raw[k] or ["(nessuno)"]:
+                print("      ", m)
     for sym, row in r.items():
         if sym == "errore" or "errore" in row:
             print(f"{sym}: {row if sym == 'errore' else row['errore']}")
