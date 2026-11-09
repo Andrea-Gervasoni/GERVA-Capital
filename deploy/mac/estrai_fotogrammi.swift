@@ -1,7 +1,7 @@
 // Estrae fotogrammi da un video, senza installare nulla (usa solo quello che il Mac ha gia').
 //
 // Uso:   swift deploy/mac/estrai_fotogrammi.swift "/percorso/del video.MP4" ~/Desktop/fotogrammi [secondi] [massimo]
-//   secondi = ogni quanti secondi un fotogramma (predefinito 10).
+//   secondi = ogni quanti secondi un fotogramma (predefinito 10; minimo 0.04 = 25 al secondo; 0.25 = 4 al secondo).
 //   massimo = quante immagini al massimo (predefinito 40): se il video e' lungo il passo cresce da solo per restare sotto questo numero.
 //   Esempio con tanti fotogrammi:  swift estrai_fotogrammi.swift "VIDEO" ~/Desktop/fotogrammi 2 200
 // Le immagini (f_001.jpg, f_002.jpg...) si trascinano nella chat. Solo lettura sul video: non lo modifica.
@@ -15,7 +15,7 @@ guard args.count >= 3 else {
 }
 let url = URL(fileURLWithPath: (args[1] as NSString).expandingTildeInPath)
 let outDir = URL(fileURLWithPath: (args[2] as NSString).expandingTildeInPath)
-var step = args.count > 3 ? max(Double(args[3]) ?? 10, 0.5) : 10
+var step = args.count > 3 ? max(Double(args[3]) ?? 10, 0.04) : 10
 let maxFrames = args.count > 4 ? max(Double(args[4]) ?? 40, 1) : 40
 
 guard FileManager.default.fileExists(atPath: url.path) else {
