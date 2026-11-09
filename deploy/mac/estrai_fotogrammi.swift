@@ -35,18 +35,30 @@ step = max(step, duration / maxFrames)     // al massimo `maxFrames` fotogrammi
 let gen = AVAssetImageGenerator(asset: asset)
 gen.appliesPreferredTrackTransform = true  // rispetta la rotazione (video girati in verticale)
 gen.maximumSize = CGSize(width: 1280, height: 1280)
+gen.requestedTimeToleranceBefore = .zero   // il fotogramma esatto di quell'istante, non il piu' vicino "chiave"
+gen.requestedTimeToleranceAfter = .zero
 
 var t = 0.0
 var i = 1
+var scritti = 0
+var errori = 0
+var primoErrore = ""
 while t < duration {
     let time = CMTime(seconds: t, preferredTimescale: 600)
-    if let cg = try? gen.copyCGImage(at: time, actualTime: nil) {
+    do {
+        let cg = try gen.copyCGImage(at: time, actualTime: nil)
         let rep = NSBitmapImageRep(cgImage: cg)
         if let data = rep.representation(using: .jpeg, properties: [.compressionFactor: 0.8]) {
             try data.write(to: outDir.appendingPathComponent(String(format: "f_%03d.jpg", i)))
+            scritti += 1
         }
+    } catch {
+        errori += 1
+        if primoErrore.isEmpty { primoErrore = "\(error)" }
     }
     i += 1
     t += step
 }
-print("fatto: \(i - 1) fotogrammi (uno ogni \(String(format: "%.1f", step)) secondi, video di \(Int(duration)) secondi) in \(outDir.path)")
+print("richiesti \(i - 1) fotogrammi (uno ogni \(String(format: "%.2f", step)) secondi, video di \(Int(duration)) secondi); SCRITTI DAVVERO: \(scritti); errori: \(errori)")
+if errori > 0 { print("primo errore: \(primoErrore)") }
+print("cartella: \(outDir.path)")
