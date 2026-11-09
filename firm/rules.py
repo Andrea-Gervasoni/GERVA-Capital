@@ -30,6 +30,7 @@ RULES = {                                  # impostazione -> (minimo, massimo): 
     "volmgmt.lo": (0.1, 1.0), "volmgmt.hi": (1.0, 3.0),
     "signals.risk_frac": (0.001, 0.05), "signals.max_frac": (0.005, 0.25), "signals.max_total_frac": (0.02, 1.0),
     "crypto.venue_max_frac": (0.0, 1.0), "expectations.haircut": (0.1, 1.0),
+    "signals.leverage_cap": (1, 25), "futures.margin_per_signal_max_pct": (1, 50), "futures.margin_total_max_pct": (5, 100),
 }
 ENGINE = {                                 # costante di GERVA-Q (config.py) -> (minimo, massimo)
     "SCALE_K": (0.5, 4.0), "SCALE_CAP": (0.5, 3.0), "SCALE_HARD_CAP": (1.0, 3.0),   # oltre ~2x lordo sulle azioni e' il broker a rifiutare gli ordini

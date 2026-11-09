@@ -65,7 +65,8 @@ SIGNAL_READ = obj({"tipo": {"type": "string", "enum": ["segnale", "aggiornamento
                    "ingresso": {"type": "number"}, "stop": {"type": "number"}, "obiettivi": arr({"type": "number"}), "a_mercato": {"type": "boolean"},
                    "testo_segnale": S_STR, "motivo": S_STR})
 SIGNAL_VERDICT = obj({"decisione": {"type": "string", "enum": ["accetta", "osserva", "scarta"]}, "probabilita_tp1": {"type": "number"},
-                      "peso_pct": {"type": "number"}, "motivo": S_STR, "rischi": arr(S_STR), "invalidazione": S_STR})
+                      "peso_pct": {"type": "number"}, "motivo": S_STR, "rischi": arr(S_STR), "invalidazione": S_STR,
+                      "leva": {"type": "number"}, "margine_pct": {"type": "number"}, "motivo_leva": S_STR})
 SIGNAL_VETO = obj({"veto": {"type": "boolean"}, "motivo": S_STR})
 NEWS_TRIAGE = obj({"items": arr(obj({"news_id": {"type": "integer"}, "rilevanza": S_PROB, "sintesi": S_STR,
                                      "tag": arr(S_STR), "affermazioni": arr(S_STR), "fonte_primaria": {"type": "boolean"}})),

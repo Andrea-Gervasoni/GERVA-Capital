@@ -651,6 +651,13 @@ def telegram_letti():
     return _json(dict(sale_ai=[s for s in _os.environ.get("TELEGRAM_CHATS_AI", "").split(",") if s.strip()], letti=log[:40], conteggio=conta))
 
 
+@app.get("/api/futures")
+def futures_overview():
+    """Il banco futures simulato: conto virtuale, posizioni, risultati per fascia di leva."""
+    from firm import futures_sim
+    return _json(futures_sim.overview())
+
+
 @app.get("/api/signals")
 def signals_list():
     return _json(dict(segnali=signals.listing(), statistiche=signals.stats(), posizioni=signals.active_targets()))

@@ -38,6 +38,16 @@ signals:                    # sala segnali crypto: gli agenti analizzano, il cod
   telegram_ai_max_per_hour: 60       # messaggi letti dall'AI all'ora nelle sale 'intelligenti' (tetto di costo); oltre, solo il filtro a parole chiave
   telegram_ai_min_confidence: 0.6    # sotto questa sicurezza un 'segnale' non entra: resta annotato
   ttl_days: 7                # un segnale non raggiunto in 7 giorni scade
+  leverage_cap: 10           # leva massima nel conto futures simulato quando il segnale non ne propone una; se la propone, vale la sua (fino al tetto fisico)
+  leverage_hard_cap: 25      # tetto fisico della leva: oltre non si va (la scelta entro il tetto e' degli agenti)
+
+futures:                     # banco futures simulato: la leva sui segnali scelta dagli agenti; non esegue nulla, misura
+  enabled: true
+  equity0_usd: 100000        # capitale virtuale di partenza
+  margin_per_signal_max_pct: 20   # al massimo il 20% del conto virtuale come margine su un segnale
+  margin_total_max_pct: 80   # al massimo l'80% come margine su tutte le posizioni aperte insieme
+  maint_margin: 0.005        # margine di mantenimento: la liquidazione avviene a ~1/leva meno lo 0,5%
+  taker_fee: 0.0005          # commissione all'ingresso e all'uscita (0,05% della posizione)
 
 expectations:               # aspettative del fondo: il caso realistico riduce il rendimento storico
   haircut: 0.5               # si tiene il 50% del rendimento medio storico (sopravvivenza, sovradattamento)
