@@ -6,7 +6,10 @@ let STATE = null;
 const NAMES = {};                                   // id agente -> {name, role, dept}
 
 async function api(path, opts = {}) {
-  const r = await fetch(path, Object.assign({ headers: { "Content-Type": "application/json", "X-Andrea-Token": TOKEN } }, opts));
+  const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 12000);
+  let r;
+  try { r = await fetch(path, Object.assign({ headers: { "Content-Type": "application/json", "X-Andrea-Token": TOKEN }, signal: controller.signal }, opts)); }
+  finally { clearTimeout(timer); }
   if (r.status === 401) { location.href = "/login"; throw new Error("sessione scaduta: accedi di nuovo"); }
   if (!r.ok) {
     const t = await r.text(); let msg = t;
@@ -40,7 +43,7 @@ function applyWidths(root) { root.querySelectorAll("[data-w]").forEach((e) => (e
 // ---------------------------------------------------------------- tema
 (function theme() {
   let t = null; try { t = localStorage.getItem("gerva-theme"); } catch (_) { /* privato */ }
-  if (t) document.documentElement.dataset.theme = t;
+  document.documentElement.dataset.theme = t || "dark";
   document.getElementById("theme").onclick = () => {
     const dark = matchMedia("(prefers-color-scheme: dark)").matches;
     const cur = document.documentElement.dataset.theme || (dark ? "dark" : "light"), nx = cur === "dark" ? "light" : "dark";
@@ -119,12 +122,12 @@ async function refreshHealth() {
   } catch (e) {                                                        // il portale stesso non risponde: si blocca anche cosi'
     if (CLOCK.ok !== false) { CLOCK.ok = false; CLOCK.frozen = new Date(); CLOCK.why = "FERMO: il portale non risponde"; }
   }
-  document.title = CLOCK.ok === false ? "■ FERMO · GERVA Capital" : "GERVA Capital";
+  document.title = CLOCK.ok === false ? "Servizi degradati · GERVA Capital" : "GERVA Capital";
   tickClock();
 }
 function tickClock() {
   const el = document.getElementById("clock"); if (!el) return;
-  if (CLOCK.ok === false) { el.classList.add("stop"); el.textContent = CLOCK.frozen ? hms(CLOCK.frozen) : "--:--:--"; }
+  if (CLOCK.ok === false) { el.classList.add("stop"); el.textContent = hms(new Date()); }
   else { el.classList.remove("stop"); el.textContent = hms(new Date()); }
   el.title = CLOCK.why || el.title;
 }
@@ -206,14 +209,26 @@ function renderFeed() {
   setTimeout(() => FEED.forEach((f) => (f.fresh = false)), 2500);
   ul.innerHTML = FEED.slice(0, 40).map((f) => `<li class="${f.fresh ? "new" : ""}"><span class="tm">${esc((f.ts || "").slice(11, 16))}</span><span>${esc(f.t)}</span></li>`).join("") || "<li class='empty'>Ancora niente di nuovo: qui compaiono idee, trade, riunioni e allarmi appena succedono.</li>";
 }
+let wsRetries = 0, wsTimer = null, liveSocket = null;
 function connectWS() {
-  const ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`);
-  ws.onmessage = (m) => { JSON.parse(m.data).forEach((ev) => { addFeed(ev); try { onWorldEvent(ev); } catch (_) { /* ufficio non pronto */ } if (ev.kind.startsWith("career") || ev.kind === "meeting.end") refreshWorld(); }); renderFeed(); };
-  ws.onclose = () => setTimeout(connectWS, 3000);
+  clearTimeout(wsTimer);
+  if (liveSocket && liveSocket.readyState < 2) return;
+  const ws = liveSocket = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`);
+  ws.onopen = () => { wsRetries = 0; refreshState(); refreshHealth(); };
+  ws.onmessage = (m) => {
+    try { JSON.parse(m.data).forEach((ev) => { addFeed(ev); try { onWorldEvent(ev); } catch (_) {} }); renderFeed(); }
+    catch (err) { console.warn("Invalid event stream", err); }
+  };
+  ws.onerror = () => ws.close();
+  ws.onclose = (e) => {
+    if (e.code === 1008) return; // authentication/origin denial is not a transient network error
+    wsTimer = setTimeout(connectWS, Math.min(30000, 1000 * 2 ** Math.min(wsRetries++, 5)) * (0.8 + Math.random() * 0.4));
+  };
 }
+window.addEventListener("online", connectWS);
 
 // ---------------------------------------------------------------- navigazione
-const GROUPS = { panoramica: ["panoramica"], plancia: ["plancia"], mercati: ["grafici", "desk"], segnali: ["segnali"],
+const GROUPS = { panoramica: ["terminal", "panoramica"], plancia: ["plancia"], mercati: ["grafici", "desk"], segnali: ["segnali"],
   azienda: ["ufficio", "conversazioni", "persone", "org", "riunioni", "compiti", "report"], idee: ["idee", "regole", "banco"], ricerca: ["tecniche", "strategie", "portafoglio", "ricerca"],
   posta: ["posta"], impostazioni: ["impostazioni"] };
 const GROUP_NAME = { panoramica: "Panoramica", plancia: "Plancia", mercati: "Mercati", segnali: "Segnali", azienda: "Azienda", idee: "Idee e regole", ricerca: "Ricerca", posta: "Posta", impostazioni: "Impostazioni" };
@@ -814,7 +829,7 @@ async function refreshWorld() { try { buildWorld(await api("/api/world")); } cat
   await refreshState();
   try { await document.fonts.load("11px VT323"); } catch (_) { /* carattere dell'ufficio */ }
   resizeCanvas(); await refreshWorld(); requestAnimationFrame(renderWorld);
-  render(location.hash.replace("#/", "") || "panoramica");
+  render(location.hash.replace("#/", "") || "terminal");
   connectWS();
   setInterval(refreshState, 8000);
   setInterval(refreshWorld, 15000);
