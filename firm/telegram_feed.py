@@ -347,6 +347,12 @@ def login(sms: bool = False, qr: bool = False) -> None:
 
 
 def run() -> None:
+    from .process_lock import exclusive
+    with exclusive(os.path.join(paths.VAR, "telegram-reader.lock")):
+        _run_owned()
+
+
+def _run_owned() -> None:
     """Ascolta i messaggi nuovi nelle sale indicate (TELEGRAM_CHATS, nomi separati da virgola). Solo lettura."""
     from telethon import events as tl_events
     plain, smart = rooms("TELEGRAM_CHATS"), rooms("TELEGRAM_CHATS_AI")

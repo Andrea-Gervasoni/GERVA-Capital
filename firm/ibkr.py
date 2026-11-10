@@ -215,7 +215,7 @@ def market_open(symbol: str, kind: str, now: dt.datetime | None = None) -> bool:
 # ---------------------------------------------------------------------------
 class _ReadOnlyIB:
     """Involucro dell'osservatore: solo letture. placeOrder/cancelOrder e tutto il resto sono vietati."""
-    _ALLOWED = frozenset({"connect", "disconnect", "managedAccounts", "accountValues", "positions", "fills", "portfolio", "sleep", "reqPnL", "cancelPnL"})
+    _ALLOWED = frozenset({"connect", "disconnect", "managedAccounts", "accountValues", "positions", "fills", "portfolio", "sleep", "reqPnL", "cancelPnL", "isConnected", "errorEvent", "accountValueEvent", "pnlEvent"})
 
     def __init__(self, ib):
         object.__setattr__(self, "_ib", ib)
@@ -310,7 +310,7 @@ def live_loop(factory=_default_factory, interval: float = 5.0, max_iter: int | N
     sleep = sleep or time.sleep
     ep = challenge_endpoint()
     client_id = int(os.environ.get("IBKR_LIVE_CLIENT_ID", ep.client_id + 1))
-    n, last_tick = 0, 0.0
+    n, last_tick, failures = 0, 0.0, 0
     from collections import deque
     import statistics
     recent = deque(maxlen=15)                                   # gli ultimi punti scritti: una lettura lontana dalla loro mediana e' quasi sempre un errore
@@ -320,6 +320,19 @@ def live_loop(factory=_default_factory, interval: float = 5.0, max_iter: int | N
         if watch:
             watch.check()
         ib = _ReadOnlyIB(factory())
+        # The socket may remain open while TWS loses its upstream connection.
+        connection = {"lost": False, "last_data": time.monotonic()}
+        handlers = []
+        def on_error(req_id, code, message, *args):
+            if code in (1100, 1101, 1300):
+                connection["lost"] = True  # recreate subscriptions on a fresh read-only session
+        def on_data(*args):
+            connection["last_data"] = time.monotonic()
+        for event_name, callback in (("errorEvent", on_error), ("accountValueEvent", on_data), ("pnlEvent", on_data)):
+            event = getattr(ib, event_name, None)
+            if event is not None:
+                event += callback
+                handlers.append((event, callback))
         try:
             ib.connect(ep.host, ep.port, clientId=client_id, timeout=15, readonly=True)
             acct, err = _pick_account(ib, ep)
@@ -330,19 +343,28 @@ def live_loop(factory=_default_factory, interval: float = 5.0, max_iter: int | N
             while max_iter is None or n < max_iter:
                 ib.sleep(interval)
                 n += 1
+                connected = getattr(ib, "isConnected", None)
+                if connection["lost"] or (connected is not None and not connected()):
+                    raise ConnectionError("IBKR disconnected; rebuilding read-only subscriptions")
+                if handlers and time.monotonic() - connection["last_data"] > 240:
+                    raise TimeoutError("no account/PnL update for 240 seconds")
                 if watch and watch.changed():
                     ib.disconnect(); watch.last = 0; watch.check()
                 vals = {(v.tag, v.currency): v.value for v in ib.accountValues(acct)}
                 exact = float(vals.get(("NetLiquidation", "EUR")) or vals.get(("NetLiquidation", "BASE")) or 0)
-                if exact <= 0:
+                if not math.isfinite(exact) or exact <= 0:
                     continue                                   # mai un valore a zero
                 tot = sum(float(x) for x in (getattr(pnl, "unrealizedPnL", None), getattr(pnl, "realizedPnL", None))
                           if x is not None and math.isfinite(float(x)))
                 if base is None or exact != base[0]:
                     base = (exact, tot)                        # arrivato un valore esatto nuovo: si riparte da lui
                 est = exact + (tot - base[1])
+                if not math.isfinite(est) or est <= 0:
+                    raise ValueError("invalid estimated NAV")
+                failures = 0
                 now = db.now_iso()
-                db.runtime_set("ibkr.live", dict(ts=now, nav=round(est, 2), nav_exact=round(exact, 2), stima=abs(est - exact) > 0.005))
+                db.runtime_set("ibkr.live", dict(ts=now, nav=round(est, 2), nav_exact=round(exact, 2), stima=abs(est - exact) > 0.005,
+                                                source_age_s=round(time.monotonic() - connection["last_data"], 1)))
                 db.runtime_set("ibkr.live_ok", now)                     # l'orologio del portale: IBKR collegato e leggibile
                 db.ex("INSERT OR REPLACE INTO nav_marks(day,pod,nav,capital,gross) VALUES(?,?,?,?,?)",
                       (db.today(), "pod_zero", est, 1.0, 0.0))
@@ -356,12 +378,18 @@ def live_loop(factory=_default_factory, interval: float = 5.0, max_iter: int | N
             prev = db.runtime_get("ibkr.live") or {}                          # l'ultimo valore noto resta: l'errore si aggiunge, non lo cancella
             db.runtime_set("ibkr.live", dict(prev, errore=f"{type(e).__name__}: {str(e)[:120]}", errore_ts=db.now_iso()))
             n += 1
-            sleep(retry)
+            failures += 1
         finally:
+            for event, callback in handlers:
+                event -= callback
             try:
                 ib.disconnect()
             except Exception:
                 pass
+
+        if failures and (max_iter is None or n < max_iter):
+            import random
+            sleep(min(120.0, retry * 2 ** min(failures - 1, 4)) * random.uniform(0.8, 1.2))
 
 
 # ---------------------------------------------------------------------------

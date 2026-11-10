@@ -56,3 +56,29 @@ def test_live_state_freshness(firm_env):
     assert A._live_state()["fresca"] is True
     db.runtime_set("ibkr.live", dict(ts="2020-01-01T00:00:00Z", nav=1.0, nav_exact=1.0, stima=False))
     assert A._live_state()["fresca"] is False
+
+
+class FakeEvent:
+    def __init__(self): self.callbacks=[]
+    def __iadd__(self,f): self.callbacks.append(f); return self
+    def __isub__(self,f): self.callbacks.remove(f); return self
+    def emit(self,*args):
+        for f in self.callbacks[:]: f(*args)
+
+
+@pytest.mark.parametrize('code',[1100,1101,1300])
+def test_upstream_loss_reconnects_without_accepting_cached_nav(firm_env,code):
+    class EventIB(FakeIB):
+        def __init__(self):
+            super().__init__([1e6],[0])
+            self.errorEvent,self.accountValueEvent,self.pnlEvent=FakeEvent(),FakeEvent(),FakeEvent()
+        def sleep(self,s):
+            super().sleep(s)
+            self.errorEvent.emit(-1,code,'upstream disconnected')
+    bad=EventIB(); good=FakeIB([1001000],[0]); instances=iter([bad,good]); waits=[]
+    ibkr.live_loop(factory=lambda:next(instances),interval=0,max_iter=3,sleep=waits.append)
+    assert bad.disconnected and good.disconnected
+    assert not bad.errorEvent.callbacks
+    assert len(waits)==1
+    assert db.runtime_get('ibkr.live')['nav']==1001000
+    assert not db.runtime_get('ibkr.live').get('errore')

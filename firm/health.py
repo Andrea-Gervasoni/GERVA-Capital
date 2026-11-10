@@ -28,8 +28,9 @@ def _parse(v):
     if not v:
         return None
     try:
-        return dt.datetime.fromisoformat(str(v).replace("Z", "+00:00"))
-    except ValueError:
+        t = dt.datetime.fromisoformat(str(v).replace("Z", "+00:00"))
+        return t.replace(tzinfo=dt.timezone.utc) if t.tzinfo is None else t
+    except (ValueError, TypeError):
         return None
 
 
@@ -55,13 +56,18 @@ def status(now: dt.datetime | None = None) -> dict:
             continue                                                        # Telegram non configurato: non conta
         raw = db.runtime_get(key)
         t = _parse(raw.get("ts") if isinstance(raw, dict) else raw)
-        fresh = t is not None and (now - t).total_seconds() <= tol
-        ok, stato, breve, motivo = fresh, "ok", None, None
-        if name == "Telegram" and fresh and isinstance(raw, dict) and raw.get("collegato") is False:
-            ok, breve, motivo = False, "scollegato", "il processo e' acceso ma ha perso la rete: si ricollega da solo, se dura controlla il Wi-Fi del Mac"
-        if name == "IBKR" and t is None:                                   # prima di questa versione: l'ultima lettura riuscita
+        if name == "IBKR" and t is None:
             old = db.runtime_get("ibkr.live") or {}
             t = _parse(old.get("ts")) if not old.get("errore") else None
+        age = (now - t).total_seconds() if t else None
+        fresh = age is not None and 0 <= age <= tol
+        if name == "IBKR" and (db.runtime_get("ibkr.live") or {}).get("errore"):
+            fresh = False
+        ok, stato, breve, motivo = fresh, "ok", None, None
+        if name == "Battito" and db.runtime_get("heartbeat.error"):
+            ok, breve, motivo = False, "errore", "ultimo ciclo fallito; controllare heartbeat.log. Il segnale verde richiede un ciclo completato."
+        if name == "Telegram" and fresh and isinstance(raw, dict) and raw.get("collegato") is False:
+            ok, breve, motivo = False, "scollegato", "il processo e' acceso ma ha perso la rete: si ricollega da solo, se dura controlla il Wi-Fi del Mac"
         if not ok and motivo is None:
             run = _running(proc)
             if run is False:
@@ -79,7 +85,7 @@ def status(now: dt.datetime | None = None) -> dict:
             motivo = "weekend: le azioni non si scambiano, Trader Workstation puo' restare chiusa. Non ferma l'orologio."
         elif not ok:
             stato = "fermo"
-        parts.append(dict(nome=name, ok=ok, stato=stato, breve=breve, ultimo=t.strftime("%Y-%m-%dT%H:%M:%SZ") if t else None, motivo=motivo))
+        parts.append(dict(nome=name, ok=ok, stato=stato, breve=breve, eta_s=age, soglia_s=tol, ultimo=t.strftime("%Y-%m-%dT%H:%M:%SZ") if t else None, motivo=motivo))
         if stato != "riposo":
             lasts.append(t if ok or t else None)
     counted = [p for p in parts if p["stato"] != "riposo"]

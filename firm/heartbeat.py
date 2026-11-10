@@ -30,8 +30,22 @@ def _once(key: str) -> bool:
 
 
 def beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
+    """One heartbeat owner; success is recorded only after the whole cycle returns."""
+    from .process_lock import exclusive
+    with exclusive(os.path.join(paths.VAR, "heartbeat.lock")):
+        db.runtime_set("heartbeat.started", db.now_iso())
+        try:
+            result = _beat(now, use_agents)
+        except Exception as exc:
+            db.runtime_set("heartbeat.error", dict(ts=db.now_iso(), kind=type(exc).__name__))
+            raise
+        db.runtime_set("heartbeat.error", None)
+        db.runtime_set("heartbeat.alive", db.now_iso())
+        return result
+
+
+def _beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
     now = now or dt.datetime.now(dt.timezone.utc)
-    db.runtime_set("heartbeat.alive", db.now_iso())                    # l'orologio del portale: il battito gira
     day = now.strftime("%Y-%m-%d")
     woke, notes = [], []
     # ---- codice deterministico, sempre
@@ -55,14 +69,14 @@ def beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
     pods.ensure_pods()
     try:
         S.refresh_defaults()
-    except Exception:
-        pass
+    except Exception as exc:
+        notes.append(f"settings refresh: {type(exc).__name__}")
     try:
         from . import crypto_venue
         if crypto_venue.configured():
             crypto_venue.rebalance()                       # crypto: 24 ore su 24, a ogni battito
-    except Exception:
-        pass
+    except Exception as exc:
+        notes.append(f"crypto rebalance: {type(exc).__name__}")
     registry.sync_if_profiles_changed()
     if os.environ.get("IBKR_CHALLENGE_ACCOUNT") and pods.enabled():
         if not os.environ.get("IBKR_FIRM_ACCOUNT"):
@@ -199,8 +213,8 @@ def beat(now: dt.datetime | None = None, use_agents: bool = True) -> dict:
     try:                                                       # plancia: fill e conto Alpaca aggiornati ad ogni battito
         from . import blotter
         blotter.sync_alpaca()
-    except Exception:
-        pass
+    except Exception as exc:
+        notes.append(f"Alpaca sync: {type(exc).__name__}")
     try:                                                       # Telegram deve ascoltare: se tace da piu' di 10 minuti lo si dice (una volta l'ora)
         tg = db.runtime_get("telegram.alive") or {}
         if (os.environ.get("TELEGRAM_CHATS") or os.environ.get("TELEGRAM_CHATS_AI")) and (not tg.get("ts") or (now - dt.datetime.fromisoformat(tg["ts"].replace("Z", "+00:00"))).total_seconds() > 600 or tg.get("collegato") is False):

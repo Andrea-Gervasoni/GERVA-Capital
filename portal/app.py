@@ -231,7 +231,7 @@ def _live_state() -> dict:
         age = time.time() - calendar.timegm(time.strptime(lv["ts"][:19], "%Y-%m-%dT%H:%M:%S")) if lv.get("ts") else None
     except (ValueError, KeyError):
         age = None
-    return dict(fresca=bool(lv.get("nav") and age is not None and age < 90), eta_s=None if age is None else round(age),
+    return dict(fresca=bool(lv.get("nav") and age is not None and 0 <= age < 90 and not lv.get("errore")), eta_s=None if age is None else round(age),
                 stima=bool(lv.get("stima")), errore=lv.get("errore"))
 
 
@@ -573,6 +573,12 @@ def api_tape():
     aperta = ny.weekday() < 5 and (9, 30) <= (ny.hour, ny.minute) < (16, 0)
     out["mercato"] = f"NEW YORK {ny:%H:%M} · {'APERTA' if aperta else 'CHIUSA'} · MILANO {_dt.datetime.now(ZoneInfo('Europe/Rome')):%H:%M}"
     return _json(out)
+
+
+@app.get("/api/terminal")
+def api_terminal():
+    from firm.terminal import snapshot
+    return _json(snapshot())
 
 
 @app.get("/api/health")

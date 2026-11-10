@@ -8,6 +8,7 @@
 <title>GERVA Capital</title>
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/static/style.css">
+<link rel="stylesheet" href="/static/terminal.css">
 </head>
 <body>
 <div class="paper-grid" aria-hidden="true"></div>
@@ -21,13 +22,13 @@
 
 <div class="shell">
   <aside class="side" id="side" aria-label="Sezioni">
-    <a class="brand" href="#/panoramica" aria-label="GERVA Capital, panoramica">
+    <a class="brand" href="#/terminal" aria-label="GERVA Capital, panoramica">
       <svg class="mono" viewBox="0 0 40 40" width="34" height="34" aria-hidden="true"><rect x="0.5" y="0.5" width="39" height="39" rx="9" class="mono-bg"/><text x="20" y="29.5" text-anchor="middle" class="mono-g">G</text><circle cx="32.5" cy="8" r="2.8" class="mono-dot"/></svg>
       <span class="wordmark"><b>GERVA</b><span>CAPITAL</span></span>
     </a>
     <nav class="tabs" id="tabs">
       <p class="side-h">Il fondo</p>
-      <button data-go="panoramica"><span class="n">01</span>Panoramica<kbd>1</kbd></button>
+      <button data-go="terminal"><span class="n">01</span>Terminale<kbd>1</kbd></button>
       <button data-go="plancia"><span class="n">02</span>Plancia<kbd>2</kbd></button>
       <button data-go="grafici"><span class="n">03</span>Mercati<kbd>3</kbd></button>
       <button data-go="segnali"><span class="n">04</span>Segnali<kbd>4</kbd></button>
@@ -53,7 +54,7 @@
       <button class="ask" id="ask" aria-label="Chiedi al Capo o vai a una pagina"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><span>Chiedi al Capo o vai a…</span><kbd>⌘K</kbd></button>
       <div class="status">
         <span class="pill paper" title="Conto simulato: nessun soldo vero">Paper</span>
-        <span class="clock" id="clock" title="L'ora corre solo se Telegram, IBKR, il battito e il banco libero sono vivi">--:--:--</span>
+        <span class="clock" id="clock" title="Ora locale; lo stato dei servizi è indicato separatamente">--:--:--</span>
         <span class="pill" id="live-pill"><i class="dot"></i><span id="live-txt">—</span></span>
         <button class="iconbtn theme" id="theme" aria-label="Cambia tema chiaro/scuro" title="Tema chiaro o scuro"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 2v16a8 8 0 0 1 0-16z"/></svg></button>
       </div>
@@ -100,5 +101,6 @@
 <script src="/static/sim.js"></script>
 <script src="/static/charts.js"></script>
 <script src="/static/app.js"></script>
+<script src="/static/terminal.js"></script>
 </body>
 </html>

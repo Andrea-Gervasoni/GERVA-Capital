@@ -34,10 +34,12 @@ def mark_done(done: set[str], key: str):
     tmp = STATE + ".tmp"
     with open(tmp, "w") as f:
         json.dump(sorted(done)[-400:], f)
+        f.flush()
+        os.fsync(f.fileno())
     os.replace(tmp, STATE)
 
 
-def run(cmd: list[str], tag: str):
+def run(cmd: list[str], tag: str) -> int:
     os.makedirs(os.path.join(GQ, "logs"), exist_ok=True)
     log = os.path.join(GQ, "logs", f"{tag}_{dt.date.today().isoformat()}.log")
     env = dict(os.environ, GERVAQ_MODE="paper")
@@ -46,6 +48,39 @@ def run(cmd: list[str], tag: str):
         f.flush()
         r = subprocess.run(cmd, cwd=GQ, env=env, stdout=f, stderr=subprocess.STDOUT, timeout=3600)
     print(f"{tag}: codice di uscita {r.returncode}", flush=True)
+    return r.returncode
+
+
+def run_slot(done: set[str], key: str, cmd: list[str], tag: str):
+    """Durable claim + outcome. An ambiguous submission is NEVER blindly replayed.
+
+    scheduler_state.json remains a backwards-compatible list of attempted slots.
+    The separate status journal distinguishes actual success from failures/crashes.
+    """
+    journal = STATE + ".status.json"
+    try:
+        with open(journal) as f:
+            statuses = json.load(f)
+    except FileNotFoundError:
+        statuses = {}
+    def save(state, **extra):
+        statuses[key] = dict(state=state, ts=dt.datetime.now(dt.timezone.utc).isoformat(), **extra)
+        with open(journal + ".tmp", "w") as f:
+            json.dump(dict(list(statuses.items())[-400:]), f)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(journal + ".tmp", journal)
+    if key in done:
+        return
+    mark_done(done, key)
+    save("started")
+    try:
+        code = run(cmd, tag)
+    except (subprocess.TimeoutExpired, OSError) as exc:
+        save("reconciliation_required", error=type(exc).__name__)
+        print(f"{tag}: reconciliation required ({type(exc).__name__})", flush=True)
+    else:
+        save("succeeded" if code == 0 else "reconciliation_required", returncode=code)
 
 
 def main():
@@ -58,14 +93,16 @@ def main():
         # finestre strette: se il server era spento all'ora giusta, il giro salta (meglio un giorno fermo che un doppio ordine)
         k_eq = f"eq:{now_r.date()}"
         if now_r.weekday() < 5 and (22, 35) <= (now_r.hour, now_r.minute) < (23, 15) and k_eq not in done:
-            mark_done(done, k_eq)                       # segnato PRIMA di partire: un crash a meta' non rilancia
-            run(["sh", "run_daily.sh"], "daily")
+            run_slot(done, k_eq, ["sh", "run_daily.sh"], "daily")
         k_cr = f"cr:{now_u.date()}:{now_u.hour}"
         if now_u.hour % 4 == 0 and 5 <= now_u.minute < 35 and k_cr not in done:
-            mark_done(done, k_cr)
-            run([sys.executable, "crypto_live.py", "--mode", "paper"], "crypto")
+            run_slot(done, k_cr, [sys.executable, "crypto_live.py", "--mode", "paper"], "crypto")
         time.sleep(20)
 
 
 if __name__ == "__main__":
-    main()
+    import fcntl
+    os.makedirs(os.path.dirname(STATE), exist_ok=True)
+    with open(STATE + ".lock", "a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        main()
