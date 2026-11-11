@@ -445,7 +445,7 @@ dati ─► 6 strategie giornaliere ─► quote ─► leva 2x ─┐
 
 ## 11. Quinta tornata: dieci analisti sul rendimento
 
-Dieci analisti indipendenti, ognuno con un mandato e una cartella in [`research/v5/v5/`](../research/v5/v5/), hanno provato circa 1.800 varianti in più. Il criterio comune è aritmetico: con N trade indipendenti l'anno, guadagno medio R̄ e deviazione σ per trade (in multipli del rischio), la crescita massima è N·(R̄/σ)²/2. **Per il 30% al mese serve N·(R̄/σ)² = 6,3.** Tutto SIMULATO.
+Dieci analisti indipendenti, ognuno con un mandato e una cartella in [`research/v5/v5/`](../research/v5/v5/), hanno provato circa 1.700 varianti in più. Il criterio comune è aritmetico: con N trade indipendenti l'anno, guadagno medio R̄ e deviazione σ per trade (in multipli del rischio), la crescita massima è N·(R̄/σ)²/2. **Per il 30% al mese serve N·(R̄/σ)² = 6,3.** Tutto SIMULATO.
 
 ### 11.1 Che cosa ha trovato ciascuno
 
@@ -493,7 +493,7 @@ Forzando il rischio sui trade a 11x fino a un mese **medio** del 30% (12% di ris
 
 ### 11.4 Il fondo rifatto
 
-Statistiche mensili, aprile 2018 – ottobre 2026, con le correzioni di 11.2 ([`sintesi/fondo_v5.out`](../research/v5/v5/sintesi/fondo_v5.out)). Monte Carlo a tre anni; "metà vantaggio" va letto come scenario centrale, dopo oltre 2.600 varianti provate.
+Statistiche mensili, aprile 2018 – ottobre 2026, con le correzioni di 11.2 ([`sintesi/fondo_v5.out`](../research/v5/v5/sintesi/fondo_v5.out)). Monte Carlo a tre anni; "metà vantaggio" va letto come scenario centrale, dopo circa 2.500 varianti provate.
 
 | Profilo | Sharpe (tutto \| verifica) | CAGR lordo | Mese mediano | Caduta massima giornaliera | Mese composto: base / metà vantaggio | P(caduta ≥ 50%) a metà vantaggio |
 |---|---|---:|---:|---:|---|---:|
