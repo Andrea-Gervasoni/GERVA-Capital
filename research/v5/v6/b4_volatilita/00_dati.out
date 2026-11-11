@@ -1,0 +1,36 @@
+^VIX       1990-01-02 2026-11-10 n=9285 last=19.46
+^VIX3M     2006-07-17 2026-11-10 n=5113 last=20.64
+^VIX9D     2011-01-04 2026-11-10 n=3987 last=18.54
+^VIX6M     2008-01-02 2026-11-10 n=4745 last=21.99
+^VVIX      2007-01-03 2026-11-10 n=4987 last=96.63
+^SKEW      1990-01-02 2026-11-10 n=9209 last=151.12
+^GSPC      1970-01-02 2026-11-10 n=14337 last=7520.93
+^SP500TR   1988-01-04 2026-11-10 n=9788 last=16882.61
+SPY        1993-01-29 2026-11-10 n=8504 last=749.92
+VXX        2018-01-25 2026-11-10 n=2211 last=18.93
+VIXY       2011-01-04 2026-11-10 n=3987 last=18.16
+SVXY       2011-10-04 2026-11-10 n=3798 last=58.50
+UVXY       2011-10-04 2026-11-10 n=3798 last=18.28
+VIXM       2011-01-04 2026-11-10 n=3987 last=13.22
+VXZ        2018-01-25 2026-11-10 n=2211 last=46.58
+ZIV        ERR https://query2.finance.yahoo.com/v8/finance/chart/ZIV?period1=0&period2=4102444800&interva
+XIV        ERR https://query2.finance.yahoo.com/v8/finance/chart/XIV?period1=0&period2=4102444800&interva
+^PUT       1996-08-02 2026-11-10 n=7610 last=3671.65
+^BXM       ERR index 0 is out of bounds for axis 0 with size 0
+^BXMD      ERR index 0 is out of bounds for axis 0 with size 0
+^VPD       2026-11-10 2026-11-10 n=1 last=1062.05
+^VPN       2026-11-10 2026-11-10 n=1 last=849.35
+^SVRO      ERR index 0 is out of bounds for axis 0 with size 0
+^PPUT      ERR index 0 is out of bounds for axis 0 with size 0
+^CLL       ERR index 0 is out of bounds for axis 0 with size 0
+^WPUT      ERR index 0 is out of bounds for axis 0 with size 0
+^BFLY      ERR index 0 is out of bounds for axis 0 with size 0
+^CNDR      ERR index 0 is out of bounds for axis 0 with size 0
+^SPVXSTR   ERR https://query2.finance.yahoo.com/v8/finance/chart/%5ESPVXSTR?period1=0&period2=4102444800&
+^SPVXSP    ERR index 0 is out of bounds for axis 0 with size 0
+^SPVXMP    ERR index 0 is out of bounds for axis 0 with size 0
+^VSTOXX    ERR https://query2.finance.yahoo.com/v8/finance/chart/%5EVSTOXX?period1=0&period2=4102444800&i
+^STOXX50E  2007-03-30 2026-11-11 n=4919 last=6393.39
+^IRX       1970-01-02 2026-11-10 n=14228 last=4.11
+^SHORTVOL  2005-12-20 2026-11-10 n=5235 last=1698.61
+^VXX       ERR index 0 is out of bounds for axis 0 with size 0

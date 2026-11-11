@@ -1,0 +1,50 @@
+(63649, 12) 2004-03-26 00:00:00 2026-11-10 00:00:00 1.0
+trade_date
+2004    11
+2005    13
+2006    21
+2007    21
+2008    22
+2009    20
+2010    20
+2011    21
+2012    21
+2013    21
+2014    21
+2015    21
+2016    21
+2017    21
+2018    21
+2019    23
+2020    21
+2021    21
+2022    21
+2023    21
+2024    21
+2025    21
+2026    19
+Name: ym, dtype: int64
+BXM      2002-03-22 2026-11-10 n=6197 cols=['bxm']
+BXMD     1986-06-20 2026-11-10 n=10171 cols=['bxmd']
+PUT      1991-03-04 2026-11-10 n=5003 cols=['put']
+PPUT     1986-06-30 2026-11-10 n=10165 cols=['pput']
+CLL      2008-08-26 2026-11-10 n=4540 cols=['cll']
+WPUT     2006-01-31 2026-11-10 n=5225 cols=['wput']
+BFLY     1986-06-20 2026-11-10 n=10171 cols=['bfly']
+CNDR     1986-06-20 2026-11-10 n=10171 cols=['cndr']
+VPD      2007-11-16 2026-11-10 n=4770 cols=['vpd']
+VPN      2008-06-04 2026-11-10 n=4634 cols=['vpn']
+SVRO     ERR https://cdn-api.cboe.com/api/global/us_indices/daily_prices/SVRO_History.csv: HT
+BXMW     2012-06-29 2026-11-10 n=3609 cols=['bxmw']
+CMBO     1986-06-30 2026-11-10 n=10165 cols=['cmbo']
+PUTY     1986-06-30 2026-11-10 n=10167 cols=['puty']
+BXY      1988-06-01 2026-11-10 n=9679 cols=['bxy']
+VXTH     2006-03-31 2026-11-10 n=5183 cols=['vxth']
+LOVOL    2006-03-21 2026-11-10 n=5191 cols=['open', 'high', 'low', 'close']
+VSTG     ERR https://cdn-api.cboe.com/api/global/us_indices/daily_prices/VSTG_History.csv: HT
+SPRO     2005-12-21 2026-11-10 n=5253 cols=['open', 'high', 'low', 'close']
+PPUT3M   2004-03-19 2026-11-10 n=5697 cols=['pput3m']
+VIX      1990-01-02 2026-11-10 n=9313 cols=['open', 'high', 'low', 'close']
+VIX1D    2022-05-13 2026-11-10 n=1128 cols=['open', 'high', 'low', 'close']
+SPVXSP   2026-09-28 2026-11-10 n=32 cols=['spvxsp']
+SPVXSTR  ERR https://cdn-api.cboe.com/api/global/us_indices/daily_prices/SPVXSTR_History.csv:

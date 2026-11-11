@@ -1,0 +1,46 @@
+giorni 1026 2023-06-13 2026-04-03 | prezzi fino a 2026-10-31
+                                 segnale coin  lag  S_tutto  S_sel  S_ver      t     IC  gg_in_pos  cambi_anno
+0   con HLP: segno della posizione netta  BTC    0   -0.862 -1.793  0.365 -1.445 -0.026      0.305      67.302
+1   con HLP: z-score 30g della posizione  BTC    0    0.078 -0.286  0.541  0.128  0.013      0.296      85.387
+2                 con HLP: variazione 1g  BTC    0   -0.603 -1.201  0.188 -1.010 -0.015      0.304     199.609
+3      con HLP: netto di tutte le monete  BTC    0   -0.646 -1.946  1.070 -1.083 -0.034      0.305      40.595
+4         con HLP: z 30g di posizione/OI  BTC    0   -0.241 -0.424 -0.008 -0.398  0.013      0.296      86.852
+5   con HLP: segno della posizione netta  BTC    1   -0.273 -0.885  0.537 -0.457 -0.001      0.304      67.368
+6   con HLP: z-score 30g della posizione  BTC    1    1.235  1.475  0.932  2.039  0.043      0.296      85.472
+7                 con HLP: variazione 1g  BTC    1   -0.065 -0.151  0.050 -0.108  0.015      0.304     199.804
+8      con HLP: netto di tutte le monete  BTC    1   -0.728 -1.555  0.360 -1.220 -0.015      0.304      40.635
+9         con HLP: z 30g di posizione/OI  BTC    1    0.601  0.946  0.164  0.992  0.029      0.296      86.940
+10  con HLP: segno della posizione netta  ETH    0   -0.708 -1.817  0.336 -1.186 -0.035      0.305      75.137
+11  con HLP: z-score 30g della posizione  ETH    0   -1.233 -1.059 -1.411 -2.037 -0.032      0.296      89.784
+12                con HLP: variazione 1g  ETH    0   -0.795 -1.160 -0.460 -1.331 -0.040      0.304     201.748
+13     con HLP: netto di tutte le monete  ETH    0   -0.400 -1.190  0.347 -0.670 -0.028      0.305      40.595
+14        con HLP: z 30g di posizione/OI  ETH    0   -1.090 -1.034 -1.156 -1.800 -0.032      0.296      86.852
+15  con HLP: segno della posizione netta  ETH    1   -0.791 -0.560 -1.023 -1.325 -0.001      0.304      75.210
+16  con HLP: z-score 30g della posizione  ETH    1   -0.741 -0.237 -1.212 -1.223  0.010      0.296      89.508
+17                con HLP: variazione 1g  ETH    1   -1.096 -0.518 -1.666 -1.835 -0.011      0.304     201.588
+18     con HLP: netto di tutte le monete  ETH    1   -0.477 -1.248  0.248 -0.799 -0.015      0.304      40.635
+19        con HLP: z 30g di posizione/OI  ETH    1   -0.755  0.137 -1.584 -1.247  0.002      0.296      86.573
+20  con HLP: segno della posizione netta  SOL    0   -0.813 -2.074  0.805 -1.362 -0.056      0.305      77.985
+21  con HLP: z-score 30g della posizione  SOL    0   -1.140 -1.425 -0.789 -1.883 -0.037      0.296      94.548
+22                con HLP: variazione 1g  SOL    0    0.534  0.903  0.059  0.895  0.052      0.304     212.441
+23     con HLP: netto di tutte le monete  SOL    0   -0.941 -2.006  0.423 -1.577 -0.043      0.305      40.595
+24        con HLP: z 30g di posizione/OI  SOL    0   -0.743 -0.424 -1.137 -1.228 -0.036      0.296      98.213
+25  con HLP: segno della posizione netta  SOL    1   -1.710 -2.421 -0.802 -2.865 -0.082      0.304      77.705
+26  con HLP: z-score 30g della posizione  SOL    1   -0.584 -1.061 -0.007 -0.965 -0.041      0.296      94.643
+27                con HLP: variazione 1g  SOL    1   -0.236  0.028 -0.577 -0.396  0.005      0.304     212.292
+28     con HLP: netto di tutte le monete  SOL    1   -1.028 -2.151  0.408 -1.721 -0.040      0.304      40.635
+29        con HLP: z 30g di posizione/OI  SOL    1   -0.065 -0.086 -0.040 -0.107 -0.032      0.296      97.945
+
+prove contate: 30 (x2 se si conta anche il verso opposto: lo Sharpe del verso "contro HLP" e' circa il negativo meno i costi)
+media |Sharpe verifica| =0.62 ; quota di segni concordi selezione/verifica = 0.50
+
+migliori 3 in SELEZIONE (lag 0) e loro verifica:
+                                 segnale coin  S_sel  S_ver      t
+22                con HLP: variazione 1g  SOL  0.903  0.059  0.895
+1   con HLP: z-score 30g della posizione  BTC -0.286  0.541  0.128
+4         con HLP: z 30g di posizione/OI  BTC -0.424 -0.008 -0.398
+
+rendimento medio a 24h (bp) per quintile dello z-score 30g della posizione HLP (giorno dopo):
+BTC {0: 14.2, 1: 13.5, 2: 7.0, 3: -4.1, 4: 24.3} n 996
+ETH {0: 32.7, 1: 36.0, 2: -15.6, 3: -2.7, 4: -15.5} n 996
+SOL {0: 88.9, 1: 23.0, 2: -54.9, 3: 40.8, 4: 17.5} n 996

@@ -1,0 +1,86 @@
+=== TEST 1: corto ST (peso 1 = nozionale pari al capitale; perdita del 96% il 5/2/2018 se non filtrato) ===
+Esecuzione base: segnale alla chiusura d, eseguito al settle d+1. Costi 20 pb per lato + roll 1,9 pb/giorno.
+                                             Sharpe tutto/scelta/verifica   CAGR tutto/scelta/verifica   maxDD   giorno peggiore   settimana peggiore   finestre di crisi
+sempre corto | in backw. piatto              Sh  0.43/ 0.40/ 0.56  CAGR  -4.8%/ -8.7%/+14.1%  DD -99.3%  g.peggiore -96.1%  sett. -96.6%  feb18 -95.9% ago15 -39.4% mar20 -85.4% ago24 -52.6% 
+F1<F2 (contango futures) | in backw. piatto  Sh  0.34/ 0.36/ 0.24  CAGR  -6.7%/ -7.3%/ -3.7%  DD -99.2%  g.peggiore -96.1%  sett. -96.7%  feb18 -96.7% ago15 -22.8% mar20 -26.1% ago24 -52.6% 
+F1<F2 (contango futures) | in backw. lungo   Sh  0.11/ 0.18/-0.19  CAGR -23.9%/-21.8%/-32.6%  DD -100.0%  g.peggiore -96.1%  sett. -97.6%  feb18 -97.5% ago15  -8.5% mar20 +166.8% ago24 -52.6% 
+VIX<ST (base positiva) | in backw. piatto    Sh  0.54/ 0.59/ 0.28  CAGR +14.9%/+18.2%/ +1.7%  DD -76.9%  g.peggiore -39.0%  sett. -40.4%  feb18 -14.4% ago15 -22.8% mar20 -17.8% ago24  +0.0% 
+VIX<ST (base positiva) | in backw. lungo     Sh  0.33/ 0.45/-0.21  CAGR  -1.7%/ +7.1%/-32.6%  DD -97.5%  g.peggiore -39.0%  sett. -44.3%  feb18 +25.0% ago15  -8.5% mar20 +227.1% ago24 +55.8% 
+VIX<ST e F1<F2 | in backw. piatto            Sh  0.52/ 0.57/ 0.28  CAGR +14.0%/+16.9%/ +2.2%  DD -74.4%  g.peggiore -39.0%  sett. -40.4%  feb18 -14.4% ago15 -22.8% mar20 -17.8% ago24  +0.0% 
+VIX<ST e F1<F2 | in backw. lungo             Sh  0.27/ 0.38/-0.21  CAGR  -5.5%/ +2.1%/-32.6%  DD -98.2%  g.peggiore -39.0%  sett. -44.3%  feb18 +25.0% ago15  -8.5% mar20 +227.1% ago24 +55.8% 
+VIX/VIX3M<0.85 | in backw. piatto            Sh -0.08/ 0.03/-0.56  CAGR  -4.9%/ -2.5%/-14.9%  DD -83.0%  g.peggiore -19.1%  sett. -25.1%  feb18  +0.0% ago15  +0.0% mar20  +0.0% ago24  +0.0% 
+VIX/VIX3M<0.85 | in backw. lungo             Sh -0.58/-0.48/-1.04  CAGR -48.4%/-44.6%/-62.2%  DD -100.0%  g.peggiore -26.0%  sett. -38.6%  feb18 +66.8% ago15 +48.9% mar20 +368.3% ago24 +55.8% 
+VIX/VIX3M<0.90 | in backw. piatto            Sh  0.27/ 0.33/-0.04  CAGR  +2.6%/ +5.2%/ -8.2%  DD -83.8%  g.peggiore -27.7%  sett. -28.1%  feb18  +0.0% ago15 -10.2% mar20  +0.0% ago24  +0.0% 
+VIX/VIX3M<0.90 | in backw. lungo             Sh -0.21/-0.11/-0.65  CAGR -32.7%/-27.9%/-50.4%  DD -100.0%  g.peggiore -27.7%  sett. -44.3%  feb18 +66.8% ago15 +21.5% mar20 +368.3% ago24 +55.8% 
+VIX/VIX3M<0.95 | in backw. piatto            Sh  0.41/ 0.42/ 0.36  CAGR  -1.7%/ -3.3%/ +5.4%  DD -99.2%  g.peggiore -96.1%  sett. -96.7%  feb18 -96.7% ago15 -22.8% mar20 -17.8% ago24  +0.0% 
+VIX/VIX3M<0.95 | in backw. lungo             Sh  0.16/ 0.21/-0.10  CAGR -20.9%/-19.5%/-26.8%  DD -100.0%  g.peggiore -96.1%  sett. -97.6%  feb18 -97.5% ago15  -8.5% mar20 +227.1% ago24 +55.8% 
+VIX/VIX3M<1.00 | in backw. piatto            Sh  0.40/ 0.45/ 0.18  CAGR  -4.2%/ -2.9%/ -9.9%  DD -98.8%  g.peggiore -96.1%  sett. -96.7%  feb18 -96.7% ago15 -22.8% mar20 -26.1% ago24 -60.2% 
+VIX/VIX3M<1.00 | in backw. lungo             Sh  0.25/ 0.36/-0.26  CAGR -16.0%/-10.6%/-36.2%  DD -99.9%  g.peggiore -96.1%  sett. -97.6%  feb18 -97.5% ago15  -8.5% mar20 +166.8% ago24 -67.8% 
+
+NB i CAGR a peso 1 sono indicativi: un corto 1x perde tutto o quasi in un giorno come il 5/2/2018 (ST +96%, massimo +102%).
+
+Migliore per Sharpe sul periodo di scelta: ('VIX<ST (base positiva)', 'piatto') 0.59
+
+--- robustezza del migliore ---
+                                             Sharpe tutto/scelta/verifica   CAGR tutto/scelta/verifica   maxDD   giorno peggiore   settimana peggiore   finestre di crisi
+lag0 (stessa chiusura, ottimistico)          Sh  0.44/ 0.55/-0.09  CAGR  +9.2%/+15.8%/-15.4%  DD -82.3%  g.peggiore -39.0%  sett. -43.5%  feb18  -0.2% ago15 -10.2% mar20  -0.2% ago24  +0.0% 
+base (lag1)                                  Sh  0.54/ 0.59/ 0.28  CAGR +14.9%/+18.2%/ +1.7%  DD -76.9%  g.peggiore -39.0%  sett. -40.4%  feb18 -14.4% ago15 -22.8% mar20 -17.8% ago24  +0.0% 
+lag2 (un giorno in piu')                     Sh  0.35/ 0.31/ 0.57  CAGR  -6.0%/-10.6%/+16.8%  DD -99.1%  g.peggiore -96.3%  sett. -96.3%  feb18 -96.3% ago15 -42.5% mar20 -26.1% ago24  +0.0% 
+costi x2                                     Sh  0.38/ 0.43/ 0.10  CAGR  +5.7%/ +8.6%/ -6.4%  DD -81.6%  g.peggiore -39.0%  sett. -40.4%  feb18 -14.8% ago15 -23.0% mar20 -17.9% ago24  +0.0% 
+t-stat rendimento medio giornaliero: 2.45   giorni in posizione: 81%
+per anno: 2006:+44%  2007:-42%  2008:-7%  2009:+100%  2010:+117%  2011:-30%  2012:+123%  2013:+50%  2014:-17%  2015:-8%  2016:+177%  2017:+81%  2018:-41%  2019:+53%  2020:-27%  2021:+37%  2022:-40%  2023:+150%  2024:-61%  2025:+21%  2026:-11%
+controllo di troncamento: OK (il segnale usa solo le chiusure del giorno d)
+
+--- strumenti reali: SVXY comprato e tenuto / con lo stesso filtro (prezzi 16:00, quindi il 5-6/2/2018 e' spalmato su due giorni) ---
+                                             Sharpe tutto/scelta/verifica   CAGR tutto/scelta/verifica   maxDD   giorno peggiore   settimana peggiore   finestre di crisi
+SVXY reale sempre                            Sh  0.56/ 0.55/ 0.69  CAGR +12.1%/ +9.6%/+19.7%  DD -95.2%  g.peggiore -83.0%  sett. -92.1%  feb18 -91.1% ago15 -39.0% mar20 -59.2% ago24 -27.3% 
+SVXY reale con filtro migliore               Sh  0.73/ 0.81/ 0.47  CAGR +23.5%/+29.1%/ +8.5%  DD -48.4%  g.peggiore -19.2%  sett. -25.8%  feb18 -13.3% ago15 -23.4% mar20  -9.5% ago24  +0.0% 
+ricostruito -ST sempre, stesso periodo       Sh  0.53/ 0.52/ 0.56  CAGR  -1.8%/ -6.7%/+14.1%  DD -99.3%  g.peggiore -96.1%  sett. -96.6%  feb18 -95.9% ago15 -39.4% mar20 -85.4% ago24 -52.6% 
+
+=== TEST 2: rischio definito ===
+(a) taglia: peso w tale che ST +100% in un giorno costi x% del capitale -> w = x. Stesso Sharpe, tutto scalato.
+                                             Sharpe tutto/scelta/verifica   CAGR tutto/scelta/verifica   maxDD   giorno peggiore   settimana peggiore   finestre di crisi
+filtro migliore, w=0.05                      Sh  0.54/ 0.59/ 0.28  CAGR  +1.4%/ +1.6%/ +0.6%  DD  -6.5%  g.peggiore  -1.9%  sett.  -2.0%  feb18  -0.7% ago15  -1.2% mar20  -0.9% ago24  +0.0% 
+filtro migliore, w=0.10                      Sh  0.54/ 0.59/ 0.28  CAGR  +2.7%/ +3.1%/ +1.2%  DD -12.7%  g.peggiore  -3.9%  sett.  -4.1%  feb18  -1.4% ago15  -2.4% mar20  -1.8% ago24  +0.0% 
+filtro migliore, w=0.20                      Sh  0.54/ 0.59/ 0.28  CAGR  +5.2%/ +5.9%/ +2.2%  DD -23.9%  g.peggiore  -7.8%  sett.  -8.2%  feb18  -2.9% ago15  -4.8% mar20  -3.6% ago24  +0.0% 
+filtro migliore, w=0.30                      Sh  0.54/ 0.59/ 0.28  CAGR  +7.5%/ +8.5%/ +3.0%  DD -33.9%  g.peggiore -11.7%  sett. -12.2%  feb18  -4.3% ago15  -7.2% mar20  -5.3% ago24  +0.0% 
+
+(b) stop intragiornaliero sull'indice ST: se il massimo del giorno supera +s% dal settle precedente si chiude; rientro dopo k giorni se il filtro lo consente.
+    'allo stop' = eseguito al livello +0,5% (cio' che la barra giornaliera lascia credere); 'al massimo' = eseguito al prezzo peggiore del giorno (stress).
+                                             Sharpe tutto/scelta/verifica   CAGR tutto/scelta/verifica   maxDD   giorno peggiore   settimana peggiore   finestre di crisi
+stop +10% pausa 1g allo stop                 Sh  0.40/ 0.52/-0.13  CAGR  +7.8%/+14.0%/-15.7%  DD -88.4%  g.peggiore -10.9%  sett. -24.6%  feb18 -10.9% ago15 -10.7% mar20 -10.7% ago24  +0.0% 
+stop +10% pausa 1g AL MASSIMO                Sh -0.05/ 0.06/-0.57  CAGR -17.5%/-12.5%/-36.4%  DD -99.8%  g.peggiore -39.8%  sett. -44.2%  feb18 -15.2% ago15 -10.3% mar20 -21.2% ago24  +0.0% 
+stop +10% pausa 5g allo stop                 Sh  0.30/ 0.35/ 0.03  CAGR  +2.8%/ +5.4%/ -8.0%  DD -92.7%  g.peggiore -10.9%  sett. -24.6%  feb18 -10.9% ago15 -10.7% mar20 -10.7% ago24  +0.0% 
+stop +10% pausa 5g AL MASSIMO                Sh -0.12/-0.06/-0.42  CAGR -19.6%/-17.2%/-29.1%  DD -99.8%  g.peggiore -39.8%  sett. -44.2%  feb18 -15.2% ago15 -10.3% mar20 -21.2% ago24  +0.0% 
+stop +15% pausa 1g allo stop                 Sh  0.42/ 0.50/ 0.05  CAGR  +8.6%/+13.1%/ -9.3%  DD -82.3%  g.peggiore -15.7%  sett. -28.3%  feb18 -14.4% ago15 -22.8% mar20 -15.7% ago24  +0.0% 
+stop +15% pausa 1g AL MASSIMO                Sh  0.25/ 0.32/-0.10  CAGR  -2.3%/ +1.5%/-17.6%  DD -96.6%  g.peggiore -39.8%  sett. -44.2%  feb18 -14.4% ago15 -22.8% mar20 -21.2% ago24  +0.0% 
+stop +15% pausa 5g allo stop                 Sh  0.38/ 0.45/ 0.08  CAGR  +6.5%/+10.0%/ -7.7%  DD -85.8%  g.peggiore -15.9%  sett. -26.5%  feb18 -14.4% ago15 -22.8% mar20 -15.7% ago24  +0.0% 
+stop +15% pausa 5g AL MASSIMO                Sh  0.21/ 0.27/-0.08  CAGR  -4.1%/ -1.1%/-16.2%  DD -97.3%  g.peggiore -39.8%  sett. -44.2%  feb18 -14.4% ago15 -22.8% mar20 -21.2% ago24  +0.0% 
+stop +20% pausa 1g allo stop                 Sh  0.47/ 0.53/ 0.17  CAGR +10.9%/+14.7%/ -4.4%  DD -81.7%  g.peggiore -20.7%  sett. -30.3%  feb18 -14.4% ago15 -22.8% mar20 -20.7% ago24  +0.0% 
+stop +20% pausa 1g AL MASSIMO                Sh  0.40/ 0.45/ 0.13  CAGR  +6.2%/ +9.3%/ -6.6%  DD -91.5%  g.peggiore -39.8%  sett. -44.2%  feb18 -14.4% ago15 -22.8% mar20 -21.2% ago24  +0.0% 
+stop +20% pausa 5g allo stop                 Sh  0.46/ 0.52/ 0.15  CAGR +10.4%/+14.2%/ -5.1%  DD -83.6%  g.peggiore -20.7%  sett. -30.3%  feb18 -14.4% ago15 -22.8% mar20 -20.7% ago24  +0.0% 
+stop +20% pausa 5g AL MASSIMO                Sh  0.39/ 0.44/ 0.11  CAGR  +5.7%/ +8.8%/ -7.3%  DD -92.4%  g.peggiore -39.8%  sett. -44.2%  feb18 -14.4% ago15 -22.8% mar20 -21.2% ago24  +0.0% 
+stop +30% pausa 1g allo stop                 Sh  0.51/ 0.56/ 0.28  CAGR +13.2%/+16.0%/ +1.7%  DD -76.9%  g.peggiore -30.7%  sett. -35.7%  feb18 -14.4% ago15 -22.8% mar20 -17.8% ago24  +0.0% 
+stop +30% pausa 1g AL MASSIMO                Sh  0.49/ 0.53/ 0.28  CAGR +11.9%/+14.3%/ +1.7%  DD -76.9%  g.peggiore -39.8%  sett. -44.2%  feb18 -14.4% ago15 -22.8% mar20 -17.8% ago24  +0.0% 
+stop +30% pausa 5g allo stop                 Sh  0.50/ 0.55/ 0.28  CAGR +12.7%/+15.3%/ +1.7%  DD -76.9%  g.peggiore -30.7%  sett. -35.7%  feb18 -14.4% ago15 -22.8% mar20 -17.8% ago24  +0.0% 
+stop +30% pausa 5g AL MASSIMO                Sh  0.48/ 0.52/ 0.28  CAGR +11.3%/+13.6%/ +1.7%  DD -78.7%  g.peggiore -39.8%  sett. -44.2%  feb18 -14.4% ago15 -22.8% mar20 -17.8% ago24  +0.0% 
+
+(c) corto 1 future VIX del mese (stesso moltiplicatore di VXM, 100$) + 1 call VIX lunga sulla stessa scadenza, strike = F0*(1+m). STIMA:
+    call valutata Black-76 con vol = VVIX*(1+0,6*ln(K/F)) (skew crescente delle call VIX), costo 7,5% del premio (min 0,03) per lato. VVIX dal 2007.
+                                             Sharpe tutto/scelta/verifica   CAGR tutto/scelta/verifica   maxDD   giorno peggiore   settimana peggiore   finestre di crisi
+future mensile corto NUDO, sempre            Sh  0.35/ 0.27/ 0.73  CAGR  +nan%/ +nan%/+17.2%  DD -189.4%  g.peggiore -145.2%  sett. -168.2%  feb18 -144.2% ago15 -45.4% mar20 -100.8% ago24 -72.1% 
++ call strike F0*1.2, sempre                 Sh  0.03/ 0.03/ 0.05  CAGR -12.3%/-12.8%/ -9.9%  DD -95.5%  g.peggiore -26.2%  sett. -30.6%  feb18 -14.9% ago15 -19.5% mar20 -39.7% ago24 -17.1% 
++ call strike F0*1.3, sempre                 Sh  0.19/ 0.17/ 0.27  CAGR  -7.1%/ -8.5%/ -1.1%  DD -89.5%  g.peggiore -32.8%  sett. -35.0%  feb18 -23.8% ago15 -23.5% mar20 -43.8% ago24 -23.0% 
++ call strike F0*1.5, sempre                 Sh  0.34/ 0.30/ 0.50  CAGR  -1.5%/ -4.3%/+10.7%  DD -89.3%  g.peggiore -40.3%  sett. -42.1%  feb18 -36.6% ago15 -29.5% mar20 -52.1% ago24 -31.8% 
++ call strike F0*2.0, sempre                 Sh  0.40/ 0.34/ 0.65  CAGR  -3.3%/ -8.1%/+18.9%  DD -92.9%  g.peggiore -68.7%  sett. -74.0%  feb18 -74.1% ago15 -37.6% mar20 -70.9% ago24 -49.3% 
+future mensile corto NUDO, filtro            Sh  0.54/ 0.55/ 0.49  CAGR +14.0%/+14.5%/+12.2%  DD -79.5%  g.peggiore -44.2%  sett. -45.7%  feb18 -17.9% ago15 -25.1% mar20 -20.7% ago24  +0.0% 
++ call strike F0*1.2, filtro                 Sh -0.12/-0.06/-0.41  CAGR -15.6%/-13.4%/-23.8%  DD -97.2%  g.peggiore -26.2%  sett. -30.6%  feb18 -11.8% ago15 -12.0% mar20 -12.0% ago24  +0.0% 
++ call strike F0*1.3, filtro                 Sh  0.06/ 0.11/-0.17  CAGR -10.1%/ -8.2%/-17.5%  DD -93.6%  g.peggiore -32.8%  sett. -35.0%  feb18 -13.7% ago15 -13.6% mar20 -13.8% ago24  +0.0% 
++ call strike F0*1.5, filtro                 Sh  0.23/ 0.26/ 0.08  CAGR  -3.4%/ -2.0%/ -8.8%  DD -88.9%  g.peggiore -40.3%  sett. -42.1%  feb18 -15.6% ago15 -16.3% mar20 -16.3% ago24  +0.0% 
++ call strike F0*2.0, filtro                 Sh  0.36/ 0.38/ 0.27  CAGR  +3.0%/ +3.8%/ -0.4%  DD -83.9%  g.peggiore -44.0%  sett. -45.5%  feb18 -17.5% ago15 -20.2% mar20 -19.2% ago24  +0.0% 
+sensibilita' allo skew (call piu' cara) e stress 'chiuso al massimo del giorno' per il caso filtro + call 1,3:
+skew 0.3                                     Sh  0.20/ 0.24/-0.01  CAGR  -3.6%/ -1.6%/-11.3%  DD -87.2%  g.peggiore -32.5%  sett. -34.6%  feb18 -13.6% ago15 -13.2% mar20 -13.2% ago24  +0.0% 
+skew 1.0                                     Sh -0.14/-0.09/-0.40  CAGR -18.8%/-17.0%/-25.7%  DD -98.7%  g.peggiore -33.2%  sett. -35.5%  feb18 -13.8% ago15 -14.2% mar20 -14.6% ago24  +0.0% 
+premio call x1,5 (approx: skew 1,5)          Sh -0.41/-0.35/-0.71  CAGR -29.3%/-27.7%/-35.6%  DD -99.9%  g.peggiore -33.8%  sett. -36.3%  feb18 -14.0% ago15 -15.0% mar20 -15.6% ago24  +0.0% 
+
+varianti: {'T1 corto ST con filtro': 15, 'T2a taglia': 4, 'T2b stop': 16, 'T2c call': 13}

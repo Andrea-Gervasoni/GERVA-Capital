@@ -1,0 +1,65 @@
+^NDX       1985-10-01 -> 2026-11-10 n=10358 last=27740.79
+^GSPC      1970-01-02 -> 2026-11-10 n=14337 last=7520.93
+^IXIC      1971-02-05 -> 2026-11-10 n=14059 last=25065.87
+QQQ        1999-03-10 -> 2026-11-10 n=6962 last=674.76
+SPY        1993-01-29 -> 2026-11-10 n=8504 last=749.92
+TQQQ       2010-02-11 -> 2026-11-10 n=4213 last=56.56
+UPRO       2009-06-25 -> 2026-11-10 n=4372 last=136.37
+SSO        2006-06-21 -> 2026-11-10 n=5130 last=66.37
+QLD        2006-06-21 -> 2026-11-10 n=5130 last=78.20
+SPXL       2008-11-05 -> 2026-11-10 n=4531 last=261.05
+TLT        2002-07-30 -> 2026-11-10 n=6111 last=80.88
+TMF        2009-04-16 -> 2026-11-10 n=4421 last=29.06
+UBT        2010-01-21 -> 2026-11-10 n=4228 last=14.42
+IEF        2002-07-30 -> 2026-11-10 n=6111 last=91.01
+GLD        2004-11-18 -> 2026-11-10 n=5529 last=369.36
+UGL        2008-12-03 -> 2026-11-10 n=4512 last=42.43
+GC=F       2000-08-30 -> 2026-11-10 n=6575 last=4030.20
+^IRX       1970-01-02 -> 2026-11-10 n=14228 last=4.11
+^GDAXI     1987-12-30 -> 2026-11-11 n=9830 last=26662.77
+^VIX       1990-01-02 -> 2026-11-10 n=9285 last=19.46
+SHY        2002-07-30 -> 2026-11-10 n=6111 last=81.32
+BIL        2007-05-30 -> 2026-11-10 n=4895 last=91.49
+QQQ3.MI    2014-04-23 -> 2026-11-11 n=3132 last=318.16
+QQQ3.L     2012-12-13 -> 2026-11-11 n=3515 last=353.07
+3USL.L     2012-12-13 -> 2026-11-11 n=3515 last=176.74
+3USL.MI    2014-05-02 -> 2026-11-11 n=3009 last=159.32
+LQQ.PA     2009-01-02 -> 2026-11-11 n=4571 last=9.05
+CL2.PA     2009-06-16 -> 2026-11-11 n=4457 last=33.26
+DBPG.DE    2010-03-18 -> 2026-11-11 n=4228 last=316.60
+XS2L.DE    ERRORE https://query2.finance.yahoo.com/v8/finance/chart/XS2L.DE?period1=0&period2=4102
+5QQQ.L     2021-12-14 -> 2026-11-11 n=811 last=126.15
+QQQ5.L     2021-12-10 -> 2026-11-11 n=1241 last=1.67
+5SPY.L     2021-12-14 -> 2026-11-11 n=1237 last=346.10
+SPY5.L     2012-03-19 -> 2026-11-11 n=3700 last=760.47
+3DEL.L     2012-12-13 -> 2026-11-11 n=3515 last=29.50
+3DEL.MI    2013-11-12 -> 2026-11-11 n=3267 last=29.50
+LQQ3.L     2012-12-13 -> 2026-11-11 n=3494 last=26599.00
+3LUS.L     2012-12-13 -> 2026-11-11 n=3494 last=13306.50
+XS2D.L     2010-03-18 -> 2026-11-11 n=4207 last=351.80
+18MF.DE    2010-03-04 -> 2026-11-11 n=4182 last=33.20
+LVE.PA     2008-01-02 -> 2026-11-11 n=4826 last=86.97
+DAXLEV.PA  ERRORE https://query2.finance.yahoo.com/v8/finance/chart/DAXLEV.PA?period1=0&period2=41
+L8I7.DE    2020-12-04 -> 2026-11-11 n=1510 last=9.04
+QQQ3.DE    ERRORE https://query2.finance.yahoo.com/v8/finance/chart/QQQ3.DE?period1=0&period2=4102
+3QQQ.L     2022-06-06 -> 2026-11-11 n=1122 last=2524.00
+5QQE.L     2021-12-14 -> 2026-11-10 n=810 last=1.31
+QQQ5.MI    ERRORE https://query2.finance.yahoo.com/v8/finance/chart/QQQ5.MI?period1=0&period2=4102
+3TYL.MI    2014-12-17 -> 2026-11-11 n=3022 last=60.59
+3GOL.MI    2012-12-20 -> 2026-11-11 n=3515 last=101.23
+3GOL.L     2012-12-20 -> 2026-11-11 n=3510 last=112.20
+3TYL.L     2014-12-17 -> 2026-11-11 n=2985 last=5059.50
+EQQQ.L     2009-01-02 -> 2026-11-11 n=4511 last=52315.00
+EQQQ.MI    2008-01-02 -> 2026-11-11 n=4788 last=626.53
+CSSPX.MI   2010-05-19 -> 2026-11-11 n=4188 last=740.60
+SXR8.DE    2010-05-19 -> 2026-11-11 n=4188 last=740.56
+EURUSD=X   2003-12-01 -> 2026-11-11 n=5954 last=1.11
+GBPUSD=X   2003-12-01 -> 2026-11-11 n=5966 last=1.33
+VUSTX      1986-05-19 -> 2026-11-10 n=10199 last=7.39
+VFINX      1980-01-02 -> 2026-11-10 n=11811 last=694.65
+VBMFX      1986-12-11 -> 2026-11-10 n=10055 last=9.37
+VWESX      1980-01-02 -> 2026-11-10 n=11811 last=7.10
+RYOCX      1994-02-14 -> 2026-11-10 n=8240 last=103.05
+FRED DTB3 ERRORE https://fred.stlouisfed.org/graph/fredgraph.csv?id=DTB3: The read operation time
+FRED DGS10 ERRORE https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10: The read operation tim
+FRED DGS30 ERRORE https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS30: The read operation tim

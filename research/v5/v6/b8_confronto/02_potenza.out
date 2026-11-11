@@ -1,0 +1,93 @@
+=== 1. Quanti giorni di paper in parallelo servono (test appaiato sulla differenza di Sharpe) ===
+formula (Jobson-Korkie/Memmel, termine dominante): anni = (z_alfa + z_potenza)^2 * 2(1 - rho) / Delta^2 ; rho = correlazione giornaliera
+  [unilaterale 5%] B_cassa_in_tbill vs LEG_v3_1x: rho 0.66  Delta 0.5:  17.0 anni =   6197 giorni | Delta 1.0:   4.2 anni =   1549 giorni
+  [unilaterale 5%] B2_debito_reale vs LEG_v3_1x: rho 0.66  Delta 0.5:  17.0 anni =   6195 giorni | Delta 1.0:   4.2 anni =   1549 giorni
+  [unilaterale 5%] C1_mtm_limiti vs LEG_v3_1x: rho 0.77  Delta 0.5:  11.4 anni =   4171 giorni | Delta 1.0:   2.9 anni =   1043 giorni
+  [unilaterale 5%] C3_mtm_limiti_debito_reale vs LEG_v33_leva15: rho 0.76  Delta 0.5:  11.9 anni =   4330 giorni | Delta 1.0:   3.0 anni =   1082 giorni
+  [unilaterale 5%] B2_debito_reale vs LEG_v33_leva15: rho 0.67  Delta 0.5:  16.3 anni =   5957 giorni | Delta 1.0:   4.1 anni =   1489 giorni
+  [unilaterale 5%] rho ipotetica 0.0: Delta 0.5 ->  18053 giorni ; Delta 1.0 ->   4513 giorni
+  [unilaterale 5%] rho ipotetica 0.5: Delta 0.5 ->   9027 giorni ; Delta 1.0 ->   2257 giorni
+  [unilaterale 5%] rho ipotetica 0.9: Delta 0.5 ->   1805 giorni ; Delta 1.0 ->    451 giorni
+  [unilaterale 10% (z > 1,28)] B_cassa_in_tbill vs LEG_v3_1x: rho 0.66  Delta 0.5:  12.4 anni =   4519 giorni | Delta 1.0:   3.1 anni =   1130 giorni
+  [unilaterale 10% (z > 1,28)] B2_debito_reale vs LEG_v3_1x: rho 0.66  Delta 0.5:  12.4 anni =   4517 giorni | Delta 1.0:   3.1 anni =   1129 giorni
+  [unilaterale 10% (z > 1,28)] C1_mtm_limiti vs LEG_v3_1x: rho 0.77  Delta 0.5:   8.3 anni =   3041 giorni | Delta 1.0:   2.1 anni =    760 giorni
+  [unilaterale 10% (z > 1,28)] C3_mtm_limiti_debito_reale vs LEG_v33_leva15: rho 0.76  Delta 0.5:   8.6 anni =   3157 giorni | Delta 1.0:   2.2 anni =    789 giorni
+  [unilaterale 10% (z > 1,28)] B2_debito_reale vs LEG_v33_leva15: rho 0.67  Delta 0.5:  11.9 anni =   4343 giorni | Delta 1.0:   3.0 anni =   1086 giorni
+  [unilaterale 10% (z > 1,28)] rho ipotetica 0.0: Delta 0.5 ->  13163 giorni ; Delta 1.0 ->   3291 giorni
+  [unilaterale 10% (z > 1,28)] rho ipotetica 0.5: Delta 0.5 ->   6581 giorni ; Delta 1.0 ->   1645 giorni
+  [unilaterale 10% (z > 1,28)] rho ipotetica 0.9: Delta 0.5 ->   1316 giorni ; Delta 1.0 ->    329 giorni
+  differenza minima rilevabile (80% potenza, 5%): 30g: 7.2 90g: 4.1 180g: 2.9 365g: 2.1 730g: 1.5 (unita' di Sharpe annuo, rho 0,66)
+
+=== 1b. Verifica per simulazione (bootstrap a blocchi della coppia storica, media del nuovo fondo spostata per avere Delta esatto) ===
+  Delta vera 0.0,    90 giorni: P(z > 1,645) = 0.06   P(z > 1,3) = 0.10
+  Delta vera 0.0,   365 giorni: P(z > 1,645) = 0.03   P(z > 1,3) = 0.07
+  Delta vera 0.0,  1500 giorni: P(z > 1,645) = 0.03   P(z > 1,3) = 0.08
+  Delta vera 0.0,  6000 giorni: P(z > 1,645) = 0.03   P(z > 1,3) = 0.07
+  Delta vera 0.5,    90 giorni: P(z > 1,645) = 0.12   P(z > 1,3) = 0.20
+  Delta vera 0.5,   365 giorni: P(z > 1,645) = 0.16   P(z > 1,3) = 0.26
+  Delta vera 0.5,  1500 giorni: P(z > 1,645) = 0.35   P(z > 1,3) = 0.51
+  Delta vera 0.5,  6000 giorni: P(z > 1,645) = 0.83   P(z > 1,3) = 0.91
+  Delta vera 1.0,    90 giorni: P(z > 1,645) = 0.23   P(z > 1,3) = 0.33
+  Delta vera 1.0,   365 giorni: P(z > 1,645) = 0.36   P(z > 1,3) = 0.51
+  Delta vera 1.0,  1500 giorni: P(z > 1,645) = 0.85   P(z > 1,3) = 0.92
+  Delta vera 1.0,  6000 giorni: P(z > 1,645) = 1.00   P(z > 1,3) = 1.00
+
+=== 1c. La differenza misurata nel backtest e' essa stessa significativa? ===
+  B_cassa_in_tbill - LEG_v3_1x [tutto]: Delta Sharpe +0.34, errore standard 0.28, z +1.21
+  B_cassa_in_tbill - LEG_v3_1x [verifica]: Delta Sharpe +0.23, errore standard 0.41, z +0.57
+  B2_debito_reale - LEG_v3_1x [tutto]: Delta Sharpe +0.37, errore standard 0.28, z +1.29
+  B2_debito_reale - LEG_v3_1x [verifica]: Delta Sharpe +0.26, errore standard 0.40, z +0.65
+  C1_mtm_limiti - LEG_v3_1x [tutto]: Delta Sharpe +0.14, errore standard 0.23, z +0.59
+  C1_mtm_limiti - LEG_v3_1x [verifica]: Delta Sharpe -0.00, errore standard 0.32, z -0.01
+  C3_mtm_limiti_debito_reale - LEG_v33_leva15 [tutto]: Delta Sharpe +0.38, errore standard 0.24, z +1.62
+  C3_mtm_limiti_debito_reale - LEG_v33_leva15 [verifica]: Delta Sharpe +0.29, errore standard 0.32, z +0.90
+  B2_debito_reale - LEG_v33_leva15 [tutto]: Delta Sharpe +0.54, errore standard 0.28, z +1.93
+  B2_debito_reale - LEG_v33_leva15 [verifica]: Delta Sharpe +0.45, errore standard 0.39, z +1.15
+
+=== 2. Lo screenshot: conto 1.089.666 EUR, +2,89% dal 6/11; S&P 500 +2,31%; il distacco (0,58 punti) tutto l'11/11 ===
+  valore di partenza implicito 1,059,059 EUR; distacco 0.58% = 6,143 EUR
+  beta apparente: fino al 10/11 il conto ha fatto come l'indice -> beta ~ 1.00 (se il salto dell'11/11 e' specifico); se invece e' tutto beta: 1.25
+  modello riespresso LEG_v3_1x (ultimi 12 mesi, giorni di borsa): beta su SPY 0.48, vol 11.3%, vol residua 9.6% (0.60% al giorno)
+  modello riespresso LEG_v33_leva15 (ultimi 12 mesi, giorni di borsa): beta su SPY 1.10, vol 24.0%, vol residua 19.6% (1.23% al giorno)
+  SPY ultimi 12 mesi: vol 12.6% (0.79% al giorno)
+  probabilita' di un distacco >= 0,58 punti SENZA alcuna abilita' (alfa 0), per ipotesi di errore di replica (vol residua annua) e giorni:
+    vol residua 5%: 1g: z 1.84 P 3% | 3g: z 1.06 P 14% | 5g: z 0.82 P 21%
+    vol residua 10%: 1g: z 0.92 P 18% | 3g: z 0.53 P 30% | 5g: z 0.41 P 34%
+    vol residua 15%: 1g: z 0.61 P 27% | 3g: z 0.35 P 36% | 5g: z 0.27 P 39%
+    vol residua 20%: 1g: z 0.46 P 32% | 3g: z 0.27 P 40% | 5g: z 0.21 P 42%
+    vol residua 25%: 1g: z 0.37 P 36% | 3g: z 0.21 P 42% | 5g: z 0.16 P 43%
+  con beta 1,25 e alfa zero il distacco ATTESO e' 0.58%: lo stesso numero senza alcuna abilita'
+  z dell'informazione sull'alfa annuo: per avere z = 2 con vol residua 15% servirebbe un alfa di 213% l'anno sostenuto per 5 giorni
+  giorni necessari per distinguere il conto dall'S&P (alfa vero 5% / 10% l'anno, vol residua 15%, 80% potenza, 5%): 56 anni / 14 anni
+
+=== 3. Regole 'battere GERVA Capital': quante volte passano (finestre da bootstrap a blocchi; 4000 finestre) ===
+  B2_debito_reale contro LEG_v3_1x  (Sharpe storico 1.51 contro 1.14)
+    nessun vantaggio vero (Sharpe uguali)   90g: A (rende di piu' e caduta <= 1,5x) 48% | B (z > 1,3) 12% | A e z > 0 46% | sconfitta netta (z < -1,3) 4%
+    nessun vantaggio vero (Sharpe uguali)  180g: A (rende di piu' e caduta <= 1,5x) 48% | B (z > 1,3) 10% | A e z > 0 46% | sconfitta netta (z < -1,3) 5%
+    nessun vantaggio vero (Sharpe uguali)  365g: A (rende di piu' e caduta <= 1,5x) 50% | B (z > 1,3) 8% | A e z > 0 47% | sconfitta netta (z < -1,3) 5%
+    meta' del vantaggio del backtest        90g: A (rende di piu' e caduta <= 1,5x) 53% | B (z > 1,3) 15% | A e z > 0 51% | sconfitta netta (z < -1,3) 3%
+    meta' del vantaggio del backtest       180g: A (rende di piu' e caduta <= 1,5x) 55% | B (z > 1,3) 13% | A e z > 0 53% | sconfitta netta (z < -1,3) 3%
+    meta' del vantaggio del backtest       365g: A (rende di piu' e caduta <= 1,5x) 61% | B (z > 1,3) 14% | A e z > 0 58% | sconfitta netta (z < -1,3) 3%
+    vantaggio del backtest                  90g: A (rende di piu' e caduta <= 1,5x) 56% | B (z > 1,3) 17% | A e z > 0 55% | sconfitta netta (z < -1,3) 3%
+    vantaggio del backtest                 180g: A (rende di piu' e caduta <= 1,5x) 62% | B (z > 1,3) 18% | A e z > 0 60% | sconfitta netta (z < -1,3) 2%
+    vantaggio del backtest                 365g: A (rende di piu' e caduta <= 1,5x) 68% | B (z > 1,3) 19% | A e z > 0 65% | sconfitta netta (z < -1,3) 2%
+  C3_mtm_limiti_debito_reale contro LEG_v33_leva15  (Sharpe storico 1.36 contro 0.97)
+    nessun vantaggio vero (Sharpe uguali)   90g: A (rende di piu' e caduta <= 1,5x) 46% | B (z > 1,3) 9% | A e z > 0 40% | sconfitta netta (z < -1,3) 12%
+    nessun vantaggio vero (Sharpe uguali)  180g: A (rende di piu' e caduta <= 1,5x) 49% | B (z > 1,3) 8% | A e z > 0 43% | sconfitta netta (z < -1,3) 11%
+    nessun vantaggio vero (Sharpe uguali)  365g: A (rende di piu' e caduta <= 1,5x) 52% | B (z > 1,3) 9% | A e z > 0 47% | sconfitta netta (z < -1,3) 11%
+    meta' del vantaggio del backtest        90g: A (rende di piu' e caduta <= 1,5x) 54% | B (z > 1,3) 11% | A e z > 0 47% | sconfitta netta (z < -1,3) 9%
+    meta' del vantaggio del backtest       180g: A (rende di piu' e caduta <= 1,5x) 59% | B (z > 1,3) 12% | A e z > 0 53% | sconfitta netta (z < -1,3) 8%
+    meta' del vantaggio del backtest       365g: A (rende di piu' e caduta <= 1,5x) 61% | B (z > 1,3) 15% | A e z > 0 55% | sconfitta netta (z < -1,3) 6%
+    vantaggio del backtest                  90g: A (rende di piu' e caduta <= 1,5x) 58% | B (z > 1,3) 14% | A e z > 0 52% | sconfitta netta (z < -1,3) 6%
+    vantaggio del backtest                 180g: A (rende di piu' e caduta <= 1,5x) 65% | B (z > 1,3) 17% | A e z > 0 60% | sconfitta netta (z < -1,3) 5%
+    vantaggio del backtest                 365g: A (rende di piu' e caduta <= 1,5x) 73% | B (z > 1,3) 22% | A e z > 0 68% | sconfitta netta (z < -1,3) 3%
+  B_cassa_in_tbill contro LEG_v3_1x  (Sharpe storico 1.49 contro 1.14)
+    nessun vantaggio vero (Sharpe uguali)   90g: A (rende di piu' e caduta <= 1,5x) 42% | B (z > 1,3) 14% | A e z > 0 39% | sconfitta netta (z < -1,3) 4%
+    nessun vantaggio vero (Sharpe uguali)  180g: A (rende di piu' e caduta <= 1,5x) 36% | B (z > 1,3) 13% | A e z > 0 34% | sconfitta netta (z < -1,3) 3%
+    nessun vantaggio vero (Sharpe uguali)  365g: A (rende di piu' e caduta <= 1,5x) 31% | B (z > 1,3) 13% | A e z > 0 30% | sconfitta netta (z < -1,3) 3%
+    meta' del vantaggio del backtest        90g: A (rende di piu' e caduta <= 1,5x) 43% | B (z > 1,3) 17% | A e z > 0 40% | sconfitta netta (z < -1,3) 3%
+    meta' del vantaggio del backtest       180g: A (rende di piu' e caduta <= 1,5x) 39% | B (z > 1,3) 17% | A e z > 0 38% | sconfitta netta (z < -1,3) 2%
+    meta' del vantaggio del backtest       365g: A (rende di piu' e caduta <= 1,5x) 33% | B (z > 1,3) 20% | A e z > 0 32% | sconfitta netta (z < -1,3) 2%
+    vantaggio del backtest                  90g: A (rende di piu' e caduta <= 1,5x) 48% | B (z > 1,3) 21% | A e z > 0 46% | sconfitta netta (z < -1,3) 2%
+    vantaggio del backtest                 180g: A (rende di piu' e caduta <= 1,5x) 43% | B (z > 1,3) 22% | A e z > 0 42% | sconfitta netta (z < -1,3) 2%
+    vantaggio del backtest                 365g: A (rende di piu' e caduta <= 1,5x) 37% | B (z > 1,3) 27% | A e z > 0 37% | sconfitta netta (z < -1,3) 1%

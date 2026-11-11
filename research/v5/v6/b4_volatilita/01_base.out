@@ -1,0 +1,15 @@
+ST valido dal 2004-05-19 al 2026-11-10  buchi: 48
+MT valido dal 2006-10-24  buchi: 202
+ST lungo: CAGR -46.9%  MT lungo: CAGR -13.3%  (roll yield negativo = premio pagato da chi compra)
+scadenze fuori standard (archivio): [('2004-07', datetime.date(2004, 7, 14), datetime.date(2004, 7, 21)), ('2004-10', datetime.date(2004, 10, 13), datetime.date(2004, 10, 20))]
+  2018-02-02 ST  +14.0% (max  +14.8%)  ^SHORTVOL  -13.7%  SVXY  -13.2%  VIXY  +13.6%  UVXY  +27.4%  VIX  +28.5%
+  2018-02-05 ST  +96.1% (max +101.8%)  ^SHORTVOL  -30.1%  SVXY  -32.0%  VIXY  +34.2%  UVXY  +66.2%  VIX +115.6%
+  2018-02-06 ST  -26.0% (max   +0.1%)  ^SHORTVOL   -0.7%  SVXY  -83.0%  VIXY   -3.2%  UVXY  -33.4%  VIX  -19.7%
+  2015-08-21 ST  +14.1% (max  +14.2%)  ^SHORTVOL  -15.2%  SVXY  -16.3%  VIXY  +16.6%  UVXY  +33.6%  VIX  +46.4%
+  2015-08-24 ST  +25.4% (max  +36.3%)  ^SHORTVOL  -17.9%  SVXY  -18.8%  VIXY  +17.9%  UVXY  +36.7%  VIX  +45.3%
+  2020-03-12 ST  +20.4% (max  +29.0%)  ^SHORTVOL  -21.9%  SVXY  -11.9%  VIXY  +24.0%  UVXY  +34.8%  VIX  +40.0%
+  2020-03-16 ST  +34.9% (max  +43.4%)  ^SHORTVOL  -41.6%  SVXY  -19.5%  VIXY  +39.1%  UVXY  +57.5%  VIX  +43.0%
+  2024-08-05 ST  +42.4% (max  +64.3%)  ^SHORTVOL  -42.1%  SVXY  -21.4%  VIXY  +43.1%  UVXY  +58.3%  VIX  +64.9%
+VIXY vs ricostruito: corr 0.950  CAGR etn -48.4%  mio -48.5%  (differenza = commissioni ETN + chiusura 16:00 contro settle 16:15)
+VIXM vs ricostruito: corr 0.940  CAGR etn -18.2%  mio -18.5%  (differenza = commissioni ETN + chiusura 16:00 contro settle 16:15)
+VXX vs ricostruito: corr 0.933  CAGR etn -40.4%  mio -41.5%  (differenza = commissioni ETN + chiusura 16:00 contro settle 16:15)

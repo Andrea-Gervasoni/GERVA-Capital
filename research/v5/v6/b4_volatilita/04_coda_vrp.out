@@ -1,0 +1,96 @@
+=== TEST 4: coda lunga finanziata dal carry ===
+(i) corto ST + lungo h x MT (la curva: si incassa il roll del tratto breve, si tiene convessita' sul tratto medio)
+                                             Sharpe tutto/scelta/verifica   CAGR tutto/scelta/verifica   maxDD   giorno peggiore   settimana peggiore   finestre di crisi
+-ST + 0.0 MT | sempre                        Sh  0.41/ 0.37/ 0.56  CAGR  -7.3%/-12.0%/+14.1%  DD -99.3%  g.peggiore -96.1%  sett. -96.6%  feb18 -95.9% ago15 -39.4% mar20 -85.4% ago24 -52.6% 
+-ST + 0.5 MT | sempre                        Sh  0.40/ 0.38/ 0.47  CAGR  +2.5%/ +0.6%/+10.3%  DD -94.2%  g.peggiore -82.9%  sett. -84.7%  feb18 -82.2% ago15 -33.6% mar20 -74.9% ago24 -44.3% 
+-ST + 1.0 MT | sempre                        Sh  0.37/ 0.38/ 0.32  CAGR  +4.8%/ +5.0%/ +4.1%  DD -83.7%  g.peggiore -69.6%  sett. -72.3%  feb18 -68.9% ago15 -27.6% mar20 -58.7% ago24 -35.5% 
+-ST + 2.0 MT | sempre                        Sh  0.10/ 0.20/-0.40  CAGR  -1.9%/ +1.3%/-13.4%  DD -92.1%  g.peggiore -43.1%  sett. -46.4%  feb18 -44.3% ago15 -15.1% mar20  +1.1% ago24 -16.6% 
+-ST + 0.0 MT | filtro VIX<ST                 Sh  0.55/ 0.61/ 0.28  CAGR +15.8%/+19.6%/ +1.7%  DD -76.9%  g.peggiore -39.0%  sett. -40.4%  feb18 -14.4% ago15 -22.8% mar20 -17.8% ago24  +0.0% 
+-ST + 0.5 MT | filtro VIX<ST                 Sh  0.45/ 0.52/ 0.13  CAGR +10.3%/+13.7%/ -2.4%  DD -69.1%  g.peggiore -30.6%  sett. -32.3%  feb18 -12.4% ago15 -20.1% mar20 -15.4% ago24  +0.0% 
+-ST + 1.0 MT | filtro VIX<ST                 Sh  0.27/ 0.35/-0.09  CAGR  +3.4%/ +6.3%/ -7.3%  DD -59.1%  g.peggiore -22.3%  sett. -24.4%  feb18 -10.4% ago15 -17.3% mar20 -13.1% ago24  +0.0% 
+-ST + 2.0 MT | filtro VIX<ST                 Sh -0.51/-0.42/-0.89  CAGR -13.1%/-11.6%/-18.9%  DD -96.6%  g.peggiore -11.6%  sett. -13.5%  feb18  -6.4% ago15 -11.6% mar20  -8.5% ago24  +0.0% 
+
+(ii) lungo volatilita' puro come assicurazione (costo del premio visto dal lato di chi lo paga)
+                                             Sharpe tutto/scelta/verifica   CAGR tutto/scelta/verifica   maxDD   giorno peggiore   settimana peggiore   finestre di crisi
+lungo ST sempre                              Sh -0.54/-0.50/-0.70  CAGR -47.2%/-46.1%/-51.8%  DD -100.0%  g.peggiore -26.0%  sett. -38.6%  feb18 +66.8% ago15 +48.9% mar20 +368.3% ago24 +55.8% 
+lungo MT sempre                              Sh -0.41/-0.31/-0.87  CAGR -17.4%/-15.2%/-25.4%  DD -99.1%  g.peggiore -15.5%  sett. -19.6%  feb18 +19.0% ago15 +14.5% mar20 +126.6% ago24 +20.3% 
+lungo ST solo in backwardation (VIX>ST)      Sh -0.07/ 0.05/-0.54  CAGR -13.8%/ -8.3%/-33.7%  DD -98.5%  g.peggiore -26.0%  sett. -38.6%  feb18 +45.9% ago15 +18.5% mar20 +297.6% ago24 +55.8% 
+lungo ST se VIX/VIX3M>1                      Sh -0.18/-0.03/-0.93  CAGR -11.9%/ -7.1%/-29.5%  DD -97.3%  g.peggiore -26.2%  sett. -38.8%  feb18 -25.6% ago15 +18.5% mar20 +261.0% ago24 -19.1% 
+
+(iii) effetto sul fondo esistente (2018-04 -> 2026-10): fondo + x * gamba di volatilita' (rendimenti giornalieri di calendario)
+[C1_mtm_limiti] da solo: Sharpe 1.43 CAGR +26.8% DD -16.5%  mar20 -8.1%  ago24 -3.7%
+   + 0.05 x lungo ST sempre        Sharpe 1.36 (scelta 1.57 / verifica 1.19)  CAGR +24.4% DD -16.8%  corr gamba-fondo -0.26
+   + 0.15 x lungo ST sempre        Sharpe 1.06 (scelta 1.21 / verifica 0.91)  CAGR +19.2% DD -21.8%  corr gamba-fondo -0.26
+   + 0.05 x lungo MT sempre        Sharpe 1.43 (scelta 1.67 / verifica 1.24)  CAGR +26.3% DD -15.8%  corr gamba-fondo -0.22
+   + 0.15 x lungo MT sempre        Sharpe 1.39 (scelta 1.70 / verifica 1.12)  CAGR +25.2% DD -18.6%  corr gamba-fondo -0.22
+   + 0.05 x lungo ST in backw.     Sharpe 1.39 (scelta 1.60 / verifica 1.22)  CAGR +25.7% DD -16.2%  corr gamba-fondo -0.12
+   + 0.15 x lungo ST in backw.     Sharpe 1.24 (scelta 1.46 / verifica 1.04)  CAGR +23.3% DD -19.6%  corr gamba-fondo -0.12
+   + 0.05 x corto ST filtro        Sharpe 1.41 (scelta 1.57 / verifica 1.27)  CAGR +27.5% DD -19.5%  corr gamba-fondo +0.23
+   + 0.15 x corto ST filtro        Sharpe 1.30 (scelta 1.39 / verifica 1.21)  CAGR +28.7% DD -25.0%  corr gamba-fondo +0.23
+   + 0.05 x -ST+1MT filtro         Sharpe 1.40 (scelta 1.58 / verifica 1.25)  CAGR +26.8% DD -18.2%  corr gamba-fondo +0.23
+   + 0.15 x -ST+1MT filtro         Sharpe 1.31 (scelta 1.47 / verifica 1.17)  CAGR +26.8% DD -21.4%  corr gamba-fondo +0.23
+   + 0.05 x -ST+2MT sempre         Sharpe 1.45 (scelta 1.69 / verifica 1.24)  CAGR +27.5% DD -17.8%  corr gamba-fondo +0.14
+   + 0.15 x -ST+2MT sempre         Sharpe 1.45 (scelta 1.78 / verifica 1.15)  CAGR +29.0% DD -20.1%  corr gamba-fondo +0.14
+[C3_mtm_limiti_debito_reale] da solo: Sharpe 1.43 CAGR +55.0% DD -31.0%  mar20 -16.0%  ago24 -7.3%
+   + 0.05 x lungo ST sempre        Sharpe 1.41 (scelta 1.61 / verifica 1.24)  CAGR +52.3% DD -28.9%  corr gamba-fondo -0.26
+   + 0.15 x lungo ST sempre        Sharpe 1.30 (scelta 1.51 / verifica 1.13)  CAGR +46.5% DD -32.9%  corr gamba-fondo -0.26
+   + 0.05 x lungo MT sempre        Sharpe 1.43 (scelta 1.64 / verifica 1.26)  CAGR +54.5% DD -29.9%  corr gamba-fondo -0.23
+   + 0.15 x lungo MT sempre        Sharpe 1.43 (scelta 1.68 / verifica 1.21)  CAGR +53.3% DD -30.3%  corr gamba-fondo -0.23
+   + 0.05 x lungo ST in backw.     Sharpe 1.42 (scelta 1.61 / verifica 1.25)  CAGR +53.7% DD -30.5%  corr gamba-fondo -0.12
+   + 0.15 x lungo ST in backw.     Sharpe 1.36 (scelta 1.58 / verifica 1.18)  CAGR +50.9% DD -31.8%  corr gamba-fondo -0.12
+   + 0.05 x corto ST filtro        Sharpe 1.42 (scelta 1.60 / verifica 1.28)  CAGR +55.7% DD -33.5%  corr gamba-fondo +0.24
+   + 0.15 x corto ST filtro        Sharpe 1.38 (scelta 1.52 / verifica 1.26)  CAGR +56.7% DD -38.2%  corr gamba-fondo +0.24
+   + 0.05 x -ST+1MT filtro         Sharpe 1.42 (scelta 1.60 / verifica 1.27)  CAGR +54.9% DD -32.4%  corr gamba-fondo +0.23
+   + 0.15 x -ST+1MT filtro         Sharpe 1.38 (scelta 1.55 / verifica 1.23)  CAGR +54.6% DD -35.1%  corr gamba-fondo +0.23
+   + 0.05 x -ST+2MT sempre         Sharpe 1.44 (scelta 1.65 / verifica 1.26)  CAGR +55.8% DD -32.0%  corr gamba-fondo +0.14
+   + 0.15 x -ST+2MT sempre         Sharpe 1.45 (scelta 1.72 / verifica 1.22)  CAGR +57.5% DD -34.0%  corr gamba-fondo +0.14
+
+=== TEST 5: VRP (implicita meno realizzata) come filtro ===
+VRP medio 3.5 punti di vol; positivo il 83% dei giorni
+
+(a) leva sull'indice (S&P 500 TR in eccesso sul T-bill; via future MES/ETF UCITS). Segnale alla chiusura d, eseguito alla chiusura d+1, 2 pb per cambio.
+                                             Sharpe tutto/scelta/verifica   CAGR tutto/scelta/verifica   maxDD   giorno peggiore   settimana peggiore   finestre di crisi
+indice 1x sempre                             Sh  0.55/ 0.47/ 1.05  CAGR  +9.2%/ +7.7%/+15.5%  DD -56.2%  g.peggiore -12.0%  sett. -18.3%  feb18  -7.1% ago15  -6.7% mar20 -28.1% ago24  -5.2% 
+riferimento: vol-target 10% (max 2x)         Sh  0.63/ 0.60/ 0.77  CAGR  +6.7%/ +6.3%/ +8.2%  DD -25.5%  g.peggiore  -5.3%  sett.  -9.6%  feb18  -6.9% ago15  -7.1% mar20 -10.5% ago24  -3.6% 
+VRP>0: leva 1 se vero, 0 se falso            Sh  0.59/ 0.58/ 0.68  CAGR  +8.5%/ +8.5%/ +8.7%  DD -28.6%  g.peggiore -12.0%  sett. -16.6%  feb18  -7.1% ago15  -6.7% mar20 -23.8% ago24  -5.2% 
+VRP>0: leva 2 se vero, 0 se falso            Sh  0.59/ 0.58/ 0.68  CAGR +14.8%/+14.5%/+16.0%  DD -53.6%  g.peggiore -24.0%  sett. -31.9%  feb18 -14.2% ago15 -13.3% mar20 -44.8% ago24 -10.2% 
+VRP>0: leva 2 se vero, 1 se falso            Sh  0.60/ 0.54/ 0.88  CAGR +15.5%/+13.7%/+23.2%  DD -71.4%  g.peggiore -24.0%  sett. -30.6%  feb18 -14.2% ago15 -13.3% mar20 -47.9% ago24 -10.2% 
+VRP>mediana 252g: leva 1 se vero, 0 se falso Sh  0.38/ 0.32/ 0.81  CAGR  +3.9%/ +3.2%/ +6.7%  DD -34.3%  g.peggiore -12.0%  sett. -16.3%  feb18  -7.1% ago15  +0.0% mar20 -18.6% ago24  -0.4% 
+VRP>mediana 252g: leva 2 se vero, 0 se falso Sh  0.38/ 0.32/ 0.81  CAGR  +6.4%/ +4.8%/+13.1%  DD -59.3%  g.peggiore -24.0%  sett. -31.5%  feb18 -14.2% ago15  +0.0% mar20 -35.7% ago24  -0.9% 
+VRP>mediana 252g: leva 2 se vero, 1 se falso Sh  0.54/ 0.45/ 1.07  CAGR +11.8%/ +9.4%/+22.4%  DD -72.5%  g.peggiore -24.0%  sett. -28.1%  feb18 -14.2% ago15  -6.7% mar20 -43.2% ago24  -5.6% 
+VIX/VIX3M<1: leva 1 se vero, 0 se falso      Sh  0.49/ 0.40/ 0.90  CAGR  +6.1%/ +4.9%/+11.2%  DD -39.0%  g.peggiore  -5.9%  sett. -10.2%  feb18  -6.2% ago15  -5.2% mar20  -6.3% ago24  -6.2% 
+VIX/VIX3M<1: leva 2 se vero, 0 se falso      Sh  0.49/ 0.40/ 0.90  CAGR +10.2%/ +7.7%/+21.6%  DD -64.8%  g.peggiore -11.8%  sett. -19.7%  feb18 -12.1% ago15 -10.3% mar20 -12.4% ago24 -12.1% 
+VIX/VIX3M<1: leva 2 se vero, 1 se falso      Sh  0.56/ 0.47/ 1.02  CAGR +13.5%/+10.6%/+26.3%  DD -73.6%  g.peggiore -12.0%  sett. -19.6%  feb18 -13.1% ago15 -11.7% mar20 -32.7% ago24 -11.1% 
+VIX9D<VIX: leva 1 se vero, 0 se falso        Sh  0.62/ 0.53/ 0.97  CAGR  +5.8%/ +4.8%/+10.2%  DD -17.3%  g.peggiore  -5.9%  sett.  -7.6%  feb18  +0.0% ago15  -5.2% mar20  -6.3% ago24  +1.0% 
+VIX9D<VIX: leva 2 se vero, 0 se falso        Sh  0.62/ 0.53/ 0.97  CAGR +10.8%/ +8.7%/+20.0%  DD -32.5%  g.peggiore -11.8%  sett. -14.9%  feb18  +0.0% ago15 -10.3% mar20 -12.4% ago24  +2.0% 
+VIX9D<VIX: leva 2 se vero, 1 se falso        Sh  0.71/ 0.62/ 1.09  CAGR +14.7%/+12.2%/+25.8%  DD -39.0%  g.peggiore -12.0%  sett. -18.3%  feb18  -7.1% ago15 -11.7% mar20 -32.7% ago24  -4.2% 
+VIX<20: leva 1 se vero, 0 se falso           Sh  0.41/ 0.34/ 0.67  CAGR  +3.5%/ +2.7%/ +7.0%  DD -23.4%  g.peggiore  -4.1%  sett.  -9.9%  feb18  -4.5% ago15  -9.0% mar20  -6.3% ago24  -6.2% 
+VIX<20: leva 2 se vero, 0 se falso           Sh  0.41/ 0.34/ 0.67  CAGR  +6.2%/ +4.6%/+13.1%  DD -42.6%  g.peggiore  -8.2%  sett. -19.1%  feb18  -9.1% ago15 -17.4% mar20 -12.4% ago24 -12.1% 
+VIX<20: leva 2 se vero, 1 se falso           Sh  0.57/ 0.49/ 0.95  CAGR +12.0%/ +9.7%/+22.1%  DD -62.7%  g.peggiore -12.0%  sett. -19.8%  feb18 -11.6% ago15 -15.3% mar20 -32.7% ago24 -11.1% 
+leva continua = VRP/4 limitata 0-2           Sh  0.48/ 0.44/ 0.68  CAGR  +8.8%/ +7.9%/+12.6%  DD -40.9%  g.peggiore -24.0%  sett. -27.3%  feb18 -10.4% ago15  -7.6% mar20 -37.7% ago24  -2.7% 
+
+(b) filtro sulla gamba EQ-MR esistente (research/v5/series.parquet, 2018 -> 2026; rendimento della gamba, non pesato)
+                                             Sharpe tutto/scelta/verifica   CAGR tutto/scelta/verifica   maxDD   giorno peggiore   settimana peggiore   finestre di crisi
+EQ-MR com'e'                                 Sh  0.94/ 1.06/ 0.74  CAGR +12.1%/+15.5%/ +7.9%  DD -17.0%  g.peggiore  -6.1%  sett.  -9.8%  feb18  -5.5% ago15  +nan% mar20 +18.2% ago24  -4.9% 
+solo se VRP>0 (lag0)                         Sh  0.98/ 1.16/ 0.71  CAGR +11.3%/+14.6%/ +7.2%  DD -12.0%  g.peggiore  -6.1%  sett.  -8.2%  feb18  -5.5% ago15  +nan% mar20 +18.2% ago24  -4.9%  | media/g acceso +5.5 pb (n=1830) spento +2.0 pb (n=392)  t diff +0.69
+solo se NON VRP>0 (lag0)                     Sh  0.15/ 0.14/ 0.20  CAGR  +0.7%/ +0.8%/ +0.6%  DD -15.8%  g.peggiore  -4.2%  sett. -10.7%  feb18  +0.0% ago15  +nan% mar20  -0.0% ago24  +0.0% 
+solo se VRP>0 (lag1)                         Sh  0.83/ 0.92/ 0.69  CAGR  +9.2%/+10.9%/ +7.0%  DD -17.1%  g.peggiore  -6.1%  sett.  -8.4%  feb18  -5.5% ago15  +nan% mar20 +11.1% ago24  -4.9%  | media/g acceso +4.5 pb (n=1830) spento +6.5 pb (n=392)  t diff -0.36
+solo se NON VRP>0 (lag1)                     Sh  0.44/ 0.53/ 0.26  CAGR  +2.7%/ +4.1%/ +0.9%  DD -12.5%  g.peggiore  -4.2%  sett.  -9.8%  feb18  +0.0% ago15  +nan% mar20  +6.4% ago24  +0.0% 
+solo se VRP>mediana 252g (lag0)              Sh  0.88/ 1.01/ 0.67  CAGR  +7.2%/ +9.5%/ +4.2%  DD  -9.7%  g.peggiore  -4.8%  sett.  -6.9%  feb18  -5.5% ago15  +nan% mar20 +11.2% ago24  -2.1%  | media/g acceso +7.9 pb (n=808) spento +3.2 pb (n=1414)  t diff +1.28
+solo se NON VRP>mediana 252g (lag0)          Sh  0.49/ 0.53/ 0.43  CAGR  +4.6%/ +5.5%/ +3.6%  DD -16.3%  g.peggiore  -6.1%  sett.  -9.8%  feb18  +0.0% ago15  +nan% mar20  +6.2% ago24  -2.9% 
+solo se VRP>mediana 252g (lag1)              Sh  0.79/ 0.82/ 0.77  CAGR  +5.6%/ +6.4%/ +4.6%  DD  -7.5%  g.peggiore  -4.8%  sett.  -6.9%  feb18  -5.5% ago15  +nan% mar20  -0.0% ago24  +0.2%  | media/g acceso +6.2 pb (n=808) spento +4.1 pb (n=1414)  t diff +0.59
+solo se NON VRP>mediana 252g (lag1)          Sh  0.60/ 0.73/ 0.38  CAGR  +6.2%/ +8.6%/ +3.2%  DD -13.3%  g.peggiore  -6.1%  sett.  -9.8%  feb18  +0.0% ago15  +nan% mar20 +18.2% ago24  -5.1% 
+solo se VIX/VIX3M<1 (lag0)                   Sh  0.45/ 0.32/ 0.67  CAGR  +3.9%/ +2.9%/ +5.3%  DD -20.6%  g.peggiore  -4.2%  sett.  -9.8%  feb18  -1.1% ago15  +nan% mar20  -0.0% ago24  -2.9%  | media/g acceso +1.9 pb (n=2037) spento +38.3 pb (n=185)  t diff -2.54
+solo se NON VIX/VIX3M<1 (lag0)               Sh  0.89/ 1.20/ 0.37  CAGR  +7.9%/+12.3%/ +2.5%  DD  -8.4%  g.peggiore  -6.1%  sett.  -8.2%  feb18  -4.4% ago15  +nan% mar20 +18.2% ago24  -2.1% 
+solo se VIX/VIX3M<1 (lag1)                   Sh  0.33/ 0.21/ 0.54  CAGR  +2.7%/ +1.6%/ +4.2%  DD -19.9%  g.peggiore  -4.2%  sett.  -9.8%  feb18  -5.1% ago15  +nan% mar20  -1.6% ago24  -5.8%  | media/g acceso +1.4 pb (n=2037) spento +43.6 pb (n=185)  t diff -2.99
+solo se NON VIX/VIX3M<1 (lag1)               Sh  1.02/ 1.34/ 0.50  CAGR  +9.1%/+13.6%/ +3.5%  DD  -9.3%  g.peggiore  -6.1%  sett.  -8.4%  feb18  -0.4% ago15  +nan% mar20 +20.0% ago24  +0.9% 
+solo se VIX9D<VIX (lag0)                     Sh  0.46/ 0.58/ 0.30  CAGR  +3.2%/ +4.2%/ +1.9%  DD -13.0%  g.peggiore  -3.0%  sett.  -4.5%  feb18  +0.0% ago15  +nan% mar20  -0.0% ago24  -3.0%  | media/g acceso +1.8 pb (n=1674) spento +14.3 pb (n=548)  t diff -2.08
+solo se NON VIX9D<VIX (lag0)                 Sh  0.82/ 0.89/ 0.71  CAGR  +8.7%/+10.8%/ +5.9%  DD -10.1%  g.peggiore  -6.1%  sett.  -9.1%  feb18  -5.5% ago15  +nan% mar20 +18.2% ago24  -2.0% 
+solo se VIX9D<VIX (lag1)                     Sh  0.59/ 0.48/ 0.78  CAGR  +4.4%/ +3.7%/ +5.2%  DD -11.0%  g.peggiore  -3.4%  sett.  -4.8%  feb18  +0.0% ago15  +nan% mar20  -1.6% ago24  +0.9%  | media/g acceso +2.4 pb (n=1674) spento +12.5 pb (n=548)  t diff -1.70
+solo se NON VIX9D<VIX (lag1)                 Sh  0.73/ 0.96/ 0.33  CAGR  +7.5%/+11.4%/ +2.5%  DD -12.0%  g.peggiore  -6.1%  sett.  -8.4%  feb18  -5.5% ago15  +nan% mar20 +20.0% ago24  -5.8% 
+solo se VIX<20 (lag0)                        Sh -0.22/-0.49/ 0.04  CAGR  -1.5%/ -2.6%/ +0.0%  DD -18.8%  g.peggiore  -4.1%  sett.  -5.7%  feb18  -5.1% ago15  +nan% mar20  -0.0% ago24  -2.9%  | media/g acceso -0.8 pb (n=1441) spento +15.4 pb (n=781)  t diff -3.50
+solo se NON VIX<20 (lag0)                    Sh  1.16/ 1.32/ 0.90  CAGR +13.8%/+18.6%/ +7.9%  DD -12.2%  g.peggiore  -6.1%  sett.  -9.8%  feb18  -0.4% ago15  +nan% mar20 +18.2% ago24  -2.1% 
+solo se VIX<20 (lag1)                        Sh -0.19/-0.58/ 0.19  CAGR  -1.5%/ -3.4%/ +1.1%  DD -21.5%  g.peggiore  -4.1%  sett.  -5.8%  feb18  -3.0% ago15  +nan% mar20  -1.6% ago24  -5.8%  | media/g acceso -0.8 pb (n=1441) spento +15.3 pb (n=781)  t diff -3.56
+solo se NON VIX<20 (lag1)                    Sh  1.19/ 1.40/ 0.84  CAGR +13.8%/+19.6%/ +6.7%  DD -12.2%  g.peggiore  -6.1%  sett.  -9.8%  feb18  -2.6% ago15  +nan% mar20 +20.0% ago24  +0.9% 
+
+varianti: {'T4 curva': 8, 'T4 lungo vol': 4, 'T4 sul fondo': 24, 'T5 leva indice': 18, 'T5 EQ-MR': 21}

@@ -1,0 +1,24 @@
+  ok   una riga per giorno  [401]
+  ok   rilanciare lo stesso giorno non duplica
+  ok   nuovo_totale = libro + trade
+  ok   rendimenti del nuovo fondo ricostruiti
+  ok   il versamento non conta come rendimento  [scarto 1.1e-12]
+  ok   righe per anno = 365 con righe giornaliere
+  ok   cumulato
+  ok   volatilita' vicina a quella generata  [0.144]
+  ok   caduta massima su percorso noto (1,1 -> 0,55 = -50%)
+  ok   Sharpe con tasso
+  ok   z grezza = t della differenza appaiata
+  ok   correlazione vicina a quella generata  [0.64]
+  ok   differenza di Sharpe: media di 60 repliche entro 3 errori standard dal vero  [media 2.08, vero 2.10, es della media 0.11]
+  ok   dispersione della stima = formula sqrt(2(1-rho)/anni)  [osservata 0.95, formula 0.85]
+  ok   giorni per Delta 1,0 = (1,645+0,842)^2 * 2(1-rho) * 365
+  ok   giorni per Delta 0,5 = 4 volte
+  ok   serie identiche: nessun giorno 'necessario', z non definita
+  ok   falsi positivi di z > 1,3 senza differenza vera tra 4% e 17%  [14%]
+  ok   esito calcolato dopo >= 90 giorni  [BATTE (criterio B: z > 1,3)]
+  ok   prima di 90 giorni l'esito e' IN CORSO
+  ok   letture mancanti non fanno fallire
+  ok   NAV dell'originale da firm.sqlite (nav_marks, pod_zero)
+  ok   il file di Andrea ha la precedenza sul database
+AUTOVERIFICA: tutto ok

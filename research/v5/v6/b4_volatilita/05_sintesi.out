@@ -1,0 +1,39 @@
+colonne disponibili r3: ['T3_VPD_VIX/VIX3M<1', 'T3_VPN_VRP>0(VIX>RV21)', 'T3_VPD_VRP>0(VIX>RV21)', 'T3_VPD_SPX>MM200', 'T3_PUT_sempre', 'T3_VPD_sempre', 'T3_VPN_sempre', 'T3b_spread3_5', 'T3b_spread3_5_ratio', 'SPX_ecc']
+
+                                             Sharpe tutto/scelta/verifica   CAGR tutto/scelta/verifica   maxDD   giorno peggiore   settimana peggiore   finestre di crisi
+K1 corto fut VIX se VIX<ST (1x noz.)         Sh  0.54/ 0.59/ 0.28  CAGR +14.9%/+18.2%/ +1.7%  DD -76.9%  g.peggiore -39.0%  sett. -40.4%  feb18 -14.4% ago15 -22.8% mar20 -17.8% ago24  +0.0%   t=2.5
+K1s idem, un giorno di ritardo (stress)      Sh  0.35/ 0.31/ 0.57  CAGR  -6.0%/-10.6%/+16.8%  DD -99.1%  g.peggiore -96.3%  sett. -96.3%  feb18 -96.3% ago15 -42.5% mar20 -26.1% ago24  +0.0%   t=1.6
+K1c idem, costi x2                           Sh  0.38/ 0.43/ 0.10  CAGR  +5.7%/ +8.6%/ -6.4%  DD -81.6%  g.peggiore -39.0%  sett. -40.4%  feb18 -14.8% ago15 -23.0% mar20 -17.9% ago24  +0.0%   t=1.7
+K0 corto fut VIX sempre (1x noz.)            Sh  0.43/ 0.40/ 0.56  CAGR  -4.8%/ -8.7%/+14.1%  DD -99.3%  g.peggiore -96.1%  sett. -96.6%  feb18 -95.9% ago15 -39.4% mar20 -85.4% ago24 -52.6%   t=2.0
+K2 VPD (indice CBOE) se SPX>MM200            Sh  0.54/ 0.55/ 0.53  CAGR  +7.2%/ +7.3%/ +6.8%  DD -23.4%  g.peggiore -18.3%  sett. -20.1%  feb18 -14.1% ago15  -4.2% mar20 -12.3% ago24 -10.1%   t=2.4
+K2b VPD sempre                               Sh  0.47/ 0.42/ 0.73  CAGR  +8.7%/ +7.6%/+13.3%  DD -62.0%  g.peggiore -31.2%  sett. -40.0%  feb18 -14.1% ago15  -7.4% mar20 -55.5% ago24 -10.1%   t=2.1
+K3 PUT (indice CBOE) sempre                  Sh  0.43/ 0.37/ 0.85  CAGR  +5.1%/ +4.5%/ +8.0%  DD -37.7%  g.peggiore -11.5%  sett. -18.3%  feb18  -5.9% ago15  -4.8% mar20 -26.7% ago24  -4.0%   t=1.9
+K4 put-spread 3% OTM largo 5% (STIMA)        Sh  0.33/ 0.15/ 1.39  CAGR  +1.5%/ +0.6%/ +5.3%  DD -27.7%  g.peggiore  -3.6%  sett.  -6.3%  feb18  -2.9% ago15  -2.2% mar20  -4.2% ago24  -1.2%   t=1.5
+K5 fut+call 1,3 filtro (STIMA)               Sh  0.06/ 0.11/-0.17  CAGR -10.1%/ -8.2%/-17.5%  DD -93.6%  g.peggiore -32.8%  sett. -35.0%  feb18 -13.7% ago15 -13.6% mar20 -13.8% ago24  +0.0%   t=0.3
+SPX in eccesso (riferimento)                 Sh  0.57/ 0.49/ 1.05  CAGR  +9.6%/ +8.3%/+15.5%  DD -56.2%  g.peggiore -12.0%  sett. -18.3%  feb18  -7.1% ago15  -6.7% mar20 -28.1% ago24  -5.2%   t=2.6
+
+=== leva di crescita massima (sul campione intero, rendimenti giornalieri), rendimento mensile composto, P(drawdown>=50% in 3 anni) ===
+                                              L*  mese@L* mese@L*/2 | P(-50%) base L*  L*/2 | meta' vantaggio: mese@L*/2  P(-50%) L*  L*/2 | corr col fondo giorn./mens. (B, C1, C3)
+K1 corto fut VIX se VIX<ST (1x noz.)        0.95   +1.17%    +0.86% |        60%         6% |          +6.77%          72%   12% | +0.33/+0.37 +0.23/+0.32 +0.24/+0.32
+K1s idem, un giorno di ritardo (stress)     0.50   +0.47%    +0.34% |        22%         1% |          +3.12%          27%    1% | +0.35/+0.33 +0.24/+0.28 +0.24/+0.28
+K1c idem, costi x2                          0.70   +0.58%    +0.44% |        37%         2% |          +3.45%          47%    3% | +0.33/+0.37 +0.23/+0.32 +0.24/+0.32
+K0 corto fut VIX sempre (1x noz.)           0.55   +0.72%    +0.54% |        46%         4% |          +5.07%          54%    6% | +0.41/+0.37 +0.26/+0.33 +0.26/+0.33
+K2 VPD (indice CBOE) se SPX>MM200           3.15   +1.13%    +0.82% |        51%         3% |          +6.32%          62%    6% | +0.37/+0.35 +0.24/+0.27 +0.25/+0.27
+K2b VPD sempre                              1.70   +0.86%    +0.63% |        36%         9% |          +6.93%          42%   11% | +0.38/+0.23 +0.22/+0.24 +0.22/+0.24
+K3 PUT (indice CBOE) sempre                 3.00   +0.76%    +0.57% |        39%         4% |          +5.61%          45%    6% | +0.42/+0.38 +0.23/+0.30 +0.23/+0.30
+K4 put-spread 3% OTM largo 5% (STIMA)       6.50   +0.44%    +0.33% |        31%         1% |          +3.23%          38%    2% | +0.36/+0.32 +0.21/+0.23 +0.21/+0.24
+K5 fut+call 1,3 filtro (STIMA)              0.10   +0.01%    +0.01% |         0%         0% |          +0.16%           0%    0% | +0.30/+0.37 +0.21/+0.32 +0.21/+0.32
+SPX in eccesso (riferimento)                2.85   +1.34%    +1.00% |        65%         7% |          +7.03%          74%   13% | +0.47/+0.47 +0.28/+0.34 +0.28/+0.33
+
+Nota: L* e' misurata a posteriori e include il fatto di aver saputo quale giorno peggiore c'e' nel campione. Per K1 il filtro ha evitato il 5/2/2018 per un giorno:
+con un giorno di ritardo (K1s) quel giorno entra per intero (-96%) e L* crolla. La leva prudente va calcolata su K1s, non su K1.
+Vincolo reale: IBKR chiede ~2.500 $ di margine per un VXM corto (~1.900 $ di nozionale): per chi vende, leva sul nozionale <= ~0,75x. STIMA dalla tabella margini IBKR.
+
+=== effetto sul fondo: Sharpe del fondo + x*candidato (2018-04 -> 2026-10) ===
+B_cassa_in_tbill             da solo 1.84 | K1: x=0,1 -> 1.44, migliore x=0.00 -> 1.84 | K2: x=0,1 -> 1.79, migliore x=0.00 -> 1.84 | K2b: x=0,1 -> 1.73, migliore x=0.00 -> 1.84 | K3: x=0,1 -> 1.77, migliore x=0.00 -> 1.84 | K4: x=0,1 -> 1.85, migliore x=0.30 -> 1.85 |
+C1_mtm_limiti                da solo 1.43 | K1: x=0,1 -> 1.36, migliore x=0.00 -> 1.43 | K2: x=0,1 -> 1.45, migliore x=0.20 -> 1.45 | K2b: x=0,1 -> 1.45, migliore x=0.10 -> 1.45 | K3: x=0,1 -> 1.44, migliore x=0.10 -> 1.44 | K4: x=0,1 -> 1.45, migliore x=1.00 -> 1.53 |
+C3_mtm_limiti_debito_reale   da solo 1.43 | K1: x=0,1 -> 1.41, migliore x=0.00 -> 1.43 | K2: x=0,1 -> 1.44, migliore x=0.30 -> 1.45 | K2b: x=0,1 -> 1.44, migliore x=0.20 -> 1.45 | K3: x=0,1 -> 1.44, migliore x=0.30 -> 1.44 | K4: x=0,1 -> 1.44, migliore x=1.00 -> 1.49 |
+(il 'migliore x' e' scelto a posteriori sullo stesso campione: e' un limite superiore, non una stima)
+
+returns.parquet: (7617, 7) 2006-01-03 2026-11-10 (rendimenti netti giornalieri, indice di calendario, senza leva; in eccesso sul T-bill)
+varianti provate: {'T1 corto ST con filtro': 15, 'T2a taglia': 4, 'T2b stop': 16, 'T2c call': 13, 'T3a indici': 78, 'T3b put modellate': 28, 'T4 curva': 8, 'T4 lungo vol': 4, 'T4 sul fondo': 24, 'T5 leva indice': 18, 'T5 EQ-MR': 21} TOTALE 229

@@ -1,0 +1,73 @@
+[controllo] libro azionario v3, motore quantlab, periodo di scelta del banco (fino a 2024-10-30): Sharpe 0.69 CAGR 5.7% vol 8.6% MaxDD -15.9%  | STATUS.md: 0,69 / 5,7% / 8,6% / -15,9% (dati al 5/11/2026)
+[troncamento 2019-06-28] scarto massimo pesi azionari 0.00e+00, crypto 0.00e+00
+[troncamento 2020-03-20] scarto massimo pesi azionari 0.00e+00, crypto 0.00e+00
+[troncamento 2024-08-05] scarto massimo pesi azionari 0.00e+00, crypto 0.00e+00
+
+esposizione media (2018-04 -> 2026-10): libro azionario 72% del suo capitale, crypto 30%; conto 1x 51%, conto v3.3 118% (massimo 150%)
+turnover annuo: azionario 27.4x, crypto 21.6x; costi annui 2.74% / 6.48%
+
+=== PERIODO COMUNE 2018-04-01 -> 2026-10-31, giorni di calendario; valori: tutto | scelta | verifica ===
+--- sistema originale (riespresso; SIMULATO) ---
+LEG_azionario_v3                                           Sh  0.46 |  0.36 |  0.58  CAGR   6.6% |   4.2% |   9.8%  vol  9.1%  DD -15.1% |  -7.4%  mese peggiore  -7.2%
+LEG_crypto_v3                                              Sh  1.10 |  1.19 |  0.98  CAGR  33.2% |  36.0% |  29.7%  vol 26.8%  DD -25.4% | -24.1%  mese peggiore -15.3%
+LEG_v3_1x                                                  Sh  1.14 |  1.20 |  1.06  CAGR  20.3% |  20.3% |  20.3%  vol 14.7%  DD -17.7% | -10.9%  mese peggiore  -9.2%
+LEG_v33_leva15                                             Sh  0.97 |  1.04 |  0.88  CAGR  33.4% |  35.9% |  30.4%  vol 32.3%  DD -36.5% | -25.9%  mese peggiore -20.6%
+LEG_v3_1x_cassa_a_zero                                     Sh  1.07 |  1.17 |  0.94  CAGR  19.0% |  19.6% |  18.2%  vol 14.7%  DD -17.7% | -11.5%  mese peggiore  -9.4%
+--- robustezza del sistema originale ---
+LEG_v3_1x  costi x2                                        Sh  0.83 |  0.93 |  0.69  CAGR  14.8% |  15.5% |  14.1%  vol 14.8%  DD -19.0% | -12.3%  mese peggiore  -9.7%
+LEG_v33_leva15  costi x2                                   Sh  0.58 |  0.71 |  0.40  CAGR  17.6% |  21.7% |  12.8%  vol 32.4%  DD -47.9% | -34.7%  mese peggiore -21.3%
+LEG_v3_1x  ritardo +1 barra                                Sh  1.02 |  1.18 |  0.80  CAGR  18.5% |  20.8% |  15.7%  vol 15.2%  DD -24.5% | -11.4%  mese peggiore -10.4%
+LEG_v33_leva15  ritardo +1 barra                           Sh  0.89 |  1.01 |  0.72  CAGR  30.4% |  35.7% |  24.2%  vol 32.9%  DD -52.4% | -26.3%  mese peggiore -21.1%
+LEG_v3_1x  costi x2 + ritardo                              Sh  0.71 |  0.93 |  0.42  CAGR  13.2% |  16.0% |   9.8%  vol 15.2%  DD -27.8% | -14.2%  mese peggiore -10.8%
+LEG_v33_leva15  costi x2 + ritardo                         Sh  0.51 |  0.70 |  0.24  CAGR  15.0% |  21.5% |   7.4%  vol 32.9%  DD -58.7% | -40.1%  mese peggiore -21.8%
+--- nuovo fondo (serie esistenti) ---
+NUOVO B_cassa_in_tbill                                     Sh  1.49 |  1.63 |  1.29  CAGR  14.7% |  14.8% |  14.5%  vol  7.6%  DD  -8.8% |  -5.6%  mese peggiore  -3.4%
+NUOVO B2_debito_reale                                      Sh  1.51 |  1.64 |  1.33  CAGR  27.7% |  29.6% |  25.4%  vol 15.2%  DD -17.9% | -12.0%  mese peggiore  -6.9%
+NUOVO C1_mtm_limiti                                        Sh  1.28 |  1.54 |  1.06  CAGR  26.8% |  26.7% |  26.9%  vol 17.6%  DD -16.5% | -16.5%  mese peggiore  -8.6%
+NUOVO C3_mtm_limiti_debito_reale                           Sh  1.36 |  1.57 |  1.17  CAGR  55.0% |  56.0% |  53.7%  vol 34.7%  DD -31.0% | -31.0%  mese peggiore -16.7%
+NUOVO C1_motore_di_rischio_attuale                         Sh  1.07 |  1.44 |  0.71  CAGR  18.7% |  21.3% |  15.6%  vol 14.4%  DD -13.4% | -13.4%  mese peggiore  -8.6%
+sleeve CR-TREND                                            Sh  1.02 |  1.40 |  0.54  CAGR  26.2% |  36.0% |  15.1%  vol 22.7%  DD -25.2% | -25.2%  mese peggiore -11.9%
+sleeve CR-XSMOM                                            Sh  1.05 |  1.03 |  1.08  CAGR  32.9% |  28.1% |  39.2%  vol 28.3%  DD -27.7% | -26.9%  mese peggiore -16.4%
+sleeve EQ-MR                                               Sh  0.83 |  1.14 |  0.33  CAGR  13.4% |  18.1% |   7.8%  vol 13.0%  DD -12.3% | -11.6%  mese peggiore  -8.7%
+sleeve MA-TREND                                            Sh  0.17 |  0.37 | -0.12  CAGR   3.7% |   3.7% |   3.6%  vol  6.9%  DD -14.9% |  -9.5%  mese peggiore  -4.4%
+--- riferimenti passivi ---
+SPY (compra e tieni, USD)                                  Sh  0.68 |  0.49 |  1.05  CAGR  14.8% |  10.0% |  20.9%  vol 18.9%  DD -33.7% | -18.8%  mese peggiore -12.5%
+BTC (compra e tieni, USD)                                  Sh  0.73 |  0.60 |  1.01  CAGR  32.5% |  20.1% |  49.6%  vol 61.7%  DD -76.6% | -53.0%  mese peggiore -37.3%
+60% SPY + 40% IEF                                          Sh  0.63 |  0.47 |  0.91  CAGR   9.7% |   6.7% |  13.5%  vol 11.4%  DD -21.0% | -10.6%  mese peggiore  -7.4%
+
+=== per anno (rendimento composto) ===
+      LEG_v3_1x  LEG_v33_leva15  B_cassa_in_tbill  B2_debito_reale  C1_mtm_limiti  C3_mtm_limiti_debito_reale   SPY
+2018       -6.9           -18.8              -5.4            -11.9           -9.0                       -17.5  -3.6
+2019       21.0            37.3              20.5             41.6           46.9                       107.9  31.2
+2020       33.2            69.2              26.8             58.2           56.6                       130.6  18.3
+2021       74.7           195.1              32.5             74.6           52.4                       126.3  28.7
+2022       -8.3           -22.7               0.6             -0.4           -3.4                        -7.3 -18.2
+2023       36.0            65.7              22.6             42.7           58.2                       136.0  26.2
+2024       34.6            59.6              17.1             30.3           27.5                        54.5  24.9
+2025        2.1            -4.0              11.0             18.2           11.0                        19.0  17.7
+2026        8.6             9.1               5.7              8.5           11.2                        19.8  11.7
+
+=== a pari volatilita' (nuovo fondo riscalato alla volatilita' del sistema originale, debito al tasso + 1,5%) ===
+B_cassa_in_tbill x1.94 (vol 14.7% = LEG_v3_1x)             Sh  1.39 |  1.54 |  1.19  CAGR  24.7% |  26.6% |  22.4%  vol 14.7%  DD -18.3% | -12.2%  mese peggiore  -6.8%
+C1_mtm_limiti x0.84 (vol 14.7% = LEG_v3_1x)                Sh  1.28 |  1.54 |  1.06  CAGR  22.7% |  22.3% |  23.2%  vol 14.7%  DD -13.8% | -13.8%  mese peggiore  -7.1%
+B_cassa_in_tbill x4.25 (vol 32.3% = LEG_v33_leva15)        Sh  1.33 |  1.48 |  1.14  CAGR  50.0% |  57.2% |  41.5%  vol 32.3%  DD -37.9% | -27.0%  mese peggiore -15.4%
+C1_mtm_limiti x1.83 (vol 32.3% = LEG_v33_leva15)           Sh  1.24 |  1.49 |  1.03  CAGR  45.7% |  48.1% |  42.7%  vol 32.3%  DD -29.8% | -29.8%  mese peggiore -15.6%
+
+=== correlazioni giornaliere / mensili con il sistema originale ===
+LEG_v3_1x B_cassa_in_tbill: 0.66/0.78 B2_debito_reale: 0.66/0.78 C1_mtm_limiti: 0.77/0.80 C3_mtm_limiti_debito_reale: 0.77/0.80 C1_motore_di_rischio_attuale: 0.77/0.82 SPY: 0.32/0.45 BTC: 0.62/0.70
+LEG_v33_leva15 B_cassa_in_tbill: 0.67/0.78 B2_debito_reale: 0.67/0.78 C1_mtm_limiti: 0.76/0.80 C3_mtm_limiti_debito_reale: 0.76/0.80 C1_motore_di_rischio_attuale: 0.76/0.81 SPY: 0.35/0.48 BTC: 0.64/0.71
+
+=== beta giornaliero su SPY e BTC (regressione a due fattori, 2018-04 -> 2026-10 e 2025-11 -> 2026-10) ===
+  LEG_v3_1x                    beta SPY 0.12  beta BTC 0.14  vol 14.7%
+  LEG_v33_leva15               beta SPY 0.30  beta BTC 0.31  vol 32.3%
+  B_cassa_in_tbill             beta SPY 0.14  beta BTC 0.06  vol 7.6%
+  C1_mtm_limiti                beta SPY 0.12  beta BTC 0.15  vol 17.6%
+  LEG_v3_1x                    beta SPY 0.27  beta BTC 0.14  vol 12.0%
+  LEG_v33_leva15               beta SPY 0.66  beta BTC 0.30  vol 25.3%
+  B_cassa_in_tbill             beta SPY 0.22  beta BTC 0.05  vol 5.7%
+  C1_mtm_limiti                beta SPY 0.18  beta BTC 0.15  vol 14.2%
+
+pesi del modello riespresso al 31/10/2026 (frazione del NAV, prima della scala):
+  azionario: {'SPY': 0.129, 'XLV': 0.042, 'XLE': 0.042, 'XLK': 0.042, 'CSCO': 0.021, 'CRM': 0.021, 'MSFT': 0.021, 'NVDA': 0.021, 'CVS': 0.021, 'DBC': 0.01}
+  crypto   : {'BTC': 0.013, 'BCH': 0.011, 'ETH': 0.01, 'SOL': 0.009, 'XRP': 0.009, 'DOGE': 0.008, 'LTC': 0.007, 'LINK': 0.006, 'AVAX': 0.006, 'ADA': 0.005}
+prove: 2 profili x 4 (base, costi x2, ritardo, entrambi) + 1 (cassa a zero) = 9, nessuna scelta di parametri
