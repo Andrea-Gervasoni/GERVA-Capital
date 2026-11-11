@@ -3,3 +3,96 @@ righe 172817 feature 45 16s
 
 ===== ORIZZONTE 4h =====
 -- scelta iper-parametri (blocchi OOS 2021-2022), criterio: AUC medio per blocco --
+                                                     cfg    auc  auc_min
+                          {"kind": "logit", "C": 0.0003} 0.5335   0.5148
+                            {"kind": "logit", "C": 0.01} 0.5291   0.5085
+ {"kind": "hgbc", "depth": 3, "iters": 100, "leaf": 500} 0.5395   0.5264
+{"kind": "hgbc", "depth": 3, "iters": 100, "leaf": 3000} 0.5414   0.5312
+ {"kind": "hgbc", "depth": 3, "iters": 300, "leaf": 500} 0.5402   0.5303
+{"kind": "hgbc", "depth": 3, "iters": 300, "leaf": 3000} 0.5422   0.5365
+CONGELATA: {'kind': 'hgbc', 'depth': 3, 'iters': 300, 'leaf': 3000}
+-- qualita della previsione per periodo (OOS) --
+             per      n    auc    acc  quota_up     ic
+  scelta 2021-22  52422 0.5411 0.5288    0.5032 0.0559
+verifica 2023-26 100785 0.5422 0.5298    0.5067 0.0557
+-- VERIFICA: rendimento a 4h per decile di probabilita (barre sovrapposte; costo andata+ritorno 13 bp, funding escluso) --
+        n      p     su  rend_lordo_bp  netto_long_bp  netto_short_bp
+q                                                                    
+1   10079  0.416  0.449         -1.177        -14.177         -11.823
+2   10078  0.446  0.471          1.006        -11.994         -14.006
+3   10079  0.462  0.470         -1.416        -14.416         -11.584
+4   10078  0.476  0.493          1.331        -11.669         -14.331
+5   10079  0.490  0.500          1.727        -11.273         -14.727
+6   10078  0.503  0.504          0.772        -12.228         -13.772
+7   10078  0.517  0.526          4.392         -8.608         -17.392
+8   10079  0.532  0.532          1.375        -11.625         -14.375
+9   10078  0.550  0.548          1.648        -11.352         -14.648
+10  10079  0.583  0.573          7.957         -5.043         -20.957
+per anno: {2023: {'auc': 0.563, 'ic': 0.086}, 2024: {'auc': 0.549, 'ic': 0.071}, 2025: {'auc': 0.535, 'ic': 0.041}, 2026: {'auc': 0.523, 'ic': 0.031}}
+-- libro eseguibile (non sovrapposto, stop 2*sigma*sqrt(h), soglie ex-ante) --
+   q                       per    n      R    sd     ir       t   hit  per_anno  long  stop  costo_R   NxIR2
+0.90                    scelta 2253 -0.017 0.518 -0.034  -1.595 0.515  1501.657 0.414 0.086    0.043  -1.696
+0.90                  verifica 5552 -0.061 0.510 -0.119  -8.873 0.490  1449.513 0.421 0.105    0.058 -20.554
+0.90         verifica costi x2 5552 -0.122 0.517 -0.235 -17.502 0.425       NaN   NaN   NaN      NaN     NaN
+0.90 verifica ritardo +1 barra 5108 -0.068 0.490 -0.139  -9.901 0.467       NaN   NaN   NaN      NaN     NaN
+0.90      verifica LORDO costi 5552 -0.002 0.509 -0.005  -0.353 0.557       NaN   NaN   NaN      NaN     NaN
+0.97                    scelta  527 -0.028 0.508 -0.055  -1.257 0.543   353.187 0.290 0.101    0.044  -1.059
+0.97                  verifica 1198 -0.027 0.488 -0.055  -1.906 0.542   316.850 0.363 0.091    0.056  -0.961
+0.97         verifica costi x2 1198 -0.085 0.495 -0.171  -5.919 0.474       NaN   NaN   NaN      NaN     NaN
+0.97 verifica ritardo +1 barra 1154 -0.072 0.458 -0.157  -5.331 0.467       NaN   NaN   NaN      NaN     NaN
+0.97      verifica LORDO costi 1198  0.029 0.487  0.059   2.049 0.605       NaN   NaN   NaN      NaN     NaN
+-- POST-HOC (deciso dopo aver visto la verifica: vale solo come descrizione): solo LONG, q=0.9 --
+                                      per      n      R    sd     ir      t   hit  per_anno  NxIR2
+                                   scelta  945.0 -0.030 0.593 -0.051 -1.563 0.533   678.116 -1.754
+                                 verifica 2401.0 -0.051 0.547 -0.093 -4.539 0.518   633.188 -5.432
+                        verifica costi x2 2401.0 -0.112 0.555 -0.201 -9.867 0.451       NaN    NaN
+verifica: long a caso stesse ore (deriva)    NaN -0.055   NaN    NaN    NaN   NaN       NaN    NaN
+
+===== ORIZZONTE 24h =====
+-- scelta iper-parametri (blocchi OOS 2021-2022), criterio: AUC medio per blocco --
+                                                     cfg    auc  auc_min
+                          {"kind": "logit", "C": 0.0003} 0.5288   0.5219
+                            {"kind": "logit", "C": 0.01} 0.5291   0.5190
+ {"kind": "hgbc", "depth": 3, "iters": 100, "leaf": 500} 0.5377   0.5247
+{"kind": "hgbc", "depth": 3, "iters": 100, "leaf": 3000} 0.5387   0.5046
+ {"kind": "hgbc", "depth": 3, "iters": 300, "leaf": 500} 0.5491   0.5299
+{"kind": "hgbc", "depth": 3, "iters": 300, "leaf": 3000} 0.5480   0.5236
+CONGELATA: {'kind': 'hgbc', 'depth': 3, 'iters': 300, 'leaf': 500}
+-- qualita della previsione per periodo (OOS) --
+             per      n    auc    acc  quota_up     ic
+  scelta 2021-22  52362 0.5535 0.5360    0.5024 0.0944
+verifica 2023-26 100725 0.5280 0.5209    0.5115 0.0370
+-- VERIFICA: rendimento a 24h per decile di probabilita (barre sovrapposte; costo andata+ritorno 13 bp, funding escluso) --
+        n      p     su  rend_lordo_bp  netto_long_bp  netto_short_bp
+q                                                                    
+1   10073  0.275  0.485         18.915          5.915         -31.915
+2   10072  0.401  0.504         15.663          2.663         -28.663
+3   10073  0.440  0.485         -1.289        -14.289         -11.711
+4   10072  0.463  0.487          0.853        -12.147         -13.853
+5   10073  0.481  0.489         -4.072        -17.072          -8.928
+6   10072  0.498  0.505          4.096         -8.904         -17.096
+7   10072  0.515  0.515          4.927         -8.073         -17.927
+8   10073  0.535  0.523         10.046         -2.954         -23.046
+9   10072  0.561  0.551         22.071          9.071         -35.071
+10  10073  0.615  0.570         34.682         21.682         -47.682
+per anno: {2023: {'auc': 0.537, 'ic': 0.074}, 2024: {'auc': 0.545, 'ic': 0.061}, 2025: {'auc': 0.521, 'ic': 0.041}, 2026: {'auc': 0.525, 'ic': 0.022}}
+-- libro eseguibile (non sovrapposto, stop 2*sigma*sqrt(h), soglie ex-ante) --
+   q                       per   n      R    sd     ir      t   hit  per_anno  long  stop  costo_R  NxIR2
+0.90                    scelta 691  0.078 0.654  0.120  3.142 0.533   464.802 0.397 0.080    0.017  6.639
+0.90                  verifica 699 -0.044 0.569 -0.077 -2.025 0.488   183.544 0.466 0.134    0.025 -1.077
+0.90         verifica costi x2 699 -0.070 0.572 -0.122 -3.228 0.459       NaN   NaN   NaN      NaN    NaN
+0.90 verifica ritardo +1 barra 674 -0.043 0.573 -0.075 -1.938 0.497       NaN   NaN   NaN      NaN    NaN
+0.90      verifica LORDO costi 699 -0.019 0.568 -0.033 -0.869 0.519       NaN   NaN   NaN      NaN    NaN
+0.97                    scelta 271  0.131 0.630  0.208  3.426 0.631   196.005 0.277 0.085    0.017  8.491
+0.97                  verifica 276 -0.039 0.547 -0.071 -1.176 0.493    80.712 0.116 0.134    0.024 -0.404
+0.97         verifica costi x2 276 -0.064 0.549 -0.116 -1.935 0.457       NaN   NaN   NaN      NaN    NaN
+0.97 verifica ritardo +1 barra 271 -0.043 0.540 -0.080 -1.311 0.539       NaN   NaN   NaN      NaN    NaN
+0.97      verifica LORDO costi 276 -0.015 0.548 -0.027 -0.448 0.511       NaN   NaN   NaN      NaN    NaN
+-- POST-HOC (deciso dopo aver visto la verifica: vale solo come descrizione): solo LONG, q=0.9 --
+                                      per     n      R    sd     ir      t   hit  per_anno  NxIR2
+                                   scelta 288.0  0.025 0.734  0.034  0.569 0.521   200.748  0.226
+                                 verifica 326.0 -0.038 0.610 -0.062 -1.127 0.518    85.601 -0.334
+                        verifica costi x2 326.0 -0.065 0.615 -0.106 -1.920 0.488       NaN    NaN
+verifica: long a caso stesse ore (deriva)   NaN -0.010   NaN    NaN    NaN   NaN       NaN    NaN
+
+varianti provate in questo script: 18  (180s)
