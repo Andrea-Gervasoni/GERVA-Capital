@@ -28,3 +28,7 @@ limits:
 paper:
   fee: {crypto: 0.0025, ibkr: 0.0005}        # commissione per lato simulata
   slippage: {crypto: 0.0005, ibkr: 0.0002}
+
+ai:                         # livello AI (gerva/ai): puo' solo RIDURRE l'esposizione; il motore di rischio decide per ultimo
+  regime_scaling: false     # il regime si mostra ma non scala: nel backtest ridurre in "teso"/"crisi" peggiora lo Sharpe (1,18 -> 1,10)
+  desk_every_hours: 6       # una passata del desk ogni 6 ore (python -m gerva ai)

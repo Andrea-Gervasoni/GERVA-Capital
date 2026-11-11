@@ -1,0 +1,21 @@
+Regime deterministico sul portafoglio (simulato). Rendimento del giorno per stato noto la sera prima:
+scelta
+           n  media_pb    vol  sharpe  peggiore
+s                                              
+calmo    513     5.929  0.104   2.078    -0.028
+normale  858     2.070  0.067   1.121    -0.034
+teso     221     1.185  0.068   0.639    -0.013
+crisi    143     6.041  0.110   2.008    -0.035
+verifica
+           n  media_pb    vol  sharpe  peggiore
+s                                              
+calmo    564     2.587  0.092   1.023    -0.022
+normale  649     1.059  0.096   0.402    -0.020
+teso     118     3.390  0.078   1.583    -0.013
+crisi     69     8.989  0.148   2.221    -0.028
+senza regime | tutto: CAGR 13.8% vol 9.0% Sharpe 1.18 caduta -9.4% mese peggiore -3.1%
+senza regime | scelta: CAGR 14.3% vol 8.4% Sharpe 1.49 caduta -9.4% mese peggiore -3.1%
+senza regime | verifica: CAGR 13.0% vol 9.6% Sharpe 0.86 caduta -8.0% mese peggiore -2.3%
+con regime (x0,7 teso, x0,4 crisi) | tutto: CAGR 12.2% vol 8.3% Sharpe 1.10 caduta -8.0% mese peggiore -3.2%
+con regime (x0,7 teso, x0,4 crisi) | scelta: CAGR 12.9% vol 7.7% Sharpe 1.45 caduta -8.0% mese peggiore -3.2%
+con regime (x0,7 teso, x0,4 crisi) | verifica: CAGR 11.4% vol 9.0% Sharpe 0.75 caduta -6.3% mese peggiore -2.1%

@@ -16,7 +16,7 @@ from ..research.run import COINS
 from ..strategies import book
 
 log = logging.getLogger("gerva.market")
-EQUITY = sorted(set(book.TREND_UNIVERSE) | {"SPY", "QQQ", "^IRX"})
+EQUITY = sorted(set(book.TREND_UNIVERSE) | {"SPY", "QQQ", "^IRX", "^VIX", "^VIX3M"})
 
 
 class Market:

@@ -11,6 +11,7 @@ Riga di comando del motore GERVA.
     python -m gerva kill "motivo"                    KILL: chiude tutto al prossimo giro e ferma il sistema
     python -m gerva reset-kill --confirm             toglie il KILL (riparte da HALTED)
     python -m gerva check-broker                     prova in sola lettura del collegamento al broker
+    python -m gerva ai [--dry]                       una passata del livello AI: fonti -> desk -> regime -> decadimento -> overlay
     python -m gerva propose scheda.json              il consiglio di ricerca valuta un'ipotesi (backtest, critica, verdetto)
 """
 from __future__ import annotations
@@ -63,6 +64,8 @@ def main(argv=None) -> int:
     rk = sub.add_parser("reset-kill")
     rk.add_argument("--confirm", action="store_true")
     sub.add_parser("check-broker")
+    ai = sub.add_parser("ai")
+    ai.add_argument("--dry", action="store_true", help="non scrive l'overlay: mostra soltanto")
     pr = sub.add_parser("propose")
     pr.add_argument("spec", help="file JSON: family, universe, params, hypothesis, author")
     a = ap.parse_args(argv)
@@ -108,6 +111,30 @@ def main(argv=None) -> int:
         print(json.dumps(out, indent=1, ensure_ascii=False, default=str))
         return 0 if out["verdetto"]["passa"] else 1
     run = _runner()
+    if a.cmd == "ai":
+        from .ai import decay, desk, feeds, overlay, regime
+        from .live import pipeline
+        from .strategies.book import SLEEVES
+        from .validation import metrics as M
+        run.market.refresh()
+        t = pipeline.build(run.market, run.l.vol_target, run.l.max_leverage)
+        items, errs = feeds.collect()
+        agents = desk.run(items, log=lambda rec: run.j.event("info", "ai.desk", json.dumps(rec, default=str)[:1900]))
+        P = run.market.P["adj"]
+        reg = regime.classify(P["^VIX"], P["^VIX3M"], t.port_ret, run.market.cclose["BTC"]).iloc[-1]
+        import pandas as pd
+        start = pd.Timestamp(run.j.get("start_ts") or 0, unit="s").normalize()
+        live = {k: t.sleeve_ret[k][t.sleeve_ret.index >= start] for k in t.sleeve_ret}
+        dec = decay.review(live, {k: M.summary(t.sleeve_ret[k], 0.0, 365).get("max_dd", -0.3) for k in t.sleeve_ret},
+                           {k: 365 for k in SLEEVES})
+        scale = bool((load()[2].get("ai") or {}).get("regime_scaling", False))      # spento: nei dati peggiora lo Sharpe
+        raw = overlay.combine([agents, {"global": dict(mult=float(reg["mult"]) if scale else 1.0, motivo=f"regime {reg['state']}")},
+                               {"sleeves": {k: v for k, v in dec.items() if v["mult"] < 1.0}}])
+        print(json.dumps(dict(fonti=len(items), fonti_in_errore=errs, regime=reg["state"], decadimento=dec, overlay=raw), indent=1,
+                         ensure_ascii=False, default=str))
+        if not a.dry:
+            overlay.save(os.path.join(run.s.home, "ai_overlay.json"), raw)
+        return 0
     if a.cmd == "cycle":
         print(json.dumps(run.cycle(), indent=1, default=str))
         return 0

@@ -1,0 +1,20 @@
+acquisti totali 157540 | >=100k 49342 | C-suite >=100k 12298
+segnali (ticker-giorno) dopo il filtro lotti: 10141 ticker unici 3037
+ticker senza prezzi (delistati o altro): 1088 = 0.358
+segnali non prezzabili 2959 | operazioni dopo filtro liquidita 2801
+TUTTO: n=2801 media=0pb (t=0.02) mediana=17pb vincenti=51.4% vincita media=5.28% perdita media=-5.59% | SPY stessi giorni 2pb | eccesso -1pb (t=-0.09) | fermati dallo stop 13.5% | R medio -0.003
+costruzione: n=2415 media=-9pb (t=-0.51) mediana=19pb vincenti=51.5% vincita media=5.23% perdita media=-5.73% | SPY stessi giorni 0pb | eccesso -9pb (t=-0.61) | fermati dallo stop 14.3% | R medio -0.009
+ultimi 12 mesi (holdout): n=386 media=58pb (t=1.42) mediana=10pb vincenti=51.0% vincita media=5.63% perdita media=-4.68% | SPY stessi giorni 9pb | eccesso 49pb (t=1.24) | fermati dallo stop 8.8% | R medio 0.034
+2016 218 138pb eccesso 80pb vincenti 61%
+2017 237 25pb eccesso -5pb vincenti 52%
+2018 214 -40pb eccesso -16pb vincenti 52%
+2019 240 31pb eccesso -19pb vincenti 54%
+2020 339 -210pb eccesso -51pb vincenti 43%
+2021 196 134pb eccesso 82pb vincenti 60%
+2022 346 -19pb eccesso -9pb vincenti 51%
+2023 299 -38pb eccesso -101pb vincenti 51%
+2024 235 65pb eccesso -9pb vincenti 48%
+2025 370 49pb eccesso 58pb vincenti 52%
+2026 107 -44pb eccesso 28pb vincenti 42%
+PORTAFOGLIO: operazioni prese 1896, saltate per limite 905, CAGR 2.71%, vol 7.85%, caduta massima -29.12%, esposizione media stimata 35%
+SPY stesso periodo: CAGR 12.08%

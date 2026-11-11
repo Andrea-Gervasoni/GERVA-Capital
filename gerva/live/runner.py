@@ -19,6 +19,7 @@ Garanzie:
 """
 from __future__ import annotations
 
+import json
 import logging
 import os
 import time
@@ -31,6 +32,7 @@ from ..ops import alerts
 from ..ops.journal import Journal
 from ..ops.resilience import CircuitBreaker, CircuitOpen, retry
 from ..risk.engine import Limits, RiskEngine
+from ..ai import overlay as ai_overlay
 from . import pipeline, snapshot
 
 log = logging.getLogger("gerva.runner")
@@ -144,7 +146,13 @@ class Runner:
         notes = []
         if data_ok or self.targets is None:
             try:
-                self.targets = pipeline.build(self.market, self.l.vol_target, self.l.max_leverage)
+                ov = ai_overlay.load(os.path.join(self.s.home, "ai_overlay.json"), now)
+                sig = json.dumps([ov.valid, ov.note, ov.global_mult, sorted((k, v["mult"]) for k, v in ov.sleeves.items())])
+                if sig != self.j.get("ai.overlay_sig"):
+                    self.j.set("ai.overlay_sig", sig)
+                    self.j.event("info" if ov.valid else "warn", "ai", ov.note or
+                                 f"overlay AI: globale {ov.global_mult:.2f}; " + ", ".join(f"{k} x{v['mult']:.2f} ({v['motivo'][:80]})" for k, v in ov.sleeves.items()))
+                self.targets = pipeline.build(self.market, self.l.vol_target, self.l.max_leverage, overlay=ov)
             except Exception as e:
                 self.j.event("warn", "pipeline", f"pesi non calcolabili: {type(e).__name__}: {str(e)[:200]}")
         if self.targets is not None:

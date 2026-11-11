@@ -39,7 +39,9 @@ def _next_row(obj):
     return pd.concat([obj, pd.Series(0.0, index=[nxt])])
 
 
-def build(market, vol_target: float, max_leverage: float, sleeves=("CR-TREND", "CR-XSMOM", "EQ-MR", "MA-TREND")) -> Targets:
+def build(market, vol_target: float, max_leverage: float, sleeves=("CR-TREND", "CR-XSMOM", "EQ-MR", "MA-TREND"),
+          overlay=None) -> Targets:
+    """overlay: gerva.ai.overlay.Overlay. Puo' solo RIDURRE il contributo di una strategia (moltiplicatore in [0, 1])."""
     W, R = {}, {}
     if market.cclose is not None:
         close, dvol, ret = market.cclose, market.cdvol, market.cret
@@ -73,7 +75,7 @@ def build(market, vol_target: float, max_leverage: float, sleeves=("CR-TREND", "
     for s, w in W.items():
         by[s] = {}
         for sym, v in w.items():
-            c = float(lev * a[s] * v)
+            c = float(lev * a[s] * v) * (min(max(overlay.mult(s), 0.0), 1.0) if overlay is not None else 1.0)
             if abs(c) > 1e-9:
                 by[s][sym] = c
                 weights[sym] = weights.get(sym, 0.0) + c
