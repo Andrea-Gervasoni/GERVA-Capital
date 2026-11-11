@@ -508,13 +508,27 @@ Statistiche mensili, aprile 2018 – ottobre 2026, con le correzioni di 11.2 ([`
 
 Dopo le tasse i rendimenti scendono di circa un quarto.
 
-- **Scelta:** il flusso sugli indici entra nel libro dei trade; il rischio per trade segue la conviction; il livello a 30x esce; l'ingresso avviene con ordine limite all'apertura; la strategia sugli ETF si ribilancia ogni mese sotto i 100.000 $.
-- **In osservazione, senza capitale:** l'indicatore GQ come soglia d'ingresso e lo short delle nuove quotazioni, finché il validatore e il paper trading non li confermano.
+- **Scelta:** il rischio per trade segue la conviction; il livello a 30x esce; l'ingresso avviene con ordine limite all'apertura; la strategia sugli ETF si ribilancia ogni mese sotto i 100.000 $.
+- **In osservazione, senza capitale:** l'indicatore GQ come soglia d'ingresso e il flusso sugli indici (che in gran parte ripete EQ-MR con più leva). Lo short delle nuove quotazioni è scartato: non è eseguibile (11.6).
 - **Alternative scartate:** gestione attiva del trade, rotture intraday a stop stretto, universo ampio, modelli statistici, tutti con i numeri nelle cartelle degli analisti.
 
 ### 11.5 Risposta alla domanda
 
-Il fondo rifatto rende, nello scenario base, tra il 2,7% e il 4,5% al mese composto; nello scenario centrale tra l'1,4% e il 2,2%. **Il 30% al mese non è raggiunto e, con i vantaggi misurati, non è raggiungibile a nessun livello di rischio**: il massimo assoluto del rendimento composto, a qualunque rischio, è intorno al 12% al mese nello scenario base, con caduta tipica del 90%. La leva non crea vantaggio: moltiplica quello che c'è, e oltre un certo punto lo distrugge.
+Il fondo rifatto rende, nello scenario base, tra il 2,0% e il 3,8% al mese composto; nello scenario centrale tra l'1,1% e l'1,8% (profili senza flussi nuovi, dopo il validatore: 11.6). **Il 30% al mese non è raggiunto e, con i vantaggi misurati, non è raggiungibile a nessun livello di rischio**: il massimo assoluto del rendimento composto, a qualunque rischio, è intorno al 12% al mese nello scenario base, con caduta tipica del 90%. La leva non crea vantaggio: moltiplica quello che c'è, e oltre un certo punto lo distrugge.
+
+### 11.6 Esito del validatore sui tre risultati positivi
+
+Un validatore indipendente ha rifatto i tre risultati dai dati grezzi, con codice suo ([`validazione/ESITO.md`](../research/v5/v5/validazione/ESITO.md)). I numeri degli analisti si riproducono tutti; cambia quello che significano.
+
+| Risultato | Esito | Che cosa ha trovato | Numero da usare |
+|---|---|---|---|
+| Trade a leva sugli indici (A5) | **Indebolito** | Il 100% dei segnali su S&P 500 e Nasdaq scatta quando la strategia EQ-MR è già lunga: sono gli stessi trade con più leva, più il Russell. Con un giorno di ritardo R scende a +0,06; senza i 5 trade migliori, in verifica, +0,05; senza il filtro sul VIX la verifica è negativa | +0,06 / +0,09 R, e non come trade nuovi |
+| Short delle nuove quotazioni (A6) | **Non eseguibile** | Solo il 20% delle quotazioni Binance dal giugno 2023 era negoziabile su Hyperliquid entro 24 ore (2% nel 2026). Sulle candele di Hyperliquid: +0,14 R, t 1,1, 41 trade l'anno; senza i 5 migliori per anno, negativo | Zero per il fondo |
+| Indicatore GQ (A1) | **Regge come stima, differenza non significativa** | Nessun look-ahead. Sui prezzi dei perpetual, verifica: +0,25 R contro +0,16 della conviction; con il funding di Hyperliquid +0,22 contro +0,13. Tutto il guadagno viene dalla distanza dal VWAP del mese. Intervallo al 90% della differenza: da −0,06 a +0,25. Nel 2025–2026 rende circa zero | +0,22 R in verifica, con un vantaggio di +0,09 R non distinguibile da zero |
+
+Conseguenze sulla tabella 11.4: le righe "+ indici a leva" sovrastimano, perché in buona parte raddoppiano una strategia già presente; la riga con lo short delle nuove quotazioni va ignorata. **I profili difendibili restano quelli corretti senza flussi nuovi: prudente 2,0% al mese composto nello scenario base e 1,1% in quello centrale; massimo 3,8% e 1,8%.**
+
+Sintesi di tutta la tornata: dieci analisti e circa 1.700 varianti non hanno trovato un vantaggio nuovo e indipendente. Hanno trovato miglioramenti di contabilità ed esecuzione (debito vero, cassa remunerata, ordine limite all'apertura, rischio proporzionale alla conviction) e hanno tolto ciò che non reggeva (il livello a 30x).
 
 ---
 

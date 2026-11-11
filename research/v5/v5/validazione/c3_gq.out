@@ -1,0 +1,72 @@
+soglie ricalcolate sulla scelta: quota alta 0.314 -> GQ alta 0.532 (analista 0.532) ; quota bassa 0.322 -> bassa -0.503 (analista -0.503) ; corr(GQ,score) 0.84 ; sd componenti {'tq': 0.214, 'btc': 0.213, 'vwm': 0.441}
+conviction alta (analista +0.237 / +0.309 / +0.180)       | tutto n 652 R +0.237 t +3.47 | scelta n 285 R +0.309 t +2.97 | verifica n 367 R +0.180 t +2.00
+GQ>=0.53 (analista +0.339 / +0.415 / +0.276)              | tutto n 605 R +0.339 t +4.53 | scelta n 277 R +0.415 t +3.74 | verifica n 328 R +0.276 t +2.71
+confronto con trades.parquet dell'analista: {'both': 605, 'left_only': 0, 'right_only': 0} max|dR| 0.0000
+per anno (n, R):
+            conv        gq
+entry                    
+2018   10 -0.64  15 -0.24
+2019    56 0.55   52 0.75
+2020    95 0.45   87 0.58
+2021   108 0.25   89 0.41
+2022   16 -0.34  34 -0.21
+2023   119 0.32  101 0.54
+2024   114 0.17  102 0.31
+2025    84 0.01   70 0.07
+2026    50 0.14  55 -0.01
+
+--- troncamento: GQ ricalcolato su dati tagliati a t (ultimo valore) contro la serie intera
+confronti 240 differenze 0 max 0.0e+00 ; (VWAP del mese: cumulata dal primo giorno del mese a t, ER: finestre all'indietro)
+
+--- sensibilita' alla soglia
+GQ>=0.2                                                   | tutto n 771 R +0.261 t +4.04 | scelta n 361 R +0.291 t +3.11 | verifica n 410 R +0.234 t +2.63
+GQ>=0.3                                                   | tutto n 721 R +0.260 t +4.05 | scelta n 334 R +0.301 t +3.12 | verifica n 387 R +0.225 t +2.62
+GQ>=0.4                                                   | tutto n 667 R +0.279 t +4.21 | scelta n 311 R +0.359 t +3.47 | verifica n 356 R +0.209 t +2.45
+GQ>=0.53                                                  | tutto n 605 R +0.341 t +4.55 | scelta n 278 R +0.413 t +3.73 | verifica n 327 R +0.280 t +2.75
+GQ>=0.6                                                   | tutto n 566 R +0.374 t +4.79 | scelta n 259 R +0.425 t +3.71 | verifica n 307 R +0.332 t +3.11
+GQ>=0.7                                                   | tutto n 520 R +0.371 t +4.59 | scelta n 232 R +0.458 t +3.81 | verifica n 288 R +0.300 t +2.75
+GQ>=0.8                                                   | tutto n 470 R +0.394 t +4.75 | scelta n 208 R +0.492 t +4.02 | verifica n 262 R +0.316 t +2.80
+GQ>=0.94                                                  | tutto n 405 R +0.398 t +4.46 | scelta n 178 R +0.558 t +4.25 | verifica n 227 R +0.272 t +2.25
+GQ>=1.1                                                   | tutto n 346 R +0.422 t +4.37 | scelta n 156 R +0.497 t +3.53 | verifica n 190 R +0.360 t +2.72
+
+--- senza una componente (soglie = stessi quantili della scelta, ricalcolati)
+senza tq (soglia 0.49)                                    | tutto n 607 R +0.343 t +4.91 | scelta n 277 R +0.419 t +3.81 | verifica n 330 R +0.279 t +3.13
+senza btc (soglia 0.51)                                   | tutto n 590 R +0.359 t +4.68 | scelta n 279 R +0.378 t +3.50 | verifica n 311 R +0.342 t +3.15
+senza vwm (soglia 0.58)                                   | tutto n 608 R +0.271 t +3.72 | scelta n 273 R +0.383 t +3.52 | verifica n 335 R +0.180 t +1.83
+solo tq                                                   | tutto n 587 R +0.282 t +3.85 | scelta n 276 R +0.362 t +3.45 | verifica n 311 R +0.212 t +2.07
+solo btc                                                  | tutto n 644 R +0.281 t +3.93 | scelta n 271 R +0.404 t +3.69 | verifica n 373 R +0.192 t +2.03
+solo vwm                                                  | tutto n 663 R +0.273 t +3.94 | scelta n 299 R +0.268 t +2.63 | verifica n 364 R +0.276 t +2.92
+
+--- costi x2, ritardo, funding
+conviction | costi x2                                     | tutto n 652 R +0.202 t +2.96 | scelta n 285 R +0.281 t +2.70 | verifica n 367 R +0.141 t +1.56
+GQ>=0.53  | costi x2                                      | tutto n 605 R +0.306 t +4.09 | scelta n 277 R +0.386 t +3.49 | verifica n 328 R +0.239 t +2.34
+conviction | ritardo +1 barra                             | tutto n 646 R +0.238 t +3.48 | scelta n 280 R +0.333 t +3.16 | verifica n 366 R +0.166 t +1.85
+GQ>=0.53  | ritardo +1 barra                              | tutto n 600 R +0.342 t +4.55 | scelta n 272 R +0.441 t +3.94 | verifica n 328 R +0.259 t +2.56
+conviction | funding x2.1 (Hyperliquid)                   | tutto n 652 R +0.193 t +2.86 | scelta n 285 R +0.249 t +2.43 | verifica n 367 R +0.149 t +1.67
+GQ>=0.53  | funding x2.1 (Hyperliquid)                    | tutto n 605 R +0.294 t +3.97 | scelta n 277 R +0.353 t +3.24 | verifica n 328 R +0.245 t +2.42
+
+--- percorso PERP 5m (Binance USDT-M), stessi segnali; confronto sullo stesso periodo (ingressi dal 2020-10)
+SPOT conviction                                           | tutto n 519 R +0.213 t +2.90 | scelta n 152 R +0.292 t +2.34 | verifica n 367 R +0.180 t +2.00
+SPOT GQ>=0.53                                             | tutto n 479 R +0.319 t +3.89 | scelta n 151 R +0.413 t +3.01 | verifica n 328 R +0.276 t +2.71
+PERP conviction                                           | tutto n 524 R +0.209 t +2.80 | scelta n 151 R +0.330 t +2.59 | verifica n 373 R +0.160 t +1.75
+PERP GQ>=0.53                                             | tutto n 485 R +0.304 t +3.75 | scelta n 151 R +0.430 t +3.11 | verifica n 334 R +0.247 t +2.48
+SPOT conviction + funding x2.1                            | tutto n 519 R +0.171 t +2.35 | scelta n 152 R +0.223 t +1.82 | verifica n 367 R +0.149 t +1.67
+SPOT GQ>=0.53 + funding x2.1                              | tutto n 479 R +0.276 t +3.40 | scelta n 151 R +0.344 t +2.55 | verifica n 328 R +0.245 t +2.42
+PERP conviction + funding x2.1                            | tutto n 524 R +0.167 t +2.26 | scelta n 151 R +0.260 t +2.08 | verifica n 373 R +0.130 t +1.43
+PERP GQ>=0.53 + funding x2.1                              | tutto n 485 R +0.262 t +3.26 | scelta n 151 R +0.362 t +2.65 | verifica n 334 R +0.217 t +2.19
+SPOT conviction + funding x2.1 + costi x2                 | tutto n 519 R +0.136 t +1.87 | scelta n 152 R +0.199 t +1.62 | verifica n 367 R +0.110 t +1.23
+SPOT GQ>=0.53 + funding x2.1 + costi x2                   | tutto n 479 R +0.243 t +2.98 | scelta n 151 R +0.319 t +2.36 | verifica n 328 R +0.207 t +2.05
+PERP conviction + funding x2.1 + costi x2                 | tutto n 524 R +0.132 t +1.79 | scelta n 151 R +0.236 t +1.88 | verifica n 373 R +0.090 t +1.00
+PERP GQ>=0.53 + funding x2.1 + costi x2                   | tutto n 485 R +0.228 t +2.84 | scelta n 151 R +0.337 t +2.47 | verifica n 334 R +0.179 t +1.81
+
+--- bootstrap appaiato a blocchi mensili della differenza di R medio (GQ - conviction), verifica; 10000 ricampionamenti
+spot, verifica                               diff +0.096  IC90 [-0.058, +0.252]  P(>0) 0.837  mesi 46
+                                             diff R totale +24.5  IC90 [-22.4, +75.0]  P(>0) 0.796
+spot, scelta                                 diff +0.105  IC90 [-0.006, +0.217]  P(>0) 0.939  mesi 57
+                                             diff R totale +26.7  IC90 [-0.6, +55.1]  P(>0) 0.946
+perp + funding x2.1, verifica                diff +0.087  IC90 [-0.062, +0.230]  P(>0) 0.825  mesi 46
+                                             diff R totale +24.0  IC90 [-23.3, +72.5]  P(>0) 0.795
+
+verifica: trade in comune 142 (R +0.330) ; solo GQ 186 (R +0.235) ; solo conviction 225 (R +0.085)
+verifica GQ per moneta: {'BTC': {'size': 114, 'mean': 0.386}, 'ETH': {'size': 104, 'mean': 0.204}, 'SOL': {'size': 110, 'mean': 0.229}}
+verifica GQ senza i 5 trade migliori: +0.142 ; conviction: +0.071

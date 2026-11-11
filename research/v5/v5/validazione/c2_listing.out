@@ -1,0 +1,29 @@
+BASE +24h stop 15% 168h                             | tutto n 836 R +0.158 t_sett +3.18 | scelta n 142 R +0.353 t_sett +2.66 | verifica n 694 R +0.118 t_sett +2.21
+trade/anno 134  sigma_R 1.29  stop 41%  funding medio per trade (short incassa) -0.331% = -0.022 R ; trade senza serie di funding: 0
+per anno: {2020: 0.467, 2021: 0.298, 2022: 0.232, 2023: 0.077, 2024: 0.206, 2025: 0.133, 2026: 0.068}
+stop saltati (riempiti all'apertura sopra lo stop): 0 ; salto medio nan% ; massimo 0.0%
+costi x2                                            | tutto n 836 R +0.148 t_sett +2.97 | scelta n 142 R +0.343 t_sett +2.59 | verifica n 694 R +0.108 t_sett +2.01
+ritardo +1 barra                                    | tutto n 836 R +0.162 t_sett +3.35 | scelta n 142 R +0.449 t_sett +3.29 | verifica n 694 R +0.103 t_sett +2.02
+ingresso a +48h                                     | tutto n 836 R +0.062 t_sett +1.38 | scelta n 142 R +0.360 t_sett +3.15 | verifica n 694 R +0.001 t_sett +0.01
+slippage stop 100 pb                                | tutto n 836 R +0.128 t_sett +2.53 | scelta n 142 R +0.324 t_sett +2.42 | verifica n 694 R +0.087 t_sett +1.61
+slippage stop 300 pb                                | tutto n 836 R +0.065 t_sett +1.24 | scelta n 142 R +0.264 t_sett +1.92 | verifica n 694 R +0.024 t_sett +0.43
+stop riempito al MASSIMO della barra (estremo)      | tutto n 836 R +0.046 t_sett +0.86 | scelta n 142 R +0.275 t_sett +2.01 | verifica n 694 R -0.001 t_sett -0.01
+funding x2.1 (livello Hyperliquid, stima)           | tutto n 836 R +0.138 t_sett +2.77 | scelta n 142 R +0.358 t_sett +2.75 | verifica n 694 R +0.093 t_sett +1.73
+senza i 5 migliori trade di ogni anno               | tutto n 801 R +0.032 t_sett +0.74 | scelta n 127 R +0.059 t_sett +0.59 | verifica n 674 R +0.027 t_sett +0.56
+senza l'1% migliore                                 | tutto n 827 R +0.115 t_sett +2.47 | scelta n 140 R +0.301 t_sett +2.62 | verifica n 687 R +0.078 t_sett +1.52
+
+prima candela 1h vs prima candela 1d dell'archivio: differenza in giorni !=0 per 0 simboli; massimo 0
+Empty DataFrame
+Columns: [sym, t0, dgap, R]
+Index: []
+solo simboli con 1h e 1d coerenti                   | tutto n 836 R +0.158 t_sett +3.18 | scelta n 142 R +0.353 t_sett +2.66 | verifica n 694 R +0.118 t_sett +2.21
+simboli con spot Binance in cache: 33 ; di cui spot piu' vecchio di 30 giorni: 13
+perp su monete GIA' quotate a pronti da >30g        | tutto n  13 R +0.278 t_sett +1.14 | scelta n  13 R +0.278 t_sett +1.14 | verifica n 0
+il resto                                            | tutto n 823 R +0.156 t_sett +3.11 | scelta n 129 R +0.361 t_sett +2.54 | verifica n 694 R +0.118 t_sett +2.21
+prefisso 1000/1M                                    | tutto n  16 R +0.348 t_sett +0.92 | scelta n 4 | verifica n  12 R +0.331 t_sett +0.79
+quotazioni dal 2023-06 (campione Hyperliquid)       | tutto n 655 R +0.119 t_sett +2.15 | scelta n 0 | verifica n 655 R +0.119 t_sett +2.15
+volume 24h sopra la mediana                         | tutto n 418 R +0.253 t_sett +3.10 | scelta n  39 R +0.709 t_sett +2.16 | verifica n 379 R +0.207 t_sett +2.46
+sotto                                               | tutto n 418 R +0.062 t_sett +1.18 | scelta n 103 R +0.218 t_sett +1.98 | verifica n 315 R +0.011 t_sett +0.18
+
+analista (tenuti, limite 8): 773 0.179
+confronto sui comuni: n 773 corr 1.0000 max|diff| 0.000

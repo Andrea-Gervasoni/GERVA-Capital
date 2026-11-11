@@ -1,0 +1,13 @@
+perp tradfi (omonimo HIP-3 non-cripto) per anno: {2023: 1, 2024: 1, 2026: 91}  su {2020: 57, 2021: 58, 2022: 27, 2023: 99, 2024: 131, 2025: 239, 2026: 225}
+perp su azioni/ETF/materie prime                             n  93 R -0.076 t_sett -1.17 stop 22% sigma1h mediana 0.0085
+il resto (tutto il periodo)                                  n 743 R +0.187 t_sett +3.43 stop 44% sigma1h mediana 0.0343
+verifica senza tradfi                                        n 601 R +0.148 t_sett +2.47 stop 45% sigma1h mediana 0.0350
+verifica (tutti)                                             n 694 R +0.118 t_sett +2.21 stop 42% sigma1h mediana 0.0311
+2025 senza tradfi                                            n 239 R +0.133 t_sett +1.23 stop 58% sigma1h mediana 0.0517
+2026 senza tradfi                                            n 134 R +0.166 t_sett +1.88 stop 25% sigma1h mediana 0.0120
+sigma oraria prime 24h < 0.4% (non si comporta da moneta nuova): 25, di cui tradfi 10
+sigma bassa                                                  n  25 R -0.045 t_sett -0.69 stop 4% sigma1h mediana 0.0028
+verifica senza sigma bassa                                   n 669 R +0.124 t_sett +2.23 stop 43% sigma1h mediana 0.0324
+
+funding HL dove esistono record (n 99, 108 ore medie): media +0.014% = +0.001 R ; Binance stessi trade -0.424% = -0.028 R
+R HL su quei trade +0.373 ; R Binance +0.364

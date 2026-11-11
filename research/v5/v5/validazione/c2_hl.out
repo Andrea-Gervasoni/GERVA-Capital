@@ -1,0 +1,35 @@
+universo Hyperliquid (dex principale): 235 monete, di cui 56 tolte dal listino
+quotazioni perp Binance dal 2023-06 (con trade simulato): 655
+  mai su Hyperliquid (per nome, con mappa 1000X->kX): 517 (79%)
+  su Hyperliquid entro 24h dalla quotazione Binance: 134 (20.5%)  [di cui gia' quotate PRIMA di Binance: 102]
+  entro 7 giorni: 136 (20.8%) ; piu' tardi: 2
+  per anno (quota entro 24h / entro 7g / n): {2023: (np.float64(0.48), np.float64(0.48), 60), 2024: (np.float64(0.43), np.float64(0.43), 131), 2025: (np.float64(0.19), np.float64(0.19), 241), 2026: (np.float64(0.02), np.float64(0.03), 223)}
+  ritardo Hyperliquid - Binance (ore), quantili sui presenti: {0.1: -766.0, 0.25: -19.0, 0.5: -12.0, 0.75: 0.0, 0.9: 3.0}
+
+--- R sulle candele BINANCE, per disponibilita' su Hyperliquid
+tutte le quotazioni Binance dal 2023-06                                n 655 R +0.119 t_sett +2.15 vincenti 47%
+solo quelle su Hyperliquid entro 24h                                   n 134 R +0.152 t_sett +1.08 vincenti 43%
+  di cui gia' su Hyperliquid prima di Binance                          n 102 R +0.059 t_sett +0.38 vincenti 41%
+  di cui quotate su HL tra 0 e 24h dopo                                n  32 R +0.449 t_sett +1.35 vincenti 47%
+su Hyperliquid tra 24h e 7 giorni                                      n 2
+NON su Hyperliquid entro 24h                                           n 521 R +0.110 t_sett +1.95 vincenti 48%
+mai su Hyperliquid                                                     n 517 R +0.119 t_sett +2.10 vincenti 48%
+
+--- stessa regola sulle candele e sul funding di HYPERLIQUID (ingresso = quotazione Binance + 24h), solo monete negoziabili su HL in quel momento
+trade simulati su HL: 133 su 134 ; per intervallo di candela: {'4h': 71, '1d': 61, '1h': 1}
+HL, tutte le candele (1h/4h/1d)                                        n 133 R +0.139 t_sett +1.10 vincenti 43%
+HL, solo candele 1h/4h                                                 n  72 R +0.107 t_sett +0.55 vincenti 36%
+HL, solo candele 1h                                                    n 1
+HL, solo candele 1d (grossolano: ingresso fino a 24h in ritardo)       n  61 R +0.177 t_sett +1.15 vincenti 51%
+stessi trade sulle candele Binance                                     n 133 R +0.161 t_sett +1.23 vincenti 43%
+funding HL per trade (short incassa): media +0.010% (+0.001 R) ; Binance sugli stessi trade -0.455% ; rapporto -0.0x ; corr R HL-Binance 0.81
+trade eseguibili su HL per anno: 41 (contro 202 su Binance)
+HL senza i 5 migliori trade per anno                                   n 114 R -0.196 t_sett -1.85 vincenti 35%
+per anno HL: {2023: {'size': 29, 'mean': -0.115}, 2024: {'size': 55, 'mean': 0.17}, 2025: {'size': 45, 'mean': 0.15}, 2026: {'size': 4, 'mean': 1.447}}
+
+--- regola ancorata alla quotazione di HYPERLIQUID (short 24h dopo la prima ora di HL), candele e funding HL
+monete HL quotate dal 2023-06: 141 trade ; per intervallo: {'1d': 69, '4h': 66, '1h': 6}
+HL propria quotazione, tutte                                           n 141 R +0.103 t_sett +0.78 vincenti 38%
+  solo candele 1h/4h                                                   n  72 R +0.230 t_sett +1.14 vincenti 40%
+  solo candele 1d (grossolano)                                         n  69 R -0.028 t_sett -0.16 vincenti 36%
+  funding medio per trade +0.055% (+0.004 R) ; per anno: {2023: {'size': 37, 'mean': -0.338}, 2024: {'size': 53, 'mean': 0.108}, 2025: {'size': 43, 'mean': 0.36}, 2026: {'size': 8, 'mean': 0.735}}
