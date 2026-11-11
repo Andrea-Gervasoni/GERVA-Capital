@@ -64,3 +64,17 @@ def test_summary_gates():
     s["closed"] = [dict(R=0.5)] * 30 + [dict(R=-1.0)] * 10
     out = TC.summary(s)
     assert out["closed"] == 40 and out["gate_trades"] and out["gate_mean_R"] and abs(out["mean_R"] - 0.125) < 1e-9
+
+
+def test_funding_is_charged_and_enters_conviction():
+    b = {"BTC": bars()}
+    s = TC.step(b, TC.empty_state(10_000), 10.0)
+    assert TC.funding_paid(None, "BTC", "2025-01-01", "2025-01-04") == 3 * TC.DEFAULT_FUNDING_DAY
+    f = {"BTC": pd.Series(0.001, index=pd.date_range("2025-01-01", periods=10, freq="D"))}
+    assert abs(TC.funding_paid(f, "BTC", "2025-01-01", "2025-01-04") - 0.003) < 1e-12
+    hot = {"BTC": pd.Series(0.002, index=b["BTC"].index)}                      # funding al 73% annuo: un segnale in meno
+    s_hot = TC.step(b, TC.empty_state(10_000), 10.0, funding=hot)
+    cold = {"BTC": pd.Series(0.0, index=b["BTC"].index)}
+    s_cold = TC.step(b, TC.empty_state(10_000), 10.0, funding=cold)
+    assert "BTC" in s_cold["open"] and "BTC" in s["open"]
+    assert len(s_hot["open"]) <= len(s_cold["open"])

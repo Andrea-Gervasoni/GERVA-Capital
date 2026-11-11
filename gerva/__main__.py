@@ -115,7 +115,23 @@ def main(argv=None) -> int:
             bars[c] = rec[rec.index < now]                      # solo barre chiuse
         path = os.path.join(s.home, "tradebook.json")
         os.makedirs(s.home, exist_ok=True)
-        state = TC.step(bars, TC.load_state(path, s.start_cash), a.venue_max_leverage)
+        funding = {}
+        for c in bars:
+            try:
+                f = st.get(f"bn_fund_{c}USDT")
+                col = f.iloc[:, 0] if f.shape[1] == 1 else f[[k for k in f.columns if "rate" in k.lower()][0]]
+                funding[c] = col.groupby(col.index.normalize()).sum()
+            except Exception:
+                pass                                            # senza cache: funding di riserva dentro il ciclo
+        # scala del motore di rischio del conto, letta dall'ultima fotografia; senza fotografia il libro NON apre trade
+        from .risk.engine import SCALE
+        scale, snap = 0.0, os.path.join(s.home, "snapshot.json")
+        if os.path.exists(snap):
+            with open(snap) as fh:
+                scale = SCALE.get(str((json.load(fh).get("risk") or {}).get("state", "")).upper(), 0.0)
+        scale = min(scale, 1.0) if scale in (1.0, 0.5) else 0.0   # HALTED e KILLED: nessun nuovo trade
+        state = TC.step(bars, TC.load_state(path, s.start_cash), a.venue_max_leverage, engine_scale=scale, funding=funding)
+        print(f"scala del motore di rischio: {scale} (0 = nessun nuovo trade; serve una fotografia recente del ciclo principale)")
         TC.save_state(path, state)
         print(json.dumps(dict(riepilogo=TC.summary(state), aperti=state["open"], ultimo=state["log"][-1] if state["log"] else None),
                          indent=1, ensure_ascii=False, default=str))

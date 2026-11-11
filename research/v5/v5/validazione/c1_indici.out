@@ -1,0 +1,42 @@
+BASE raggruppato (IBS<.2,VIX>=20)            | tutto n  978 R +0.112 t +3.69 t_mese +3.66 | scelta n  916 R +0.102 t +3.30 t_mese +3.26 | verifica n   62 R +0.262 t +1.80 t_mese +1.87
+BASE non raggruppato (per indice)            | tutto n 1838 R +0.131 t +5.61 t_mese +3.95 | scelta n 1715 R +0.125 t +5.25 t_mese +3.69 | verifica n  123 R +0.214 t +2.00 t_mese +1.40
+trade/anno 32.0  stop % 0.31
+entrata = barra dopo il segnale per tutti: True  VIX min ai segnali 20.00
+costi x2                                     | tutto n  978 R +0.091 t +2.98 t_mese +2.96 | scelta n  916 R +0.081 t +2.62 t_mese +2.58 | verifica n   62 R +0.236 t +1.62 t_mese +1.67
+ritardo 1 giorno (lag=2)                     | tutto n  880 R +0.061 t +1.99 t_mese +1.94 | scelta n  828 R +0.057 t +1.83 t_mese +1.82 | verifica n   52 R +0.123 t +0.81 t_mese +0.66
+VIX del giorno prima (t-1)                   | tutto n  852 R +0.114 t +3.55 t_mese +3.59 | scelta n  815 R +0.106 t +3.28 t_mese +3.32 | verifica n   37 R +0.292 t +1.48 t_mese +1.41
+SENZA filtro VIX                             | tutto n 2031 R +0.032 t +1.59 t_mese +1.57 | scelta n 1790 R +0.043 t +1.97 t_mese +1.91 | verifica n  241 R -0.044 t -0.71 t_mese -0.82
+VIX<20                                       | tutto n 1060 R -0.043 t -1.59 t_mese -1.48 | scelta n  879 R -0.020 t -0.67 t_mese -0.61 | verifica n  181 R -0.156 t -2.46 t_mese -2.56
+VIX>=18                                      | tutto n 1187 R +0.072 t +2.61 t_mese +2.60 | scelta n 1088 R +0.069 t +2.43 t_mese +2.41 | verifica n   99 R +0.102 t +0.94 t_mese +0.95
+VIX>=22                                      | tutto n  758 R +0.119 t +3.41 t_mese +3.41 | scelta n  724 R +0.110 t +3.15 t_mese +3.14 | verifica n   34 R +0.303 t +1.38 t_mese +1.39
+VIX>=25                                      | tutto n  488 R +0.147 t +3.36 t_mese +3.25 | scelta n  470 R +0.143 t +3.26 t_mese +3.10 | verifica n   18 R +0.266 t +0.81 t_mese +1.09
+VIX>=15                                      | tutto n 1536 R +0.055 t +2.29 t_mese +2.27 | scelta n 1359 R +0.067 t +2.67 t_mese +2.60 | verifica n  177 R -0.042 t -0.55 t_mese -0.62
+VIX>=30                                      | tutto n  233 R +0.225 t +3.36 t_mese +3.54 | scelta n  227 R +0.216 t +3.29 t_mese +3.40 | verifica n    6 R +0.546 t +0.70 t_mese +1.04
+stop toccato -> esce in chiusura (diagn.)    | tutto n  978 R +0.136 t +4.34 t_mese +4.38 | scelta n  916 R +0.128 t +4.00 t_mese +4.03 | verifica n   62 R +0.257 t +1.71 t_mese +1.75
+senza stop (diagn.)                          | tutto n  850 R +0.219 t +6.52 t_mese +5.97 | scelta n  799 R +0.206 t +5.90 t_mese +5.38 | verifica n   51 R +0.424 t +3.55 t_mese +3.43
+
+per indice:
+SPY                                          | tutto n  676 R +0.137 t +3.48 t_mese +3.48 | scelta n  636 R +0.135 t +3.39 t_mese +3.37 | verifica n   40 R +0.163 t +0.83 t_mese +0.89
+QQQ                                          | tutto n  601 R +0.142 t +3.50 t_mese +3.68 | scelta n  558 R +0.130 t +3.12 t_mese +3.25 | verifica n   43 R +0.301 t +1.72 t_mese +1.93
+IWM                                          | tutto n  561 R +0.111 t +2.69 t_mese +2.77 | scelta n  521 R +0.107 t +2.53 t_mese +2.60 | verifica n   40 R +0.170 t +0.91 t_mese +0.94
+
+verifica per anno:
+        size  mean   sum
+entry                  
+2023     18  0.04  0.74
+2024      9  0.41  3.67
+2025     18  0.55  9.96
+2026     17  0.11  1.88
+verifica senza i 5 trade migliori: 0.049 ; senza 2025: 0.143 (n 44)
+verifica R medio, bootstrap a blocchi mensili: IC90 [0.032, 0.549]  P(<=0) 0.029
+
+confronto con analista: {'both': 978, 'left_only': 0, 'right_only': 0}  corr R 0.9999  max|diff| 0.4439
+troncamento IBS/ATR: 900 confronti, 0 differenze
+
+sovrapposizione con EQ-MR (gerva/strategies/book.py:65):
+SPY: segnali A5 con EQ-MR gia' long alla chiusura del segnale: 100.0% ; notti A5 coperte da EQ-MR: 71.7% ; notti EQ-MR coperte da A5: 38.8%
+   scelta: EQ-MR lordo annuo +0.121, di cui in giorni con VIX(t-1)>=20 +0.088
+   verifica: EQ-MR lordo annuo +0.094, di cui in giorni con VIX(t-1)>=20 +0.075
+QQQ: segnali A5 con EQ-MR gia' long alla chiusura del segnale: 100.0% ; notti A5 coperte da EQ-MR: 71.9% ; notti EQ-MR coperte da A5: 39.3%
+   scelta: EQ-MR lordo annuo +0.163, di cui in giorni con VIX(t-1)>=20 +0.117
+   verifica: EQ-MR lordo annuo +0.158, di cui in giorni con VIX(t-1)>=20 +0.131

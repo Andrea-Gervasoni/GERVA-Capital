@@ -10,6 +10,7 @@ Limiti dichiarati di questa versione paper:
   * lavora su barre GIORNALIERE: lo stop e' verificato sul minimo del giorno, non sul percorso; nel reale lo stop e' un
     ordine reduce-only a riposo sulla sede e questo modulo deve solo riconciliarlo;
   * l'ingresso avviene al prezzo di chiusura della barra del segnale (nella ricerca: apertura del giorno dopo);
+  * il funding e' quello di Binance quando e' in cache, altrimenti 0,01% ogni 8 ore; su Hyperliquid e' stato circa il doppio;
   * nessun ordine parte verso una sede: e' un registro interno, per misurare i cancelli della sezione 4.2 del documento.
 Il passo e' idempotente: rieseguito sulla stessa barra non fa nulla.
 """
@@ -47,15 +48,29 @@ def save_state(path: str, state: dict) -> None:
     os.replace(tmp, path)
 
 
-def _conviction(bars: dict[str, pd.DataFrame], coin: str) -> tuple[float | None, str]:
-    cv = E.conviction(E.crypto_signals(bars[coin], bars["BTC"]["close"]), "crypto").iloc[-1]
+DEFAULT_FUNDING_DAY = 0.0003   # 0,01% ogni 8 ore, usato quando il funding reale del giorno non e' disponibile
+
+
+def _conviction(bars: dict[str, pd.DataFrame], coin: str, funding: dict | None = None) -> tuple[float | None, str]:
+    f = (funding or {}).get(coin)
+    cv = E.conviction(E.crypto_signals(bars[coin], bars["BTC"]["close"], f), "crypto").iloc[-1]
     return (None if cv["score"] != cv["score"] else float(cv["score"])), str(cv["tier"])
 
 
+def funding_paid(funding: dict | None, coin: str, opened: str, day: str) -> float:
+    """Funding pagato da un long tra il giorno di apertura e quello di chiusura, in frazione del controvalore."""
+    days = pd.date_range(opened, day, freq="D")[:-1] if opened != day else pd.DatetimeIndex([pd.Timestamp(day)])
+    f = (funding or {}).get(coin)
+    if f is None:
+        return DEFAULT_FUNDING_DAY * len(days)
+    return float(f.reindex(days).fillna(DEFAULT_FUNDING_DAY).sum())
+
+
 def step(bars: dict[str, pd.DataFrame], state: dict, venue_max_leverage: float, engine_scale: float = 1.0,
-         ai_multiplier: dict | None = None, limits: BookLimits | None = None) -> dict:
+         ai_multiplier: dict | None = None, limits: BookLimits | None = None, funding: dict | None = None) -> dict:
     """bars: moneta -> DataFrame giornaliero (open, high, low, close) fino all'ultima barra chiusa; deve contenere BTC.
-    ai_multiplier: moneta -> fattore in [0, 1] (assente = 1). Restituisce lo stato aggiornato."""
+    ai_multiplier: moneta -> fattore in [0, 1] (assente = 1). funding: moneta -> serie giornaliera del funding (somma dei
+    tassi del giorno); entra nel segnale di conviction e nei costi, come nella ricerca. Restituisce lo stato aggiornato."""
     day = str(max(b.index[-1] for b in bars.values()).date())
     if state.get("asof") == day:
         return state
@@ -78,12 +93,12 @@ def step(bars: dict[str, pd.DataFrame], state: dict, venue_max_leverage: float, 
             exit_px, why = px * (1 - t.side * STOP_SLIP), "stop"
         else:
             book.update_stop(sym, b["high"], b["low"])
-            _, tier = _conviction(bars, sym)
+            _, tier = _conviction(bars, sym, funding)
             if tier == "bassa" or held >= MAX_HOLD:
                 exit_px, why = float(b["close"]), "conviction bassa" if tier == "bassa" else "durata massima"
         if exit_px is not None:
             risk = t.risk
-            pnl = book.close(sym, float(exit_px), eq0, costs=2 * FEE * t.notional)
+            pnl = book.close(sym, float(exit_px), eq0, costs=(2 * FEE + funding_paid(funding, sym, opened, day)) * t.notional)
             state["equity"] = float(state["equity"]) + pnl
             rec = dict(symbol=sym, opened=opened, closed=day, entry=t.entry, exit=float(exit_px), leverage=t.leverage, tier=t.tier,
                        pnl=pnl, R=pnl / risk if risk else 0.0, why=why)
@@ -94,7 +109,7 @@ def step(bars: dict[str, pd.DataFrame], state: dict, venue_max_leverage: float, 
         for sym, b in bars.items():
             if sym in book.open or len(b) < 260 or str(b.index[-1].date()) != day:
                 continue
-            score, _ = _conviction(bars, sym)
+            score, _ = _conviction(bars, sym, funding)
             atr = float(((b["high"] - b["low"]) / b["close"]).rolling(14).mean().iloc[-1])
             m = (ai_multiplier or {}).get(sym, 1.0)
             d = book.propose(sym, 1, float(b["close"].iloc[-1]), atr, score, float(state["equity"]), venue_max_leverage,
