@@ -216,7 +216,9 @@ Quanto spesso il prezzo ha percorso l'intera distanza di liquidazione, cioè che
 | 5 agosto 2024 | −16%, −4,5% | −22%, −9,7% | −21%, −6,2% | Stop eseguito con slippage a 11x; margine perso a 30x |
 | 10 ottobre 2025 (prima attivazione dell'ADL su Hyperliquid) | −16%, −7,5% | −21%, −6,7% | −24%, −8,7% | Come sopra; possibile chiusura forzata anche di posizioni in guadagno |
 
-Il caso peggiore del libro dei trade è quindi noto prima: tutte le posizioni aperte perdono il margine insieme. Con il tetto del 6% di rischio aperto, è circa il **10% del conto**. È il motivo per cui il tetto esiste.
+Il caso peggiore del libro dei trade è quindi noto prima: tutte le posizioni aperte perdono il margine insieme. Con il 6% di rischio aperto e la leva "sicura" è circa il **10% del conto**; il tetto sul margine totale lo ferma comunque al **15%**.
+
+**Meno leva dalla sede significa meno protezione dal gap, non più.** Il margine di un trade vale rischio / (stop × leva). Con stop al 3%: a 20x è 1,7 volte il rischio; a 10x, 3,3 volte; a 2x, 16 volte. Su una sede a 10x il tetto del 15% di margine basta quasi sempre; su una sede a 2x riduce il libro a circa un terzo dei trade, e la sola difesa dal gap resta lo stop.
 
 ### 3.6 I limiti nel codice
 
@@ -226,7 +228,7 @@ Il caso peggiore del libro dei trade è quindi noto prima: tutte le posizioni ap
 | Leva per trade | Minimo tra: leva sicura per lo stop, tetto del livello (15x o 30x), tetto della sede, 30x assoluto | `isolated.py` |
 | Stop | Entro il 60% della distanza dalla liquidazione; mobile, si sposta solo a favore | `isolated.py` |
 | Rischio aperto totale | 6% del patrimonio | `isolated.py` |
-| Margine totale | 20% del patrimonio (è anche quanto serve sulla sede) | `isolated.py` |
+| Margine totale | 15% del patrimonio: è la perdita massima del libro in un solo evento | `isolated.py` |
 | Controvalore totale dei trade | 1,5 volte il patrimonio | `isolated.py` |
 | Trade aperti | 4 | `isolated.py` |
 | Interruttore di giornata | −3%: nessun nuovo trade; −5%: si chiude tutto fino a domani | `isolated.py` |
@@ -291,7 +293,7 @@ Dettaglio e fonti in [`STRUTTURA.md`](../research/v5/v4/STRUTTURA.md).
 Il quadro giuridico **[F]**: i derivati sono strumenti MiFID II, non MiCA. La delibera Consob 20976/2019 limita i CFD su crypto a 2x per i clienti al dettaglio. Il 24 febbraio 2026 l'ESMA ha scritto che i perpetual ricadono "probabilmente" in quelle misure: il 10x delle sedi europee può scendere a 2x.
 
 - **Scelta:** IBKR per azioni, ETF e cassa; Kraken (o OKX Europe) per il libro dei trade a 10x; Hyperliquid solo per il livello a 30x e per il carry, con non più del 10–15% del capitale e dopo un parere legale.
-- **Motivazione:** il livello confermato lavora a 11x, quindi sta dentro il 10x regolamentato con una perdita trascurabile. Se il tetto scende a 2x, il trade resta possibile: il controvalore di un trade è il 20–40% del patrimonio, quindi a 2x impegna il 10–20% di margine invece del 2%. Si perde efficienza del capitale, non la strategia.
+- **Motivazione:** il livello confermato lavora a 11x, quindi sta dentro il 10x regolamentato con una perdita trascurabile. Se il tetto scende a 2x, un trade impegna il 10–20% del patrimonio in margine invece del 2%: il tetto del 15% sul margine totale lascia spazio a un trade alla volta, e si perde la protezione dal gap che il margine isolato dà a leva alta (sezione 3.5). A 2x il libro dei trade si riduce a circa un terzo.
 - **Alternative scartate:** tutto su Hyperliquid (nessuna tutela, accesso revocabile, zona grigia); status di cliente professionale (servono 500.000 € o un anno di lavoro nel settore finanziario); sedi offshore con VPN (viola i termini d'uso, e il conto può essere congelato).
 - **Costo mensile:** nessun canone; commissioni sul controvalore.
 - **Passi:** aprire IBKR e Kraken; verificare a schermo leva e commissioni per l'Italia; chiave API di solo trading con lista di IP; conto demo prima del reale.
@@ -404,7 +406,8 @@ dati ─► 6 strategie giornaliere ─► quote ─► leva 2x ─┐
 |---|---|
 | Motore di rischio del conto, ordini idempotenti, supervisore, registro | Fatto e testato |
 | Quattro strategie giornaliere nel ciclo paper | Fatto |
-| Libro dei trade: ammissione, limiti, stop mobile, interruttore di giornata | Fatto e testato (11 test), **non collegato al ciclo** |
+| Libro dei trade: ammissione, limiti, stop mobile, interruttore di giornata | Fatto e testato (11 test) |
+| Ciclo paper del libro dei trade (`python -m gerva trades`), su barre giornaliere, registro interno | Fatto e testato (5 test); **non ancora dentro il ciclo principale né verso una sede** |
 | DIP-24h e carry | **Solo ricerca**: non sono nel motore |
 | Livello AI su strategie | Fatto; moltiplicatore sul singolo trade: previsto dall'interfaccia, **non collegato** |
 | Adattatori: Alpaca | Provato solo contro un servizio finto |
@@ -433,7 +436,7 @@ dati ─► 6 strategie giornaliere ─► quote ─► leva 2x ─┐
 - **Obiettivo chiesto:** 20–30% al mese. **Che cosa sostengono i dati:** in media 2,2% al mese nel profilo prudente e 4,2% in quello massimo (simulato, scenario base); circa la metà nello scenario prudente. Il mese tipico resta sotto l'1%: il rendimento arriva in pochi mesi grandi.
 - **Come:** sei strategie giornaliere poco correlate (Sharpe 1,34) più un libro di trade a leva sui giorni ad alta conviction.
 - **Leva:** 2x sul libro giornaliero; 11x per trade sui setup confermati, 30x sugli eccezionali, sempre a margine isolato, con rischio dell'1–2% per trade. 50x respinta: 9% di trade vincenti e 53 perdite di fila.
-- **Rischio:** nel profilo massimo caduta tipica −19%, −35% nel 5% dei casi peggiori, probabilità di dimezzare il conto fino al 4,5% nello scenario prudente. Caso peggiore del libro dei trade in un solo evento: circa −10%.
+- **Rischio:** nel profilo massimo caduta tipica −19%, −35% nel 5% dei casi peggiori, probabilità di dimezzare il conto fino al 4,5% nello scenario prudente. Caso peggiore del libro dei trade in un solo evento: circa −10%, mai oltre −15%.
 - **Evidenza:** 812 prove, Deflated Sharpe 0,38 contro una soglia di 0,95. Promettente, non provato.
 - **Sedi:** IBKR, più Kraken o OKX Europe a 10x; Hyperliquid solo come quota a perdere.
 - **Veicolo:** persona fisica; denaro dei familiari solo come donazione o prestito.
@@ -443,7 +446,7 @@ dati ─► 6 strategie giornaliere ─► quote ─► leva 2x ─┐
 
 ## I primi cinque passi
 
-1. **Collegare il libro dei trade al ciclo paper** e scrivere l'adattatore per Kraken demo e Hyperliquid testnet, con lo stop che nasce insieme all'ordine.
+1. **Scrivere l'adattatore per Kraken demo e Hyperliquid testnet** e portarvi il libro dei trade (oggi gira in paper interno con `python -m gerva trades`), con lo stop che nasce insieme all'ordine.
 2. **Provare su testnet le due ipotesi di sicurezza**: l'agent non può prelevare; il "cancella tutto" non rimuove gli stop.
 3. **Avviare i 90 giorni di paper** con i due libri in parallelo, con e senza AI.
 4. **Portare al commercialista e all'avvocato** le domande della sezione 6, prima di depositare un euro.

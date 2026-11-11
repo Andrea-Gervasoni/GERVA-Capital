@@ -10,7 +10,7 @@ Chi decide che cosa:
 
 L'AI non puo' aumentare un'esposizione ne' fornire numeri al dimensionamento: puo' solo abbassare un moltiplicatore
 tra 0 e 1. Il motivo e' nei dati: gli LLM che decidono le operazioni non battono l'indice dopo i costi, mentre come
-filtro un errore costa un'occasione persa, non denaro (docs/RIFONDAZIONE.md, sezioni 2.6 e 10).
+filtro un errore costa un'occasione persa, non denaro (docs/archivio_RIFONDAZIONE_v2.md, sezioni 2.6 e 10).
 """
 from .overlay import Overlay, combine, load, save
 

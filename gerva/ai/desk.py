@@ -16,7 +16,7 @@ Regole contro le allucinazioni, fatte rispettare dal codice e non dal prompt:
   5. due modelli indipendenti devono concordare; in disaccordo non si fa nulla (e lo si registra);
   6. ogni proposta scade (24 ore) e viene misurata: quanto avrebbe reso il portafoglio SENZA di essa.
 
-Costo: una passata usa ~6.000 token in ingresso e ~800 in uscita per modello. Vedi docs/RIFONDAZIONE.md, sezione 10.4.
+Costo: una passata usa ~6.000 token in ingresso e ~800 in uscita per modello. Vedi docs/archivio_RIFONDAZIONE_v2.md, sezione 10.4.
 """
 from __future__ import annotations
 

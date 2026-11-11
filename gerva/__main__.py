@@ -66,6 +66,8 @@ def main(argv=None) -> int:
     sub.add_parser("check-broker")
     ai = sub.add_parser("ai")
     ai.add_argument("--dry", action="store_true", help="non scrive l'overlay: mostra soltanto")
+    tb = sub.add_parser("trades", help="un passo PAPER del libro dei trade a margine isolato")
+    tb.add_argument("--venue-max-leverage", type=float, default=10.0, help="tetto di leva della sede (10 = sedi MiFID UE)")
     pr = sub.add_parser("propose")
     pr.add_argument("spec", help="file JSON: family, universe, params, hypothesis, author")
     a = ap.parse_args(argv)
@@ -100,6 +102,25 @@ def main(argv=None) -> int:
         j.set("killed.flattened", False)
         print("KILL azzerato: stato HALTED." if ok else "il file KILL e' ancora presente: toglilo a mano prima.")
         return 0 if ok else 1
+    if a.cmd == "trades":
+        import pandas as pd
+        from .data import Store, binance_recent
+        from .live import tradecycle as TC
+        s, limits, _ = load()
+        st = Store(os.environ.get("GERVA_CACHE") or os.path.join(ROOT, "data_cache"))
+        bars = {}
+        for c in ("BTC", "ETH", "SOL"):
+            rec = binance_recent(c + "USDT", "1d", 400)[["open", "high", "low", "close"]]
+            now = pd.Timestamp.now(tz="UTC").tz_localize(None).normalize()
+            bars[c] = rec[rec.index < now]                      # solo barre chiuse
+        path = os.path.join(s.home, "tradebook.json")
+        os.makedirs(s.home, exist_ok=True)
+        state = TC.step(bars, TC.load_state(path, s.start_cash), a.venue_max_leverage)
+        TC.save_state(path, state)
+        print(json.dumps(dict(riepilogo=TC.summary(state), aperti=state["open"], ultimo=state["log"][-1] if state["log"] else None),
+                         indent=1, ensure_ascii=False, default=str))
+        print("PAPER: nessun ordine inviato a una sede.")
+        return 0
     if a.cmd == "propose":
         from .agents import Council, StrategySpec
         from .research.run import Lab

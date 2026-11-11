@@ -49,7 +49,9 @@ class BookLimits:
     exceptional: Tier = Tier("eccezionale", 0.020, 1.0, None, 15.0, 2.0)
     exceptional_tight: Tier = Tier("eccezionale-30x", 0.005, None, 0.017, 30.0, None)
     max_open_risk: float = 0.06        # somma dei rischi dei trade aperti
-    max_margin: float = 0.20           # somma dei margini isolati: e' anche il capitale che serve sull'exchange
+    max_margin: float = 0.15           # somma dei margini isolati = PERDITA MASSIMA del libro in un solo evento (gap, sede
+                                       # irraggiungibile). Se la sede concede meno leva di quella 'sicura' il margine per trade
+                                       # sale (a 10x con stop al 3%: 3,3 volte il rischio; a 2x: 16 volte) e questo tetto riduce i trade
     max_notional: float = 1.5          # somma dei controvalori, in multipli del patrimonio
     max_trades: int = 4
     day_stop_new: float = -0.03        # perdita di giornata oltre la quale non si aprono trade

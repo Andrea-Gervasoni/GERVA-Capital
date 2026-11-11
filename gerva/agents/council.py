@@ -9,7 +9,7 @@ Il consiglio di ricerca: piu' agenti che collaborano, con il codice come arbitro
 
 Perche' cosi' (e non agenti che "dibattono" e poi tradano):
   * nei test indipendenti gli agenti LLM che decidono le operazioni non battono l'indice dopo i costi
-    (FINSABER, StockBench, Alpha Arena: vedi docs/RIFONDAZIONE.md, sezione 2.6);
+    (FINSABER, StockBench, Alpha Arena: vedi docs/archivio_RIFONDAZIONE_v2.md, sezione 2.6);
   * un LLM e' utile per generare ipotesi e trovare difetti, cioe' dove un errore costa una prova in piu', non denaro;
   * il dibattito non migliora la decisione a parita' di calcolo; pareri indipendenti aggregati da codice si'.
 
@@ -22,7 +22,7 @@ from typing import Callable
 
 from .spec import FAMILIES, StrategySpec, TrialRegistry, evaluate, gate
 
-BASELINE_TRIALS = 110          # prove gia' consumate dalla ricerca v5 (research/v5/RESULTS.md, sezione 8d)
+BASELINE_TRIALS = 812          # prove gia' consumate: 110 (v5) + 12 (v3) + 680 e 10 portafogli (v4, research/v5/v4/RISULTATI.md, sezione 6)
 
 
 def default_roles() -> dict[str, Callable]:
