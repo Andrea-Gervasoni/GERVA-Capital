@@ -1,0 +1,99 @@
+Controllo di troncamento (segnale e ATR ricalcolati sui dati tagliati a t-1): 120/120 identici
+
+################ A: {'stop': 'atr', 'k': 1.0, 'trail': 2.0} ################
+                                                cfg   n  N_anno     R   sdR     t   hit  R_sel  sd_sel  t_sel  N_sel  R_ver  sd_ver  t_ver  N_ver  costo_R  fund_R  K_sel  K_ver
+                       A0 v4 su SPOT (2020+), taker 586  86.062 0.220 1.719 3.094 0.430  0.289   1.713  2.495 73.452  0.179   1.724  1.984 95.885    0.028   0.044  2.087  1.028
+                       A1 PERP, taker (base onesta) 592  86.943 0.216 1.728 3.037 0.424  0.313   1.668  2.775 73.452  0.159   1.762  1.740 97.452    0.028   0.043  2.583  0.791
+                  A2 + ingresso maker 15m poi taker 593  87.090 0.226 1.726 3.183 0.427  0.323   1.663  2.876 73.452  0.168   1.761  1.850 97.714    0.018   0.043  2.774  0.894
+          A3 + uscita a tempo maker  [COMBINAZIONE] 593  87.090 0.229 1.726 3.224 0.427  0.325   1.659  2.902 73.452  0.172   1.763  1.884 97.714    0.014   0.043  2.825  0.927
+                                        A3 costi x2 593  87.090 0.208 1.730 2.927 0.427  0.310   1.664  2.754 73.452  0.148   1.767  1.623 97.714    0.028   0.043  2.544  0.689
+                                   A1 base costi x2 592  86.943 0.181 1.729 2.541 0.422  0.285   1.669  2.526 73.452  0.119   1.762  1.307 97.452    0.057   0.043  2.139  0.447
+                                A3 ritardo +1 barra 590  86.650 0.218 1.719 3.078 0.432  0.322   1.649  2.875 72.782  0.157   1.758  1.729 97.452    0.014   0.043  2.773  0.781
+                           A1 base ritardo +1 barra 590  86.650 0.205 1.717 2.906 0.429  0.313   1.647  2.803 72.782  0.143   1.755  1.569 97.452    0.028   0.043  2.635  0.643
+                            A3 attraversamento 1 pb 594  87.237 0.224 1.724 3.171 0.426  0.319   1.658  2.851 73.788  0.169   1.762  1.853 97.714    0.014   0.043  2.727  0.897
+                            A3 attraversamento 3 pb 596  87.531 0.213 1.722 3.016 0.423  0.298   1.653  2.682 74.459  0.162   1.761  1.782 97.714    0.015   0.042  2.413  0.830
+            A3 commissioni UE (taker 5, maker 2 pb) 593  87.090 0.226 1.726 3.194 0.427  0.324   1.659  2.887 73.452  0.169   1.763  1.857 97.714    0.016   0.043  2.795  0.901
+                         A3 sul percorso a 1 minuto 593  87.090 0.229 1.729 3.225 0.427  0.326   1.665  2.899 73.452  0.172   1.765  1.886 97.714    0.014   0.043  2.819  0.929
+                                    A3 solo BTC+ETH 441  64.767 0.205 1.671 2.572 0.426  0.333   1.652  2.721 61.043  0.114   1.681  1.094 67.668    0.015   0.050  2.484  0.313
+A4 = 3 + salta se funding > 3 pb/8h (soglia scelta) 538  79.013 0.256 1.749 3.397 0.429  0.445   1.670  3.502 58.024  0.167   1.781  1.790 95.362    0.014   0.037  4.113  0.838
+                      A5 = 3 + salta se base > 5 pb 474  69.726 0.270 1.796 3.272 0.424  0.415   1.709  2.842 46.119  0.211   1.829  2.117 88.047    0.015   0.033  2.718  1.171
+
+Effetto netto della combinazione sul perp: scelta R 0.313->0.325 (+0.013), sd 1.67->1.66, N/anno 73->73, R/sd 0.188->0.196, K 2.58->2.83
+                                          verifica R 0.159->0.172 (+0.013), sd 1.76->1.76, N/anno 97->98, R/sd 0.090->0.097, K 0.79->0.93
+Stessi trade (n=589): differenza di R media +0.0132, t appaiato +20.86; scelta +0.0099, verifica +0.0152; risparmio di costo +0.0146 R; quota ingressi maker 98.0%
+
+Per anno: base perp | combinazione
+       n_base  R_base  somma_R_base  n_comb  R_comb  somma_R_comb
+entry                                                            
+2020       96   0.439        42.141      96   0.456        43.741
+2021      107   0.283        30.249     107   0.292        31.250
+2022       16  -0.244        -3.911      16  -0.232        -3.712
+2023      123   0.322        39.599     123   0.338        41.532
+2024      115   0.128        14.740     115   0.142        16.365
+2025       85  -0.007        -0.554      86  -0.003        -0.224
+2026       50   0.108         5.415      50   0.131         6.552
+
+Per moneta (combinazione):
+cfg   n     R   sdR     t  R_sel  R_ver
+BTC 228 0.214 1.674 1.932  0.191  0.230
+ETH 213 0.194 1.671 1.698  0.476 -0.015
+SOL 152 0.298 1.881 1.952  0.287  0.301
+
+Su HYPERLIQUID (commissioni HL, funding orario HL reale, 319 trade dal 2023-05-12, solo verifica): R medio 0.111 (sd 1.67, t 1.19, N/anno 92, K 0.41) contro 0.144 con funding Binance e 0.131 della base taker con funding Binance
+   esplorativo (solo verifica, NON scelto prima): salta se funding HL delle ultime 8 ore > 1 pb -> n=138 R 0.326 sd 2.07 K 0.99
+   esplorativo (solo verifica, NON scelto prima): salta se funding HL delle ultime 8 ore > 3 pb -> n=281 R 0.118 sd 1.80 K 0.35
+
+################ C: {'stop': 'fix', 'k': 0.017, 'trail': None} ################
+                                                cfg    n  N_anno     R   sdR     t   hit  R_sel  sd_sel  t_sel   N_sel  R_ver  sd_ver  t_ver   N_ver  costo_R  fund_R  K_sel  K_ver
+                       C0 v4 su SPOT (2020+), taker  995 146.129 0.331 4.139 2.522 0.175  0.514   4.789  2.183 138.520  0.201   3.605  1.342 152.057    0.076   0.065  1.598  0.471
+                       C1 PERP, taker (base onesta) 1026 150.682 0.252 4.052 1.992 0.166  0.468   4.754  2.009 139.862  0.104   3.487  0.737 159.111    0.076   0.062  1.354  0.142
+                  C2 + ingresso maker 15m poi taker 1026 150.682 0.280 4.051 2.217 0.167  0.495   4.752  2.128 139.862  0.133   3.487  0.943 159.111    0.048   0.062  1.519  0.232
+          C3 + uscita a tempo maker  [COMBINAZIONE] 1026 150.682 0.284 4.057 2.245 0.167  0.499   4.757  2.141 139.862  0.137   3.494  0.971 159.111    0.043   0.062  1.538  0.246
+                                        C3 costi x2 1026 150.682 0.218 4.073 1.713 0.167  0.431   4.773  1.845 139.862  0.072   3.511  0.503 159.111    0.085   0.062  1.142  0.066
+                                   C1 base costi x2 1026 150.682 0.152 4.060 1.197 0.165  0.367   4.763  1.575 139.862  0.004   3.495  0.029 159.111    0.153   0.062  0.832  0.000
+                                C3 ritardo +1 barra 1026 150.682 0.250 3.911 2.046 0.166  0.384   4.438  1.781 141.874  0.155   3.495  1.092 157.543    0.043   0.063  1.064  0.312
+                           C1 base ritardo +1 barra 1024 150.388 0.231 3.923 1.884 0.166  0.380   4.465  1.750 141.874  0.126   3.492  0.885 157.021    0.076   0.063  1.027  0.205
+                            C3 attraversamento 1 pb 1031 151.416 0.276 4.047 2.186 0.166  0.487   4.742  2.105 140.868  0.130   3.488  0.923 159.634    0.044   0.061  1.486  0.223
+                            C3 attraversamento 3 pb 1034 151.857 0.269 4.040 2.143 0.165  0.481   4.734  2.083 141.203  0.124   3.481  0.882 160.156    0.045   0.061  1.456  0.203
+            C3 commissioni UE (taker 5, maker 2 pb) 1026 150.682 0.278 4.057 2.198 0.167  0.493   4.757  2.116 139.862  0.132   3.494  0.929 159.111    0.049   0.062  1.502  0.226
+                         C3 sul percorso a 1 minuto 1026 150.682 0.285 4.058 2.247 0.167  0.499   4.760  2.142 139.862  0.138   3.494  0.972 159.111    0.043   0.062  1.539  0.247
+                                    C3 solo BTC+ETH  713 104.714 0.239 3.441 1.858 0.188  0.386   3.948  1.786 112.023  0.110   2.922  0.735  99.020    0.042   0.075  1.070  0.141
+C4 = 3 + salta se funding > 3 pb/8h (soglia scelta)  871 127.918 0.387 4.134 2.761 0.184  0.890   5.162  2.921  96.260  0.139   3.499  0.962 152.579    0.042   0.055  2.862  0.242
+                      C5 = 3 + salta se base > 5 pb  724 106.501 0.458 4.006 3.079 0.196  0.864   4.664  2.715  72.377  0.287   3.685  1.759 132.984    0.042   0.049  2.482  0.808
+
+Effetto netto della combinazione sul perp: scelta R 0.468->0.499 (+0.031), sd 4.75->4.76, N/anno 140->140, R/sd 0.098->0.105, K 1.35->1.54
+                                          verifica R 0.104->0.137 (+0.033), sd 3.49->3.49, N/anno 159->159, R/sd 0.030->0.039, K 0.14->0.25
+Stessi trade (n=1026): differenza di R media +0.0323, t appaiato +42.43; scelta +0.0309, verifica +0.0333; risparmio di costo +0.0338 R; quota ingressi maker 98.1%
+
+Per anno: base perp | combinazione
+       n_base  R_base  somma_R_base  n_comb  R_comb  somma_R_comb
+entry                                                            
+2020      152   0.361        54.846     152   0.390        59.337
+2021      240   0.565       135.588     240   0.596       143.128
+2022       25   0.186         4.656      25   0.220         5.509
+2023      198   0.387        76.638     198   0.419        82.918
+2024      217  -0.125       -27.178     217  -0.092       -20.001
+2025      123   0.156        19.207     123   0.192        23.589
+2026       71  -0.074        -5.231      71  -0.039        -2.790
+
+Per moneta (combinazione):
+cfg   n     R   sdR     t  R_sel  R_ver
+BTC 355 0.194 3.200 1.145  0.280  0.129
+ETH 358 0.284 3.669 1.465  0.477  0.089
+SOL 313 0.386 5.198 1.315  0.953  0.182
+
+Su HYPERLIQUID (commissioni HL, funding orario HL reale, 529 trade dal 2023-05-12, solo verifica): R medio 0.078 (sd 3.49, t 0.51, N/anno 153, K 0.08) contro 0.126 con funding Binance e 0.093 della base taker con funding Binance
+   esplorativo (solo verifica, NON scelto prima): salta se funding HL delle ultime 8 ore > 1 pb -> n=195 R 0.606 sd 4.38 K 1.08
+   esplorativo (solo verifica, NON scelto prima): salta se funding HL delle ultime 8 ore > 3 pb -> n=421 R 0.180 sd 3.64 K 0.30
+
+rendimenti giornalieri all'1% di rischio per trade (somma, non composto): media annua e Sharpe annuo
+                       media_annua  sharpe  sharpe_ver
+A_base_perp                  0.187   0.964       0.731
+A_combinazione               0.198   1.024       0.791
+A_comb_filtro_funding        0.202   1.075       0.755
+A_combinazione_HL            0.052   0.382       0.511
+C_base_perp                  0.378   0.690       0.338
+C_combinazione               0.427   0.778       0.445
+C_comb_filtro_funding        0.493   0.963       0.440
+C_combinazione_HL            0.060   0.177       0.237
+prove: {'combinazione': 32}

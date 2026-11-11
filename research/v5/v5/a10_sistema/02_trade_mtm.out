@@ -1,0 +1,100 @@
+== 1. Libro dei trade 11x (1%/2%): P&L sul giorno di uscita (09_fondo) contro valutazione giornaliera a mercato
+   somma dei rendimenti: uscita 2.1214  mtm 2.1214 (devono coincidere)
+T solo trade [uscita]                                      Sh giorn 0.97 | Sh mens 0.85 (sel 1.01 ver 0.75) | CAGR 0.249 | vol giorn 0.227 vol mens 0.272 | DD giorn -0.215 DD mens -0.186 | giorno peggiore -0.063 mese peggiore -0.148
+C2 = 6 strat 1x + trade [uscita]                           Sh giorn 1.40 | Sh mens 1.12 (sel 1.31 ver 0.97) | CAGR 0.415 | vol giorn 0.250 vol mens 0.335 | DD giorn -0.240 DD mens -0.183 | giorno peggiore -0.087 mese peggiore -0.156
+C3 = 6 strat 2x + trade [uscita]                           Sh giorn 1.50 | Sh mens 1.17 (sel 1.38 ver 0.99) | CAGR 0.528 | vol giorn 0.292 vol mens 0.407 | DD giorn -0.302 DD mens -0.218 | giorno peggiore -0.112 mese peggiore -0.167
+   correlazione GIORNALIERA trade-libro giornaliero: 0.16   mensile: 0.64
+T solo trade [mtm]                                         Sh giorn 0.87 | Sh mens 0.78 (sel 0.93 ver 0.68) | CAGR 0.240 | vol giorn 0.252 vol mens 0.291 | DD giorn -0.245 DD mens -0.195 | giorno peggiore -0.092 mese peggiore -0.150
+C2 = 6 strat 1x + trade [mtm]                              Sh giorn 1.17 | Sh mens 1.04 (sel 1.20 ver 0.90) | CAGR 0.395 | vol giorn 0.299 vol mens 0.352 | DD giorn -0.264 DD mens -0.193 | giorno peggiore -0.099 mese peggiore -0.158
+C3 = 6 strat 2x + trade [mtm]                              Sh giorn 1.23 | Sh mens 1.09 (sel 1.28 ver 0.91) | CAGR 0.496 | vol giorn 0.357 vol mens 0.421 | DD giorn -0.324 DD mens -0.229 | giorno peggiore -0.107 mese peggiore -0.170
+   correlazione GIORNALIERA trade-libro giornaliero: 0.53   mensile: 0.63
+
+== 2. Composizione: sovrapposizione additiva sul patrimonio corrente (09) contro conto vero (controvalore fissato sul patrimonio di INGRESSO)
+C2 conto vero (mtm, sizing su patrimonio di ingresso)      Sh giorn 1.19 | Sh mens 1.05 (sel 1.22 ver 0.91) | CAGR 0.392 | vol giorn 0.292 vol mens 0.342 | DD giorn -0.261 DD mens -0.190 | giorno peggiore -0.090 mese peggiore -0.158
+C2 + LIMITI del libro live (rischio<=2%, 6% aperto, 1,5x, 15% margine) Sh giorn 1.19 | Sh mens 1.06 (sel 1.22 ver 0.92) | CAGR 0.392 | vol giorn 0.290 vol mens 0.340 | DD giorn -0.261 DD mens -0.190 | giorno peggiore -0.090 mese peggiore -0.158
+       {'kill': 0, 'saltati': 0, 'presi': 652, 'giorni': {'NORMAL': 0, 'REDUCED': 0, 'HALTED': 0, 'KILLED': 0}}
+C2 + limiti + MOTORE DI RISCHIO (config/gerva.yaml: -10% meta, -15% un quarto, -20% KILL; -4% giorno, -8% settimana) Sh giorn 1.03 | Sh mens 0.98 (sel 1.29 ver 0.54) | CAGR 0.232 | vol giorn 0.194 vol mens 0.207 | DD giorn -0.162 DD mens -0.125 | giorno peggiore -0.090 mese peggiore -0.125
+       {'kill': 0, 'saltati': 0, 'presi': 652, 'giorni': {'NORMAL': 854, 'REDUCED': 1116, 'HALTED': 1166, 'KILLED': 0}}
+   solo libro giornaliero 1x + motore di rischio           Sh giorn 1.36 | Sh mens 1.33 (sel 1.62 ver 0.98) | CAGR 0.136 | vol giorn 0.076 vol mens 0.077 | DD giorn -0.094 DD mens -0.064 | giorno peggiore -0.037 mese peggiore -0.034
+       {'kill': 0, 'saltati': 652, 'presi': 0, 'giorni': {'NORMAL': 3136, 'REDUCED': 0, 'HALTED': 0, 'KILLED': 0}}
+C2 + limiti, finanziamento sul debito reale                Sh giorn 1.19 | Sh mens 1.06 (sel 1.22 ver 0.92) | CAGR 0.392 | vol giorn 0.290 vol mens 0.340 | DD giorn -0.261 DD mens -0.190 | giorno peggiore -0.090 mese peggiore -0.158
+C3 conto vero (mtm, sizing su patrimonio di ingresso)      Sh giorn 1.25 | Sh mens 1.10 (sel 1.30 ver 0.92) | CAGR 0.493 | vol giorn 0.349 vol mens 0.412 | DD giorn -0.321 DD mens -0.226 | giorno peggiore -0.106 mese peggiore -0.170
+C3 + LIMITI del libro live (rischio<=2%, 6% aperto, 1,5x, 15% margine) Sh giorn 1.25 | Sh mens 1.11 (sel 1.30 ver 0.93) | CAGR 0.493 | vol giorn 0.347 vol mens 0.410 | DD giorn -0.321 DD mens -0.226 | giorno peggiore -0.102 mese peggiore -0.170
+       {'kill': 0, 'saltati': 0, 'presi': 652, 'giorni': {'NORMAL': 0, 'REDUCED': 0, 'HALTED': 0, 'KILLED': 0}}
+C3 + limiti + MOTORE DI RISCHIO (config/gerva.yaml: -10% meta, -15% un quarto, -20% KILL; -4% giorno, -8% settimana) Sh giorn 1.05 | Sh mens 1.00 (sel 1.35 ver 0.46) | CAGR 0.251 | vol giorn 0.207 vol mens 0.220 | DD giorn -0.193 DD mens -0.105 | giorno peggiore -0.096 mese peggiore -0.100
+       {'kill': 0, 'saltati': 0, 'presi': 652, 'giorni': {'NORMAL': 564, 'REDUCED': 635, 'HALTED': 1937, 'KILLED': 0}}
+   solo libro giornaliero 2x + motore di rischio           Sh giorn 0.83 | Sh mens 0.79 (sel 1.05 ver 0.48) | CAGR 0.129 | vol giorn 0.123 vol mens 0.128 | DD giorn -0.151 DD mens -0.111 | giorno peggiore -0.074 mese peggiore -0.070
+       {'kill': 0, 'saltati': 652, 'presi': 0, 'giorni': {'NORMAL': 2039, 'REDUCED': 749, 'HALTED': 348, 'KILLED': 0}}
+C3 + limiti, finanziamento sul debito reale                Sh giorn 1.36 | Sh mens 1.20 (sel 1.37 ver 1.04) | CAGR 0.550 | vol giorn 0.347 vol mens 0.410 | DD giorn -0.310 DD mens -0.213 | giorno peggiore -0.102 mese peggiore -0.167
+C4 conto vero (mtm, sizing su patrimonio di ingresso)      Sh giorn 1.20 | Sh mens 1.05 (sel 1.23 ver 0.90) | CAGR 0.609 | vol giorn 0.460 vol mens 0.557 | DD giorn -0.401 DD mens -0.300 | giorno peggiore -0.136 mese peggiore -0.238
+C4 + LIMITI del libro live (rischio<=2%, 6% aperto, 1,5x, 15% margine) Sh giorn 1.21 | Sh mens 1.06 (sel 1.28 ver 0.86) | CAGR 0.538 | vol giorn 0.400 vol mens 0.482 | DD giorn -0.382 DD mens -0.293 | giorno peggiore -0.107 mese peggiore -0.237
+       {'kill': 0, 'saltati': 1, 'presi': 651, 'giorni': {'NORMAL': 0, 'REDUCED': 0, 'HALTED': 0, 'KILLED': 0}}
+C4 + limiti + MOTORE DI RISCHIO (config/gerva.yaml: -10% meta, -15% un quarto, -20% KILL; -4% giorno, -8% settimana) Sh giorn 0.99 | Sh mens 0.91 (sel 1.30 ver 0.46) | CAGR 0.271 | vol giorn 0.245 vol mens 0.272 | DD giorn -0.254 DD mens -0.145 | giorno peggiore -0.101 mese peggiore -0.123
+       {'kill': 2, 'saltati': 0, 'presi': 652, 'giorni': {'NORMAL': 617, 'REDUCED': 309, 'HALTED': 2150, 'KILLED': 60}}
+   solo libro giornaliero 2x + motore di rischio           Sh giorn 0.83 | Sh mens 0.79 (sel 1.05 ver 0.48) | CAGR 0.129 | vol giorn 0.123 vol mens 0.128 | DD giorn -0.151 DD mens -0.111 | giorno peggiore -0.074 mese peggiore -0.070
+       {'kill': 0, 'saltati': 652, 'presi': 0, 'giorni': {'NORMAL': 2039, 'REDUCED': 749, 'HALTED': 348, 'KILLED': 0}}
+C4 + limiti, finanziamento sul debito reale                Sh giorn 1.30 | Sh mens 1.14 (sel 1.35 ver 0.95) | CAGR 0.597 | vol giorn 0.400 vol mens 0.482 | DD giorn -0.372 DD mens -0.281 | giorno peggiore -0.106 mese peggiore -0.234
+C6 conto vero (mtm, sizing su patrimonio di ingresso)      Sh giorn 1.24 | Sh mens 1.08 (sel 1.27 ver 0.91) | CAGR 0.708 | vol giorn 0.519 vol mens 0.632 | DD giorn -0.452 DD mens -0.333 | giorno peggiore -0.160 mese peggiore -0.249
+C6 + LIMITI del libro live (rischio<=2%, 6% aperto, 1,5x, 15% margine) Sh giorn 1.24 | Sh mens 1.09 (sel 1.32 ver 0.87) | CAGR 0.637 | vol giorn 0.462 vol mens 0.558 | DD giorn -0.434 DD mens -0.325 | giorno peggiore -0.142 mese peggiore -0.249
+       {'kill': 0, 'saltati': 1, 'presi': 651, 'giorni': {'NORMAL': 0, 'REDUCED': 0, 'HALTED': 0, 'KILLED': 0}}
+C6 + limiti + MOTORE DI RISCHIO (config/gerva.yaml: -10% meta, -15% un quarto, -20% KILL; -4% giorno, -8% settimana) Sh giorn 0.95 | Sh mens 0.88 (sel 1.19 ver 0.54) | CAGR 0.285 | vol giorn 0.274 vol mens 0.300 | DD giorn -0.295 DD mens -0.242 | giorno peggiore -0.110 mese peggiore -0.097
+       {'kill': 3, 'saltati': 10, 'presi': 642, 'giorni': {'NORMAL': 539, 'REDUCED': 336, 'HALTED': 2171, 'KILLED': 90}}
+   solo libro giornaliero 3x + motore di rischio           Sh giorn 0.80 | Sh mens 0.73 (sel 1.04 ver 0.31) | CAGR 0.150 | vol giorn 0.155 vol mens 0.173 | DD giorn -0.180 DD mens -0.129 | giorno peggiore -0.111 mese peggiore -0.105
+       {'kill': 0, 'saltati': 652, 'presi': 0, 'giorni': {'NORMAL': 956, 'REDUCED': 1575, 'HALTED': 605, 'KILLED': 0}}
+C6 + limiti, finanziamento sul debito reale                Sh giorn 1.37 | Sh mens 1.20 (sel 1.41 ver 0.99) | CAGR 0.736 | vol giorn 0.461 vol mens 0.559 | DD giorn -0.420 DD mens -0.309 | giorno peggiore -0.142 mese peggiore -0.244
+
+== 3. Sopravvivenza: SOL e' stata scelta sapendo com'e' andata? Libro dei trade per moneta (1%/2%, mtm)
+trade BTC                                                          Sh  0.55 |  0.54 |  0.55  CAGR    9.5%    7.4%   12.2%  vol  12.6%  DD  -16.1%  -13.2%  n=263 R medio +0.22 (sel +0.23, ver +0.22) t=2.08
+trade ETH                                                          Sh  0.49 |  1.08 | -0.10  CAGR    8.3%   13.6%    2.2%  vol  11.4%  DD  -15.4%  -15.4%  n=238 R medio +0.23 (sel +0.44, ver +0.02) t=2.09
+trade SOL                                                          Sh  0.33 |  0.05 |  0.53  CAGR    5.9%    1.4%   11.9%  vol   9.0%  DD  -13.4%   -9.9%  n=151 R medio +0.27 (sel +0.19, ver +0.30) t=1.82
+trade BTC+ETH                                                      Sh  0.70 |  0.91 |  0.45  CAGR   17.8%   21.2%   13.7%  vol  20.7%  DD  -22.4%  -22.4%  n=501 R medio +0.23 (sel +0.33, ver +0.13) t=2.95
+trade BTC+ETH+SOL                                                  Sh  0.78 |  0.93 |  0.68  CAGR   24.0%   22.8%   25.7%  vol  25.2%  DD  -24.5%  -24.5%  n=652 R medio +0.24 (sel +0.31, ver +0.18) t=3.47
+
+== 4. Monte Carlo: mensile a blocchi di 3 mesi (pubblicato) contro giornaliero mtm a blocchi di 30 e 90 giorni; 3 anni, 4000 percorsi
+                     p                          metodo  cagr_p50  cagr_p05  dd_p50  dd_p95  p_meno30  p_dimezzato
+           C2 1x+trade mensile blocchi 3m (pubblicato)     0.420     0.069  -0.160  -0.307     0.012        0.001
+           C2 1x+trade     giornaliero mtm blocchi 30g     0.406     0.053  -0.252  -0.399     0.030        0.001
+           C2 1x+trade     giornaliero mtm blocchi 90g     0.420     0.056  -0.240  -0.385     0.024        0.000
+           C3 2x+trade mensile blocchi 3m (pubblicato)     0.526     0.076  -0.202  -0.367     0.029        0.002
+           C3 2x+trade     giornaliero mtm blocchi 30g     0.512     0.071  -0.298  -0.460     0.065        0.003
+           C3 2x+trade     giornaliero mtm blocchi 90g     0.523     0.071  -0.291  -0.456     0.050        0.003
+C3 conto vero + limiti mensile blocchi 3m (pubblicato)     0.523     0.078  -0.200  -0.364     0.028        0.002
+C3 conto vero + limiti     giornaliero mtm blocchi 30g     0.511     0.072  -0.293  -0.454     0.060        0.003
+C3 conto vero + limiti     giornaliero mtm blocchi 90g     0.521     0.072  -0.286  -0.449     0.046        0.002
+
+== 5. Varianti del motore di rischio (soglie x m; isteresi h = frazione della soglia per risalire; massimo su finestra mobile). Scelta sul periodo di scelta
+B2 libro 2x: motore SPENTO (numeri pubblicati)                     Sh  1.23 |  1.51 |  0.88  CAGR   23.0%   26.4%   19.0%  vol  15.2%  DD  -19.8%  -13.4% 
+B2 libro 2x: soglie x1.0 isteresi 0.5 massimo storico              Sh  0.79 |  1.05 |  0.48  CAGR   12.9%   14.9%   10.4%  vol  12.3%  DD  -15.1%  -12.9% | kill 0 giorni ridotti/fermi 749/348
+B2 libro 2x: soglie x1.0 isteresi 0.5 massimo 365g                 Sh  0.89 |  1.21 |  0.48  CAGR   14.4%   17.7%   10.4%  vol  12.7%  DD  -15.1%  -12.9% | kill 0 giorni ridotti/fermi 527/303
+B2 libro 2x: soglie x1.0 isteresi 0.8 massimo storico              Sh  1.03 |  1.32 |  0.69  CAGR   18.3%   21.3%   14.6%  vol  13.7%  DD  -15.1%  -12.9% | kill 0 giorni ridotti/fermi 459/109
+B2 libro 2x: soglie x1.0 isteresi 0.8 massimo 365g                 Sh  1.05 |  1.34 |  0.69  CAGR   18.7%   22.0%   14.6%  vol  13.7%  DD  -15.1%  -12.9% | kill 0 giorni ridotti/fermi 454/109
+B2 libro 2x: soglie x1.5 isteresi 0.5 massimo storico              Sh  1.10 |  1.29 |  0.88  CAGR   20.1%   21.0%   19.0%  vol  14.3%  DD  -17.6%  -13.4% | kill 0 giorni ridotti/fermi 304/0
+B2 libro 2x: soglie x1.5 isteresi 0.5 massimo 365g                 Sh  1.11 |  1.30 |  0.88  CAGR   20.4%   21.5%   19.0%  vol  14.3%  DD  -17.6%  -13.4% | kill 0 giorni ridotti/fermi 297/0
+B2 libro 2x: soglie x1.5 isteresi 0.8 massimo storico              Sh  1.15 |  1.37 |  0.88  CAGR   21.3%   23.2%   19.0%  vol  14.6%  DD  -17.6%  -13.4% | kill 0 giorni ridotti/fermi 192/0
+B2 libro 2x: soglie x1.5 isteresi 0.8 massimo 365g                 Sh  1.15 |  1.37 |  0.88  CAGR   21.3%   23.2%   19.0%  vol  14.6%  DD  -17.6%  -13.4% | kill 0 giorni ridotti/fermi 192/0
+B2 libro 2x: soglie x2.0 isteresi 0.5 massimo storico              Sh  1.23 |  1.51 |  0.88  CAGR   23.0%   26.4%   19.0%  vol  15.2%  DD  -19.8%  -13.4% | kill 0 giorni ridotti/fermi 0/0
+B2 libro 2x: soglie x2.0 isteresi 0.5 massimo 365g                 Sh  1.23 |  1.51 |  0.88  CAGR   23.0%   26.4%   19.0%  vol  15.2%  DD  -19.8%  -13.4% | kill 0 giorni ridotti/fermi 0/0
+B2 libro 2x: soglie x2.0 isteresi 0.8 massimo storico              Sh  1.23 |  1.51 |  0.88  CAGR   23.0%   26.4%   19.0%  vol  15.2%  DD  -19.8%  -13.4% | kill 0 giorni ridotti/fermi 0/0
+B2 libro 2x: soglie x2.0 isteresi 0.8 massimo 365g                 Sh  1.23 |  1.51 |  0.88  CAGR   23.0%   26.4%   19.0%  vol  15.2%  DD  -19.8%  -13.4% | kill 0 giorni ridotti/fermi 0/0
+B2 libro 2x: soglie x3.0 isteresi 0.5 massimo storico              Sh  1.23 |  1.51 |  0.88  CAGR   23.0%   26.4%   19.0%  vol  15.2%  DD  -19.8%  -13.4% | kill 0 giorni ridotti/fermi 0/0
+B2 libro 2x: soglie x3.0 isteresi 0.5 massimo 365g                 Sh  1.23 |  1.51 |  0.88  CAGR   23.0%   26.4%   19.0%  vol  15.2%  DD  -19.8%  -13.4% | kill 0 giorni ridotti/fermi 0/0
+B2 libro 2x: soglie x3.0 isteresi 0.8 massimo storico              Sh  1.23 |  1.51 |  0.88  CAGR   23.0%   26.4%   19.0%  vol  15.2%  DD  -19.8%  -13.4% | kill 0 giorni ridotti/fermi 0/0
+B2 libro 2x: soglie x3.0 isteresi 0.8 massimo 365g                 Sh  1.23 |  1.51 |  0.88  CAGR   23.0%   26.4%   19.0%  vol  15.2%  DD  -19.8%  -13.4% | kill 0 giorni ridotti/fermi 0/0
+C3 2x+trade: motore SPENTO (numeri pubblicati)                     Sh  1.11 |  1.30 |  0.93  CAGR   49.3%   52.2%   45.8%  vol  34.7%  DD  -32.1%  -32.1% 
+C3 2x+trade: soglie x1.0 isteresi 0.5 massimo storico              Sh  1.00 |  1.35 |  0.46  CAGR   25.1%   37.0%   11.7%  vol  20.7%  DD  -19.3%  -19.3% | kill 0 giorni ridotti/fermi 635/1937
+C3 2x+trade: soglie x1.0 isteresi 0.5 massimo 365g                 Sh  0.99 |  1.35 |  0.56  CAGR   27.9%   37.0%   17.4%  vol  22.8%  DD  -20.5%  -20.5% | kill 0 giorni ridotti/fermi 670/1831
+C3 2x+trade: soglie x1.0 isteresi 0.8 massimo storico              Sh  0.84 |  1.27 |  0.19  CAGR   21.1%   34.2%    6.6%  vol  21.7%  DD  -21.2%  -18.9% | kill 1 giorni ridotti/fermi 794/1635
+C3 2x+trade: soglie x1.0 isteresi 0.8 massimo 365g                 Sh  0.97 |  1.27 |  0.67  CAGR   28.8%   34.2%   22.4%  vol  24.8%  DD  -20.7%  -20.7% | kill 0 giorni ridotti/fermi 998/1237
+C3 2x+trade: soglie x1.5 isteresi 0.5 massimo storico              Sh  1.00 |  1.34 |  0.58  CAGR   32.5%   44.0%   19.5%  vol  26.0%  DD  -23.1%  -23.1% | kill 0 giorni ridotti/fermi 1457/504
+C3 2x+trade: soglie x1.5 isteresi 0.5 massimo 365g                 Sh  1.03 |  1.34 |  0.70  CAGR   35.6%   44.0%   25.9%  vol  27.4%  DD  -23.1%  -23.1% | kill 0 giorni ridotti/fermi 1445/257
+C3 2x+trade: soglie x1.5 isteresi 0.8 massimo storico              Sh  0.96 |  1.28 |  0.56  CAGR   31.2%   42.3%   18.6%  vol  26.7%  DD  -24.0%  -23.3% | kill 0 giorni ridotti/fermi 1655/241
+C3 2x+trade: soglie x1.5 isteresi 0.8 massimo 365g                 Sh  1.04 |  1.28 |  0.78  CAGR   37.0%   42.3%   30.6%  vol  28.8%  DD  -23.8%  -23.3% | kill 0 giorni ridotti/fermi 1429/104
+C3 2x+trade: soglie x2.0 isteresi 0.5 massimo storico              Sh  0.98 |  1.30 |  0.60  CAGR   33.0%   43.9%   20.7%  vol  28.3%  DD  -27.4%  -27.4% | kill 0 giorni ridotti/fermi 1543/0
+C3 2x+trade: soglie x2.0 isteresi 0.5 massimo 365g                 Sh  1.00 |  1.30 |  0.71  CAGR   36.6%   43.9%   28.0%  vol  29.7%  DD  -27.4%  -27.4% | kill 0 giorni ridotti/fermi 1421/0
+C3 2x+trade: soglie x2.0 isteresi 0.8 massimo storico              Sh  0.94 |  1.21 |  0.63  CAGR   32.7%   40.9%   23.1%  vol  29.4%  DD  -27.4%  -27.4% | kill 0 giorni ridotti/fermi 1390/0
+C3 2x+trade: soglie x2.0 isteresi 0.8 massimo 365g                 Sh  0.98 |  1.21 |  0.77  CAGR   37.2%   40.9%   32.7%  vol  30.8%  DD  -27.4%  -27.4% | kill 0 giorni ridotti/fermi 1316/0
+C3 2x+trade: soglie x3.0 isteresi 0.5 massimo storico              Sh  1.06 |  1.30 |  0.83  CAGR   46.3%   52.2%   39.3%  vol  34.2%  DD  -31.7%  -31.7% | kill 0 giorni ridotti/fermi 109/0
+C3 2x+trade: soglie x3.0 isteresi 0.5 massimo 365g                 Sh  1.06 |  1.30 |  0.83  CAGR   46.3%   52.2%   39.3%  vol  34.2%  DD  -31.7%  -31.7% | kill 0 giorni ridotti/fermi 109/0
+C3 2x+trade: soglie x3.0 isteresi 0.8 massimo storico              Sh  1.05 |  1.30 |  0.82  CAGR   45.9%   52.2%   38.3%  vol  34.4%  DD  -31.7%  -31.7% | kill 0 giorni ridotti/fermi 70/0
+C3 2x+trade: soglie x3.0 isteresi 0.8 massimo 365g                 Sh  1.05 |  1.30 |  0.82  CAGR   45.9%   52.2%   38.3%  vol  34.4%  DD  -31.7%  -31.7% | kill 0 giorni ridotti/fermi 70/0
+varianti provate: 37

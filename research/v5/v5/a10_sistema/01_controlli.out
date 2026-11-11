@@ -1,0 +1,42 @@
+controllo: NEW ricostruito = portafogli.parquet?  diff max 0.0
+controllo: libro trade (uscita) = fondo_serie.trade11?  diff max 1.3877787807814457e-17
+
+== 1. Dove sta il capitale (media, quota del patrimonio), portafoglio a 6 strategie 1x
+quota di capitale ASSEGNATA (media):
+CR-TREND    0.132
+CR-XSMOM    0.094
+EQ-MR       0.197
+MA-TREND    0.335
+DIP         0.091
+CARRY       0.149
+esposizione lorda (assegnata x esposizione dello sleeve):
+CR-TREND    0.031
+CR-XSMOM    0.018
+EQ-MR       0.064
+MA-TREND    0.332
+DIP         0.006
+CARRY       0.149
+  tot       cassa impegnata 0.534  ->  cassa LIBERA media 0.466  (min 0.219, 5° pct 0.314);  rf medio 2.686%
+  scelta    cassa impegnata 0.520  ->  cassa LIBERA media 0.480  (min 0.219, 5° pct 0.286);  rf medio 1.249%
+  verifica  cassa impegnata 0.552  ->  cassa LIBERA media 0.448  (min 0.310, 5° pct 0.365);  rf medio 4.468%
+  cassa libera per sede (media): IBKR (MA-TREND+EQ-MR) 0.197 su 0.532 assegnato; crypto spot (CR-TREND+CR-XSMOM) 0.178 su 0.227; perp (DIP) 0.090 su 0.091
+
+== 2. Uso doppio del capitale: cassa impegnata dal libro giornaliero + margine del libro dei trade
+  libro 1x + trade 0,5/1%: cassa richiesta media 0.55 max 0.81; giorni oltre il 100% 0.0%; debito medio 0.000 | con leva sede 10x: margine max 0.087, giorni oltre 100% 0.0% | margine max 0.054 (limite live 0,15), controvalore max 0.87 (limite 1,5), rischio aperto max 0.030 (limite 0,06)
+  libro 1x + trade 1/2%: cassa richiesta media 0.56 max 0.83; giorni oltre il 100% 0.0%; debito medio 0.000 | con leva sede 10x: margine max 0.173, giorni oltre 100% 0.0% | margine max 0.109 (limite live 0,15), controvalore max 1.73 (limite 1,5), rischio aperto max 0.060 (limite 0,06)
+  libro 1x + trade 1,5/3%: cassa richiesta media 0.57 max 0.87; giorni oltre il 100% 0.0%; debito medio 0.000 | con leva sede 10x: margine max 0.260, giorni oltre 100% 0.0% | margine max 0.163 (limite live 0,15), controvalore max 2.60 (limite 1,5), rischio aperto max 0.090 (limite 0,06)
+  libro 2x + trade 0,5/1%: cassa richiesta media 1.08 max 1.59; giorni oltre il 100% 67.7%; debito medio 0.128 | con leva sede 10x: margine max 0.087, giorni oltre 100% 67.8% | margine max 0.054 (limite live 0,15), controvalore max 0.87 (limite 1,5), rischio aperto max 0.030 (limite 0,06)
+  libro 2x + trade 1/2%: cassa richiesta media 1.09 max 1.62; giorni oltre il 100% 68.3%; debito medio 0.140 | con leva sede 10x: margine max 0.173, giorni oltre 100% 68.3% | margine max 0.109 (limite live 0,15), controvalore max 1.73 (limite 1,5), rischio aperto max 0.060 (limite 0,06)
+  libro 2x + trade 1,5/3%: cassa richiesta media 1.10 max 1.64; giorni oltre il 100% 68.5%; debito medio 0.152 | con leva sede 10x: margine max 0.260, giorni oltre 100% 68.6% | margine max 0.163 (limite live 0,15), controvalore max 2.60 (limite 1,5), rischio aperto max 0.090 (limite 0,06)
+  libro 3x + trade 0,5/1%: cassa richiesta media 1.62 max 2.37; giorni oltre il 100% 96.1%; debito medio 0.617 | con leva sede 10x: margine max 0.087, giorni oltre 100% 96.1% | margine max 0.054 (limite live 0,15), controvalore max 0.87 (limite 1,5), rischio aperto max 0.030 (limite 0,06)
+  libro 3x + trade 1/2%: cassa richiesta media 1.63 max 2.40; giorni oltre il 100% 96.1%; debito medio 0.629 | con leva sede 10x: margine max 0.173, giorni oltre 100% 96.1% | margine max 0.109 (limite live 0,15), controvalore max 1.73 (limite 1,5), rischio aperto max 0.060 (limite 0,06)
+  libro 3x + trade 1,5/3%: cassa richiesta media 1.64 max 2.42; giorni oltre il 100% 96.2%; debito medio 0.641 | con leva sede 10x: margine max 0.260, giorni oltre 100% 96.2% | margine max 0.163 (limite live 0,15), controvalore max 2.60 (limite 1,5), rischio aperto max 0.090 (limite 0,06)
+
+== 3. Costo del finanziamento: quello di 09_fondo.py [ (L-1) x (rf+1,5%) su TUTTO il capitale ] contro il debito realmente necessario
+  2x: cassa impegnata media 1.07; debito medio 0.117; cassa ancora libera 0.048;  costo addebitato 4.186%/anno, costo del debito reale 0.464%/anno  -> sottostima del CAGR ~ 3.722%/anno
+  6 strategie 2x come 09_fondo                                     Sh  1.26 |  1.49 |  0.96  CAGR   23.0%   26.4%   19.0%  vol  15.2%  DD  -19.8%  -13.4% 
+  6 strategie 2x con il debito reale                               Sh  1.51 |  1.64 |  1.33  CAGR   27.7%   29.6%   25.4%  vol  15.2%  DD  -17.9%  -12.0% 
+  3x: cassa impegnata media 1.60; debito medio 0.605; cassa ancora libera 0.002;  costo addebitato 8.371%/anno, costo del debito reale 2.518%/anno  -> sottostima del CAGR ~ 5.853%/anno
+  6 strategie 3x come 09_fondo                                     Sh  1.23 |  1.46 |  0.93  CAGR   32.5%   38.9%   25.0%  vol  22.8%  DD  -29.1%  -20.4% 
+  6 strategie 3x con il debito reale                               Sh  1.49 |  1.63 |  1.30  CAGR   40.5%   44.7%   35.4%  vol  22.8%  DD  -26.0%  -18.5% 
+  NB: EQ-MR paga gia' (rf+1,5%) sul controvalore dentro il suo rendimento; a leva L lo paga L volte (giusto) PIU' la quota di (L-1)(rf+1,5%): doppio addebito.

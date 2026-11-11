@@ -1,0 +1,117 @@
+monete caricate: 133
+
+== (a) long conviction alta: universo x stop ==
+
+== short conviction <= 0,2 (top30) ==
+                                n      R      t    hit   R_sc   t_sc  n_sc  R_ver  t_ver  n_ver     lev
+cfg                                                                                                    
+trio BTC/ETH/SOL stop 1xATR   575  0.231  3.265  0.440  0.290  2.577   213  0.197  2.162    362  10.878
+top10 stop 1xATR             1748  0.098  2.423  0.384  0.142  2.096   637  0.072  1.442   1111   8.594
+top20 stop 1xATR             3189  0.047  1.613  0.371  0.130  2.444  1167  0.000  0.002   2022   7.642
+top30 stop 1xATR             4498  0.039  1.578  0.367  0.120  2.613  1588 -0.005 -0.164   2910   7.267
+trio BTC/ETH/SOL stop 2xATR   467  0.149  2.974  0.501  0.153  1.817   176  0.146  2.353    291   5.478
+top10 stop 2xATR             1411  0.090  2.908  0.464  0.086  1.653   536  0.092  2.409    875   4.308
+top20 stop 2xATR             2612  0.054  2.172  0.440  0.086  1.785   993  0.035  1.267   1619   3.922
+top30 stop 2xATR             3681  0.059  2.688  0.437  0.089  2.150  1348  0.041  1.662   2333   3.922
+SHORT top30 stop 1xATR       3236  0.009  0.389  0.414  0.041  1.180  1333 -0.014 -0.477   1903   7.257
+SHORT top30 stop 2xATR       2678 -0.010 -0.622  0.475  0.015  0.525  1109 -0.028 -1.361   1569   3.922
+
+N = trade/anno; sR = dev.std di R; Neff = N^2 sR^2 / Var annua del P&L giornaliero sommato (da somme settimanali);
+K = N_eff*(Rm/sR)^2 = Sharpe annuo^2 del flusso; PR = rapporto di partecipazione della covarianza moneta x giorno; rho = correlazione esiti stesso giorno
+                                  N    sR   Neff     K     PR   rho    N_sc  Neff_sc  K_sc   N_ver  Neff_ver  K_ver  PR_ver  rho_ver
+cfg                                                                                                                                 
+trio BTC/ETH/SOL stop 1xATR   88.69  1.70  50.21  0.93   2.20  0.63   84.29    51.40  1.60   95.60     42.01   0.54    2.08     0.69
+top10 stop 1xATR             279.66  1.69  77.28  0.26   8.61  0.42  268.05    75.93  0.52  289.85     72.21   0.14    7.01     0.41
+top20 stop 1xATR             510.20  1.66  84.83  0.07  14.10  0.36  482.73    80.18  0.40  529.42    114.34   0.00   11.39     0.37
+top30 stop 1xATR             719.62  1.67  85.09  0.05  18.41  0.35  656.87    76.43  0.32  761.92    127.85  -0.00   14.40     0.34
+trio BTC/ETH/SOL stop 2xATR   72.00  1.08  43.07  0.82   2.24  0.56   69.65    45.75  0.86   76.80     35.04   0.67    1.99     0.57
+top10 stop 2xATR             225.74  1.16  53.63  0.32   9.48  0.49  225.55    47.19  0.24  228.28     58.61   0.39    7.62     0.47
+top20 stop 2xATR             417.89  1.28  63.87  0.12  15.18  0.38  410.75    60.33  0.19  423.29     60.87   0.06   13.22     0.46
+top30 stop 2xATR             588.91  1.32  65.63  0.13  20.89  0.36  557.60    54.95  0.19  609.97     71.54   0.08   16.64     0.36
+SHORT top30 stop 1xATR       525.54  1.27  43.22  0.00   8.38  0.57  573.47    45.49  0.07  496.48     47.80  -0.01    7.24     0.54
+SHORT top30 stop 2xATR       434.92  0.86  33.09 -0.00  10.10  0.60  477.11    30.94  0.02  409.34     42.33  -0.07    8.88     0.54
+
+== solo le monete FUORI dal trio (top30, 1xATR): il contributo marginale ==
+                     0
+cfg       alt soltanto
+n                 3967
+R                0.015
+t                0.578
+hit              0.357
+R_sc             0.103
+t_sc             2.075
+n_sc              1419
+R_ver           -0.033
+t_ver           -1.091
+n_ver             2548
+lev              6.907
+N              634.668
+sR               1.673
+Neff            83.175
+K                0.007
+PR              20.201
+rho              0.347
+N_sc           586.965
+sR_sc            1.871
+Neff_sc         71.385
+K_sc             0.213
+PR_sc           13.003
+rho_sc           0.385
+N_ver          667.138
+sR_ver            1.55
+Neff_ver       132.311
+K_ver           -0.062
+PR_ver            16.2
+rho_ver          0.326
+per fascia di rango (volume):
+                  n      R      t
+fascia   entry                   
+(0, 3]   False  197  0.137  1.334
+         True   371  0.179  2.004
+(3, 10]  False  437  0.146  1.674
+         True   738  0.005  0.077
+(10, 20] False  528  0.116  1.386
+         True   899 -0.085 -1.763
+(20, 30] False  426  0.091  0.991
+         True   902 -0.008 -0.159
+
+== per anno, top30 1xATR ==
+          n      R      t
+entry                    
+2020    311 -0.053 -0.605
+2021   1000  0.285  4.542
+2022    277 -0.278 -3.155
+2023    922  0.020  0.406
+2024    880  0.009  0.156
+2025    621 -0.138 -2.607
+2026    487  0.094  1.103
+
+== per anno, trio 1xATR ==
+         n      R      t
+entry                   
+2020    71  0.538  2.396
+2021   126  0.219  1.645
+2022    16 -0.256 -0.710
+2023   118  0.324  1.868
+2024   113  0.207  1.341
+2025    84  0.009  0.063
+2026    47  0.190  0.610
+
+== robustezza top30 e trio, 1xATR: costi x2, ritardo +1 barra, tetto 10x ==
+                         n      R      t   R_sc  R_ver  t_ver    Neff      K  K_ver
+cfg                                                                                
+trio base              575  0.231  3.265  0.290  0.197  2.162  50.211  0.931  0.543
+trio costi x2          575  0.196  2.762  0.258  0.159  1.745  50.209  0.666  0.352
+trio ritardo +1h       579  0.193  2.827  0.311  0.127  1.473  51.845  0.716  0.257
+trio tetto leva 10x    575  0.231  3.265  0.290  0.197  2.162  50.211  0.931  0.543
+top30 base            4498  0.039  1.578  0.120 -0.005 -0.164  85.094  0.047 -0.001
+top30 costi x2        4498  0.003  0.128  0.092 -0.045 -1.540  84.953  0.000 -0.105
+top30 ritardo +1h     4524  0.020  0.826  0.108 -0.027 -0.947  88.486  0.013 -0.042
+top30 tetto leva 10x  4498  0.039  1.578  0.120 -0.005 -0.164  85.094  0.047 -0.001
+
+== tetto di liquidita' (posizione <= 0,1% del volume mediano 90g; conto 100k) top30 1xATR ==
+rischio 1%: trade tagliati 1.9%, quota media eseguita 0.991, R medio effettivo 0.042 (pieno 0.039); dal 2023: tagliati 0.3%
+rischio 3%: trade tagliati 7.1%, quota media eseguita 0.968, R medio effettivo 0.038 (pieno 0.039); dal 2023: tagliati 2.2%
+rischio 5%: trade tagliati 13.5%, quota media eseguita 0.939, R medio effettivo 0.034 (pieno 0.039); dal 2023: tagliati 7.5%
+
+varianti provate in questo script: 10

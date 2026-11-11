@@ -1,0 +1,30 @@
+dataset (8225, 86) feature 72 3s
+      size        min        max
+coin                            
+BTC   3105 2018-04-24 2026-10-23
+ETH   3105 2018-04-24 2026-10-23
+SOL   2015 2021-04-18 2026-10-23
+
+Candidati generici (TUTTI i giorni, sovrapposti): R medio per periodo e lato
+L           size   mean    std  <lambda_0> | per                                      | scelta    4049  0.100  1.556       0.400 | verifica  4176  0.145  1.743       0.402
+S           size   mean    std  <lambda_0> | per                                      | scelta    4049  0.037  1.355       0.413 | verifica  4176 -0.038  1.347       0.380
+
+Long generico per livello di conviction (regola attuale):
+                size   mean    std  <lambda_0>
+per      tier                                 
+scelta   alta   1272  0.408  1.866       0.454
+         bassa  1302 -0.109  1.266       0.366
+         media  1475  0.019  1.452       0.383
+verifica alta   1722  0.113  1.641       0.386
+         bassa   935  0.093  1.518       0.419
+         media  1519  0.212  1.969       0.410
+
+Quota di NaN per feature nel periodo di scelta (>5%):
+{'basis': 0.31, 'basis7': 0.31, 'perp_taker1': 0.31, 'perp_spot_vol': 0.31, 'fund1': 0.31, 'fund7': 0.31, 'fund30': 0.32, 'oi1': 0.71, 'oi7': 0.71, 'top_ls': 0.94, 'dvol': 0.53, 'dvol_ch7': 0.53, 'vrp': 0.53}
+
+== Controllo (a): riproduzione libro v4 "stop 1xATR alta trail=2" ==
+v4: n=652 R medio=0.2365 | mio: n=652 R medio=0.2365
+trade con stessa data d'ingresso: 652; max |R_v4 - R_a8| = 0.00e+00
+
+== Controllo (b): troncamento ==
+controlli 13, diversi 0

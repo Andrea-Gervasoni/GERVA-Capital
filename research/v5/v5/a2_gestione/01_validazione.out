@@ -1,0 +1,14 @@
+== 1. confronto con il simulatore originale (funding azzerato in entrambi) ==
+stop 1,7% senza trailing     n orig  1099 n nuovo  1099  R medio orig +0.44089 nuovo +0.44089  max|dR| 7.11e-15
+stop 1,7% trail 2            n orig  1892 n nuovo  1892  R medio orig +0.04969 nuovo +0.04969  max|dR| 1.78e-15
+stop 1xATR trail 2           n orig   652 n nuovo   652  R medio orig +0.27637 nuovo +0.27637  max|dR| 1.78e-15
+stop 6% obiettivo 2R         n orig   778 n nuovo   778  R medio orig +0.19587 nuovo +0.19587  max|dR| 3.77e-15
+stop 0,4% senza trailing     n orig  2117 n nuovo  2117  R medio orig -0.03059 nuovo -0.03059  max|dR| 2.84e-14
+
+== 2. effetto della convenzione del funding (originale: somma giornaliera per giorno di calendario; nuovo: pagamenti reali alle 00/08/16 mentre si e' dentro) ==
+stop 1,7% senza trailing     R medio orig +0.3635 (scelta +0.5526 verifica +0.1956)  nuovo +0.3812 (scelta +0.5833 verifica +0.2018)
+stop 1xATR trail 2           R medio orig +0.2365 (scelta +0.3094 verifica +0.1799)  nuovo +0.2362 (scelta +0.3094 verifica +0.1794)
+
+== 3. troncamento: conviction ricalcolata su dati tagliati a t (deve essere identica) ==
+date controllate 120, differenze 0
+VWAP alla barra k usa solo barre < k: True

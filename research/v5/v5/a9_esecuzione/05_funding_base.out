@@ -1,0 +1,108 @@
+
+################ A: {'stop': 'atr', 'k': 1.0, 'trail': 2.0} ################
+durata media 109.4 ore (mediana 130.2); funding pagato per trade: media 24.68 pb = 0.0428 R; commissioni+slippage 0.0284 R; R netto 0.216 -> il funding e' il 17% dell'R ante-funding
+  per periodo: scelta 0.0671 R, verifica 0.0286 R; tasso medio annualizzato pagato durante i trade: 19.8% (contro media incondizionata BTC 11.6%)
+
+--- R per livello dell'ultimo funding regolato (noto all'ingresso); soglie = quartili del periodo di scelta ---
+soglie (pb/8h): [1.   1.   3.23]
+      n  f_medio_pb      R  R_lordo_funding  fund_R  n_sel  R_sel  n_ver  R_ver
+fq                                                                             
+0   185       0.197  0.188            0.204   0.016     16  0.340    169  0.173
+2   332       1.233  0.317            0.364   0.048    148  0.485    184  0.181
+3    75       6.512 -0.163           -0.074   0.088     55 -0.160     20 -0.170
+corr(funding ultimo, R): scelta -0.182 verifica -0.031 | corr(funding ultimi 3, R): scelta -0.141 verifica -0.031
+
+--- Filtro: niente ingresso se l'ultimo funding supera la soglia (si riprova il giorno dopo) ---
+                          cfg   n  N_anno  s_med     R   sdR     t   hit  R_sel  t_sel  R_ver  t_ver  costo_R  fund_R  stop_pct  K_sel  K_ver
+                       A base 592  86.943  0.050 0.216 1.728 3.037 0.424  0.313  2.775  0.159  1.740    0.028   0.043     0.601  2.583  0.791
+ A salta se funding > 1 pb/8h 483  71.021  0.046 0.255 1.776 3.162 0.431  0.417  2.974  0.188  1.907    0.030   0.031     0.584  2.976  0.950
+ A salta se funding > 2 pb/8h 511  75.047  0.048 0.253 1.760 3.251 0.434  0.417  3.177  0.178  1.848    0.029   0.035     0.577  3.385  0.893
+ A salta se funding > 3 pb/8h 537  78.866  0.048 0.244 1.750 3.235 0.428  0.435  3.413  0.154  1.649    0.029   0.037     0.579  3.908  0.711
+ A salta se funding > 5 pb/8h 568  83.419  0.050 0.226 1.735 3.105 0.426  0.354  2.973  0.158  1.725    0.029   0.039     0.588  2.964  0.777
+A salta se funding > 10 pb/8h 588  86.356  0.050 0.223 1.731 3.122 0.427  0.334  2.927  0.159  1.740    0.028   0.042     0.599  2.873  0.791
+
+--- Ora d'ingresso e regolamenti: funding pagato (pb) entrando all'ora h (dai trade di 03: qui solo il conto del funding) ---
+  h=00: funding medio 24.68 pb = 0.0428 R; regolamenti attraversati per trade 13.67 (stima)
+  h=01: funding medio 24.05 pb = 0.0418 R; regolamenti attraversati per trade 13.29 (stima)
+  h=04: funding medio 25.17 pb = 0.0439 R; regolamenti attraversati per trade 13.56 (stima)
+  h=07: funding medio 24.86 pb = 0.0434 R; regolamenti attraversati per trade 13.03 (stima)
+  h=08: funding medio 23.73 pb = 0.0412 R; regolamenti attraversati per trade 13.17 (stima)
+  valore di un regolamento evitato: 1.58 pb = 0.0029 R per trade
+
+--- Sede piu' conveniente per il funding, 318 trade dal 2023-05-12 ---
+  Binance 8h: 13.84 pb = 0.0297 R | Hyperliquid oraria: 29.88 pb = 0.0628 R | sceglie la sede col funding recente piu' basso (HL ultime 8 ore contro ultimo Binance): 14.62 pb = 0.0310 R (HL scelta nel 19% dei casi)
+  R medio: su Binance 0.1313; con funding Hyperliquid 0.0983; con sede scelta 0.1301   (differenza HL-Binance: -0.0330 R, t -12.46)
+    2023: n=68 Binance 0.0352 R, HL 0.0787 R
+    2024: n=115 Binance 0.0426 R, HL 0.0835 R
+    2025: n=85 Binance 0.0190 R, HL 0.0448 R
+    2026: n=50 Binance 0.0107 R, HL 0.0238 R
+
+--- (e) Base perp/spot all'ingresso: media +0.76 pb, mediana -1.42, 5-95 percentile -6.3/+11.8 pb; variazione ingresso->uscita +0.98 pb = +0.0035 R ---
+soglie dei terzili (scelta, pb): [1.26 7.44]
+      n  base_pb      R  n_sel  R_sel  n_ver  R_ver
+bq                                                 
+0   350   -3.769  0.229     73  0.410    277  0.182
+1   144    4.728  0.299     73  0.320     71  0.278
+2    98   11.114  0.044     73  0.209     25 -0.437
+corr(base, R): scelta -0.069 verifica -0.050
+                    cfg   n  N_anno  s_med     R   sdR     t   hit  R_sel  t_sel  R_ver  t_ver  costo_R  fund_R  stop_pct  K_sel  K_ver
+                 A base 592  86.943  0.050 0.216 1.728 3.037 0.424  0.313  2.775  0.159  1.740    0.028   0.043     0.601  2.583  0.791
+ A salta se base > 5 pb 466  68.549  0.046 0.264 1.797 3.176 0.427  0.435  2.924  0.198  1.977    0.030   0.032     0.586  2.878  1.021
+A salta se base > 10 pb 562  82.537  0.049 0.228 1.745 3.099 0.420  0.368  3.000  0.156  1.700    0.029   0.040     0.593  3.020  0.755
+
+################ C: {'stop': 'fix', 'k': 0.017, 'trail': None} ################
+durata media 50.4 ore (mediana 16.0); funding pagato per trade: media 10.52 pb = 0.0619 R; commissioni+slippage 0.0765 R; R netto 0.252 -> il funding e' il 20% dell'R ante-funding
+  per periodo: scelta 0.0970 R, verifica 0.0379 R; tasso medio annualizzato pagato durante i trade: 18.3% (contro media incondizionata BTC 11.6%)
+
+--- R per livello dell'ultimo funding regolato (noto all'ingresso); soglie = quartili del periodo di scelta ---
+soglie (pb/8h): [1.   1.   4.04]
+      n  f_medio_pb      R  R_lordo_funding  fund_R  n_sel  R_sel  n_ver  R_ver
+fq                                                                             
+0   283       0.263  0.262            0.285   0.023     28  1.205    255  0.159
+2   620       1.385  0.427            0.499   0.072    284  0.777    336  0.131
+3   123       8.523 -0.654           -0.552   0.102    105 -0.566     18 -1.168
+corr(funding ultimo, R): scelta -0.136 verifica -0.060 | corr(funding ultimi 3, R): scelta -0.137 verifica -0.056
+
+--- Filtro: niente ingresso se l'ultimo funding supera la soglia (si riprova il giorno dopo) ---
+                          cfg    n  N_anno  s_med     R   sdR     t   hit  R_sel  t_sel  R_ver  t_ver  costo_R  fund_R  stop_pct  K_sel  K_ver
+                       C base 1026 150.682  0.017 0.252 4.052 1.992 0.166  0.468  2.009  0.104  0.737    0.076   0.062     0.827  1.354  0.142
+ C salta se funding > 1 pb/8h  768 112.928  0.017 0.393 4.224 2.581 0.186  0.836  2.445  0.192  1.220    0.076   0.047     0.806  2.011  0.389
+ C salta se funding > 2 pb/8h  830 121.897  0.017 0.309 4.046 2.197 0.183  0.655  2.202  0.140  0.931    0.076   0.051     0.808  1.627  0.226
+ C salta se funding > 3 pb/8h  871 127.918  0.017 0.354 4.130 2.530 0.183  0.859  2.819  0.106  0.734    0.076   0.055     0.809  2.665  0.141
+ C salta se funding > 5 pb/8h  939 137.905  0.017 0.341 4.113 2.542 0.179  0.738  2.706  0.119  0.836    0.076   0.058     0.814  2.457  0.183
+C salta se funding > 10 pb/8h  999 146.717  0.017 0.291 4.099 2.246 0.170  0.584  2.354  0.104  0.737    0.076   0.061     0.823  1.859  0.142
+
+--- Ora d'ingresso e regolamenti: funding pagato (pb) entrando all'ora h (dai trade di 03: qui solo il conto del funding) ---
+  h=00: funding medio 10.52 pb = 0.0619 R; regolamenti attraversati per trade 6.30 (stima)
+  h=01: funding medio 11.91 pb = 0.0701 R; regolamenti attraversati per trade 6.57 (stima)
+  h=04: funding medio 12.48 pb = 0.0734 R; regolamenti attraversati per trade 6.72 (stima)
+  h=07: funding medio 13.32 pb = 0.0783 R; regolamenti attraversati per trade 6.61 (stima)
+  h=08: funding medio 11.11 pb = 0.0653 R; regolamenti attraversati per trade 6.25 (stima)
+  valore di un regolamento evitato: 1.93 pb = 0.0114 R per trade
+
+--- Sede piu' conveniente per il funding, 529 trade dal 2023-05-12 ---
+  Binance 8h: 6.55 pb = 0.0385 R | Hyperliquid oraria: 14.75 pb = 0.0868 R | sceglie la sede col funding recente piu' basso (HL ultime 8 ore contro ultimo Binance): 7.15 pb = 0.0420 R (HL scelta nel 20% dei casi)
+  R medio: su Binance 0.0932; con funding Hyperliquid 0.0450; con sede scelta 0.0897   (differenza HL-Binance: -0.0483 R, t -11.93)
+    2023: n=118 Binance 0.0444 R, HL 0.1115 R
+    2024: n=217 Binance 0.0500 R, HL 0.1046 R
+    2025: n=123 Binance 0.0256 R, HL 0.0621 R
+    2026: n=71 Binance 0.0157 R, HL 0.0338 R
+
+--- (e) Base perp/spot all'ingresso: media +1.80 pb, mediana +0.40, 5-95 percentile -6.1/+13.5 pb; variazione ingresso->uscita +1.07 pb = +0.0063 R ---
+soglie dei terzili (scelta, pb): [2.5  8.42]
+      n  base_pb      R  n_sel  R_sel  n_ver  R_ver
+bq                                                 
+0   589   -3.260  0.397    139  1.122    450  0.173
+1   265    5.708  0.236    139  0.391    126  0.064
+2   172   13.100 -0.219    139 -0.110     33 -0.678
+corr(base, R): scelta -0.109 verifica -0.061
+                    cfg    n  N_anno  s_med     R   sdR     t   hit  R_sel  t_sel  R_ver  t_ver  costo_R  fund_R  stop_pct  K_sel  K_ver
+                 C base 1026 150.682  0.017 0.252 4.052 1.992 0.166  0.468  2.009  0.104  0.737    0.076   0.062     0.827  1.354  0.142
+ C salta se base > 5 pb  714 105.030  0.017 0.426 3.994 2.850 0.197  0.834  2.580  0.259  1.586    0.076   0.048     0.794  2.241  0.657
+C salta se base > 10 pb  927 136.143  0.017 0.347 4.223 2.505 0.179  0.737  2.558  0.131  0.910    0.076   0.061     0.813  2.194  0.216
+
+=== Hyperliquid contro Binance perp: candele orarie (cache v4_hl_1h, 2026-04 -> 2026-10). Il perp Binance e' un buon sostituto? ===
+BTC: 4728 ore; apertura HL-Binance media +1.20 pb (dev.std 2.3); minimo orario HL-Binance media +1.66 pb, 1o percentile -2.8, minimo -19.9 pb; ampiezza HL/Binance-1 mediana -1.38%
+ETH: 4728 ore; apertura HL-Binance media +1.73 pb (dev.std 2.8); minimo orario HL-Binance media +2.97 pb, 1o percentile -2.8, minimo -22.9 pb; ampiezza HL/Binance-1 mediana -3.37%
+SOL: 4728 ore; apertura HL-Binance media +1.55 pb (dev.std 2.6); minimo orario HL-Binance media +3.16 pb, 1o percentile -3.4, minimo -40.7 pb; ampiezza HL/Binance-1 mediana -3.75%
+prove: {'funding': 12, 'base': 4}

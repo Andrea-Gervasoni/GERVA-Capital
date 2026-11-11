@@ -1,0 +1,131 @@
+eventi: 146432
+
+== deriva lorda media (pb) per lookback x orizzonte: SCELTA | VERIFICA  [t a grappoli per giorno]
+-- orizzonte 1h
+          n  1h_sel  t_sel  1h_ver  t_ver
+N                                        
+6h   103984   -2.42  -1.79   -1.23  -1.51
+24h   28269    3.02   1.26    1.72   0.97
+3g     9260   -1.05  -0.24    3.88   1.20
+7g     4005   -9.72  -1.15   -3.57  -0.75
+30g     914  -28.38  -0.89  -10.49  -0.81
+-- orizzonte 4h
+          n  4h_sel  t_sel  4h_ver  t_ver
+N                                        
+6h   103984   -6.53  -2.48   -1.86  -1.26
+24h   28269    1.97   0.45   -1.45  -0.50
+3g     9260   -0.30  -0.05    4.27   0.83
+7g     4005  -18.23  -1.64    1.50   0.18
+30g     914  -55.06  -0.82   13.27   0.63
+-- orizzonte 12h
+          n  12h_sel  t_sel  12h_ver  t_ver
+N                                          
+6h   103984    -3.37  -0.74    -2.78  -1.10
+24h   28269    11.23   1.28    -1.72  -0.37
+3g     9260    28.00   2.19     8.53   1.01
+7g     4005    25.75   1.49     8.71   0.71
+30g     914    83.69   1.30    11.45   0.37
+-- orizzonte 24h
+          n  24h_sel  t_sel  24h_ver  t_ver
+N                                          
+6h   103984     0.19   0.03    -3.60  -1.00
+24h   28269    11.88   0.76    -5.47  -0.84
+3g     9260    43.87   1.70     7.28   0.67
+7g     4005    60.59   1.26     9.02   0.57
+30g     914    68.04   0.65   -13.01  -0.37
+-- orizzonte 72h
+          n  72h_sel  t_sel  72h_ver  t_ver
+N                                          
+6h   103984    11.78   0.97     4.81   0.81
+24h   28269    19.26   0.89     4.92   0.45
+3g     9260    66.37   1.95     1.23   0.07
+7g     4005    72.90   1.31     4.09   0.15
+30g     914   169.99   2.04     1.15   0.02
+
+== per lato (24h)
+  N  side     n  24h_sel  t_sel  24h_ver  t_ver
+24h    -1 13612   -38.78  -1.85   -26.80  -2.53
+24h     1 14657    57.99   2.27    14.62   1.44
+30g    -1   429  -151.03  -0.96  -116.16  -2.01
+30g     1   485   258.20   1.89    79.40   1.90
+ 3g    -1  4469   -34.08  -1.07   -20.33  -1.23
+ 3g     1  4791   112.23   2.76    34.16   2.29
+ 6h    -1 50512   -39.56  -2.69   -19.43  -2.34
+ 6h     1 53472    37.36   2.45    11.46   1.41
+ 7g    -1  1923   -86.32  -1.96   -25.67  -1.11
+ 7g     1  2082   192.88   2.33    41.67   1.94
+
+== lookback 24h/3g/7g, per volb, orizzonte 4h
+ volb     n  4h_sel  t_sel  4h_ver  t_ver
+vol<2  3027   -8.42  -0.71   -5.26  -1.04
+  2-5 13030   -7.54  -1.30   -4.60  -1.35
+   >5 25460    4.64   0.90    2.99   0.66
+
+== lookback 24h/3g/7g, per volb, orizzonte 24h
+ volb     n  24h_sel  t_sel  24h_ver  t_ver
+vol<2  3027   -64.10   -2.0   -12.15  -0.98
+  2-5 13030   -27.24   -1.6    -7.41  -0.81
+   >5 25460    63.35    2.3     3.00   0.34
+
+== lookback 24h/3g/7g, per tkb, orizzonte 4h
+           tkb     n  4h_sel  t_sel  4h_ver  t_ver
+        contro   434  -36.35  -1.43   -7.10  -0.47
+        neutro  6168    8.71   0.83    4.45   0.59
+      a favore 21972   -6.58  -1.27   -0.08  -0.02
+molto a favore 12960    6.75   1.15   -1.48  -0.36
+
+== lookback 24h/3g/7g, per tkb, orizzonte 24h
+           tkb     n  24h_sel  t_sel  24h_ver  t_ver
+        contro   434   -21.26  -0.35   -38.80  -1.32
+        neutro  6168    88.02   1.38   -10.01  -0.76
+      a favore 21972     0.51   0.04    -3.96  -0.49
+molto a favore 12960    34.07   1.52     8.94   0.96
+
+== lookback 24h/3g/7g, per hvb, orizzonte 4h
+        hvb     n  4h_sel  t_sel  4h_ver  t_ver
+  vol bassa 10932   23.34   4.24    6.50   1.53
+medio-bassa 12523    3.13   0.55    6.03   1.39
+ medio-alta 11037   -8.56  -1.05   -4.38  -0.76
+       alta  6552  -38.07  -2.82  -13.98  -1.46
+
+== lookback 24h/3g/7g, per hvb, orizzonte 24h
+        hvb     n  24h_sel  t_sel  24h_ver  t_ver
+  vol bassa 10932    25.56   1.68     3.45   0.32
+medio-bassa 12523    33.81   1.46    19.78   1.93
+ medio-alta 11037    41.22   1.10    -9.35  -0.83
+       alta  6552   -32.84  -0.79   -36.15  -1.96
+
+== lookback 24h/3g/7g, per sess, orizzonte 4h
+  sess     n  4h_sel  t_sel  4h_ver  t_ver
+  asia 10873   14.90   1.70   -3.30  -0.62
+europa  9450   -6.25  -0.70   -8.38  -1.61
+   usa 16318   -9.19  -1.32    4.57   0.73
+  sera  4893    2.11   0.16    7.41   0.80
+
+== lookback 24h/3g/7g, per sess, orizzonte 24h
+  sess     n  24h_sel  t_sel  24h_ver  t_ver
+  asia 10873    63.79   1.21    -1.51  -0.12
+europa  9450    14.96   0.65     5.47   0.43
+   usa 16318     3.84   0.21    -4.33  -0.41
+  sera  4893     9.61   0.33    -1.70  -0.11
+
+== lookback 24h/3g/7g, per we, orizzonte 4h
+   we     n  4h_sel  t_sel  4h_ver  t_ver
+False 30921    1.72   0.34   -1.58  -0.40
+ True 10613   -6.94  -0.81    5.07   0.78
+
+== lookback 24h/3g/7g, per we, orizzonte 24h
+   we     n  24h_sel  t_sel  24h_ver  t_ver
+False 30921    41.97   1.66     1.12   0.13
+ True 10613   -29.78  -1.46    -8.00  -0.57
+
+== 24h con una barra di ritardo
+          n  d1_sel  t_sel  d1_ver  t_ver
+N                                        
+6h   103984   -1.16  -0.16   -2.98  -0.83
+24h   28269    7.43   0.50   -5.97  -0.93
+3g     9260   37.45   1.56    5.29   0.50
+7g     4005   51.03   1.17    8.00   0.51
+30g     914   69.78   0.76   -3.27  -0.10
+
+celle guardate (contano come varianti): 69

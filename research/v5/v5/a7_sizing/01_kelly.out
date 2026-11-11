@@ -1,0 +1,179 @@
+==================== 1.1 KELLY PER FLUSSO (R empirici, perdita limitata dal margine isolato) ====================
+r_gauss = R/sigma^2; r_seq = max E[log(1+rR)] trade per trade; r_coorte = idem con i trade dello stesso giorno simultanei (quello usato).
+g = crescita log annua; mese = exp(g/12)-1. 'fuori campione' = r_coorte stimato sulla SCELTA applicato alla VERIFICA.
+flusso              periodo    n   N_anno      Rm     sd       t  SRtrade  N_SR2  r_gauss  r_seq  r_coorte  g_pieno  mese_pieno  g_mezzo  mese_mezzo  g_quarto
+   A30                 base 1099 129.0707  0.3635 4.2777  2.8173   0.0850 0.9321   0.0199 0.0288    0.0232   0.4799      0.0408   0.3730      0.0316    0.2261
+   A30               scelta  517 113.9615  0.5526 4.9205  2.5535   0.1123 1.4372   0.0228 0.0375    0.0295   0.7871      0.0678   0.6176      0.0528    0.3788
+   A30             verifica  582 153.0421  0.1956 3.6082  1.3077   0.0542 0.4497   0.0150 0.0187    0.0155   0.2142      0.0180   0.1644      0.0138    0.0982
+   A30 fuori campione x1.00  582      NaN     NaN    NaN     NaN      NaN    NaN      NaN    NaN    0.0295   0.0741      0.0062      NaN         NaN       NaN
+   A30 fuori campione x0.50  582      NaN     NaN    NaN     NaN      NaN    NaN      NaN    NaN    0.0147   0.2137      0.0180      NaN         NaN       NaN
+   A30 fuori campione x0.25  582      NaN     NaN    NaN     NaN      NaN    NaN      NaN    NaN    0.0074   0.1594      0.0134      NaN         NaN       NaN
+   C11                 base  652  76.5733  0.2365 1.7396  3.4716   0.1360 1.4154   0.0782 0.1023    0.0781   0.6485      0.0555   0.4979      0.0424    0.2982
+   C11               scelta  285  62.8601  0.3094 1.7583  2.9708   0.1760 1.9466   0.1001 0.1357    0.1088   0.9689      0.0841   0.7431      0.0639    0.4452
+   C11             verifica  367  96.5059  0.1799 1.7253  1.9977   0.1043 1.0494   0.0604 0.0762    0.0554   0.4451      0.0378   0.3413      0.0288    0.2039
+   C11 fuori campione x1.00  367      NaN     NaN    NaN     NaN      NaN    NaN      NaN    NaN    0.1088   0.1030      0.0086      NaN         NaN       NaN
+   C11 fuori campione x0.50  367      NaN     NaN    NaN     NaN      NaN    NaN      NaN    NaN    0.0544   0.4450      0.0378      NaN         NaN       NaN
+   C11 fuori campione x0.25  367      NaN     NaN    NaN     NaN      NaN    NaN      NaN    NaN    0.0272   0.3375      0.0285      NaN         NaN       NaN
+   B20                 base  887 104.1726  0.2464 3.0133  2.4358   0.0818 0.6968   0.0271 0.0357    0.0305   0.3574      0.0302   0.2753      0.0232    0.1652
+   B20               scelta  416  91.6982  0.3857 3.4349  2.2900   0.1123 1.1559   0.0327 0.0476    0.0419   0.6555      0.0561   0.5089      0.0433    0.3081
+   B20             verifica  471 123.8537  0.1235 2.5819  1.0379   0.0478 0.2833   0.0185 0.0216    0.0175   0.1269      0.0106   0.0968      0.0081    0.0574
+   B20 fuori campione x1.00  471      NaN     NaN    NaN     NaN      NaN    NaN      NaN    NaN    0.0419  -0.0729     -0.0061      NaN         NaN       NaN
+   B20 fuori campione x0.50  471      NaN     NaN    NaN     NaN      NaN    NaN      NaN    NaN    0.0209   0.1227      0.0103      NaN         NaN       NaN
+   B20 fuori campione x0.25  471      NaN     NaN    NaN     NaN      NaN    NaN      NaN    NaN    0.0105   0.1075      0.0090      NaN         NaN       NaN
+   D17                 base 1239 145.5128  0.1202 2.0628  2.0505   0.0583 0.4938   0.0282 0.0332    0.0281   0.2330      0.0196   0.1776      0.0149    0.1053
+   D17               scelta  608 134.0205  0.1933 2.1985  2.1677   0.0879 1.0358   0.0400 0.0509    0.0438   0.5266      0.0449   0.4035      0.0342    0.2407
+   D17             verifica  631 165.9271  0.0497 1.9221  0.6498   0.0259 0.1110   0.0135 0.0145    0.0119   0.0476      0.0040   0.0360      0.0030    0.0212
+   D17 fuori campione x1.00  631      NaN     NaN    NaN     NaN      NaN    NaN      NaN    NaN    0.0438  -0.2476     -0.0204      NaN         NaN       NaN
+   D17 fuori campione x0.50  631      NaN     NaN    NaN     NaN      NaN    NaN      NaN    NaN    0.0219   0.0165      0.0014      NaN         NaN       NaN
+   D17 fuori campione x0.25  631      NaN     NaN    NaN     NaN      NaN    NaN      NaN    NaN    0.0109   0.0473      0.0040      NaN         NaN       NaN
+  A30m                 base 2401 281.8918  0.0426 3.6384  0.5739   0.0117 0.0387   0.0032 0.0034    0.0024   0.0140      0.0012   0.0105      0.0009    0.0062
+  A30m               scelta 1229 262.3567 -0.0127 3.7194 -0.1196  -0.0034 0.0031   0.0000 0.0000    0.0000   0.0000      0.0000   0.0000      0.0000    0.0000
+  A30m             verifica 1172 307.0825  0.1006 3.5522  0.9697   0.0283 0.2464   0.0080 0.0091    0.0059   0.0871      0.0073   0.0663      0.0055    0.0392
+  A30m fuori campione x1.00 1172      NaN     NaN    NaN     NaN      NaN    NaN      NaN    NaN    0.0000   0.0000      0.0000      NaN         NaN       NaN
+  A30m fuori campione x0.50 1172      NaN     NaN    NaN     NaN      NaN    NaN      NaN    NaN    0.0000   0.0000      0.0000      NaN         NaN       NaN
+  A30m fuori campione x0.25 1172      NaN     NaN    NaN     NaN      NaN    NaN      NaN    NaN    0.0000   0.0000      0.0000      NaN         NaN       NaN
+   S20                 base  756  91.7982  0.1019 1.7249  1.6238   0.0591 0.3202   0.0342 0.0386    0.0284   0.1279      0.0107   0.0970      0.0081    0.0572
+   S20               scelta  472 102.2527  0.1743 1.6810  2.2523   0.1037 1.0990   0.0617 0.0735    0.0523   0.4418      0.0375   0.3365      0.0284    0.1996
+   S20             verifica  284  78.5246 -0.0185 1.7921 -0.1737  -0.0103 0.0083   0.0000 0.0000    0.0000   0.0000      0.0000   0.0000      0.0000    0.0000
+   S20 fuori campione x1.00  284      NaN     NaN    NaN     NaN      NaN    NaN      NaN    NaN    0.0523  -0.4609     -0.0377      NaN         NaN       NaN
+   S20 fuori campione x0.50  284      NaN     NaN    NaN     NaN      NaN    NaN      NaN    NaN    0.0262  -0.1398     -0.0116      NaN         NaN       NaN
+   S20 fuori campione x0.25  284      NaN     NaN    NaN     NaN      NaN    NaN      NaN    NaN    0.0131  -0.0454     -0.0038      NaN         NaN       NaN
+
+per anno (A30, C11): n, R medio, t
+A30
+entry    2018    2019     2020     2021    2022     2023     2024     2025    2026
+n      17.000  87.000  150.000  239.000  24.000  192.000  202.000  118.000  70.000
+Rm     -0.870   1.164    0.453    0.526   0.234    0.455   -0.009    0.275  -0.060
+sd      1.056   5.785    4.063    5.318   3.817    4.300    3.345    3.073   3.073
+t      -3.399   1.877    1.365    1.529   0.300    1.467   -0.038    0.971  -0.162
+C11
+entry    2018    2019    2020     2021    2022     2023     2024    2025    2026
+n      10.000  56.000  95.000  108.000  16.000  119.000  114.000  84.000  50.000
+Rm     -0.642   0.548   0.447    0.249  -0.337    0.321    0.173   0.012   0.142
+sd      0.850   1.976   1.991    1.467   1.476    1.860    1.633   1.360   2.128
+t      -2.389   2.074   2.188    1.762  -0.913    1.882    1.132   0.079   0.473
+
+==================== 1.2 KELLY SOTTO INCERTEZZA DEI PARAMETRI (bootstrap a blocchi di mesi, 3000 ricampionamenti) ====================
+                         0       1       2       3       4       5       6       7
+flusso                 A30     A30     C11     C11     B20     B20     S20     S20
+stima_su            scelta    base  scelta    base  scelta    base  scelta    base
+Rm                  0.5526  0.3635  0.3094  0.2365  0.3857  0.2464  0.1743  0.1019
+se_iid              0.2164   0.129  0.1042  0.0681  0.1684  0.1012  0.0774  0.0627
+se_blocchi          0.2544  0.1597  0.1195  0.0956  0.1724  0.1138  0.1053  0.0911
+t_blocchi           2.1718  2.2767  2.5886  2.4733  2.2364  2.1658  1.6544  1.1177
+r_pieno             0.0295  0.0232  0.1088  0.0781  0.0419  0.0305  0.0523  0.0284
+r_boot_p05          0.0068  0.0064  0.0386  0.0261  0.0104  0.0081     0.0     0.0
+r_boot_p25          0.0204  0.0157  0.0804  0.0572  0.0293  0.0207  0.0297  0.0104
+r_boot_p50          0.0298  0.0234  0.1085  0.0778  0.0419  0.0306  0.0505  0.0275
+r_boot_p75          0.0392  0.0298  0.1357  0.0999  0.0542  0.0406   0.073  0.0451
+r_boot_p95          0.0524    0.04  0.1747  0.1295  0.0726  0.0554  0.1059  0.0708
+P_r0                0.0183   0.011  0.0067  0.0063  0.0133  0.0133  0.0563   0.144
+r_meno1se           0.0126   0.011  0.0601  0.0418  0.0196  0.0144  0.0188  0.0028
+r_meno2se           0.0016  0.0021    0.02  0.0121  0.0033  0.0018     0.0     0.0
+r_maxp25              0.02  0.0166  0.0823  0.0572  0.0302  0.0207  0.0297  0.0099
+r_maxp10            0.0119  0.0098  0.0571   0.038  0.0176  0.0122  0.0113     0.0
+P_perdita_a_pieno   0.1247  0.1253   0.094  0.0953   0.132   0.127  0.2107  0.2977
+P_perdita_a_mezzo   0.0537  0.0407   0.026  0.0277  0.0483  0.0457  0.1117  0.2053
+P_perdita_a_quarto  0.0293   0.022  0.0143  0.0123  0.0263  0.0237  0.0837   0.173
+P_perdita_a_x = quota dei ricampionamenti (storie alternative della stessa lunghezza) in cui puntare x*Kelly da' crescita log NEGATIVA.
+
+==================== 1.3 RISCHIO OTTIMO PER CONVICTION SCORE E STATO DI VOLATILITA' ====================
+Soglie ATR (terzili) e Kelly di cella stimati sulla SCELTA. k_scelta/k_base = Kelly sequenziale di cella; R_ver = R medio in verifica.
+
+--- A30: terzili ATR (scelta) 0.056 / 0.080
+per score
+ cella   n  n_sc  n_ver    Rm    sd     t  R_sc  t_sc  R_ver  t_ver  k_scelta  k_base  k_ver
+  0.67 554   262    292 0.041 3.355 0.288 0.085 0.378  0.001  0.008     0.007   0.004  0.000
+  0.75 341   176    165 0.467 4.497 1.918 0.630 1.734  0.293  0.911     0.046   0.036  0.024
+>=0.83 204    79    125 1.066 5.801 2.626 1.930 2.198  0.521  1.455     0.104   0.076  0.051
+per volatilita
+ cella   n  n_sc  n_ver    Rm    sd     t  R_sc  t_sc  R_ver  t_ver  k_scelta  k_base  k_ver
+1bassa 562   172    390 0.549 4.006 3.249 1.029 2.727  0.337  1.905     0.094   0.058  0.039
+2media 301   172    129 0.080 3.654 0.381 0.409 1.278 -0.358 -1.492     0.032   0.006  0.000
+ 3alta 236   173     63 0.283 5.473 0.795 0.221 0.528  0.452  0.665     0.009   0.012  0.023
+per moneta
+cella   n  n_sc  n_ver    Rm    sd     t  R_sc  t_sc  R_ver  t_ver  k_scelta  k_base  k_ver
+  BTC 400   212    188 0.300 3.583 1.676 0.404 1.460  0.183  0.836     0.036   0.032  0.025
+  ETH 397   222    175 0.362 4.032 1.788 0.573 1.814  0.094  0.420     0.041   0.031  0.012
+  SOL 302    83    219 0.449 5.322 1.467 0.876 1.122  0.288  0.952     0.034   0.024  0.019
+score x volatilita
+           cella   n  n_sc  n_ver     Rm     sd      t   R_sc   t_sc  R_ver  t_ver  k_scelta  k_base  k_ver
+  (0.67, 1bassa) 264    76    188  0.330  3.467  1.548  0.363  0.912  0.317  1.251     0.042   0.038  0.037
+  (0.67, 2media) 163    89     74 -0.232  2.967 -0.997  0.081  0.218 -0.608 -2.531     0.007   0.000  0.000
+   (0.67, 3alta) 127    97     30 -0.210  3.557 -0.666 -0.129 -0.327 -0.472 -1.210     0.000   0.000  0.000
+  (0.75, 1bassa) 160    61     99  0.863  4.705  2.320  1.662  2.108  0.371  1.061     0.137   0.084  0.044
+  (0.75, 2media)  99    60     39  0.250  3.747  0.664  0.758  1.329 -0.532 -1.506     0.063   0.022  0.000
+   (0.75, 3alta)  82    55     27 -0.043  4.878 -0.081 -0.654 -1.624  1.200  0.855     0.000   0.000  0.049
+(>=0.83, 1bassa) 138    35    103  0.604  4.091  1.734  1.374  1.538  0.342  0.968     0.116   0.061  0.038
+(>=0.83, 2media)  39    23     16  0.952  5.514  1.079  0.764  0.629  1.223  0.938     0.041   0.060  0.092
+ (>=0.83, 3alta)  27    21      6  3.595 11.061  1.689  4.135  1.570  1.706  0.602     0.154   0.141  0.095
+corr(score,R)=0.083  corr(atr,R)=-0.028  (verifica: 0.063, -0.035)
+
+--- C11: terzili ATR (scelta) 0.051 / 0.072
+per score
+ cella   n  n_sc  n_ver    Rm    sd     t  R_sc  t_sc  R_ver  t_ver  k_scelta  k_base  k_ver
+  0.67 316   140    176 0.127 1.708 1.323 0.297 2.093 -0.008 -0.058     0.143   0.052  0.000
+  0.75 191    95     96 0.294 1.725 2.352 0.290 1.607  0.297  1.713     0.122   0.133  0.146
+>=0.83 145    50     95 0.400 1.821 2.642 0.382 1.351  0.409  2.302     0.146   0.179  0.201
+per volatilita
+ cella   n  n_sc  n_ver    Rm    sd     t  R_sc  t_sc  R_ver  t_ver  k_scelta  k_base  k_ver
+1bassa 326    95    231 0.277 1.961 2.555 0.410 1.813  0.223  1.828     0.132   0.101  0.086
+2media 195    95    100 0.196 1.569 1.742 0.409 2.500 -0.007 -0.043     0.200   0.095  0.000
+ 3alta 131    95     36 0.195 1.365 1.638 0.110 0.779  0.421  1.895     0.064   0.123  0.320
+per moneta
+cella   n  n_sc  n_ver    Rm    sd     t  R_sc  t_sc  R_ver  t_ver  k_scelta  k_base  k_ver
+  BTC 263   129    134 0.225 1.752 2.083 0.228 1.477  0.222  1.463     0.098   0.097  0.095
+  ETH 238   118    120 0.225 1.658 2.094 0.437 2.612  0.017  0.128     0.193   0.103  0.008
+  SOL 151    38    113 0.275 1.851 1.823 0.193 0.733  0.302  1.666     0.088   0.111  0.119
+score x volatilita
+           cella   n  n_sc  n_ver    Rm    sd     t   R_sc   t_sc  R_ver  t_ver  k_scelta  k_base  k_ver
+  (0.67, 1bassa) 144    42    102 0.136 1.971 0.830  0.328  0.994  0.057  0.304     0.110   0.043  0.017
+  (0.67, 2media) 102    47     55 0.115 1.563 0.744  0.392  1.718 -0.121 -0.584     0.197   0.053  0.000
+   (0.67, 3alta)  70    51     19 0.126 1.301 0.810  0.183  0.977 -0.027 -0.095     0.119   0.084  0.000
+  (0.75, 1bassa)  88    31     57 0.305 2.006 1.426  0.357  0.918  0.277  1.081     0.110   0.107  0.106
+  (0.75, 2media)  60    32     28 0.410 1.492 2.128  0.671  2.285  0.111  0.477     0.319   0.229  0.082
+   (0.75, 3alta)  43    32     11 0.108 1.398 0.509 -0.155 -0.662  0.874  2.100     0.000   0.063  0.575
+(>=0.83, 1bassa)  94    22     72 0.468 1.905 2.382  0.640  1.224  0.415  2.048     0.207   0.204  0.203
+(>=0.83, 2media)  33    16     17 0.055 1.728 0.184 -0.067 -0.175  0.170  0.362     0.000   0.021  0.060
+ (>=0.83, 3alta)  18    12      6 0.673 1.507 1.894  0.506  1.071  1.007  1.931     0.263   0.413  0.577
+corr(score,R)=0.069  corr(atr,R)=-0.052  (verifica: 0.112, -0.057)
+
+==================== 1.4 KELLY SIMULTANEO SU 3 MONETE CORRELATE ====================
+/home/user/GERVA-Capital/research/v5/v5/a7_sizing/01_kelly.py:75: Pandas4Warning: Starting with pandas version 4.0 all arguments of sum will be keyword-only.
+  print(f'\n--- {n}: coorti {len(P)}, con 1/2/3 monete: {(P.notna().sum(1)).value_counts().sort_index().to_dict()}')
+
+--- A30: coorti 812, con 1/2/3 monete: {1: 555, 2: 227, 3: 30}
+correlazione di R fra monete entrate lo stesso giorno (n coppie):
+coin   BTC   ETH   SOL
+coin                  
+BTC   1.00  0.75  0.28
+ETH   0.75  1.00  0.43
+SOL   0.28  0.43  1.00
+  n coppie BTC ETH 166;  n coppie BTC SOL 71;  n coppie ETH SOL 80;
+  coppie di trade sovrapposti nel tempo (monete diverse): 697, corr R = 0.16
+  [scelta] Kelly indipendente per moneta {'BTC': 0.0359, 'ETH': 0.041, 'SOL': 0.0336} somma 0.1105 -> usato insieme: g=0.742/anno
+  [scelta] Kelly congiunto          {'BTC': np.float64(0.0236), 'ETH': np.float64(0.0331), 'SOL': np.float64(0.032)} somma 0.0887 -> g=0.795/anno ; uguale per moneta r=0.0295 g=0.787
+  [base] Kelly indipendente per moneta {'BTC': 0.0316, 'ETH': 0.0312, 'SOL': 0.0243} somma 0.0871 -> usato insieme: g=0.452/anno
+  [base] Kelly congiunto          {'BTC': np.float64(0.0233), 'ETH': np.float64(0.024), 'SOL': np.float64(0.0222)} somma 0.0695 -> g=0.480/anno ; uguale per moneta r=0.0232 g=0.480
+  [verifica] Kelly indipendente per moneta {'BTC': 0.0248, 'ETH': 0.0118, 'SOL': 0.0191} somma 0.0557 -> usato insieme: g=0.222/anno
+  [verifica] Kelly congiunto          {'BTC': np.float64(0.0213), 'ETH': np.float64(0.0061), 'SOL': np.float64(0.0175)} somma 0.0449 -> g=0.232/anno ; uguale per moneta r=0.0155 g=0.214
+/home/user/GERVA-Capital/research/v5/v5/a7_sizing/01_kelly.py:75: Pandas4Warning: Starting with pandas version 4.0 all arguments of sum will be keyword-only.
+  print(f'\n--- {n}: coorti {len(P)}, con 1/2/3 monete: {(P.notna().sum(1)).value_counts().sort_index().to_dict()}')
+
+--- C11: coorti 513, con 1/2/3 monete: {1: 392, 2: 103, 3: 18}
+correlazione di R fra monete entrate lo stesso giorno (n coppie):
+coin   BTC   ETH   SOL
+coin                  
+BTC   1.00  0.69  0.72
+ETH   0.69  1.00  0.62
+SOL   0.72  0.62  1.00
+  n coppie BTC ETH 83;  n coppie BTC SOL 32;  n coppie ETH SOL 42;
+  coppie di trade sovrapposti nel tempo (monete diverse): 531, corr R = 0.47
+  [scelta] Kelly indipendente per moneta {'BTC': 0.0977, 'ETH': 0.1926, 'SOL': 0.088} somma 0.3783 -> usato insieme: g=1.064/anno
+  [scelta] Kelly congiunto          {'BTC': np.float64(0.0558), 'ETH': np.float64(0.1755), 'SOL': np.float64(0.0748)} somma 0.3061 -> g=1.113/anno ; uguale per moneta r=0.1088 g=0.969
+  [base] Kelly indipendente per moneta {'BTC': 0.0965, 'ETH': 0.1027, 'SOL': 0.1114} somma 0.3107 -> usato insieme: g=0.596/anno
+  [base] Kelly congiunto          {'BTC': np.float64(0.0742), 'ETH': np.float64(0.0756), 'SOL': np.float64(0.0881)} somma 0.2379 -> g=0.651/anno ; uguale per moneta r=0.0781 g=0.649
+  [verifica] Kelly indipendente per moneta {'BTC': 0.0954, 'ETH': 0.0082, 'SOL': 0.119} somma 0.2226 -> usato insieme: g=0.652/anno
+  [verifica] Kelly congiunto          {'BTC': np.float64(0.0778), 'ETH': np.float64(0.0), 'SOL': np.float64(0.104)} somma 0.1818 -> g=0.691/anno ; uguale per moneta r=0.0554 g=0.445
+
+varianti contate in questo script: 24

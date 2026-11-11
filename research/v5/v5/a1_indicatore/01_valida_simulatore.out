@@ -1,0 +1,7 @@
+BTC C 1xATR trail2: originale n=263 R=+0.2250 | riscritto n=263 R=+0.2250 | identici=True maxdiff=1.22e-14
+BTC A 1,7% no trail: originale n=400 R=+0.3003 | riscritto n=400 R=+0.3003 | identici=True maxdiff=1.87e-14
+ETH C 1xATR trail2: originale n=238 R=+0.2251 | riscritto n=238 R=+0.2251 | identici=True maxdiff=9.77e-15
+ETH A 1,7% no trail: originale n=397 R=+0.3619 | riscritto n=397 R=+0.3619 | identici=True maxdiff=2.31e-14
+SOL C 1xATR trail2: originale n=151 R=+0.2747 | riscritto n=151 R=+0.2747 | identici=True maxdiff=2.22e-15
+SOL A 1,7% no trail: originale n=302 R=+0.4494 | riscritto n=302 R=+0.4494 | identici=True maxdiff=1.07e-14
+secondi 2.0

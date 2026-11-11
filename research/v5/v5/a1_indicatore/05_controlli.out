@@ -1,0 +1,23 @@
+(1) troncamento: 120 date a caso, differenze > 1e-9: 0, differenza massima 0.00e+00
+    volume giornaliero: file con taker vs somma dei 5 minuti, scarto relativo mediano: {'BTC': 0.0, 'ETH': 0.0, 'SOL': 0.0}
+
+(2) differenza di R medio, libro GQ alta - libro conviction alta: (differenza, [5%,95%], P(>0)); blocchi = mesi
+    C {'tutto': (np.float64(0.103), [0.002, 0.205], 0.955), 'scelta': (np.float64(0.105), [-0.011, 0.221], 0.931), 'verifica': (np.float64(0.096), [-0.063, 0.249], 0.827)}
+    A {'tutto': (np.float64(-0.008), [-0.195, 0.161], 0.465), 'scelta': (np.float64(-0.126), [-0.427, 0.163], 0.236), 'verifica': (np.float64(0.089), [-0.112, 0.289], 0.761)}
+
+(3) incrocio ingresso/uscita (diagnostica, NON candidati):
+conv ingresso uscita    n     R     t  R_scelta  R_verifica  t_ver  giorni  stop
+   C     conv   conv  652 0.237 3.472     0.309       0.180  1.998   4.408 0.595
+   C     conv     gq  658 0.233 3.456     0.291       0.187  2.096   4.339 0.581
+   C     conv   none  652 0.237 3.472     0.309       0.180  1.998   4.408 0.595
+   C       gq   conv  606 0.339 4.528     0.413       0.275  2.708   4.441 0.573
+   C       gq     gq  605 0.339 4.528     0.415       0.276  2.710   4.460 0.574
+   C       gq   none  605 0.339 4.528     0.415       0.276  2.710   4.460 0.574
+   A     conv   conv 1099 0.364 2.817     0.553       0.196  1.308   2.451 0.815
+   A     conv     gq 1104 0.352 2.743     0.533       0.190  1.279   2.431 0.811
+   A     conv   none 1099 0.364 2.817     0.553       0.196  1.308   2.451 0.815
+   A       gq   conv 1069 0.355 2.640     0.427       0.285  1.719   2.345 0.823
+   A       gq     gq 1069 0.355 2.640     0.427       0.285  1.719   2.345 0.823
+   A       gq   none 1069 0.355 2.640     0.427       0.285  1.719   2.345 0.823
+
+(4) libro GQ alta 1xATR con il simulatore ORIGINALE: n=605 R=+0.3394 | con il mio: n=605 R=+0.3394

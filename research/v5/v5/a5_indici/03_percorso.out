@@ -1,0 +1,25 @@
+(a) S&P 500 a 1 minuto (CFD-like), 2011-2018, regola MR; costi 2 bp per lato, finanziamento incluso
+IBS<0.2 e VIX>=20 | solo seduta regolare, percorso al minuto           n   94  R medio +0.151  sigma 1.18  t +1.24  vincenti 0.56  stop 0.33
+IBS<0.2 e VIX>=20 | 24 ore, percorso al minuto (stop notturni)         n   97  R medio +0.170  sigma 1.12  t +1.49  vincenti 0.56  stop 0.36
+IBS<0.2 e VIX>=20 | 24 ore, ingresso 5 minuti dopo                     n   97  R medio +0.160  sigma 1.16  t +1.36  vincenti 0.55  stop 0.37
+IBS<0.2 e VIX>=20 | motore giornaliero sulle stesse barre              n   94  R medio +0.149  sigma 1.18  t +1.22  vincenti 0.56  stop 0.28
+IBS<0.2 senza filtro | solo seduta regolare, percorso al minuto        n  269  R medio +0.095  sigma 1.04  t +1.50  vincenti 0.57  stop 0.31
+IBS<0.2 senza filtro | 24 ore, percorso al minuto (stop notturni)      n  276  R medio +0.066  sigma 1.02  t +1.07  vincenti 0.55  stop 0.35
+IBS<0.2 senza filtro | 24 ore, ingresso 5 minuti dopo                  n  275  R medio +0.047  sigma 1.03  t +0.76  vincenti 0.55  stop 0.36
+IBS<0.2 senza filtro | motore giornaliero sulle stesse barre           n  269  R medio +0.094  sigma 1.04  t +1.48  vincenti 0.57  stop 0.26
+IBS<0.1 senza filtro | solo seduta regolare, percorso al minuto        n  168  R medio +0.048  sigma 1.09  t +0.57  vincenti 0.53  stop 0.36
+IBS<0.1 senza filtro | 24 ore, percorso al minuto (stop notturni)      n  174  R medio +0.014  sigma 1.08  t +0.17  vincenti 0.51  stop 0.40
+IBS<0.1 senza filtro | 24 ore, ingresso 5 minuti dopo                  n  173  R medio +0.024  sigma 1.09  t +0.29  vincenti 0.51  stop 0.39
+IBS<0.1 senza filtro | motore giornaliero sulle stesse barre           n  168  R medio +0.047  sigma 1.10  t +0.55  vincenti 0.53  stop 0.30
+SPY giornaliero (Yahoo), IBS<0.2 e VIX>=20, 2011-2018                  n   94  R medio +0.164  sigma 1.22  t +1.31  vincenti 0.56  stop 0.27
+
+(b) barre orarie Yahoo, 2023-12 -> 2026-11, regola MR (IBS<0.2 e VIX>=20), stop 1 ATR
+percorso orario, ingresso apertura t+1 (3 indici)                      n   86  R medio +0.307  sigma 1.29  t +2.20  vincenti 0.59  stop 0.30
+motore giornaliero, stessi trade                                       n   89  R medio +0.309  sigma 1.28  t +2.27  vincenti 0.58  stop 0.27
+decisione 15:30 con VIX della vigilia, ingresso/uscita in chiusura (campione piccolo: NON usato) n   40  R medio +0.632  sigma 1.23  t +3.26  vincenti 0.78  stop 0.10
+trade in comune 86 su 86/89; differenza media R orario-giornaliero -0.0146; massima |diff| 0.461; corr 0.9986
+
+(c) controllo di troncamento: segnali ricalcolati sui dati tagliati a t
+confronti 2400, differenze 0  (TOM e FOMC usano solo il calendario di borsa e della Fed, noti in anticipo)
+
+varianti provate in questo script: 10

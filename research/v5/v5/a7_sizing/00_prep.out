@@ -1,0 +1,6 @@
+A30 (0.017, ('alta',), None, 'long') n 1099 per anno 129.1 R 0.364 sd 4.278 minR -1.96 cap 1.96 L 30.0 score nan 0 atr med 0.055
+C11 ('atr1.0', ('alta',), 2.0, 'long') n 652 per anno 76.6 R 0.237 sd 1.740 minR -1.19 cap 1.77 L 11.2 score nan 0 atr med 0.051
+B20 (0.027, ('alta',), None, 'long') n 887 per anno 104.2 R 0.246 sd 3.013 minR -1.76 cap 1.85 L 20.0 score nan 0 atr med 0.056
+D17 (0.027, ('alta',), 2.0, 'long') n 1239 per anno 145.5 R 0.120 sd 2.063 minR -1.31 cap 1.85 L 20.0 score nan 0 atr med 0.060
+A30m (0.017, ('media', 'alta'), None, 'long') n 2401 per anno 281.9 R 0.043 sd 3.638 minR -1.96 cap 1.96 L 30.0 score nan 0 atr med 0.058
+S20 (0.027, 'short', 2.0, 'short') n 756 per anno 91.8 R 0.102 sd 1.725 minR -1.85 cap 1.85 L 20.0 score nan 0 atr med 0.071

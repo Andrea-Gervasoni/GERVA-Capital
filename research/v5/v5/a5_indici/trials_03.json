@@ -1,0 +1,12 @@
+[
+"orario|decisione 15:30 ingresso in chiusura",
+"percorso|IBS<0.1 senza filtro|24 ore, ingresso 5 minuti dopo",
+"percorso|IBS<0.1 senza filtro|24 ore, percorso al minuto (stop notturni)",
+"percorso|IBS<0.1 senza filtro|solo seduta regolare, percorso al minuto",
+"percorso|IBS<0.2 e VIX>=20|24 ore, ingresso 5 minuti dopo",
+"percorso|IBS<0.2 e VIX>=20|24 ore, percorso al minuto (stop notturni)",
+"percorso|IBS<0.2 e VIX>=20|solo seduta regolare, percorso al minuto",
+"percorso|IBS<0.2 senza filtro|24 ore, ingresso 5 minuti dopo",
+"percorso|IBS<0.2 senza filtro|24 ore, percorso al minuto (stop notturni)",
+"percorso|IBS<0.2 senza filtro|solo seduta regolare, percorso al minuto"
+]

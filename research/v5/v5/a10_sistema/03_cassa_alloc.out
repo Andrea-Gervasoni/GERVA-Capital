@@ -1,0 +1,117 @@
+BIL: rendimento annuo 2.563% contro rf 2.686% (2018-04 ->)
+
+== 1. Cassa libera in T-bill (ETF monetario; 10 pb per lato; cuscinetto 5%, banda 5%; quota decisa il giorno prima)
+B. 6 strategie 1x (cassa a rendimento zero)                        Sh  1.36 |  1.58 |  1.07  CAGR   13.6%   14.4%   12.7%  vol   7.6%  DD   -9.4%   -6.0% 
+B + T-bill: solo la cassa gia' presso IBKR                         Sh  1.41 |  1.60 |  1.15  CAGR   14.0%   14.5%   13.4%  vol   7.6%  DD   -9.2%   -5.9% parcheggiato medio 0.15, +0.332%/anno (sel 0.101%, ver 0.617%)
+B + T-bill: tutta la cassa libera (capitale accentrato su IBKR)    Sh  1.49 |  1.63 |  1.29  CAGR   14.7%   14.8%   14.5%  vol   7.6%  DD   -8.8%   -5.6% parcheggiato medio 0.41, +0.934%/anno (sel 0.357%, ver 1.649%)
+B + T-bill: tutta la cassa libera meno 15% riservato al margine de Sh  1.44 |  1.61 |  1.20  CAGR   14.2%   14.6%   13.8%  vol   7.6%  DD   -9.0%   -5.8% parcheggiato medio 0.26, +0.551%/anno (sel 0.200%, ver 0.987%)
+B + cassa remunerata a rf-0,5% (conto IBKR >10k o stablecoin a ren Sh  1.47 |  1.62 |  1.27  CAGR   14.5%   14.7%   14.3%  vol   7.6%  DD   -8.9%   -5.6% 
+  sensibilita': cuscinetto 2% banda 2%                             Sh  1.49 |  1.63 |  1.31  CAGR   14.7%   14.8%   14.6%  vol   7.6%  DD   -8.8%   -5.5% 
+  sensibilita': cuscinetto 5% banda 10%                            Sh  1.49 |  1.64 |  1.29  CAGR   14.7%   14.8%   14.5%  vol   7.6%  DD   -8.8%   -5.6% 
+  sensibilita': cuscinetto 10% banda 5%                            Sh  1.47 |  1.62 |  1.26  CAGR   14.5%   14.7%   14.3%  vol   7.6%  DD   -8.9%   -5.6% 
+  sensibilita': cuscinetto 10% banda 10%                           Sh  1.47 |  1.63 |  1.26  CAGR   14.6%   14.8%   14.3%  vol   7.6%  DD   -8.8%   -5.6% 
+C2 (1x + trade 1/2% mtm), cassa a zero                             Sh  1.04 |  1.20 |  0.90  CAGR   39.5%   39.3%   39.7%  vol  29.9%  DD  -26.4%  -26.4% 
+C2 + T-bill sulla cassa libera al netto del margine dei trade      Sh  1.06 |  1.21 |  0.93  CAGR   40.5%   39.7%   41.4%  vol  29.9%  DD  -26.1%  -26.1% parcheggiato medio 0.34
+
+== 2. Allocazione tra i 5 sleeve a rischio di mercato (CARRY resta a quota fissa 20%). Walk-forward: pesi a inizio mese con i dati fino al giorno prima
+RIFERIMENTO: portafoglio pubblicato (gerva.portfolio.risk_parity)  Sh  1.36 |  1.58 |  1.07  CAGR   13.6%   14.4%   12.7%  vol   7.6%  DD   -9.4%   -6.0% 
+RP con pavimento 0,5 (attuale; ricalcolata qui)                    Sh  1.35 |  1.57 |  1.07  CAGR   13.6%   14.3%   12.7%  vol   7.6%  DD   -9.4%   -6.0% | pesi medi CR-TR 0.13 CR-XS 0.09 EQ-MR 0.20 MA-TR 0.33 DIP 0.09 CARRY 0.15 | giro pesi/anno 1.2
+RP senza pavimento                                                 Sh  1.37 |  1.57 |  1.14  CAGR   14.8%   14.8%   14.9%  vol   8.4%  DD   -9.6%   -6.0% | pesi medi CR-TR 0.14 CR-XS 0.10 EQ-MR 0.19 MA-TR 0.31 DIP 0.09 CARRY 0.15 | giro pesi/anno 1.7
+pesi uguali                                                        Sh  1.43 |  1.69 |  1.07  CAGR   18.2%   20.8%   15.0%  vol  10.1%  DD  -13.6%   -7.5% | pesi medi CR-TR 0.18 CR-XS 0.18 EQ-MR 0.18 MA-TR 0.18 DIP 0.11 CARRY 0.15 | giro pesi/anno 0.1
+RP finestra 90                                                     Sh  1.37 |  1.54 |  1.15  CAGR   13.3%   13.5%   13.1%  vol   7.4%  DD   -8.3%   -5.1% | pesi medi CR-TR 0.14 CR-XS 0.10 EQ-MR 0.20 MA-TR 0.32 DIP 0.09 CARRY 0.15 | giro pesi/anno 1.6
+RP finestra 365                                                    Sh  1.38 |  1.68 |  0.95  CAGR   13.6%   15.4%   11.5%  vol   7.5%  DD   -9.4%   -5.4% | pesi medi CR-TR 0.12 CR-XS 0.09 EQ-MR 0.19 MA-TR 0.35 DIP 0.10 CARRY 0.15 | giro pesi/anno 0.7
+varianza inversa, contrazione 0                                    Sh  1.02 |  1.10 |  0.92  CAGR    9.5%    8.6%   10.7%  vol   6.5%  DD   -8.4%   -5.4% | pesi medi CR-TR 0.10 CR-XS 0.05 EQ-MR 0.18 MA-TR 0.43 DIP 0.06 CARRY 0.15 | giro pesi/anno 1.6
+varianza inversa, contrazione 0,5                                  Sh  1.43 |  1.69 |  1.05  CAGR   15.4%   17.3%   13.1%  vol   8.4%  DD   -9.7%   -6.3% | pesi medi CR-TR 0.15 CR-XS 0.11 EQ-MR 0.21 MA-TR 0.27 DIP 0.11 CARRY 0.15 | giro pesi/anno 0.9
+varianza inversa, contrazione 0,8                                  Sh  1.44 |  1.71 |  1.07  CAGR   17.1%   19.6%   14.1%  vol   9.4%  DD  -11.9%   -6.7% | pesi medi CR-TR 0.17 CR-XS 0.15 EQ-MR 0.20 MA-TR 0.21 DIP 0.11 CARRY 0.15 | giro pesi/anno 0.5
+minima varianza, corr contratta 0,5                                Sh  0.65 |  0.64 |  0.67  CAGR    6.5%    5.2%    8.1%  vol   5.9%  DD   -8.3%   -4.2% | pesi medi CR-TR 0.08 CR-XS 0.02 EQ-MR 0.15 MA-TR 0.47 DIP 0.05 CARRY 0.15 | giro pesi/anno 1.7
+minima varianza, corr contratta 0,9                                Sh  0.65 |  0.67 |  0.63  CAGR    6.5%    5.4%    8.0%  vol   5.9%  DD   -8.1%   -4.4% | pesi medi CR-TR 0.08 CR-XS 0.02 EQ-MR 0.16 MA-TR 0.47 DIP 0.04 CARRY 0.15 | giro pesi/anno 1.7
+minima varianza, corr contratta 0,5, finestra 365                  Sh  0.70 |  0.87 |  0.45  CAGR    6.9%    6.8%    6.9%  vol   5.9%  DD   -7.5%   -4.4% | pesi medi CR-TR 0.05 CR-XS 0.02 EQ-MR 0.13 MA-TR 0.49 DIP 0.05 CARRY 0.15 | giro pesi/anno 1.1
+ERC, corr contratta 0,5                                            Sh  1.33 |  1.54 |  1.04  CAGR   13.1%   13.9%   12.1%  vol   7.4%  DD   -9.6%   -6.1% | pesi medi CR-TR 0.13 CR-XS 0.09 EQ-MR 0.20 MA-TR 0.34 DIP 0.09 CARRY 0.15 | giro pesi/anno 1.2
+ERC, corr contratta 0,5, finestra 365                              Sh  1.36 |  1.66 |  0.95  CAGR   13.3%   15.0%   11.3%  vol   7.4%  DD   -9.6%   -5.4% | pesi medi CR-TR 0.12 CR-XS 0.09 EQ-MR 0.20 MA-TR 0.35 DIP 0.10 CARRY 0.15 | giro pesi/anno 0.8
+ERC, corr grezza                                                   Sh  1.31 |  1.52 |  1.03  CAGR   12.8%   13.6%   11.9%  vol   7.4%  DD   -9.8%   -6.1% | pesi medi CR-TR 0.12 CR-XS 0.09 EQ-MR 0.21 MA-TR 0.34 DIP 0.09 CARRY 0.15 | giro pesi/anno 1.2
+RP x Sharpe, contrazione 0,9                                       Sh  1.33 |  1.52 |  1.07  CAGR   13.5%   14.1%   12.8%  vol   7.8%  DD   -9.6%   -6.1% | pesi medi CR-TR 0.14 CR-XS 0.10 EQ-MR 0.20 MA-TR 0.33 DIP 0.10 CARRY 0.15 | giro pesi/anno 1.2
+RP x Sharpe, contrazione 0,75                                      Sh  1.31 |  1.48 |  1.07  CAGR   13.6%   14.0%   13.1%  vol   7.9%  DD  -10.0%   -6.2% | pesi medi CR-TR 0.14 CR-XS 0.10 EQ-MR 0.19 MA-TR 0.32 DIP 0.10 CARRY 0.15 | giro pesi/anno 1.3
+RP x Sharpe, contrazione 0,5                                       Sh  1.29 |  1.44 |  1.08  CAGR   13.8%   13.9%   13.6%  vol   8.2%  DD  -10.6%   -6.4% | pesi medi CR-TR 0.15 CR-XS 0.10 EQ-MR 0.19 MA-TR 0.30 DIP 0.11 CARRY 0.15 | giro pesi/anno 1.4
+   A parita' di volatilita' (7,6%): CAGR in eccesso = Sharpe x 7,6%. Differenza di Sharpe tra il migliore in scelta e l'attuale va letta contro l'errore standard (~0,45 su 5 anni).
+
+== 3. Ribilanciamento TRA sleeve: combine() ribilancia ogni giorno gratis. Conto vero: le quote derivano; costi sugli spostamenti
+combine() pubblicato (ribilancio giornaliero implicito, gratis)    Sh  1.36 |  1.58 |  1.07  CAGR   13.6%   14.4%   12.7%  vol   7.6%  DD   -9.4%   -6.0% 
+ribilancio D banda 0%                                              Sh  1.34 |  1.56 |  1.04  CAGR   13.4%   14.1%   12.4%  vol   7.6%  DD   -9.4%   -6.1% | costo 0.204%/anno, giro 2.3x/anno
+ribilancio D banda 2%                                              Sh  1.33 |  1.57 |  1.01  CAGR   13.4%   14.3%   12.3%  vol   7.6%  DD   -9.3%   -6.0% | costo 0.085%/anno, giro 1.1x/anno
+ribilancio W banda 0%                                              Sh  1.38 |  1.60 |  1.08  CAGR   13.8%   14.6%   12.8%  vol   7.7%  DD   -9.2%   -6.0% | costo 0.123%/anno, giro 1.6x/anno
+ribilancio M banda 0%                                              Sh  1.36 |  1.58 |  1.07  CAGR   13.8%   14.5%   12.8%  vol   7.7%  DD   -9.3%   -6.1% | costo 0.095%/anno, giro 1.3x/anno
+ribilancio M banda 2%                                              Sh  1.35 |  1.59 |  1.05  CAGR   13.7%   14.5%   12.7%  vol   7.7%  DD   -9.3%   -6.3% | costo 0.079%/anno, giro 1.1x/anno
+ribilancio M banda 5%                                              Sh  1.34 |  1.62 |  0.96  CAGR   13.7%   15.1%   12.0%  vol   7.8%  DD   -9.8%   -6.1% | costo 0.065%/anno, giro 0.9x/anno
+ribilancio Q banda 0%                                              Sh  1.34 |  1.57 |  1.03  CAGR   14.7%   16.1%   12.9%  vol   8.5%  DD  -12.4%   -6.6% | costo 0.057%/anno, giro 0.9x/anno
+ribilancio Q banda 5%                                              Sh  1.35 |  1.62 |  0.97  CAGR   15.0%   16.9%   12.6%  vol   8.6%  DD  -12.0%   -6.4% | costo 0.042%/anno, giro 0.7x/anno
+ribilancio Y banda 0%                                              Sh  1.35 |  1.58 |  1.02  CAGR   16.2%   18.6%   13.4%  vol   9.5%  DD  -12.2%   -8.6% | costo 0.024%/anno, giro 0.4x/anno
+   Bande e frequenza DENTRO gli sleeve (costi pieni): CR-TREND e MA-TREND
+CR-TREND ogni 1g banda 0%                                          Sh  1.05 |  1.29 |  0.76  CAGR   27.1%   32.2%   21.1%  vol  22.8%  DD  -21.6%  -18.8% | giro 15.2x costo 4.56%
+CR-TREND ogni 1g banda 3%                                          Sh  1.07 |  1.30 |  0.78  CAGR   27.4%   32.2%   21.6%  vol  22.5%  DD  -21.8%  -18.6% | giro 13.7x costo 4.11%
+CR-TREND ogni 1g banda 6%                                          Sh  1.06 |  1.28 |  0.78  CAGR   26.9%   31.6%   21.2%  vol  22.4%  DD  -22.1%  -18.0% | giro 13.0x costo 3.89%
+CR-TREND ogni 1g banda 10%                                         Sh  1.07 |  1.29 |  0.79  CAGR   27.8%   32.7%   21.9%  vol  22.9%  DD  -20.2%  -17.5% | giro 12.1x costo 3.63%
+CR-TREND ogni 7g banda 0%                                          Sh  1.00 |  1.38 |  0.52  CAGR   25.8%   35.6%   14.6%  vol  22.8%  DD  -25.1%  -25.1% | giro 6.5x costo 1.94%
+CR-TREND ogni 7g banda 3%                                          Sh  1.02 |  1.40 |  0.54  CAGR   26.2%   36.0%   15.1%  vol  22.7%  DD  -25.2%  -25.2% | giro 5.3x costo 1.58%
+CR-TREND ogni 7g banda 6%                                          Sh  1.02 |  1.40 |  0.53  CAGR   26.2%   36.4%   14.6%  vol  22.6%  DD  -24.9%  -24.9% | giro 4.9x costo 1.48%
+CR-TREND ogni 7g banda 10%                                         Sh  0.97 |  1.30 |  0.54  CAGR   24.9%   33.5%   15.0%  vol  22.7%  DD  -26.4%  -24.7% | giro 4.6x costo 1.37%
+CR-TREND ogni 14g banda 0%                                         Sh  0.94 |  1.24 |  0.55  CAGR   24.1%   31.6%   15.4%  vol  22.9%  DD  -28.4%  -21.0% | giro 5.0x costo 1.50%
+CR-TREND ogni 14g banda 3%                                         Sh  0.97 |  1.27 |  0.59  CAGR   25.1%   32.6%   16.3%  vol  22.9%  DD  -28.0%  -20.0% | giro 3.9x costo 1.16%
+CR-TREND ogni 14g banda 6%                                         Sh  0.96 |  1.23 |  0.62  CAGR   24.6%   30.9%   17.3%  vol  22.8%  DD  -28.5%  -20.1% | giro 3.6x costo 1.07%
+CR-TREND ogni 14g banda 10%                                        Sh  0.88 |  1.15 |  0.53  CAGR   22.2%   28.5%   14.8%  vol  22.7%  DD  -30.1%  -22.3% | giro 3.2x costo 0.96%
+CR-TREND ogni 30g banda 0%                                         Sh  0.59 |  0.66 |  0.51  CAGR   15.2%   15.6%   14.7%  vol  24.3%  DD  -38.7%  -26.5% | giro 4.1x costo 1.23%
+CR-TREND ogni 30g banda 3%                                         Sh  0.63 |  0.72 |  0.51  CAGR   16.1%   17.2%   14.8%  vol  24.2%  DD  -37.6%  -26.7% | giro 3.1x costo 0.93%
+CR-TREND ogni 30g banda 6%                                         Sh  0.63 |  0.71 |  0.54  CAGR   16.4%   17.1%   15.6%  vol  24.5%  DD  -36.7%  -26.3% | giro 2.9x costo 0.87%
+CR-TREND ogni 30g banda 10%                                        Sh  0.62 |  0.69 |  0.53  CAGR   15.8%   16.3%   15.3%  vol  24.1%  DD  -32.8%  -25.6% | giro 2.6x costo 0.79%
+MA-TREND ogni 1g banda 0%                                          Sh -0.18 |  0.20 | -0.72  CAGR    1.3%    2.5%   -0.2%  vol   6.8%  DD  -20.8%  -14.0% | giro 35.2x costo 3.52%
+MA-TREND ogni 1g banda 2%                                          Sh -0.04 |  0.31 | -0.53  CAGR    2.2%    3.2%    0.9%  vol   6.8%  DD  -20.7%  -13.7% | giro 27.5x costo 2.75%
+MA-TREND ogni 1g banda 4%                                          Sh  0.11 |  0.42 | -0.32  CAGR    3.2%    4.1%    2.2%  vol   7.0%  DD  -19.4%  -12.8% | giro 22.4x costo 2.24%
+MA-TREND ogni 5g banda 0%                                          Sh  0.15 |  0.38 | -0.17  CAGR    3.5%    3.8%    3.2%  vol   6.8%  DD  -14.6%   -9.6% | giro 14.6x costo 1.46%
+MA-TREND ogni 5g banda 2%                                          Sh  0.17 |  0.37 | -0.12  CAGR    3.7%    3.7%    3.6%  vol   6.9%  DD  -14.9%   -9.5% | giro 11.8x costo 1.18%
+MA-TREND ogni 5g banda 4%                                          Sh  0.21 |  0.41 | -0.06  CAGR    4.0%    4.1%    3.9%  vol   7.1%  DD  -14.1%   -9.6% | giro 10.1x costo 1.01%
+MA-TREND ogni 10g banda 0%                                         Sh  0.14 |  0.34 | -0.16  CAGR    3.5%    3.6%    3.3%  vol   7.0%  DD  -15.6%  -10.2% | giro 10.3x costo 1.03%
+MA-TREND ogni 10g banda 2%                                         Sh  0.14 |  0.33 | -0.14  CAGR    3.5%    3.5%    3.4%  vol   7.0%  DD  -15.4%   -9.7% | giro 8.3x costo 0.83%
+MA-TREND ogni 10g banda 4%                                         Sh  0.16 |  0.34 | -0.11  CAGR    3.6%    3.6%    3.6%  vol   7.2%  DD  -14.3%   -9.3% | giro 7.3x costo 0.73%
+MA-TREND ogni 21g banda 0%                                         Sh  0.35 |  0.41 |  0.26  CAGR    5.0%    4.1%    6.2%  vol   7.2%  DD  -12.2%   -8.3% | giro 7.0x costo 0.70%
+MA-TREND ogni 21g banda 2%                                         Sh  0.35 |  0.40 |  0.28  CAGR    5.1%    4.1%    6.3%  vol   7.2%  DD  -13.0%   -8.2% | giro 5.4x costo 0.54%
+MA-TREND ogni 21g banda 4%                                         Sh  0.35 |  0.38 |  0.30  CAGR    5.1%    3.9%    6.6%  vol   7.4%  DD  -13.7%   -8.9% | giro 4.9x costo 0.49%
+
+== 4. Volatilita' obiettivo sul libro giornaliero (obiettivo 15%): finestra, tetto, volatilita' al ribasso. Finanziamento sul debito REALE; costo del cambio di leva 12 pb x esposizione
+1x                                                                 Sh  1.44 |  1.74 |  1.07  CAGR   14.3%   15.7%   12.7%  vol   7.6%  DD   -8.7%   -6.0% 
+leva costante 1.5x (debito reale)                                  Sh  1.56 |  1.79 |  1.27  CAGR   21.9%   24.1%   19.4%  vol  11.4%  DD  -12.9%   -8.9% 
+leva costante 2.0x (debito reale)                                  Sh  1.59 |  1.80 |  1.33  CAGR   29.2%   32.5%   25.4%  vol  15.1%  DD  -17.0%  -12.0% 
+leva costante 3.0x (debito reale)                                  Sh  1.57 |  1.78 |  1.30  CAGR   42.9%   49.7%   35.4%  vol  22.7%  DD  -24.8%  -18.5% 
+vol 15% std finestra 20 tetto 2.0x                                 Sh  1.49 |  1.72 |  1.21  CAGR   23.8%   26.1%   21.1%  vol  13.1%  DD  -11.7%  -11.7% | leva media 1.83 giro leva 7.4/anno
+vol 15% std finestra 40 tetto 2.0x                                 Sh  1.51 |  1.72 |  1.26  CAGR   24.4%   26.1%   22.5%  vol  13.3%  DD  -11.9%  -11.9% | leva media 1.84 giro leva 4.3/anno
+vol 15% std finestra 60 tetto 2.0x                                 Sh  1.53 |  1.71 |  1.31  CAGR   25.3%   26.6%   23.8%  vol  13.6%  DD  -11.6%  -11.6% | leva media 1.85 giro leva 2.9/anno
+vol 15% std finestra 120 tetto 2.0x                                Sh  1.50 |  1.63 |  1.35  CAGR   25.3%   25.6%   24.9%  vol  13.8%  DD  -15.1%  -12.0% | leva media 1.86 giro leva 1.5/anno
+vol 15% std finestra 250 tetto 2.0x                                Sh  1.51 |  1.64 |  1.36  CAGR   26.0%   26.4%   25.4%  vol  14.2%  DD  -17.0%  -12.0% | leva media 1.87 giro leva 0.8/anno
+vol 15% down finestra 20 tetto 2.0x                                Sh  1.46 |  1.67 |  1.20  CAGR   24.2%   26.2%   21.9%  vol  13.7%  DD  -11.9%  -11.5% | leva media 1.86 giro leva 6.7/anno
+vol 15% down finestra 40 tetto 2.0x                                Sh  1.52 |  1.72 |  1.28  CAGR   25.4%   26.8%   23.8%  vol  13.8%  DD  -12.0%  -12.0% | leva media 1.88 giro leva 3.2/anno
+vol 15% down finestra 60 tetto 2.0x                                Sh  1.54 |  1.78 |  1.27  CAGR   26.4%   28.5%   23.8%  vol  14.0%  DD  -11.9%  -11.7% | leva media 1.89 giro leva 2.1/anno
+vol 15% down finestra 120 tetto 2.0x                               Sh  1.50 |  1.65 |  1.32  CAGR   25.7%   26.2%   25.1%  vol  14.1%  DD  -15.1%  -11.9% | leva media 1.90 giro leva 1.2/anno
+vol 15% down finestra 250 tetto 2.0x                               Sh  1.49 |  1.62 |  1.33  CAGR   25.9%   26.3%   25.4%  vol  14.3%  DD  -16.7%  -12.0% | leva media 1.92 giro leva 0.4/anno
+vol 15% ewma finestra 20 tetto 2.0x                                Sh  1.48 |  1.73 |  1.17  CAGR   23.3%   25.9%   20.2%  vol  12.9%  DD  -11.6%  -11.6% | leva media 1.84 giro leva 11.2/anno
+vol 15% ewma finestra 40 tetto 2.0x                                Sh  1.51 |  1.73 |  1.24  CAGR   24.2%   26.2%   21.9%  vol  13.1%  DD  -11.6%  -11.6% | leva media 1.85 giro leva 6.6/anno
+vol 15% ewma finestra 60 tetto 2.0x                                Sh  1.51 |  1.71 |  1.27  CAGR   24.5%   26.1%   22.7%  vol  13.3%  DD  -11.8%  -11.8% | leva media 1.85 giro leva 4.8/anno
+vol 15% ewma finestra 120 tetto 2.0x                               Sh  1.51 |  1.66 |  1.33  CAGR   24.9%   25.5%   24.2%  vol  13.6%  DD  -13.0%  -11.9% | leva media 1.86 giro leva 2.5/anno
+vol 15% ewma finestra 250 tetto 2.0x                               Sh  1.50 |  1.64 |  1.34  CAGR   25.4%   25.8%   24.9%  vol  13.9%  DD  -15.1%  -12.0% | leva media 1.88 giro leva 1.3/anno
+vol 15% std finestra 20 tetto 3.0x                                 Sh  1.31 |  1.58 |  0.99  CAGR   25.4%   29.2%   21.0%  vol  16.2%  DD  -17.5%  -15.9% | leva media 2.37 giro leva 19.9/anno
+vol 15% std finestra 40 tetto 3.0x                                 Sh  1.34 |  1.54 |  1.12  CAGR   25.6%   27.1%   23.9%  vol  15.9%  DD  -16.5%  -16.1% | leva media 2.30 giro leva 11.8/anno
+vol 15% std finestra 60 tetto 3.0x                                 Sh  1.37 |  1.52 |  1.19  CAGR   26.4%   27.0%   25.6%  vol  16.1%  DD  -16.8%  -15.2% | leva media 2.26 giro leva 8.5/anno
+vol 15% std finestra 120 tetto 3.0x                                Sh  1.35 |  1.47 |  1.22  CAGR   25.9%   26.2%   25.6%  vol  16.0%  DD  -15.9%  -14.7% | leva media 2.18 giro leva 4.8/anno
+vol 15% std finestra 250 tetto 3.0x                                Sh  1.47 |  1.51 |  1.42  CAGR   28.5%   27.3%   30.1%  vol  16.2%  DD  -18.6%  -13.2% | leva media 2.08 giro leva 3.0/anno
+vol 15% down finestra 20 tetto 3.0x                                Sh  1.29 |  1.50 |  1.05  CAGR   27.1%   30.3%   23.6%  vol  17.7%  DD  -17.7%  -17.2% | leva media 2.49 giro leva 18.8/anno
+vol 15% down finestra 40 tetto 3.0x                                Sh  1.33 |  1.52 |  1.11  CAGR   27.8%   29.4%   26.0%  vol  17.6%  DD  -17.3%  -17.3% | leva media 2.42 giro leva 12.3/anno
+vol 15% down finestra 60 tetto 3.0x                                Sh  1.36 |  1.50 |  1.22  CAGR   29.0%   29.0%   28.9%  vol  17.9%  DD  -16.9%  -16.2% | leva media 2.38 giro leva 9.3/anno
+vol 15% down finestra 120 tetto 3.0x                               Sh  1.33 |  1.43 |  1.24  CAGR   27.6%   26.7%   28.6%  vol  17.4%  DD  -16.2%  -14.1% | leva media 2.34 giro leva 5.5/anno
+vol 15% down finestra 250 tetto 3.0x                               Sh  1.40 |  1.48 |  1.32  CAGR   28.8%   27.1%   30.8%  vol  17.2%  DD  -18.7%  -14.0% | leva media 2.24 giro leva 3.4/anno
+vol 15% ewma finestra 20 tetto 3.0x                                Sh  1.26 |  1.52 |  0.94  CAGR   23.2%   26.5%   19.5%  vol  15.4%  DD  -17.4%  -16.0% | leva media 2.35 giro leva 26.5/anno
+vol 15% ewma finestra 40 tetto 3.0x                                Sh  1.30 |  1.50 |  1.07  CAGR   24.0%   25.6%   22.1%  vol  15.4%  DD  -17.3%  -15.7% | leva media 2.29 giro leva 16.2/anno
+vol 15% ewma finestra 60 tetto 3.0x                                Sh  1.31 |  1.48 |  1.12  CAGR   24.2%   25.2%   23.1%  vol  15.4%  DD  -17.2%  -15.5% | leva media 2.25 giro leva 12.3/anno
+vol 15% ewma finestra 120 tetto 3.0x                               Sh  1.36 |  1.48 |  1.23  CAGR   25.3%   25.3%   25.3%  vol  15.5%  DD  -16.4%  -14.2% | leva media 2.18 giro leva 7.4/anno
+vol 15% ewma finestra 250 tetto 3.0x                               Sh  1.41 |  1.50 |  1.31  CAGR   26.2%   25.7%   26.8%  vol  15.4%  DD  -15.9%  -13.6% | leva media 2.10 giro leva 4.2/anno
+vol 15% std finestra 60 tetto 2x, banda leva 0.1                   Sh  1.53 |  1.71 |  1.32  CAGR   25.3%   26.6%   23.9%  vol  13.6%  DD  -11.8%  -11.8% | leva media 1.85 giro leva 2.0/anno
+vol 15% std finestra 60 tetto 2x, banda leva 0.25                  Sh  1.55 |  1.74 |  1.32  CAGR   25.2%   26.7%   23.5%  vol  13.4%  DD  -11.6%  -11.1% | leva media 1.80 giro leva 1.5/anno
+vol 15% std finestra 60 tetto 2x, banda leva 0.5                   Sh  1.61 |  1.83 |  1.33  CAGR   26.1%   29.5%   22.1%  vol  13.2%  DD  -13.2%  -10.1% | leva media 1.77 giro leva 0.6/anno
+
+varianti provate in questo script: {'cassa': 11, 'allocazione': 17, 'ribilancio': 37, 'voltarget': 36} totale 101

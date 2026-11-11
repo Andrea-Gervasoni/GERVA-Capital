@@ -1,0 +1,74 @@
+== 1) contributo marginale per fascia di rango (conviction alta), esclusi BTC/ETH/SOL ==
+                                             n      R      t    hit   R_sc   t_sc  n_sc  R_ver  t_ver  n_ver
+cfg                                                                                                         
+top30 stop 1xATR ranghi 1-10 senza trio   1231  0.039  0.804  0.358  0.102  1.264   484 -0.002 -0.038    747
+top30 stop 1xATR ranghi 11-20 senza trio  1412 -0.015 -0.335  0.352  0.108  1.263   513 -0.085 -1.763    899
+top30 stop 1xATR ranghi 21-30 senza trio  1324  0.026  0.550  0.363  0.098  1.063   422 -0.008 -0.159    902
+top30 stop 2xATR ranghi 1-10 senza trio    989  0.061  1.577  0.441  0.064  1.017   409  0.058  1.206    580
+top30 stop 2xATR ranghi 11-20 senza trio  1179  0.011  0.271  0.412  0.080  0.923   444 -0.031 -0.783    735
+top30 stop 2xATR ranghi 21-30 senza trio  1081  0.074  1.708  0.432  0.106  1.335   354  0.058  1.132    727
+
+== 2) ampiezza come FILTRO del trio: quota di membri del top-30 con conviction alta (nota la sera prima) ==
+terzili di selezione dell'ampiezza nei giorni di ingresso: [0.375 0.633]
+                 n      R      t
+fascia  entry                   
+1 bassa False   66  0.565  2.822
+        True   151  0.352  2.250
+2 media False   61  0.287  1.507
+        True    92  0.208  1.007
+3 alta  False   86  0.080  0.427
+        True   119 -0.007 -0.065
+
+== 3) quanto vale l'ampiezza SE il margine per trade fosse quello del trio (STIMA: conto controfattuale) ==
+trio: N=89 N_eff=50 Rm/sR=0.136 K=0.93  (K se indipendenti: 1.64)
+top10 1xATR                  N=   280 N_eff=    77 PR=  8.6 rho= 0.42 | misurato Rm/sR=+0.058 K=+0.26 | K col margine del trio= 1.43 | Rm/sR necessario per K=6,3: 0.286 (= 0.481 R netti; costi medi 0.059 R)
+top20 1xATR                  N=   510 N_eff=    85 PR= 14.1 rho= 0.36 | misurato Rm/sR=+0.029 K=+0.07 | K col margine del trio= 1.57 | Rm/sR necessario per K=6,3: 0.273 (= 0.453 R netti; costi medi 0.063 R)
+top30 1xATR                  N=   720 N_eff=    85 PR= 18.4 rho= 0.35 | misurato Rm/sR=+0.024 K=+0.05 | K col margine del trio= 1.58 | Rm/sR necessario per K=6,3: 0.272 (= 0.455 R netti; costi medi 0.066 R)
+neutro L30 k5 (1xATR, 7g)    N=   994 N_eff=  1105 PR= 49.4 rho= 0.07 | misurato Rm/sR=-0.012 K=-0.16 | K col margine del trio=20.49 | Rm/sR necessario per K=6,3: 0.076 (= 0.104 R netti; costi medi 0.052 R)
+neutro L30 k5 2xATR 28g      N=   550 N_eff=   653 PR= 47.3 rho= 0.05 | misurato Rm/sR=+0.005 K=+0.02 | K col margine del trio=12.11 | Rm/sR necessario per K=6,3: 0.098 (= 0.144 R netti; costi medi 0.056 R)
+
+== 4) robustezza dei candidati meno deboli ==
+top5 1xATR per anno:
+entry     2020     2021    2022     2023     2024     2025    2026
+n      101.000  172.000  44.000  196.000  185.000  126.000  87.000
+R        0.073    0.274  -0.136    0.154    0.152    0.040   0.251
+t        0.500    2.301  -0.619    1.266    1.176    0.319   1.095
+top10 2xATR per anno:
+entry     2020     2021    2022     2023     2024     2025     2026
+n      132.000  317.000  87.000  272.000  280.000  185.000  138.000
+R        0.015    0.219  -0.287    0.105    0.145   -0.086    0.194
+t        0.181    2.875  -3.057    1.667    1.881   -1.291    1.962
+                            n      R      t    hit   R_sc   t_sc  R_ver  t_ver  n_ver        N     sR    Neff      K   K_sc  K_ver    rho
+cfg                                                                                                                                      
+top5 1xATR base           911  0.147  2.668  0.406  0.153  1.794  0.144  2.018    594  145.748  1.662  64.963  0.508  0.708  0.380  0.478
+top5 1xATR costi x2       911  0.118  2.133  0.402  0.130  1.525  0.111  1.555    594  145.748  1.663  64.658  0.323  0.511  0.225  0.478
+top5 1xATR ritardo +1h    909  0.132  2.424  0.403  0.182  2.123  0.106  1.521    599  145.428  1.636  65.044  0.421  0.994  0.227  0.462
+top5 1xATR tetto 10x      911  0.147  2.668  0.406  0.153  1.794  0.144  2.018    594  145.748  1.662  64.963  0.508  0.708  0.380  0.478
+top10 2xATR base         1411  0.090  2.908  0.464  0.086  1.653  0.092  2.409    875  225.741  1.157  53.633  0.322  0.240  0.389  0.487
+top10 2xATR costi x2     1411  0.077  2.487  0.459  0.075  1.439  0.078  2.039    875  225.741  1.158  53.606  0.235  0.182  0.279  0.488
+top10 2xATR ritardo +1h  1422  0.072  2.293  0.455  0.072  1.316  0.071  1.902    877  227.501  1.179  57.142  0.211  0.165  0.255  0.440
+top10 2xATR tetto 10x    1411  0.090  2.908  0.464  0.086  1.653  0.092  2.409    875  225.741  1.157  53.633  0.322  0.240  0.389  0.487
+neutro L30 k5 per anno:
+entry     2020      2021      2022     2023      2024     2025     2026
+n      383.000  1055.000  1030.000  967.000  1022.000  944.000  810.000
+R        0.073    -0.001    -0.009   -0.045    -0.026   -0.042   -0.012
+t        1.041    -0.018    -0.216   -1.069    -0.595   -0.977   -0.241
+alt (fuori dal trio) conviction top30 1xATR per anno:
+entry     2020     2021     2022     2023     2024     2025     2026
+n      263.000  895.000  261.000  804.000  767.000  537.000  440.000
+R       -0.149    0.289   -0.279   -0.025   -0.021   -0.161    0.083
+t       -1.578    4.245   -3.069   -0.484   -0.350   -2.845    0.947
+
+== 5) sedi: quali monete dell'universo sono quotate oggi su Hyperliquid e su Kraken Futures ==
+Hyperliquid: 29/31 dei membri attuali del top-30; 81/133 di tutti i mai-membri
+  mancanti tra gli attuali: ['AKEUSDT', 'FTMUSDT']
+  leva massima HL sugli attuali: {'PEPE': 10, 'AAVE': 10, 'ADA': 10, 'AVAX': 10, 'BCH': 10, 'BNB': 10, 'BTC': 40, 'DOGE': 10, 'DOT': 10, 'ENA': 10, 'ETH': 25, 'FIL': 5, 'HYPE': 10, 'LINK': 10, 'LIT': 5, 'LTC': 10, 'NEAR': 10, 'ONDO': 10, 'PENGU': 5, 'PUMP': 10, 'SOL': 20, 'SUI': 10, 'TAO': 5, 'TRUMP': 10, 'UNI': 10, 'WLD': 10, 'XLM': 5, 'XRP': 20, 'ZEC': 10}
+Kraken Futures: 28/31 dei membri attuali; 88/133 di tutti i mai-membri
+  mancanti tra gli attuali: ['AKEUSDT', 'FTMUSDT', 'LITUSDT']
+monete dell'universo non piu' scambiate su Binance (tolte dal listino o rinominate): 6/133 ['EOSUSDT', 'LUNAUSDT', 'MATICUSDT', 'RNDRUSDT', 'SXPUSDT', 'TOMOUSDT']
+
+== 6) file di consegna ==
+returns.parquet: rendimenti giornalieri netti a rischio 1% per trade (somma semplice, senza capitalizzazione), colonne: ['trio_1h_1xATR (riferimento, non nuovo)', 'top5_pit_1xATR', 'top10_pit_2xATR', 'top30_pit_1xATR (scartato)', 'neutro_L30_k5 (scartato)']
+trades.parquet: 13606 righe
+
+varianti nuove in questo script: 2

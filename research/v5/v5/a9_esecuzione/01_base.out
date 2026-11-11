@@ -1,0 +1,69 @@
+=== 1. Riproduzione di v4 (spot, funding contato come in v4) ===
+A 1xATR trail2: mio n=652 R=0.2365 | v4 n=652 R=0.2365 | scarto massimo su R trade per trade: 1.7763568394002505e-15
+C 1,7% fisso: mio n=1099 R=0.3635 | v4 n=1099 R=0.3635 | scarto massimo su R trade per trade: 7.105427357601002e-15
+
+=== 2. Funding: somma giornaliera di v4 contro regolamenti effettivamente attraversati (spot, tutto il periodo) ===
+                 cfg    n  N_anno  s_med     R   sdR     t   hit  R_sel  t_sel  R_ver  t_ver  costo_R  fund_R  stop_pct  K_sel  K_ver
+      A spot fund=v4  652  76.573  0.051 0.237 1.740 3.472 0.433  0.309  2.971  0.180  1.998    0.028   0.040     0.595  1.883  1.043
+A spot fund=bn_exact  652  76.573  0.051 0.235 1.737 3.450 0.433  0.307  2.955  0.179  1.984    0.028   0.042     0.595  1.863  1.028
+    A spot fund=none  652  76.573  0.051 0.276 1.759 4.012 0.437  0.365  3.443  0.208  2.294    0.028   0.000     0.595  2.529  1.375
+      C spot fund=v4 1099 129.071  0.017 0.364 4.278 2.817 0.177  0.553  2.553  0.196  1.308    0.076   0.078     0.815  1.391  0.447
+C spot fund=bn_exact 1099 129.071  0.017 0.379 4.268 2.944 0.177  0.580  2.688  0.201  1.342    0.076   0.062     0.815  1.542  0.471
+    C spot fund=none 1099 129.071  0.017 0.441 4.349 3.361 0.179  0.665  3.014  0.242  1.598    0.076   0.000     0.815  1.938  0.668
+
+=== 3. SPOT contro PERP (Binance USDT-M 5m), stesso segnale, stessi costi, funding esatto. Periodo comune 2020-01 -> 2026-10 ===
+    (BTC/ETH perp dal 2020-01, SOL perp dal 2020-09; il segnale resta calcolato sullo spot)
+A BTC+ETH+SOL: trade con stessa data d'ingresso 575 (spot 586, perp 592); R perp-spot su questi: media -0.0096 (t -0.70); scelta -0.0134 verifica -0.0075; esito diverso (stop/tempo) 1.7%; stop solo sul perp 1.6%, solo sullo spot 0.2%
+      base all'ingresso (perp/spot-1): media +0.77 pb, mediana -1.47 pb, dev.std 6.3 pb
+A BTC+ETH: trade con stessa data d'ingresso 426 (spot 435, perp 440); R perp-spot su questi: media -0.0197 (t -1.08); scelta -0.0276 verifica -0.0140; esito diverso (stop/tempo) 1.9%; stop solo sul perp 1.9%, solo sullo spot 0.0%
+      base all'ingresso (perp/spot-1): media +1.03 pb, mediana -1.08 pb, dev.std 6.2 pb
+C BTC+ETH+SOL: trade con stessa data d'ingresso 979 (spot 995, perp 1026); R perp-spot su questi: media -0.0416 (t -1.34); scelta -0.0280 verifica -0.0514; esito diverso (stop/tempo) 0.9%; stop solo sul perp 0.8%, solo sullo spot 0.1%
+      base all'ingresso (perp/spot-1): media +1.71 pb, mediana +0.00 pb, dev.std 7.0 pb
+C BTC+ETH: trade con stessa data d'ingresso 680 (spot 693, perp 713); R perp-spot su questi: media -0.0530 (t -1.95); scelta -0.0888 verifica -0.0199; esito diverso (stop/tempo) 0.9%; stop solo sul perp 0.9%, solo sullo spot 0.0%
+      base all'ingresso (perp/spot-1): media +2.02 pb, mediana +0.49 pb, dev.std 7.1 pb
+               cfg    n  N_anno  s_med     R   sdR     t   hit  R_sel  t_sel  R_ver  t_ver  costo_R  fund_R  stop_pct  K_sel  K_ver
+A SPOT BTC+ETH+SOL  586  86.062  0.050 0.220 1.719 3.094 0.430  0.289  2.495  0.179  1.984    0.028   0.044     0.587  2.087  1.028
+A PERP BTC+ETH+SOL  592  86.943  0.050 0.216 1.728 3.037 0.424  0.313  2.775  0.159  1.740    0.028   0.043     0.601  2.583  0.791
+    A SPOT BTC+ETH  435  63.886  0.044 0.201 1.673 2.507 0.430  0.309  2.396  0.124  1.216    0.031   0.051     0.575  1.926  0.386
+    A PERP BTC+ETH  440  64.620  0.044 0.191 1.674 2.388 0.423  0.319  2.591  0.100  0.954    0.032   0.050     0.595  2.251  0.238
+C SPOT BTC+ETH+SOL  995 146.129  0.017 0.331 4.139 2.522 0.175  0.514  2.183  0.201  1.342    0.076   0.065     0.818  1.598  0.471
+C PERP BTC+ETH+SOL 1026 150.682  0.017 0.252 4.052 1.992 0.166  0.468  2.009  0.104  0.737    0.076   0.062     0.827  1.354  0.142
+    C SPOT BTC+ETH  693 101.777  0.017 0.274 3.507 2.054 0.196  0.418  1.893  0.142  0.912    0.076   0.077     0.794  1.201  0.217
+    C PERP BTC+ETH  713 104.714  0.017 0.207 3.438 1.610 0.187  0.355  1.645  0.077  0.512    0.076   0.075     0.804  0.908  0.069
+
+Per anno, A (1xATR) BTC+ETH+SOL: spot | perp
+       n_spot  R_spot  somma_R_spot  n_perp  R_perp  somma_R_perp
+entry                                                            
+2020       95   0.442        42.036      96   0.439        42.141
+2021      108   0.246        26.608     107   0.283        30.249
+2022       16  -0.338        -5.403      16  -0.244        -3.911
+2023      119   0.319        37.976     123   0.322        39.599
+2024      114   0.171        19.515     115   0.128        14.740
+2025       84   0.011         0.916      85  -0.007        -0.554
+2026       50   0.142         7.123      50   0.108         5.415
+
+Per anno, C (1,7%) BTC+ETH+SOL: spot | perp
+       n_spot  R_spot  somma_R_spot  n_perp  R_perp  somma_R_perp
+entry                                                            
+2020      150   0.473        70.937     152   0.361        54.846
+2021      239   0.568       135.764     240   0.565       135.588
+2022       24   0.239         5.727      25   0.186         4.656
+2023      192   0.461        88.505     198   0.387        76.638
+2024      202  -0.001        -0.288     217  -0.125       -27.178
+2025      118   0.276        32.578     123   0.156        19.207
+2026       70  -0.058        -4.034      71  -0.074        -5.231
+
+=== 3b. Stop piu' stretti: lo scarto spot-perp cresce? (BTC+ETH+SOL, 2020+, senza trailing) ===
+ stop  n_spot  n_perp  R_spot  R_perp   diff  Rsel_spot  Rsel_perp  Rver_spot  Rver_perp  stop_spot  stop_perp
+0.006    1675    1700  -0.008  -0.048 -0.040      0.131      0.039     -0.101     -0.106      0.944      0.948
+0.009    1408    1439   0.187   0.131 -0.056      0.247      0.153      0.145      0.115      0.909      0.912
+0.012    1202    1222   0.321   0.307 -0.013      0.479      0.461      0.207      0.198      0.872      0.875
+0.017     995    1026   0.331   0.252 -0.079      0.514      0.468      0.201      0.104      0.818      0.827
+0.027     795     796   0.249   0.234 -0.015      0.430      0.387      0.125      0.127      0.722      0.729
+0.040     668     670   0.201   0.201  0.000      0.346      0.356      0.098      0.092      0.620      0.625
+
+=== 3c. Le candele perp hanno code piu' lunghe? minimo giornaliero perp contro spot (2020+) ===
+BTC: minimo del giorno perp-spot media -5.50 pb, 5o percentile -21.5 pb, 1o -61.0 pb; ampiezza del giorno perp/spot-1 media +1.993%; minimo della barra 5m perp-spot: media -1.63 pb, 1o percentile -9.7 pb, 0,1o -25.0 pb
+ETH: minimo del giorno perp-spot media -9.09 pb, 5o percentile -29.7 pb, 1o -98.1 pb; ampiezza del giorno perp/spot-1 media +2.407%; minimo della barra 5m perp-spot: media -1.42 pb, 1o percentile -10.8 pb, 0,1o -32.5 pb
+SOL: minimo del giorno perp-spot media -12.83 pb, 5o percentile -42.4 pb, 1o -165.6 pb; ampiezza del giorno perp/spot-1 media +1.349%; minimo della barra 5m perp-spot: media -3.82 pb, 1o percentile -33.5 pb, 0,1o -336.6 pb
+prove: {'riproduzione': 2, 'funding': 6, 'spot_vs_perp': 10}

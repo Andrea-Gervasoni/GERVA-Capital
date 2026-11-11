@@ -1,0 +1,72 @@
+==================== 2a.1 ANALITICO ====================
+Obiettivo: 30%/mese = crescita log annua 3.148 (= +2230%/anno). g(c*Kelly) = N*SR^2*(c - c^2/2), SR = R medio/sigma_R per trade.
+
+Rendimento mensile % (mediano, composto) a KELLY PIENO:
+SR per trade 0.050 0.085  0.100  0.136   0.200   0.300   0.400  0.500
+N/anno                                                               
+50             0.5   1.5    2.1    3.9     8.7    20.6    39.6   68.3
+77             0.8   2.3    3.3    6.1    13.7    33.5    67.1  123.0
+100            1.0   3.1    4.3    8.0    18.1    45.5    94.8  183.4
+129            1.4   4.0    5.5   10.5    24.0    62.2   136.3  283.3
+200            2.1   6.2    8.7   16.7    39.6   111.7   279.4  703.1
+500            5.3  16.2   23.2   47.0   130.1   552.1  2703.2  >9999
+1000          11.0  35.1   51.7  116.1   429.4  4152.1   >9999  >9999
+2000          23.2  82.6  130.1  367.1  2703.2   >9999   >9999  >9999
+
+Rendimento mensile % (mediano, composto) a MEZZO KELLY:
+SR per trade 0.050 0.085 0.100  0.136   0.200   0.300   0.400   0.500
+N/anno                                                               
+50             0.4   1.1   1.6    2.9     6.4    15.1    28.4    47.8
+77             0.6   1.8   2.4    4.6    10.1    24.2    47.0    82.5
+100            0.8   2.3   3.2    6.0    13.3    32.5    64.9   118.4
+129            1.0   3.0   4.1    7.7    17.5    43.7    90.6   174.0
+200            1.6   4.6   6.4   12.3    28.4    75.5   171.8   377.1
+500            4.0  12.0  16.9   33.5    86.8   308.1  1118.2  4871.2
+1000           8.1  25.3  36.7   78.2   249.0  1565.1   >9999   >9999
+2000          16.9  57.1  86.8  217.7  1118.2   >9999   >9999   >9999
+
+Rendimento mensile % (mediano, composto) a QUARTO DI KELLY:
+SR per trade 0.050 0.085 0.100 0.136  0.200   0.300   0.400   0.500
+N/anno                                                             
+50             0.2   0.7   0.9   1.7    3.7     8.5    15.7    25.6
+77             0.4   1.0   1.4   2.6    5.8    13.5    25.2    42.0
+100            0.5   1.3   1.8   3.4    7.6    17.8    33.9    57.7
+129            0.6   1.7   2.4   4.4    9.9    23.6    45.7    80.0
+200            0.9   2.7   3.7   7.0   15.7    38.8    79.2   148.8
+500            2.3   6.8   9.5  18.4   44.0   127.1   329.9   876.3
+1000           4.7  14.1  20.0  40.1  107.3   415.8  1748.0  9432.5
+2000           9.5  30.1  44.0  96.3  329.9  2560.9   >9999   >9999
+
+SR per trade richiesto per un dato rendimento mensile (e, tra parentesi implicita, il t-statistico che mostrerebbe in UN anno = SR*sqrt(N)):
+      10% pieno  10% mezzo  20% pieno  20% mezzo  30% pieno  30% mezzo  t in 1 anno (30% pieno)  R medio se sigma=1.74 (C11)  R medio se sigma=4.28 (A30)
+N                                                                                                                                                        
+50        0.214      0.247      0.296      0.342      0.355      0.410                    2.509                        0.617                        1.519
+77        0.172      0.199      0.238      0.275      0.286      0.330                    2.509                        0.498                        1.224
+100       0.151      0.175      0.209      0.242      0.251      0.290                    2.509                        0.437                        1.074
+129       0.133      0.154      0.184      0.213      0.221      0.255                    2.509                        0.384                        0.946
+200       0.107      0.123      0.148      0.171      0.177      0.205                    2.509                        0.309                        0.759
+500       0.068      0.078      0.094      0.108      0.112      0.130                    2.509                        0.195                        0.480
+1000      0.048      0.055      0.066      0.076      0.079      0.092                    2.509                        0.138                        0.340
+2000      0.034      0.039      0.047      0.054      0.056      0.065                    2.509                        0.098                        0.240
+
+Misurato nel fondo (R medio/sigma, N/anno, N*SR^2, mensile a Kelly pieno in campione):
+  A30 base      SR=0.085 N=129 N*SR^2=0.93 (serve 6.30) -> mensile Kelly pieno gaussiano 4.0%  | moltiplicatore di N*SR^2 mancante: x6.8
+  A30 scelta    SR=0.112 N=114 N*SR^2=1.44 (serve 6.30) -> mensile Kelly pieno gaussiano 6.2%  | moltiplicatore di N*SR^2 mancante: x4.4
+  A30 verifica  SR=0.054 N=153 N*SR^2=0.45 (serve 6.30) -> mensile Kelly pieno gaussiano 1.9%  | moltiplicatore di N*SR^2 mancante: x14.0
+  C11 base      SR=0.136 N=77 N*SR^2=1.42 (serve 6.30) -> mensile Kelly pieno gaussiano 6.1%  | moltiplicatore di N*SR^2 mancante: x4.4
+  C11 scelta    SR=0.176 N=63 N*SR^2=1.95 (serve 6.30) -> mensile Kelly pieno gaussiano 8.4%  | moltiplicatore di N*SR^2 mancante: x3.2
+  C11 verifica  SR=0.104 N=97 N*SR^2=1.05 (serve 6.30) -> mensile Kelly pieno gaussiano 4.5%  | moltiplicatore di N*SR^2 mancante: x6.0
+
+Analitico (moto browniano geometrico, orizzonte infinito): P(prima o poi il capitale scende a (1-d) del livello DI OGGI) = (1-d)^(2/c-1).
+Attenzione: e' la discesa sotto il livello di partenza, non il drawdown dal massimo; il drawdown massimo su un orizzonte finito e' PEGGIORE e cresce col tempo (vedi simulazione).
+      c=2  c=1.5  c=1  c=0.75  c=0.5  c=0.25
+-20%  1.0  0.928  0.8   0.689  0.512   0.210
+-30%  1.0  0.888  0.7   0.552  0.343   0.082
+-50%  1.0  0.794  0.5   0.315  0.125   0.008
+-70%  1.0  0.669  0.3   0.134  0.027   0.000
+-90%  1.0  0.464  0.1   0.022  0.001   0.000
+(c = frazione del Kelly VERO; c=2 = doppio Kelly: crescita zero; oltre: rovina certa.)
+
+==================== 2a.2 SIMULAZIONE con la forma empirica di R (3 anni, 2000 percorsi, trade i.i.d.) ====================
+Per ottenere un dato SR si ripesano i trade empirici (tilting esponenziale: cambia la FREQUENZA di vincite e perdite, non la loro dimensione; la perdita massima resta quella del margine isolato).
+Kelly risolto numericamente sulla distribuzione ripesata. r* = rischio per trade in % del capitale.

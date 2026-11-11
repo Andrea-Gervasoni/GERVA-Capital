@@ -1,0 +1,105 @@
+                                                 libro    n  per_anno     R     t  vincenti  sigmaR  R_scelta  t_sc  n_ver  R_verifica  t_ver  R_su_sigma  R_su_sigma_ver   leva
+                   1xATR trail2 ~11x | conviction alta  652    76.573 0.237 3.472     0.433   1.740     0.309 2.971    367       0.180  1.998       0.136           0.104 11.188
+        1xATR trail2 ~11x | conviction alta | costi x2  652    76.573 0.202 2.964     0.431   1.740     0.281 2.697    367       0.141  1.562       0.116           0.082 11.188
+1xATR trail2 ~11x | conviction alta | ritardo +1 barra  646    75.869 0.238 3.482     0.438   1.739     0.333 3.158    366       0.166  1.848       0.137           0.097 11.240
+                    1xATR trail2 ~11x | conviction ecc  296    35.000 0.398 3.654     0.446   1.874     0.662 3.239    185       0.240  1.951       0.212           0.143 11.930
+         1xATR trail2 ~11x | conviction ecc | costi x2  296    35.000 0.361 3.311     0.443   1.874     0.630 3.089    185       0.199  1.618       0.192           0.119 11.930
+ 1xATR trail2 ~11x | conviction ecc | ritardo +1 barra  297    35.118 0.395 3.607     0.441   1.886     0.654 3.151    186       0.240  1.961       0.209           0.144 11.932
+                           1xATR trail2 ~11x | GQ alta  605    71.560 0.339 4.528     0.453   1.844     0.415 3.743    328       0.276  2.710       0.184           0.150 10.841
+                1xATR trail2 ~11x | GQ alta | costi x2  605    71.560 0.306 4.087     0.448   1.843     0.386 3.488    328       0.239  2.345       0.166           0.129 10.841
+        1xATR trail2 ~11x | GQ alta | ritardo +1 barra  600    71.014 0.342 4.546     0.455   1.841     0.441 3.938    328       0.259  2.559       0.186           0.141 10.846
+                            1xATR trail2 ~11x | GQ ecc  224    27.400 0.430 3.510     0.455   1.832     0.502 2.575    125       0.372  2.381       0.234           0.213 10.940
+                 1xATR trail2 ~11x | GQ ecc | costi x2  224    27.400 0.395 3.235     0.451   1.830     0.472 2.424    125       0.335  2.145       0.216           0.192 10.940
+         1xATR trail2 ~11x | GQ ecc | ritardo +1 barra  225    27.522 0.419 3.425     0.453   1.837     0.475 2.434    125       0.375  2.400       0.228           0.215 10.878
+                            1,7% 30x | conviction alta 1099   129.071 0.364 2.817     0.177   4.278     0.553 2.553    582       0.196  1.308       0.085           0.054 30.000
+                 1,7% 30x | conviction alta | costi x2 1099   129.071 0.264 2.039     0.176   4.286     0.452 2.087    582       0.096  0.639       0.061           0.027 30.000
+         1,7% 30x | conviction alta | ritardo +1 barra 1101   129.306 0.343 2.746     0.179   4.148     0.569 2.701    590       0.147  1.018       0.083           0.042 30.000
+                             1,7% 30x | conviction ecc  420    49.662 0.732 3.019     0.193   4.966     1.163 2.356    259       0.463  1.892       0.147           0.118 30.000
+                  1,7% 30x | conviction ecc | costi x2  420    49.662 0.632 2.604     0.193   4.975     1.064 2.153    259       0.364  1.481       0.127           0.092 30.000
+          1,7% 30x | conviction ecc | ritardo +1 barra  426    50.371 0.651 2.798     0.192   4.801     1.014 2.194    260       0.419  1.739       0.136           0.108 30.000
+                                    1,7% 30x | GQ alta 1069   126.442 0.355 2.640     0.170   4.396     0.427 2.006    541       0.285  1.719       0.081           0.074 30.000
+                         1,7% 30x | GQ alta | costi x2 1069   126.442 0.255 1.893     0.170   4.404     0.327 1.531    541       0.185  1.115       0.058           0.048 30.000
+                 1,7% 30x | GQ alta | ritardo +1 barra 1086   128.453 0.308 2.433     0.172   4.169     0.336 1.752    543       0.280  1.692       0.074           0.073 30.000
+                                     1,7% 30x | GQ ecc  370    45.244 0.334 1.503     0.157   4.276     0.234 0.670    190       0.429  1.529       0.078           0.111 30.000
+                          1,7% 30x | GQ ecc | costi x2  370    45.244 0.234 1.050     0.157   4.284     0.132 0.379    190       0.330  1.172       0.055           0.085 30.000
+                  1,7% 30x | GQ ecc | ritardo +1 barra  364    44.510 0.406 1.742     0.165   4.446     0.460 1.202    192       0.358  1.279       0.091           0.092 30.000
+
+Nota: "conviction alta" 1xATR e' esattamente la riga "stop 1.0xATR alta trail=2" di leva_trade_isolato.out (652 trade, +0,237 R).
+
+Dentro il libro "alta": i trade entrati a livello eccezionale contro gli altri (cosi' e' definito +0,40 R nel libro attuale)
+                                     libro   n     R     t   hit  n_sc   R_sc   t_sc  n_ve   R_ve   t_ve
+C conviction alta: score>0,75 all'ingresso 145 0.400 2.642 0.490    50  0.382  1.351    95  0.409  2.302
+            C conviction alta: score<=0,75 507 0.190 2.493 0.416   235  0.294  2.640   272  0.100  0.958
+              C conviction alta: e GQ>=ecc 129 0.382 2.492 0.519    54  0.292  1.187    75  0.447  2.275
+             C conviction alta: e GQ>=alta 422 0.315 3.749 0.467   209  0.318  2.558   213  0.313  2.746
+             C conviction alta: ma GQ<alta 230 0.092 0.796 0.370    76  0.287  1.503   154 -0.004 -0.027
+           C GQ alta: GQ>=ecc all'ingresso 121 0.373 2.619 0.521    49  0.310  1.266    72  0.415  2.406
+                         C GQ alta: GQ<ecc 484 0.331 3.817 0.436   228  0.437  3.524   256  0.237  1.955
+              C GQ alta: GQ in [0.53,0.94) 337 0.356 3.214 0.427   161  0.408  2.680   176  0.308  1.923
+              C GQ alta: GQ in [0.94,1.35) 132 0.197 1.482 0.447    60  0.424  1.932    72  0.009  0.053
+              C GQ alta: GQ in [1.35,1.42)  15 0.956 1.836 0.533     7  1.212  1.617     8  0.732  0.961
+             C GQ alta: GQ in [1.42,99.00) 121 0.373 2.619 0.521    49  0.310  1.266    72  0.415  2.406
+A conviction alta: score>0,75 all'ingresso 204 1.066 2.626 0.221    79  1.930  2.198   125  0.521  1.455
+            A conviction alta: score<=0,75 895 0.203 1.587 0.166   438  0.304  1.530   457  0.107  0.653
+              A conviction alta: e GQ>=ecc 221 0.198 0.696 0.154   106  0.150  0.310   115  0.241  0.767
+             A conviction alta: e GQ>=alta 713 0.441 2.587 0.178   367  0.667  2.390   346  0.202  1.067
+             A conviction alta: ma GQ<alta 386 0.220 1.163 0.174   150  0.272  0.907   236  0.186  0.764
+           A GQ alta: GQ>=ecc all'ingresso 212 0.198 0.643 0.137    92  0.253  0.433   120  0.155  0.501
+                         A GQ alta: GQ<ecc 857 0.394 2.635 0.179   436  0.464  2.046   421  0.322  1.659
+              A GQ alta: GQ in [0.53,0.94) 578 0.410 2.408 0.185   295  0.303  1.358   283  0.521  2.016
+              A GQ alta: GQ in [0.94,1.35) 254 0.381 1.210 0.169   129  0.906  1.601   125 -0.161 -0.630
+              A GQ alta: GQ in [1.35,1.42)  25 0.151 0.199 0.120    12 -0.354 -0.435    13  0.616  0.485
+             A GQ alta: GQ in [1.42,99.00) 212 0.198 0.643 0.137    92  0.253  0.433   120  0.155  0.501
+
+Per anno (R medio, numero di trade):
+       C conv alta  C conv ecc  C gq alta  C gq ecc  A conv alta  A conv ecc  A gq alta  A gq ecc
+entry                                                                                            
+2018         -0.64       -1.03      -0.24      1.14        -0.87       -1.12      -0.47      3.23
+2019          0.55        1.46       0.75      0.86         1.16        1.99       0.82      0.56
+2020          0.45        0.69       0.58      0.78         0.45        1.34       0.48      1.37
+2021          0.25        0.35       0.41     -0.09         0.53        0.86       0.58     -0.69
+2022         -0.34       -1.04      -0.21      0.21         0.23       -1.12      -0.36     -0.03
+2023          0.32        0.38       0.54      0.59         0.46        0.84       0.64      0.64
+2024          0.17        0.27       0.31      0.28        -0.01        0.42       0.43      0.45
+2025          0.01        0.00       0.07     -0.01         0.27        0.06      -0.06      0.07
+2026          0.14        0.16      -0.01      0.66        -0.06       -0.04      -0.26      0.27
+       C conv alta  C conv ecc  C gq alta  C gq ecc  A conv alta  A conv ecc  A gq alta  A gq ecc
+entry                                                                                            
+2018            10           2         15         1           17           2         24         1
+2019            56          23         52        23           87          25         85        39
+2020            95          44         87        39          150          59        151        53
+2021           108          40         89        31          239          73        204        80
+2022            16           2         34         5           24           2         64         7
+2023           119          70        101        43          192          99        172        69
+2024           114          55        102        44          202          80        168        65
+2025            84          44         70        24          118          60        119        35
+2026            50          16         55        14           70          20         82        21
+
+Per moneta, verifica:
+      C conv alta  C conv ecc  C gq alta  C gq ecc  A conv alta  A conv ecc  A gq alta  A gq ecc
+coin                                                                                            
+BTC         0.222       0.268      0.386     0.460        0.183       0.340      0.218     0.644
+ETH         0.017       0.160      0.204     0.357        0.094       0.006      0.137     0.362
+SOL         0.302       0.279      0.229     0.279        0.288       1.199      0.447     0.309
+
+Aritmetica (N per anno x (R medio/sigma_R)^2; serve ~6,3 per il 30% al mese a Kelly pieno):
+  C conv alta tutto   : N/anno=  76.6  R/sigma=+0.136  N*(R/sigma)^2=+1.42
+  C conv alta verifica: N/anno=  96.5  R/sigma=+0.104  N*(R/sigma)^2=+1.05
+  C conv ecc  tutto   : N/anno=  35.0  R/sigma=+0.212  N*(R/sigma)^2=+1.58
+  C conv ecc  verifica: N/anno=  49.1  R/sigma=+0.143  N*(R/sigma)^2=+1.01
+  C gq   alta tutto   : N/anno=  71.6  R/sigma=+0.184  N*(R/sigma)^2=+2.43
+  C gq   alta verifica: N/anno=  87.6  R/sigma=+0.150  N*(R/sigma)^2=+1.96
+  C gq   ecc  tutto   : N/anno=  27.4  R/sigma=+0.234  N*(R/sigma)^2=+1.51
+  C gq   ecc  verifica: N/anno=  33.7  R/sigma=+0.213  N*(R/sigma)^2=+1.53
+  A conv alta tutto   : N/anno= 129.1  R/sigma=+0.085  N*(R/sigma)^2=+0.93
+  A conv alta verifica: N/anno= 153.0  R/sigma=+0.054  N*(R/sigma)^2=+0.45
+  A conv ecc  tutto   : N/anno=  49.7  R/sigma=+0.147  N*(R/sigma)^2=+1.08
+  A conv ecc  verifica: N/anno=  68.7  R/sigma=+0.118  N*(R/sigma)^2=+0.95
+  A gq   alta tutto   : N/anno= 126.4  R/sigma=+0.081  N*(R/sigma)^2=+0.82
+  A gq   alta verifica: N/anno= 144.4  R/sigma=+0.074  N*(R/sigma)^2=+0.79
+  A gq   ecc  tutto   : N/anno=  45.2  R/sigma=+0.078  N*(R/sigma)^2=+0.28
+  A gq   ecc  verifica: N/anno=  51.3  R/sigma=+0.111  N*(R/sigma)^2=+0.63
+
+returns.parquet: rendimento giornaliero (P&L registrato il giorno di uscita) a rischio 1% del conto per trade, senza capitalizzazione dentro il giorno.
+{'GQ alta 1xATR': 0.241, 'conviction alta 1xATR (riferimento)': 0.181} Sharpe annuo {'GQ alta 1xATR': 1.32, 'conviction alta 1xATR (riferimento)': 1.01} verifica {'GQ alta 1xATR': 1.14, 'conviction alta 1xATR (riferimento)': 0.84}
+varianti contate in questo script: 8 (+ 2 prove di robustezza ciascuna)
