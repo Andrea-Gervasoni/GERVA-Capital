@@ -153,7 +153,7 @@ Ho provato sui dati reali ogni famiglia accessibile a un conto come il tuo. La t
 
 | Famiglia | Fonte principale | Sharpe in letteratura | Nostro test, netto (tutto / scelta / verifica) | Con 12 mila euro | Verdetto |
 |---|---|---|---|---|---|
-| Trend following multi-asset | Moskowitz, Ooi, Pedersen 2012 [S1]; Hurst e altri 2017 [S2] | 1,0–1,3 lordo nei backtest; 0,77 netto su un secolo; **0,28 l'indice SG Trend reale dal 2000** [S4] `[S]` | giornaliero: −0,47; lento settimanale solo long: 0,46 / 0,44 / −0,12 | Sì, ma lento e senza leva | **Tenuto** come diversificatore (MA-TREND), peso piccolo nel rischio |
+| Trend following multi-asset | Moskowitz, Ooi, Pedersen 2012 [S1]; Hurst e altri 2017 [S2] | 1,0–1,3 lordo nei backtest; 0,77 netto su un secolo; **0,28 l'indice SG Trend reale dal 2000** [S4] `[S]` | giornaliero: −0,47; lento settimanale solo long: 0,46 / 0,59 / −0,22 | Sì, ma lento e senza leva | **Tenuto** come diversificatore (MA-TREND), peso piccolo nel rischio |
 | Ritorno alla media di breve su indici (IBS) | pratica nota; nessun paper canonico | — | 0,55 su 27 anni; dal 2018: 0,73 / 0,97 / 0,33 | Sì, via CFD su indice | **Tenuto** (EQ-MR); vive solo se eseguito in chiusura |
 | Leva a regime (media a 200 giorni) | Gayed e Bilello 2016 [S12] | 0,51 contro 0,30 del comprare e tenere, senza costi di cambio | 2x SPY: 0,53; 2x QQQ: 0,42 con caduta −83% | Sì | Scartato: Sharpe uguale al comprare e tenere, cadute enormi |
 | Volatilità gestita | Moreira e Muir 2017 [S11] | +25% di Sharpe in campione; fuori campione peggiora 72 strategie su 103 (Cederburg e altri 2020) `[S]` | 0,51 contro 0,49 di SPY | Sì | Scartato come strategia; usato come regola di rischio |
@@ -327,7 +327,7 @@ La volatilità quasi triplica passando dal quintile alto a quello basso (correla
 
 | Momentum dell'ultima mezz'ora | Periodo | Giorni | Rendimento lordo medio | t | Sharpe netto (0,5 pb) |
 |---|---|---:|---:|---:|---:|
-| Tutti i giorni | 2011–2018 | 1.906 | +1,3 pb | ≈ 3 | 0,45 |
+| Tutti i giorni | 2011–2018 | 1.906 | +1,5 pb | ≈ 3 | 0,45 |
 | Solo con GEX di ieri nel 20% basso | 2011–2018 | 343 | **+7,5 pb** | **4,30** | **1,38** |
 | Tutti i giorni, SPY | 2023-12 → 2026-11 | 721 | −2,0 pb | −2,54 | negativo |
 | Solo con GEX basso, SPY | 2023-12 → 2026-11 | 122 | −2,9 pb | −1,02 | −0,81 |
@@ -409,7 +409,7 @@ Correlazioni dei rendimenti mensili: CR-TREND e CR-XSMOM 0,55; entrambe con MA-T
 
 - **Scelta:** parità di rischio. Ogni strategia riceve capitale in proporzione inversa alla propria volatilità degli ultimi 180 giorni, ricalcolata a inizio mese con soli dati passati; nessuna oltre il 60%; la volatilità usata non scende sotto metà di quella di lungo periodo (`gerva/portfolio/allocate.py`). Pesi medi: MA-TREND 44%, EQ-MR 27%, CR-TREND 17%, CR-XSMOM 12%.
 - **Motivazione:** non richiede di stimare i rendimenti attesi, che sono la grandezza stimata peggio: con 8,6 anni di dati l'errore standard dello Sharpe è ±0,34.
-- **Alternative scartate:** *media-varianza* (Markowitz) amplifica l'errore di stima e concentra tutto sulla strategia fortunata; *pesi uguali* rende di più nel backtest (30,7% l'anno) ma solo perché lascia dominare le crypto, con volatilità 22,5%: è leva travestita; *Kelly per strategia* richiede i rendimenti attesi.
+- **Alternative scartate:** *media-varianza* (Markowitz) amplifica l'errore di stima e concentra tutto sulla strategia fortunata; *Kelly per strategia* richiede i rendimenti attesi; *pesi uguali* merita una nota onesta: **nel backtest fa meglio** (20,0% l'anno, volatilità 12,4%, Sharpe 1,31 contro 1,18), perché dà alle crypto il 50% del capitale invece del 29% e nel campione le crypto sono andate meglio. Non la adotto per due ragioni: sceglierla ora, dopo aver visto il risultato, sarebbe scegliere col senno di poi (una prova in più, non dichiarata prima), e quasi raddoppia l'esposizione al rischio che nessuno stop controlla, la controparte crypto. È la prima alternativa da riesaminare, a registro aperto, dopo il paper.
 - **Un difetto trovato e corretto durante il lavoro:** una strategia rimasta in cassa per mesi ha volatilità quasi nulla e, senza il pavimento, si prendeva il 60% del capitale proprio mentre non lo usava.
 
 ### 4.3 La leva: teoria, numeri, scelta
