@@ -44,3 +44,11 @@ per anno: {2023: {'auc': 0.563, 'ic': 0.086}, 2024: {'auc': 0.549, 'ic': 0.071},
 
 ===== ORIZZONTE 24h =====
 -- scelta iper-parametri (blocchi OOS 2021-2022), criterio: AUC medio per blocco --
+                                                     cfg    auc  auc_min
+                          {"kind": "logit", "C": 0.0003} 0.5288   0.5219
+                            {"kind": "logit", "C": 0.01} 0.5291   0.5190
+ {"kind": "hgbc", "depth": 3, "iters": 100, "leaf": 500} 0.5377   0.5247
+{"kind": "hgbc", "depth": 3, "iters": 100, "leaf": 3000} 0.5387   0.5046
+ {"kind": "hgbc", "depth": 3, "iters": 300, "leaf": 500} 0.5491   0.5299
+{"kind": "hgbc", "depth": 3, "iters": 300, "leaf": 3000} 0.5480   0.5236
+CONGELATA: {'kind': 'hgbc', 'depth': 3, 'iters': 300, 'leaf': 500}
