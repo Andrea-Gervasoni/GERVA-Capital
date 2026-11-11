@@ -535,7 +535,7 @@ Il ciclo live gira in paper con prezzi veri (`python -m gerva run`). Il passaggi
 | 7 | Scostamento dal backtest sugli stessi giorni | ≤ 3 punti | Se il paper non replica il backtest, il backtest non descrive il sistema |
 | 8 | Costi reali / costi ipotizzati | ≤ 1,5 | Se i costi veri sono il doppio, MA-TREND esce e il portafoglio va ricalcolato |
 
-I cancelli 7 e 8 richiedono il confronto con la replica del backtest sugli stessi giorni: oggi restano rossi per costruzione finché quel confronto non viene eseguito. È il primo lavoro da fare dopo l'avvio del paper.
+I cancelli 7 e 8 li calcola il ciclo stesso: a ogni giro annota l'esposizione usata, e la confronta con il rendimento simulato del portafoglio sugli stessi giorni; i costi li legge dagli eseguiti nel registro (scarto dal prezzo di riferimento più commissioni) e li divide per quelli ipotizzati. Il confronto è a grana grossa, perché il paper interno valuta alle ultime chiusure: serve a scoprire che il sistema *non* replica il backtest, non a misurare i centesimi. Con un conto paper vero (Alpaca) il cancello dei costi diventa una misura reale.
 
 ### 5.3 Dal paper al reale: la rampa
 
@@ -731,7 +731,7 @@ Anche pubblicare segnali ha regole: generici e rivolti al pubblico sono "raccoma
 | Fase | Durata | Che cosa si fa | Criterio per andare avanti (GO) | Criterio per fermarsi (NO-GO) |
 |---|---|---|---|---|
 | **0. Messa in opera** | 1–2 settimane | Server Linux; ciclo in paper interno; dashboard; allarmi Telegram; conto paper Alpaca collegato per le crypto | Ciclo attivo 7 giorni senza interventi; fotografia sempre fresca | Più di 2 giri falliti al giorno |
-| **1. Paper** | 90 giorni | Paper trading completo; misura dei costi reali; replica quotidiana del backtest per i cancelli 7 e 8; adattatore IBKR sul conto paper | Tutti gli 8 cancelli verdi (5.2) | Scostamento dal backtest oltre 3 punti, oppure Sharpe paper negativo con PSR < 0,3: si torna alla ricerca |
+| **1. Paper** | 90 giorni | Paper trading completo; misura dei costi reali e dello scostamento dal backtest (cancelli 7 e 8, automatici); adattatore IBKR sul conto paper | Tutti gli 8 cancelli verdi (5.2) | Scostamento dal backtest oltre 3 punti, oppure Sharpe paper negativo con PSR < 0,3: si torna alla ricerca |
 | **2. Reale, un quarto** | 60 giorni | 25% del capitale, leva 1x, paper in parallelo; apertura dei conti; commercialista | Scostamento dal paper ≤ 3 punti; nessun incidente | Un KILL per difetto del software; costi reali oltre il doppio di quelli ipotizzati |
 | **3. Reale, metà e poi intero** | 4–6 mesi | 50% poi 100%, leva fino a 1,5x | Sharpe realizzato ≥ 0,4 su 6 mesi; caduta ≤ 15% | Caduta oltre il 15%: si torna alla fase precedente |
 | **4. Regime** | dal mese 12 | Leva fino a 2x; versamenti mensili; due sedi crypto sopra i 25 mila euro; nuove strategie dal consiglio di ricerca, sempre via paper | Rivalutazione ogni 6 mesi: se lo Sharpe a 12 mesi è sotto 0,3 si riduce a 1x | Sharpe a 18 mesi negativo: stop e riesame completo |
@@ -806,7 +806,7 @@ L'ultima riga è il numero più scomodo della tabella: **su 12 mila euro, i cost
 
 4. **Entro un mese: tre telefonate.** (a) A Interactive Brokers: conferma scritta su età minima per il conto a margine, accesso ai CFD su indice e Family Account. (b) A un commercialista che conosca il quadro RW e i broker esteri: preventivo e regime delle crypto al 33%. (c) A un avvocato dei mercati finanziari: donazione o prestito dei genitori, delega, e che cosa puoi pubblicare con il nome "GERVA Capital". La lista delle domande è nella sezione 7.5.
 
-5. **Durante i 90 giorni: i due lavori che chiudono i cancelli rossi.** Scrivi (o fammi scrivere) la replica quotidiana del backtest per misurare scostamento e costi reali (cancelli 7 e 8), e l'adattatore IBKR sul conto paper. Ogni domenica: `python -m gerva gates` e mezz'ora sulla dashboard. Nessun cambiamento alle strategie o ai limiti durante il periodo: se cambi il sistema, il conto dei giorni riparte.
+5. **Durante i 90 giorni: l'adattatore IBKR e la disciplina.** Scrivi (o fammi scrivere) l'adattatore per Interactive Brokers sul conto paper, incapsulando `firm/ibkr.py` nell'interfaccia `Broker`: senza, le due strategie azionarie restano sul paper interno. Ogni domenica: `python -m gerva gates` e mezz'ora sulla dashboard. Nessun cambiamento alle strategie o ai limiti durante il periodo: se cambi il sistema, il conto dei giorni riparte.
 
 Soltanto con otto cancelli verdi, il parere del legale e il commercialista scelto: 3.000 euro, leva 1x.
 

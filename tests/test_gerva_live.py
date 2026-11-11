@@ -399,7 +399,30 @@ def test_gates_need_time_and_clean_record(tmp_path):
     g = gates.evaluate(j, daily, now)
     by = {x["name"]: x["ok"] for x in g}
     assert by["Giorni di paper trading"] and by["Disponibilita' del ciclo"] and by["Ordini non riconciliati"] and by["PSR (Sharpe vero > 0)"]
-    assert not gates.all_green(g)                             # scostamento dal backtest e costi restano da calcolare
+    assert not gates.all_green(g)                             # senza modello e senza eseguiti, scostamento e costi restano rossi
+    # con un modello che il paper replica e costi in linea, tutti verdi
+    daily.index = pd.date_range("2026-01-01", periods=120)
+    for i in range(12):
+        j.intent(f"o{i}", "c", "BTC", "BUY", 1.0, 100.0, "crypto", "CR-TREND")
+        j.resolve(f"o{i}", "filled", 1.0, 100.05, 0.25)       # 5 pb di slippage + 25 pb di commissione = 30 pb: come ipotizzato
+    g = gates.evaluate(j, daily, now, 900.0, daily * 0.99)
+    assert gates.all_green(g), [x for x in g if not x["ok"]]
+    assert gates.cost_ratio(j) == pytest.approx(1.0, abs=0.01)
+    # un paper che NON replica il modello viene fermato
+    g = gates.evaluate(j, daily, now, 900.0, daily * 0.2)
+    assert not next(x for x in g if x["name"] == "Scostamento dal backtest")["ok"]
+    for i in range(12, 40):
+        j.intent(f"o{i}", "c", "BTC", "BUY", 1.0, 100.0, "crypto", "CR-TREND")
+        j.resolve(f"o{i}", "filled", 1.0, 101.0, 0.25)        # slippage dell'1%: costi quattro volte quelli ipotizzati
+    assert not next(x for x in gates.evaluate(j, daily, now, 900.0, daily) if x["name"].startswith("Costi"))["ok"]
+
+
+def test_cycle_records_exposure_and_model_series(rig):
+    rig.cycle()
+    expo = rig.j.get("expo")
+    assert len(expo) == 1 and 0 < list(expo.values())[0] <= rig.l.max_leverage
+    from gerva.live import snapshot as snap
+    assert isinstance(snap.model_daily(rig), pd.Series)
 
 
 def test_demo_snapshot_is_labelled_simulated():

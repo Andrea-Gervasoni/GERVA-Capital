@@ -77,6 +77,16 @@ def _limits(l, a, gross: float, weights: dict, venue_w: dict) -> list:
     return rows
 
 
+def model_daily(runner) -> pd.Series:
+    """Rendimento giornaliero 'da modello': moltiplicatore annotato il giorno d x rendimento simulato del portafoglio in d+1."""
+    t, expo = runner.targets, runner.j.get("expo") or {}
+    if t is None or not expo:
+        return pd.Series(dtype=float)
+    m = pd.Series({pd.Timestamp(d) + pd.Timedelta(days=1): v for d, v in expo.items()})
+    port = t.port_ret.reindex(m.index).dropna()
+    return (m.reindex(port.index) * port).shift(1).dropna()      # il paper vede la chiusura di d+1 il giorno d+2
+
+
 def build(runner, acct, pos: dict, a, notes: list) -> dict:
     j, l, s, t = runner.j, runner.l, runner.s, runner.targets
     now = runner.clock()
@@ -165,7 +175,7 @@ def build(runner, acct, pos: dict, a, notes: list) -> dict:
                     components=[dict(name=h["component"], status=h["status"], latency_ms=h["latency_ms"], last_ok=_iso(h["last_ok"]),
                                      detail=h["detail"]) for h in hb]),
         alerts=[dict(t=_iso(e["ts"]), level=e["level"], msg=f"{e['component']}: {e['msg']}") for e in j.events(30)],
-        gates=G.evaluate(j, daily, now))
+        gates=G.evaluate(j, daily, now, s.interval, model_daily(runner)))
 
 
 # ---------------------------------------------------------------------------

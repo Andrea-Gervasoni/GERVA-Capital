@@ -135,7 +135,13 @@ def main(argv=None) -> int:
         if len(nav):
             nav["d"] = pd.to_datetime(nav["ts"], unit="s").dt.normalize()
             daily = nav.groupby("d")["equity"].last().pct_change().dropna()
-        g = gates.evaluate(run.j, daily)
+        from .live import pipeline, snapshot
+        try:                                              # serve il portafoglio simulato per il cancello "scostamento"
+            run.market.refresh()
+            run.targets = pipeline.build(run.market, run.l.vol_target, run.l.max_leverage)
+        except Exception as e:
+            print(f"  (dati non disponibili, scostamento non calcolato: {type(e).__name__})")
+        g = gates.evaluate(run.j, daily, None, run.s.interval, snapshot.model_daily(run))
         for x in g:
             print(f"  [{'OK' if x['ok'] else '  '}] {x['name']}: {x['value']} (obiettivo {x['target']} {x['unit']})")
         print("TUTTI VERDI: si puo' proporre il passaggio al reale." if gates.all_green(g) else "Non tutti verdi: si resta in paper.")

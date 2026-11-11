@@ -147,6 +147,10 @@ class Runner:
                 self.targets = pipeline.build(self.market, self.l.vol_target, self.l.max_leverage)
             except Exception as e:
                 self.j.event("warn", "pipeline", f"pesi non calcolabili: {type(e).__name__}: {str(e)[:200]}")
+        if self.targets is not None:
+            expo = self.j.get("expo") or {}
+            expo[pd.Timestamp.fromtimestamp(now, tz="UTC").strftime("%Y-%m-%d")] = self.targets.leverage * a.scale
+            self.j.set("expo", dict(sorted(expo.items())[-800:]))            # serve al cancello "scostamento dal backtest"
         if self.targets is not None and not unreconciled:
             w = {k: v * a.scale for k, v in self.targets.weights.items()}
             w, notes = self.risk.clamp_weights(w, {k: self.market.venue_of(k) for k in w})
