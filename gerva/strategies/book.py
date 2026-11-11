@@ -93,3 +93,34 @@ def ma_trend_returns(adj: pd.DataFrame, rf_daily: pd.Series, fee: float = ETF_FE
     W = ma_trend(adj)
     R = adj[TREND_UNIVERSE].loc["2003":].pct_change(fill_method=None)
     return run(W, R, rf_daily, Costs(trade=fee, cash_haircut=1.0), lag=lag, band=0.02)
+
+
+# ---------------------------------------------------------------------------
+# Candidata IN OMBRA (non riceve capitale): momentum residuo sulle crypto
+# ---------------------------------------------------------------------------
+def cr_resid(close: pd.DataFrame, dollar_volume: pd.DataFrame, ret: pd.DataFrame, beta_window: int = 60,
+             lookback: int = 28) -> pd.DataFrame:
+    """Come CR-XSMOM, ma le monete si ordinano per momentum AL NETTO di Bitcoin: il rendimento residuo dopo aver tolto
+    beta x rendimento di BTC, diviso per la sua volatilita' (Blitz, Huij, Martens 2011, sulle azioni).
+    Ricerca v3 (research/v5/v3): Sharpe 1,11 (scelta 1,06, verifica 1,16), stabile su 9 combinazioni di parametri;
+    correlazione 0,94 con CR-XSMOM. Sostituita a CR-XSMOM porta il portafoglio da 1,18 a 1,22: dentro il rumore.
+    Per questo NON e' in produzione: gira in ombra e si decide dopo il paper trading."""
+    btc = ret["BTC"]
+    beta = ret.rolling(beta_window).cov(btc).div(btc.rolling(beta_window).var(), axis=0)
+    resid = ret.sub(beta.mul(btc, axis=0))
+    score = resid.rolling(lookback).sum() / resid.rolling(lookback).std() / math.sqrt(lookback)
+    adv = dollar_volume.rolling(30, min_periods=20).mean()
+    btc_up = close["BTC"] > close["BTC"].rolling(100).mean()
+    W = pd.DataFrame(0.0, index=close.index, columns=close.columns)
+    last = None
+    for i, d in enumerate(close.index):
+        if i % 7 == 0:
+            ok = adv.loc[d].notna() & score.loc[d].notna()
+            s = score.loc[d][adv.loc[d][ok].nlargest(20).index]
+            pick = s[s > 0].nlargest(5).index
+            last = pd.Series(0.0, index=close.columns)
+            if len(pick) and bool(btc_up.get(d, False)):
+                last[pick] = 0.2
+        if last is not None:
+            W.loc[d] = last
+    return W

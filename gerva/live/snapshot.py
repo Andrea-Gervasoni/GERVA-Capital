@@ -175,7 +175,8 @@ def build(runner, acct, pos: dict, a, notes: list) -> dict:
                     components=[dict(name=h["component"], status=h["status"], latency_ms=h["latency_ms"], last_ok=_iso(h["last_ok"]),
                                      detail=h["detail"]) for h in hb]),
         alerts=[dict(t=_iso(e["ts"]), level=e["level"], msg=f"{e['component']}: {e['msg']}") for e in j.events(30)],
-        gates=G.evaluate(j, daily, now, s.interval, model_daily(runner)))
+        gates=G.evaluate(j, daily, now, s.interval, model_daily(runner)),
+        ai=getattr(runner, "ai_state", None))
 
 
 # ---------------------------------------------------------------------------

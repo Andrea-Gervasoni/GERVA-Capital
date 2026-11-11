@@ -34,6 +34,8 @@ Hai chiesto tre correzioni e mi hai mandato due esempi. Le ho trattate come ipot
 
 Due cose che ho provato e spento perché peggioravano i risultati: usare il regime di mercato per ridurre l'esposizione (Sharpe da 1,18 a 1,10) e far salire la leva del conto con la conviction (peggio della leva fissa a parità di leva media). E un errore mio, corretto: una prima simulazione con stop "ideali" dava +158% l'anno; rifatta sul percorso a 5 minuti, il vantaggio sparisce.
 
+**Terza tornata (stesso giorno):** provate undici idee più recenti. Due miglioramenti: remunerare la liquidità ferma (+1,1 punti l'anno, Sharpe da 1,18 a 1,29, senza rischio aggiuntivo) e il momentum residuo sulle crypto, tenuto in ombra. Dettaglio nella **sezione 11**; spiegazione del fondo e confronto con la versione precedente in [`COME_FUNZIONA.md`](COME_FUNZIONA.md).
+
 Tutto il dettaglio è nella **sezione 10**. Le sezioni 1–9 sono la versione 1 e restano valide dove la 10 non le aggiorna.
 
 ---
@@ -1099,6 +1101,61 @@ Se uno è rosso, l'AI resta in ombra: continua a proporre e a essere misurata, s
 | Leva dinamica 10–30x | Leva alta sul singolo trade a rischio fisso; tabella completa per il conto da 1x a 30x | Sul conto il massimo sostenuto è 3x. A 10x: rovina 30% / 62% / 77% secondo lo scenario. A 30x: 96–99% |
 
 Fonti aggiunte in questa sezione: [A1] Lopez-Lira e Tang, "Can ChatGPT Forecast Stock Price Movements?", versione di ottobre 2025, https://arxiv.org/html/2304.07619v6 `[V]`. [A2] Gao, Jiang, Yan 2025, sul bias di memoria nei backtest di LLM, https://arxiv.org/html/2512.23847v2 `[V]`. ASIC 22-082MR (dopo i tetti di leva sui CFD le perdite nette dei clienti al dettaglio sono scese del 91%), https://asic.gov.au/about-asic/news-centre/find-a-media-release/2022-releases/22-082mr-asic-s-cfd-product-intervention-order-extended-for-five-years/ `[V]`. Avviso ESMA 2018 sui CFD, https://www.esma.europa.eu/sites/default/files/library/esma35-43-1135_notice_of_pi_decisions_on_cfds_and_binary_options.pdf `[V]`. Dati SEC sugli acquisti dei dirigenti: https://www.sec.gov/dera/data/form-345. Prezzi dei dati: https://eodhd.com/pricing , https://www.tiingo.com/about/pricing , https://unusualwhales.com/guides/best-options-flow-api `[V]`. Non verificati in questa sessione: margini ufficiali di CME e IBKR per i futures, posizione di CONSOB sui perpetual, statistiche sullo slittamento degli stop.
+
+---
+
+## 11. Terza tornata: strategie più recenti, e due miglioramenti
+
+Ho provato undici idee nuove sui dati reali (script e uscite in [`research/v5/v3/`](../research/v5/v3/)). Per ognuna: Sharpe da sola, nel periodo di scelta e in quello di verifica, e Sharpe del portafoglio se la si aggiunge come quinta strategia. Tutto **SIMULATO**. Il portafoglio attuale ha Sharpe 1,18 (scelta 1,49, verifica 0,86).
+
+| # | Idea | Sharpe da sola (scelta / verifica) | Portafoglio con l'idea (tutto / scelta / verifica) | Esito |
+|---:|---|---|---|---|
+| 1 | Bitcoin ed Ether pesati per conviction | 0,83 (0,97 / 0,61) | 1,18 / 1,44 / 0,89 | Nessun guadagno: è lo stesso trend, con più volatilità |
+| 1b | Trend attuale moltiplicato per la conviction | 0,95 (1,36 / 0,41) | 1,20 / 1,57 / 0,80 | Meglio in scelta, peggio in verifica |
+| 2 | Meta-modello: regressione logistica sui 12 segnali, riaddestrata ogni anno | 0,55 (0,79 / 0,21) | 1,11 / 1,42 / 0,75 | **Peggiora.** Pesi stimati fanno peggio dei pesi uguali |
+| 3 | Trend a 4 ore, su perpetual (7 pb) | 0,65 (1,00 / 0,20) | 1,18 / 1,53 / 0,79 | Si spegne in verifica |
+| 3 | Lo stesso su spot (30 pb) | −1,16 | 0,64 | Distrutto dai costi |
+| **4** | **Momentum residuo: le crypto più forti al netto di Bitcoin** | **1,09 (0,98 / 1,21)** | **1,23 / 1,43 / 1,03** | **Unica che migliora: vedi sotto** |
+| 5 | Inversione a 3 giorni (le 5 peggiori su 20) | 0,22 (0,38 / 0,02) | 1,01 / 1,30 / 0,70 | Peggiora |
+| 11 | Doppio momentum Bitcoin/Ether | 0,80 (1,00 / 0,53) | 1,18 / 1,46 / 0,87 | Neutra |
+| 13 | IBS sugli indici solo con VIX alto | 0,53 (0,74 / 0,16) | 1,13 / 1,48 / 0,73 | Peggiora |
+| 13 | IBS sugli indici solo con VIX basso | 0,01 | 0,92 | Peggiora |
+| 6 | Stagionalità di Bitcoin (ora, giorno) | — | — | Curiosità, non scambiabili: sotto |
+
+**Stagionalità.** Due regolarità compaiono uguali nei due periodi: Bitcoin rende in media +4 punti base l'ora tra le 21 e le 23 UTC, e il giovedì perde in media 30 punti base. Nessuna delle due supera i costi di un'entrata e un'uscita (14 punti base sui perpetual), e la seconda non è statisticamente distinguibile da zero. Le registro come osservazioni.
+
+### 11.1 Miglioramento 1: la liquidità ferma (da fare, senza rischio aggiuntivo)
+
+Le quattro strategie tengono investito in media il **59%** del capitale; il 41% resta fermo e, nei backtest, non rende nulla. Tenerlo in un fondo monetario in euro (un ETF sul tasso overnight, acquistabile su IBKR) cambia così il portafoglio senza leva:
+
+| | CAGR | Sharpe | Caduta massima |
+|---|---:|---:|---:|
+| Liquidità che non rende (com'è ora) | 13,8% | 1,18 | −9,4% |
+| Liquidità al 2,3% netto | **14,8%** | **1,29** | −8,7% |
+
+È l'unico intervento di tutta la ricerca che alza il rendimento senza aggiungere rischio di mercato. Costa due ordini al mese. **Non è ancora nel codice**: il ciclo va esteso con uno "strumento di cassa" da comprare con il capitale libero sul lato IBKR; la cassa del lato crypto resta in banca, non sull'exchange.
+
+### 11.2 Miglioramento 2: momentum residuo (in ombra, da confermare)
+
+L'idea viene dalle azioni (Blitz, Huij e Martens, 2011 `[R]`): ordinare i titoli non per quanto sono saliti, ma per quanto sono saliti *oltre* ciò che il mercato spiega. Qui: si toglie a ogni moneta il suo beta rispetto a Bitcoin e si ordina per ciò che resta, diviso per la sua volatilità.
+
+| Controllo | Risultato |
+|---|---|
+| Sharpe da sola | 1,11 (scelta 1,06, verifica 1,16) |
+| Nove combinazioni di parametri (beta a 30/60/90 giorni, momentum a 14/28/56) | da 0,93 a 1,11; in verifica tutte sopra 1,05 |
+| Costi raddoppiati | 1,01 |
+| Un giorno di ritardo | 0,87 |
+| Correlazione con CR-XSMOM | **0,94** |
+| Al posto di CR-XSMOM | portafoglio 1,22 (scelta 1,50, verifica 0,92), caduta −8,7% |
+| Aggiunta come quinta | 1,23 (1,43 / 1,03), ma con volatilità 10,6% invece di 9,0%: è più esposizione crypto, non più abilità |
+
+- **Scelta:** la tengo **in ombra**. È nel codice (`cr_resid` in `gerva/strategies/book.py`, con il suo test anti look-ahead), viene calcolata, non riceve capitale.
+- **Motivazione:** è robusta, ma è quasi la stessa strategia di CR-XSMOM (correlazione 0,94) e il guadagno sul portafoglio, da 1,18 a 1,22, sta dentro l'errore di stima (±0,34). Cambiare il libro in produzione per una differenza che non si distingue dal caso è proprio l'errore che il walk-forward della sezione 5 ha misurato.
+- **Che cosa la promuove:** dopo 90 giorni di paper, se il suo rendimento in ombra supera quello di CR-XSMOM, sostituirla o usarne metà e metà.
+
+### 11.3 Che cosa conferma questa tornata
+
+Tre idee "moderne" hanno fatto peggio della versione semplice: il meta-modello addestrato (peggio dei pesi uguali), il trend intraday (si spegne fuori campione), la conviction usata come moltiplicatore (meglio in scelta, peggio in verifica). Con otto anni di dati e cinque segnali effettivamente indipendenti, la complessità aggiunge parametri più in fretta di quanto aggiunga informazione. Il registro delle prove sale a circa 150.
 
 ---
 

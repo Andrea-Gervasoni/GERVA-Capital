@@ -60,6 +60,7 @@ class Runner:
         self.hb_file = os.path.join(settings.home, "heartbeat")
         self.cb = {"data": CircuitBreaker("dati", 3, 300.0), "broker": CircuitBreaker("broker", 3, 120.0)}
         self.targets = None
+        self.ai_state = None
         self.started = clock()
 
     # ---- piccoli strumenti --------------------------------------------------
@@ -153,6 +154,7 @@ class Runner:
                     self.j.event("info" if ov.valid else "warn", "ai", ov.note or
                                  f"overlay AI: globale {ov.global_mult:.2f}; " + ", ".join(f"{k} x{v['mult']:.2f} ({v['motivo'][:80]})" for k, v in ov.sleeves.items()))
                 self.targets = pipeline.build(self.market, self.l.vol_target, self.l.max_leverage, overlay=ov)
+                self.ai_state = self._ai_state(ov)
             except Exception as e:
                 self.j.event("warn", "pipeline", f"pesi non calcolabili: {type(e).__name__}: {str(e)[:200]}")
         if self.targets is not None:
@@ -181,6 +183,29 @@ class Runner:
             return self.broker.positions()
         except Exception:
             return fallback
+
+    def _ai_state(self, ov) -> dict:
+        """Stato del livello AI per la dashboard: overlay in vigore, regime, conviction di oggi. Non decide nulla."""
+        out = dict(overlay=dict(valido=ov.valid, nota=ov.note, globale=ov.global_mult, motivo_globale=ov.global_reason,
+                                scade=snapshot._iso(ov.expires) if ov.expires else None,
+                                strategie=[dict(id=k, mult=v["mult"], motivo=v["motivo"], fonti=v.get("fonti", [])) for k, v in ov.sleeves.items()]),
+                   regime=None, conviction=[])
+        try:
+            from .. import ensemble
+            from ..ai import regime
+            m = self.market
+            if m.P is not None and m.cclose is not None and "^VIX" in m.P["adj"]:
+                r = regime.classify(m.P["adj"]["^VIX"], m.P["adj"]["^VIX3M"], self.targets.port_ret, m.cclose["BTC"]).iloc[-1]
+                out["regime"] = dict(stato=str(r["state"]), punteggio=float(r["score"]), scala_esposizione=False)
+            for c in ("BTC", "ETH"):
+                if m.cclose is not None and c in m.cclose:
+                    px = m.cclose[c].dropna()
+                    bars = pd.DataFrame(dict(open=px, high=px, low=px, close=px))      # il feed live tiene solo le chiusure: IBS neutro
+                    cv = ensemble.conviction(ensemble.crypto_signals(bars, m.cclose["BTC"]).drop(columns=["ibs_low"]), "crypto").iloc[-1]
+                    out["conviction"].append(dict(asset=c, score=float(cv["score"]) if pd.notna(cv["score"]) else None, livello=str(cv["tier"])))
+        except Exception as e:
+            self.j.event("warn", "ai", f"stato AI non calcolato: {type(e).__name__}")
+        return out
 
     # ---- passo 8: ordini ----------------------------------------------------
     def _trade(self, w: dict, pos: dict, equity: float, state: str, ages: dict, in_window: bool, now: float):

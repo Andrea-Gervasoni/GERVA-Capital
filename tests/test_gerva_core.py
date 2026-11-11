@@ -251,3 +251,16 @@ def test_kelly_ruin_formula():
     assert allocate.ruin_probability(0.5, 0.5) == pytest.approx(0.125)
     assert allocate.ruin_probability(2.0, 0.5) == 1.0
     assert allocate.kelly_from_sharpe(1.0, 0.10, 0.5) == pytest.approx(5.0)
+
+
+def test_shadow_candidate_residual_momentum_has_no_lookahead():
+    rng = np.random.default_rng(3)
+    many = prices(700, 12, 11, "D", 0.04)
+    many.columns = ["BTC", "ETH"] + [f"C{i}" for i in range(10)]
+    dv = pd.DataFrame(rng.uniform(1e6, 1e8, many.shape), index=many.index, columns=many.columns)
+    r = many.pct_change()
+    full = book.cr_resid(many, dv, r)
+    for t in (420, 533, 699):
+        assert np.allclose(full.iloc[t], book.cr_resid(many.iloc[:t + 1], dv.iloc[:t + 1], r.iloc[:t + 1]).iloc[-1])
+    assert (full.sum(axis=1) <= 1.0 + 1e-9).all() and (full >= 0).all().all()
+    assert "CR-RESID" not in book.SLEEVES                      # in ombra: non riceve capitale

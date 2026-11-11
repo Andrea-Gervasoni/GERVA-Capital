@@ -1,0 +1,19 @@
+sensibilita ai parametri (Sharpe tutto / scelta / verifica):
+ beta 30g, momentum 14g: 1.00 / 0.80 / 1.24
+ beta 30g, momentum 28g: 1.01 / 0.99 / 1.05
+ beta 30g, momentum 56g: 0.93 / 0.75 / 1.13
+ beta 60g, momentum 14g: 1.02 / 0.78 / 1.30
+ beta 60g, momentum 28g: 1.11 / 1.06 / 1.16
+ beta 60g, momentum 56g: 0.97 / 0.77 / 1.19
+ beta 90g, momentum 14g: 1.10 / 1.02 / 1.19
+ beta 90g, momentum 28g: 1.06 / 1.07 / 1.05
+ beta 90g, momentum 56g: 0.98 / 0.78 / 1.20
+ insieme delle 9: 1.07 / 0.95 / 1.22
+base 1.11 | costi doppi 1.01 | ritardo 1g 0.87 | senza top>0: n/a
+{'cagr': 0.343, 'vol': 0.277, 'sharpe': 1.105, 'max_dd': -0.271, 'mese_peggiore': -0.167}
+correlazione mensile con CR-XSMOM: 0.94 con CR-TREND: 0.54
+attuale: Sharpe 1.18 / 1.49 / 0.86 | CAGR 13.8% vol 9.0% caduta -9.4%
++ residuo come quinta: Sharpe 1.23 / 1.43 / 1.03 | CAGR 16.4% vol 10.6% caduta -10.5%
+residuo AL POSTO di CR-XSMOM: Sharpe 1.22 / 1.50 / 0.92 | CAGR 14.1% vol 9.0% caduta -8.7%
++ insieme dei 9 residui come quinta: Sharpe 1.21 / 1.41 / 1.01 | CAGR 16.0% vol 10.5% caduta -10.9%
+meta XSMOM + meta residuo in una sola strategia: Sharpe 1.20 / 1.49 / 0.90 | CAGR 14.0% vol 9.0% caduta -8.9%
