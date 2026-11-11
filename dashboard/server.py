@@ -6,6 +6,7 @@ Che cosa fa:
   * GET  /api/v1/snapshot  restituisce lo snapshot JSON scritto dal motore (env GERVA_SNAPSHOT);
                            se il file non esiste serve l'esempio, marcato "DEMO: dati di esempio";
   * GET  /api/v1/health    {"ok": true, "snapshot_age_s": ...};
+  * GET  /api/v1/quant     i risultati della ricerca (env GERVA_QUANT, default research/v5/quant.json): tutto SIMULATO;
   * POST /api/v1/kill      crea in modo atomico il file KILL (env GERVA_KILL_FILE). Non lo cancella mai.
 
 Sicurezza:
@@ -69,6 +70,11 @@ SECURITY_HEADERS = {
 def snapshot_path() -> Path:
     raw = os.environ.get("GERVA_SNAPSHOT", "").strip()
     return Path(raw).expanduser() if raw else ROOT / "var" / "gerva" / "snapshot.json"
+
+
+def quant_path() -> Path:
+    raw = os.environ.get("GERVA_QUANT", "").strip()
+    return Path(raw).expanduser() if raw else ROOT / "research" / "v5" / "quant.json"
 
 
 def kill_path() -> Path:
@@ -278,6 +284,22 @@ def get_snapshot():
     except SnapshotError as exc:
         return _error(503, str(exc))
     return JSONResponse(snap, headers={"X-Gerva-Snapshot-Source": source})
+
+
+@app.get("/api/v1/quant")
+def get_quant():
+    """Risultati della ricerca su dati storici: statici, simulati, serviti così come sono (NaN -> null)."""
+    path = quant_path()
+    if not path.is_file():
+        return _error(404, "ricerca non disponibile")
+    try:
+        data = _read_json(path)
+    except SnapshotError as exc:
+        return _error(503, str(exc).replace("snapshot", "file della ricerca"))
+    age = None
+    with contextlib.suppress(OSError):
+        age = str(int(max(0.0, time.time() - path.stat().st_mtime)))
+    return JSONResponse(data, headers={"X-Gerva-Quant-Age": age} if age is not None else None)
 
 
 @app.get("/api/v1/health")

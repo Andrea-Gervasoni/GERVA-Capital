@@ -10,6 +10,9 @@ const SNAPSHOT_URL = 'api/v1/snapshot';
 const HEALTH_URL = 'api/v1/health';
 const POLL_MS = 5000;
 const HEALTH_MS = 20000;
+const QUANT_URL = 'api/v1/quant';
+const QUANT_MS = 600000;         // la ricerca è statica: una volta al caricamento, poi ogni 10 minuti
+const QUANT_RETRY_MS = 60000;    // se manca o non si legge si riprova più spesso
 const TIMEOUT_MS = 4500;
 
 async function getJson(url) {
@@ -35,12 +38,17 @@ export function createStore() {
     receivedAt: null,    // quando è arrivato l'ultimo snapshot (orologio locale, ms)
     clockOffset: 0,      // orologio del server − orologio locale (ms), dall'header Date
     status: 'loading',   // loading | ok | stale | offline
+    quant: null,         // risultati della ricerca (/api/v1/quant), tutti simulati
+    quantStatus: 'loading', // loading | ok | missing | error
+    quantAt: null,       // quando è arrivata l'ultima copia valida (ms locali)
   };
   const subscribers = new Set();
   let lastText = null;
   let timer = null;
   let busy = false;
   let lastHealthAt = 0;
+  let lastQuantAt = 0;
+  let lastQuantText = null;
 
   const serverNow = () => Date.now() + state.clockOffset;
 
@@ -107,12 +115,41 @@ export function createStore() {
     }
   }
 
+  async function pollQuant(force = false) {
+    const every = state.quantStatus === 'ok' ? QUANT_MS : QUANT_RETRY_MS;
+    if (!force && lastQuantAt && Date.now() - lastQuantAt < every) return;
+    lastQuantAt = Date.now();
+    const before = state.quantStatus;
+    let changed = false;
+    try {
+      const { res, text, body } = await getJson(QUANT_URL);
+      if (res.status === 404) {
+        changed = state.quant !== null;
+        state.quant = null;
+        state.quantStatus = 'missing';
+        lastQuantText = null;
+      } else if (res.ok && body && typeof body === 'object' && !Array.isArray(body)) {
+        changed = text !== lastQuantText;
+        lastQuantText = text;
+        state.quant = body;
+        state.quantStatus = 'ok';
+        state.quantAt = Date.now();
+      } else if (!state.quant) {
+        state.quantStatus = 'error';
+      }
+    } catch (e) {
+      if (!state.quant) state.quantStatus = 'error';
+    }
+    if (changed || before !== state.quantStatus) for (const fn of subscribers) fn(state, true);
+  }
+
   async function tick() {
     if (busy) return;
     busy = true;
     try {
       await pollSnapshot();
       await pollHealth();
+      await pollQuant();
     } finally {
       busy = false;
       schedule();
@@ -136,6 +173,9 @@ export function createStore() {
     start: tick,
     refresh: tick,
     refreshHealth: () => pollHealth(true),
+    refreshQuant: () => pollQuant(true),
+    secondsSinceReceived: () => (state.receivedAt == null ? null : Math.max(0, (Date.now() - state.receivedAt) / 1000)),
+    secondsSinceQuant: () => (state.quantAt == null ? null : Math.max(0, (Date.now() - state.quantAt) / 1000)),
     /** Da chiamare ogni secondo: lo stato può diventare "stale" senza che arrivi nulla di nuovo. */
     reevaluate: () => emit(false),
     subscribe(fn) {

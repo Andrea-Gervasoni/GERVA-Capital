@@ -2,13 +2,38 @@
 
 import { h, icon, fill } from './dom.js';
 import { DASH, fmtMoney, fmtPctSigned, signOf, str } from './format.js';
+import { gloss } from './glossary.js';
+
+/** Spiegazione in parole semplici (solo nel livello Semplice); i termini del glossario diventano cliccabili. */
+export function explain(text, cls = '') {
+  return h('p', { class: `explain only-semplice ${cls}`.trim() }, gloss(text));
+}
+
+/** Nota di metodo (solo nel livello Esperto). */
+export function method(text, cls = '') {
+  return h('p', { class: `method only-esperto ${cls}`.trim() }, h('span', { class: 'method__tag', text: 'Metodo' }), gloss(text));
+}
+
+/** Etichetta fissa per tutto ciò che viene dalla ricerca: non è un conto vero. */
+export function simTag(label) {
+  return h('span', { class: 'tag tag--sim simtag', text: str(label).trim() || 'SIMULATO: ricerca su dati storici' });
+}
+
+/** «Che cosa significa?»: riquadro a comparsa accanto al titolo (elemento nativo, raggiungibile da tastiera). */
+export function what(text) {
+  return h('details', { class: 'what only-semplice' },
+    h('summary', { class: 'what__btn' }, icon('info'), h('span', { text: 'Che cosa significa?' })),
+    h('div', { class: 'what__panel' }, h('p', null, gloss(text))));
+}
 
 /** Scheda con intestazione. Ritorna { el, body, head, sub } per riempirla dopo. */
-export function card({ title, sub = '', actions = null, cls = '', flush = false } = {}) {
+export function card({ title, sub = '', actions = null, cls = '', flush = false, what: whatText = '', method: methodText = '', sim = '' } = {}) {
   const subEl = h('p', { class: 'card__sub', text: sub });
   subEl.hidden = !sub;
   const head = h('header', { class: 'card__head' },
-    h('div', { class: 'card__titles' }, h('h2', { class: 'card__title', text: title }), subEl),
+    h('div', { class: 'card__titles' },
+      h('div', { class: 'card__title-row' }, h('h2', { class: 'card__title', text: title }), sim ? simTag(sim === true ? '' : sim) : null, whatText ? what(whatText) : null),
+      subEl, methodText ? method(methodText) : null),
     actions ? h('div', { class: 'card__actions' }, actions) : null);
   const body = h('div', { class: `card__body ${flush ? 'card__body--flush' : ''}`.trim() });
   const el = h('section', { class: `card ${cls}`.trim() }, title ? head : null, body);
@@ -24,11 +49,12 @@ export function card({ title, sub = '', actions = null, cls = '', flush = false 
 }
 
 /** Cifra con etichetta: l'etichetta sopra, il valore grande, una riga di contesto sotto. */
-export function stat({ label, value, sub = null, cls = '', hint = '' }) {
+export function stat({ label, value, sub = null, cls = '', hint = '', explain: why = '' }) {
   return h('div', { class: `stat ${cls}`.trim(), title: hint || null },
     h('div', { class: 'stat__label', text: label }),
     h('div', { class: 'stat__value num' }, value == null ? DASH : value),
-    sub == null || sub === '' ? null : h('div', { class: 'stat__sub' }, sub));
+    sub == null || sub === '' ? null : h('div', { class: 'stat__sub' }, sub),
+    why ? h('p', { class: 'stat__explain only-semplice' }, gloss(why)) : null);
 }
 
 /**

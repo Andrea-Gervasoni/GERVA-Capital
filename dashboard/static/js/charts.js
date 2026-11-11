@@ -229,7 +229,10 @@ const pathOf = (seg) => 'M' + seg.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(
  *     format: (v, passo) => testo,             etichette dell'asse y (passo = distanza tra due tacche)
  *     top, bottom,                             estremi fissi (es. top: 0 per il drawdown)
  *     refs: [{ value, label }],                linee di riferimento tratteggiate
+ *     bands: [{ lo, hi, cls }],                fasce tra due serie (ventaglio di percentili, aree impilate)
  *   }],
+ *   marks: [{ t, label }],                     linee verticali di riferimento
+ *   xTicks: [{ t, label }],                    tacche dell'asse x, se non sono date
  *   tip: (i) => ({ title, rows }),             contenuto del tooltip per il punto i
  *   say: (i) => testo,                         stessa cosa in una frase, per i lettori di schermo
  * })
@@ -310,6 +313,18 @@ export function timeChart(host, { label = 'Grafico' } = {}) {
         g.append(s('line', { class: 'c-ref', x1: left, x2: right, y1: yy, y2: yy }));
         if (ref.label) refLabels.push({ x: left + 4, y: yy - 5, text: ref.label });
       }
+      for (const band of p.bands || []) {
+        const up = [];
+        const down = [];
+        for (let i = 0; i < n; i++) {
+          const a = band.lo[i];
+          const b = band.hi[i];
+          if (a == null || b == null || (p.scale === 'log' && (a <= 0 || b <= 0))) continue;
+          up.push(`${px[i].toFixed(1)},${p.yOf(b).toFixed(1)}`);
+          down.push(`${px[i].toFixed(1)},${p.yOf(a).toFixed(1)}`);
+        }
+        if (up.length > 1) g.append(s('path', { class: `c-band c-band--${band.cls}`, d: `M${up.join('L')}L${down.reverse().join('L')}Z` }));
+      }
       for (const sr of p.series) {
         const py = sr.values.map((v) => (v == null || (p.scale === 'log' && v <= 0) ? null : p.yOf(v)));
         const segs = segmentsOf(px, py, plotW);
@@ -320,6 +335,9 @@ export function timeChart(host, { label = 'Grafico' } = {}) {
           g.append(s('path', { class: `c-area c-area--${sr.cls}`, d }));
         }
         g.append(s('path', { class: `c-line c-line--${sr.cls}`, d: segs.map(pathOf).join('') }));
+        if (sr.dots && n <= 40) {
+          for (let i = 0; i < n; i++) if (py[i] != null) g.append(s('circle', { class: `c-dot c-dot--${sr.cls}`, cx: px[i].toFixed(1), cy: py[i].toFixed(1), r: 3.5 }));
+        }
         if (sr.end) {
           for (let i = n - 1; i >= 0; i--) {
             if (py[i] != null) {
@@ -336,16 +354,24 @@ export function timeChart(host, { label = 'Grafico' } = {}) {
     // asse del tempo sotto l'ultimo pannello
     const bottom = panels[panels.length - 1].y1;
     svg.append(s('line', { class: 'c-axis', x1: left, x2: right, y1: bottom + 0.5, y2: bottom + 0.5 }));
-    for (const tk of timeTicks(t0, t1, Math.floor(plotW / 60))) {
+    // linee verticali di riferimento (es. confine tra periodo di scelta e di verifica)
+    for (const mk of spec.marks || []) {
+      if (mk.t == null || mk.t < t0 || mk.t > t1) continue;
+      const x = Math.round(xOf(mk.t)) + 0.5;
+      svg.append(s('line', { class: 'c-mark', x1: x, x2: x, y1: panels[0].y0, y2: bottom }));
+      if (mk.label) refLabels.push({ x: x + 5, y: panels[0].y0 + 11, text: mk.label, end: x > right - 120 ? x - 5 : null });
+    }
+    for (const tk of (spec.xTicks || timeTicks(t0, t1, Math.floor(plotW / 60)))) {
       const x = xOf(tk.t);
-      if (x < left + 14 || x > right - 14) continue;
+      const edge = x < left + 14 ? 'start' : x > right - 14 ? 'end' : null;
+      if (x < left - 1 || x > right + 1 || (edge && !spec.xTicks)) continue;
       svg.append(s('line', { class: 'c-axis', x1: Math.round(x) + 0.5, x2: Math.round(x) + 0.5, y1: bottom, y2: bottom + 4 }));
-      svg.append(s('text', { class: 'c-tick c-tick--x', x: x.toFixed(1), y: bottom + 17 }, tk.label));
+      svg.append(s('text', { class: 'c-tick c-tick--x', x: x.toFixed(1), y: bottom + 17, 'text-anchor': edge }, tk.label));
     }
 
     // etichette delle linee di riferimento: sopra le serie, su un fondo del colore della scheda per restare leggibili
     for (const rl of refLabels) {
-      const text = s('text', { class: 'c-ref-label', x: rl.x, y: rl.y }, rl.text);
+      const text = s('text', { class: 'c-ref-label', x: rl.end != null ? rl.end : rl.x, y: rl.y, 'text-anchor': rl.end != null ? 'end' : null }, rl.text);
       svg.append(text);
       const box = typeof text.getBBox === 'function' ? text.getBBox() : null;
       if (box && box.width > 0) svg.insertBefore(s('rect', { class: 'c-ref-bg', x: box.x - 3, y: box.y - 1, width: box.width + 6, height: box.height + 2, rx: 2 }), text);
@@ -372,6 +398,15 @@ export function timeChart(host, { label = 'Grafico' } = {}) {
       if (v == null) continue;
       lo = Math.min(lo, v);
       hi = Math.max(hi, v);
+    }
+    for (const band of p.bands || []) {
+      for (const arr2 of [band.lo, band.hi]) {
+        for (const v of arr2) {
+          if (v == null || (p.scale === 'log' && v <= 0)) continue;
+          if (v < lo) lo = v;
+          if (v > hi) hi = v;
+        }
+      }
     }
     if (lo === Infinity) return null;
     if (p.scale === 'log') {
@@ -674,3 +709,150 @@ export function dumbbell({ from, to, min = 0, max = 1, width = 132, label = '' }
   return svg;
 }
 
+
+// ---- barre con segno (una per riga) ----------------------------------------------------------------------------------------
+
+/** rows: [{ label, value, text, note, tag, kind }] — barra dallo zero verso destra o sinistra, valore e nota a fianco. */
+export function signedBars(rows, { labelHead = 'Voce', valueHead = 'Valore', noteHead = '', tone = false } = {}) {
+  const vals = rows.map((r) => num(r.value)).filter((v) => v != null);
+  const hi = Math.max(0.0001, ...vals.map((v) => Math.max(0, v)));
+  const lo = Math.min(0, ...vals);
+  const span = hi - lo;
+  const zero = ((0 - lo) / span) * 100;
+  return h('table', { class: 'bars bars--single' },
+    h('thead', null, h('tr', null,
+      h('th', { scope: 'col', text: labelHead }),
+      h('th', { scope: 'col' }, h('span', { class: 'sr-only', text: 'Grafico' })),
+      h('th', { scope: 'col', class: 'bars__num', text: valueHead }),
+      noteHead ? h('th', { scope: 'col', class: 'bars__note', text: noteHead }) : null)),
+    h('tbody', null, rows.map((r) => {
+      const v = num(r.value);
+      const w = v == null ? 0 : (Math.abs(v) / span) * 100;
+      const cls = r.kind || (tone ? (v > 0 ? 'pos' : v < 0 ? 'neg' : 'net') : 'net');
+      return h('tr', { class: r.mark ? 'is-marked' : null },
+        h('th', { scope: 'row', class: 'bars__name' }, r.label, r.tag ? h('span', { class: 'tag tag--plain bars__tag', text: r.tag }) : null),
+        h('td', { class: 'bars__viz' }, h('span', { class: 'bars__track bars__track--one' },
+          v == null ? null : h('span', { class: `bars__bar bars__bar--one bars__bar--${cls} ${v < 0 ? 'bars__bar--left' : ''}`.trim(), style: { left: `${(v < 0 ? zero - w : zero).toFixed(2)}%`, width: `${Math.max(w, 0.6).toFixed(2)}%` } }),
+          lo < 0 ? h('span', { class: 'bars__zero', style: { left: `${zero.toFixed(2)}%` } }) : null)),
+        h('td', { class: `bars__num num ${tone && v != null ? (v > 0 ? 'pos' : v < 0 ? 'neg' : '') : ''}`.trim(), text: r.text == null ? DASH : r.text }),
+        noteHead ? h('td', { class: 'bars__note', text: r.note || '' }) : null);
+    })));
+}
+
+/** Due barre per riga su una scala comune (es. scelta contro verifica). rows: [{ name, a, b, aText, bText, extra }] */
+export function dualBars(rows, { nameHead = 'Voce', aHead = 'A', bHead = 'B', extraHead = '', extraCls = '' } = {}) {
+  const vals = rows.flatMap((r) => [num(r.a), num(r.b)]).filter((v) => v != null);
+  const hi = Math.max(0.0001, ...vals.map((v) => Math.max(0, v)));
+  const lo = Math.min(0, ...vals);
+  const span = hi - lo;
+  const zero = ((0 - lo) / span) * 100;
+  const bar = (v, cls) => {
+    if (v == null) return null;
+    const w = (Math.abs(v) / span) * 100;
+    return h('span', { class: `bars__bar bars__bar--${cls} ${v < 0 ? 'bars__bar--left' : ''}`.trim(), style: { left: `${(v < 0 ? zero - w : zero).toFixed(2)}%`, width: `${Math.max(w, 0.6).toFixed(2)}%` } });
+  };
+  return h('table', { class: 'bars' },
+    h('thead', null, h('tr', null,
+      h('th', { scope: 'col', text: nameHead }),
+      h('th', { scope: 'col' }, h('span', { class: 'sr-only', text: 'Grafico' })),
+      h('th', { scope: 'col', class: 'bars__num' }, h('span', { class: 'key key--bench', 'aria-hidden': 'true' }), aHead),
+      h('th', { scope: 'col', class: 'bars__num' }, h('span', { class: 'key key--fund', 'aria-hidden': 'true' }), bHead),
+      extraHead ? h('th', { scope: 'col', class: `bars__num bars__extra ${extraCls}`.trim(), text: extraHead }) : null)),
+    h('tbody', null, rows.map((r) => h('tr', { class: r.group ? 'bars__group' : null },
+      h('th', { scope: 'row', class: 'bars__name' }, r.name),
+      h('td', { class: 'bars__viz' }, h('span', { class: 'bars__track' }, bar(num(r.a), 'gross'), bar(num(r.b), 'net'), lo < 0 ? h('span', { class: 'bars__zero', style: { left: `${zero.toFixed(2)}%` } }) : null)),
+      h('td', { class: 'bars__num num', text: r.aText == null ? DASH : r.aText }),
+      h('td', { class: 'bars__num num', text: r.bText == null ? DASH : r.bText }),
+      extraHead ? h('td', { class: `bars__num bars__extra num ${extraCls}`.trim(), text: r.extra || DASH }) : null))));
+}
+
+// ---- matrice (correlazioni) ---------------------------------------------------------------------------------------------------
+
+/** Matrice quadrata con il numero in ogni cella; blu = si muovono insieme, arancio = in senso opposto, grigio = indipendenti. */
+export function matrix(labels, values, { caption = 'Matrice' } = {}) {
+  return h('div', { class: 'hm-wrap' }, h('table', { class: 'hm hm--matrix' },
+    h('caption', { class: 'sr-only', text: caption }),
+    h('thead', null, h('tr', null, h('th', { class: 'hm__corner' }), labels.map((l) => h('th', { scope: 'col', text: l })))),
+    h('tbody', null, labels.map((l, i) => h('tr', null,
+      h('th', { scope: 'row', text: l }),
+      labels.map((m, j) => {
+        const v = num((values[i] || [])[j]);
+        if (v == null) return h('td', { class: 'hm__cell hm__cell--empty' });
+        const td = h('td', {
+          class: `hm__cell num ${i === j ? 'hm__cell--diag' : v > 0 ? 'hm__cell--cool' : v < 0 ? 'hm__cell--warm' : ''}`.trim(),
+          style: { '--k': (i === j ? 0 : Math.min(1, Math.abs(v))).toFixed(3) }, text: fmtSigned(v, 2),
+        });
+        bindTip(td, () => ({ title: `${l} · ${m}`, rows: [{ label: 'Correlazione', value: fmtSigned(v, 3) }] }));
+        return td;
+      }))))));
+}
+
+// ---- istogramma con curva normale -------------------------------------------------------------------------------------------
+
+/**
+ * data: { edges: [n+1], counts: [n] }. La curva è la gaussiana con la stessa media e deviazione standard:
+ * dove le colonne la superano (centro e code) i rendimenti sono «più appuntiti e con code più grasse» del caso normale.
+ */
+export function histogram(host, data, { log = false, label = 'Distribuzione', xFormat = (v) => fmtPctSigned(v, 0) } = {}) {
+  const edges = list(data && data.edges).map(num);
+  const counts = list(data && data.counts).map(num);
+  const n = Math.min(counts.length, edges.length - 1);
+  if (n < 2 || edges.some((e) => e == null)) return false;
+  const total = counts.reduce((a, b) => a + (b || 0), 0);
+  const mids = counts.map((_, i) => (edges[i] + edges[i + 1]) / 2);
+  const mean = mids.reduce((a, m, i) => a + m * (counts[i] || 0), 0) / total;
+  const sd = Math.sqrt(mids.reduce((a, m, i) => a + (m - mean) ** 2 * (counts[i] || 0), 0) / total);
+  const normal = mids.map((m, i) => total * (edges[i + 1] - edges[i]) * Math.exp(-0.5 * ((m - mean) / sd) ** 2) / (sd * Math.sqrt(2 * Math.PI)));
+  const svg = s('svg', { class: 'chart chart--static', role: 'img', 'aria-label': label });
+  host.replaceChildren(svg);
+  let last = 0;
+  function draw(width) {
+    const w = Math.floor(width);
+    if (w < 80 || w === last) return;
+    last = w;
+    svg.replaceChildren();
+    const H = 190;
+    const left = 1;
+    const right = w - 44;
+    const top = 8;
+    const bottom = top + H;
+    const max = Math.max(...counts.map((c) => c || 0), ...normal);
+    const f = log ? (v) => Math.log10(Math.max(v, 0.5)) : (v) => v;
+    const f0 = f(log ? 0.5 : 0);
+    const yOf = (v) => bottom - ((f(v) - f0) / (f(max * 1.05) - f0)) * H;
+    const xOf = (e) => left + ((e - edges[0]) / (edges[n] - edges[0])) * (right - left);
+    svg.setAttribute('viewBox', `0 0 ${w} ${bottom + 24}`);
+    svg.setAttribute('width', w);
+    svg.setAttribute('height', bottom + 24);
+    const ticks = log ? [1, 10, 100, 1000].filter((v) => v <= max * 1.05) : linearTicks(0, max * 1.05, 4);
+    for (const v of ticks) {
+      const y = Math.round(yOf(v)) + 0.5;
+      svg.append(s('line', { class: 'c-grid', x1: left, x2: right, y1: y, y2: y }));
+      svg.append(s('text', { class: 'c-tick', x: right + 8, y: y + 3.5 }, fmtNum(v, 0)));
+    }
+    for (let i = 0; i < n; i++) {
+      const c = counts[i] || 0;
+      if (c <= 0) continue;
+      const x0 = xOf(edges[i]);
+      const x1 = xOf(edges[i + 1]);
+      const y = yOf(c);
+      const rect = s('rect', { class: `c-col ${mids[i] < 0 ? 'c-col--neg' : 'c-col--pos'}`, x: (x0 + 1).toFixed(1), y: y.toFixed(1), width: Math.max(1, x1 - x0 - 2).toFixed(1), height: Math.max(1, bottom - y).toFixed(1), rx: 1.5, tabindex: '0' });
+      bindTip(rect, () => ({
+        title: `da ${fmtPctSigned(edges[i], 1)} a ${fmtPctSigned(edges[i + 1], 1)}`,
+        rows: [{ label: 'Giorni', value: fmtNum(c, 0) }, { label: 'Quota', value: fmtPct(c / total, 1) }, { label: 'Attesi se normale', value: fmtNum(normal[i], 1) }],
+      }));
+      svg.append(rect);
+    }
+    const pts = mids.map((m, i) => [xOf(m), yOf(Math.max(normal[i], log ? 0.5 : 0))]);
+    svg.append(s('path', { class: 'c-line c-line--bench c-line--dash', d: pathOf(pts) }));
+    svg.append(s('line', { class: 'c-axis', x1: left, x2: right, y1: bottom + 0.5, y2: bottom + 0.5 }));
+    const step = Math.max(1, Math.round(n / Math.max(2, Math.floor((right - left) / 70))));
+    for (let i = 0; i <= n; i += step) {
+      const x = xOf(edges[i]);
+      svg.append(s('text', { class: 'c-tick c-tick--x', x: Math.min(right - 14, Math.max(left + 14, x)).toFixed(1), y: bottom + 17 }, Math.abs(edges[i]) < 1e-9 ? '0%' : xFormat(edges[i])));
+    }
+  }
+  draw(host.clientWidth);
+  onResize(host, (w) => draw(w));
+  return { mean, sd, total };
+}
