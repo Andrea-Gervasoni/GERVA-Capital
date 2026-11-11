@@ -88,9 +88,12 @@ def run(B, ev, H, k=1.5, tp=None, cm=1.0, delay=0, smin=0.003, smax=0.15, **kw):
     return pd.DataFrame(out)
 
 def blk(T):
-    """media R, t-stat raggruppato per istante di decisione (eventi simultanei su piu' monete = un'osservazione)."""
+    """media R per trade e t-stat robusto al raggruppamento. CLU=None: gli eventi simultanei (stesso istante, piu' monete) sono una
+    sola osservazione (media). CLU='D': t-stat della SOMMA giornaliera di R (verifica la media per trade tenendo conto che i trade
+    dello stesso giorno sono correlati; la media delle medie giornaliere invece peserebbe di piu' i giorni con pochi trade)."""
     if len(T) < 3: return dict(n=len(T), m=np.nan, t=np.nan)
-    g = T['R'].groupby(T['t_dec'].values if CLU is None else T['t_dec'].dt.floor(CLU).values).mean()
+    if CLU is None: g = T['R'].groupby(T['t_dec'].values).mean()
+    else: g = T['R'].groupby(T['t_dec'].dt.floor(CLU).values).sum()
     t = g.mean() / g.std() * np.sqrt(len(g)) if len(g) > 2 and g.std() > 0 else np.nan
     return dict(n=len(T), m=T.R.mean(), t=t, ne=len(g))
 

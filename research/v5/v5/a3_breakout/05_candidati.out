@@ -1,0 +1,27 @@
+== griglia LONG rottura (scelta su tg_sel)
+                                      cfg    n  n_anno  stop_med  lev_med     R     t   t_g   hit  R_sel  tg_sel  sh_sel  R_ver  tg_ver  sh_ver
+LONG rottura N=8640 stop=6.0hv trail6 72h  969 145.290     0.049   11.541 0.262 4.220 3.133 0.426  0.407   3.418   1.984  0.160   1.398   0.722
+LONG rottura N=2016 stop=6.0hv trail6 72h 2219 326.022     0.043   13.070 0.198 4.674 2.844 0.404  0.260   3.059   1.764  0.156   1.528   0.780
+LONG rottura N=8640 stop=3.0hv trail6 72h 1314 196.857     0.026   20.456 0.310 3.713 2.776 0.268  0.445   2.977   1.742  0.205   1.266   0.654
+LONG rottura N=2016 stop=3.0hv trail6 72h 2822 414.616     0.023   23.490 0.246 4.326 2.710 0.268  0.317   2.643   1.529  0.193   1.476   0.754
+LONG rottura N=8640 stop=1.5hv trail6 72h 1865 279.406     0.013   36.383 0.216 2.304 1.839 0.171  0.369   2.336   1.374  0.095   0.559   0.289
+ LONG rottura N=864 stop=6.0hv trail6 72h 3684 540.828     0.041   13.698 0.099 3.175 1.894 0.382  0.156   2.276   1.313  0.060   0.810   0.414
+ LONG rottura N=864 stop=3.0hv trail6 72h 4671 685.725     0.021   24.893 0.127 2.872 1.754 0.247  0.213   2.196   1.267  0.066   0.634   0.324
+LONG rottura N=2016 stop=1.5hv trail6 72h 4009 589.013     0.012   40.000 0.109 1.851 1.240 0.173  0.182   1.538   0.892  0.055   0.433   0.222
+ LONG rottura N=864 stop=1.5hv trail6 72h 6441 945.189     0.011   40.000 0.043 0.945 0.588 0.168  0.089   0.949   0.548  0.009   0.090   0.046
+
+######## A. Donchian 4h N=100, stop 2 ATR(4h), trailing 4R, max 8 giorni (long+short)   {'maxhold': 2304, 'smax': 0.1, 'trail_R': 4.0}
+  base              n= 1534 n/anno= 226 stop med=4.60% leva med=12x | R=0.306 t=4.55 t_giorni=3.42 hit=0.34 R/sig=0.116 | SCELTA R=0.456 t_g=3.02 sh=1.74 | VERIFICA R=0.211 t_g=1.91 sh=0.98
+  costi x2          n= 1534 n/anno= 226 stop med=4.60% leva med=12x | R=0.265 t=3.95 t_giorni=2.97 hit=0.33 R/sig=0.101 | SCELTA R=0.423 t_g=2.80 sh=1.62 | VERIFICA R=0.167 t_g=1.51 sh=0.77
+  ritardo +1 barra  n= 1526 n/anno= 225 stop med=4.61% leva med=12x | R=0.300 t=4.49 t_giorni=3.38 hit=0.33 R/sig=0.115 | SCELTA R=0.465 t_g=3.04 sh=1.75 | VERIFICA R=0.198 t_g=1.83 sh=0.94
+  per anno (R medio, n): {2020: (0.768, 155), 2021: (0.581, 203), 2022: (0.14, 233), 2023: (0.268, 255), 2024: (0.171, 232), 2025: (0.129, 243), 2026: (0.282, 213)}
+  per lato: {-1: (np.float64(0.126), np.float64(0.204), np.float64(0.083), 656), 1: (np.float64(0.44), np.float64(0.626), np.float64(0.314), 878)}  (tutto, scelta, verifica, n)
+  per simbolo (R scelta | R verifica): {'ADA': (np.float64(0.91), np.float64(0.33)), 'AVAX': (np.float64(0.04), np.float64(0.45)), 'BNB': (np.float64(0.31), np.float64(0.19)), 'BTC': (np.float64(0.51), np.float64(0.3)), 'DOGE': (np.float64(0.9), np.float64(0.17)), 'ETH': (np.float64(0.42), np.float64(0.25)), 'LINK': (np.float64(0.31), np.float64(0.02)), 'LTC': (np.float64(0.03), np.float64(-0.27)), 'SOL': (np.float64(0.61), np.float64(0.39)), 'XRP': (np.float64(0.68), np.float64(0.29))}
+  uscite: {'stop': 0.71, 'tempo/segnale': 0.29}  R peggiore -1.40  R migliore 34.6
+  troncamento: 0 differenze su 25 punti
+  sovrapposizione col libro 11x: {'quota_in_giorni_libro': 0.618, 'quota_calendario_libro': 0.579, 'R_in': 0.39, 'R_fuori': 0.169, 'corr_mese_trade11': 0.538, 'corr_mese_new': 0.444, 'corr_giorno_trade11': 0.188}
+  scelta   Sharpe candidato 1.77 (Sharpe^2 = N(R/sig)^2 ~ 3.15) | alfa/anno 93.1% t=3.15 beta trade11 0.13 beta new -0.32 | Sharpe trade11 1.12 -> con candidato 2.03 | Sharpe C3 1.97 -> con candidato 2.50
+  verifica Sharpe candidato 0.89 (Sharpe^2 = N(R/sig)^2 ~ 0.79) | alfa/anno 37.3% t=1.30 beta trade11 0.61 beta new -0.21 | Sharpe trade11 1.05 -> con candidato 1.13 | Sharpe C3 1.43 -> con candidato 1.34
+  BTC/ETH/SOL: R_sel 0.505 R_ver 0.310 n 495 | altri 7: R_sel 0.433 R_ver 0.165 n 1039
+
+######## B. rottura 7 giorni in vol compressa (hvr<0.4), stop 6 hv, trailing 6R, 72h (long+short)   {'smax': 0.1, 'trail_R': 6.0, 'maxhold': 864}

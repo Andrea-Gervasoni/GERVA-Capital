@@ -12,3 +12,62 @@ CR-TREND spot 10 pb (Binance/OKX taker, o maker altrove)           Sh  1.07 |  1
 CR-XSMOM spot 10 pb (Binance/OKX taker, o maker altrove)           Sh  1.11 |  1.08 |  1.14  CAGR   35.0%   29.6%   42.0%  vol  28.3%  DD  -27.5%  -26.4% 
    -> portafoglio con crypto spot 10 pb                            Sh  1.40 |  1.61 |  1.11  CAGR   13.9%   14.6%   13.0%  vol   7.6%  DD   -9.2%   -6.0% 
 CR-TREND spot 6,5 pb (Hyperliquid spot / maker)                    Sh  1.08 |  1.44 |  0.62  CAGR   27.8%   37.3%   17.0%  vol  22.7%  DD  -23.7%  -23.7% 
+CR-XSMOM spot 6,5 pb (Hyperliquid spot / maker)                    Sh  1.12 |  1.09 |  1.15  CAGR   35.4%   29.9%   42.5%  vol  28.3%  DD  -27.5%  -26.4% 
+   -> portafoglio con crypto spot 6,5 pb                           Sh  1.40 |  1.62 |  1.12  CAGR   14.0%   14.7%   13.1%  vol   7.6%  DD   -9.2%   -6.0% 
+CR-TREND su PERP: 6,5 pb + funding reale                           Sh  0.87 |  1.20 |  0.45  CAGR   21.9%   29.7%   12.9%  vol  22.6%  DD  -24.6%  -24.6% | funding pagato 4.80%/anno
+CR-XSMOM su PERP: 10 pb + funding reale (0,03%/g dove manca)       Sh  1.02 |  0.96 |  1.10  CAGR   31.8%   25.6%   40.0%  vol  28.3%  DD  -28.7%  -26.9% | funding pagato 7.61%/anno
+   -> portafoglio con CR-TREND e CR-XSMOM su perp                  Sh  1.31 |  1.50 |  1.05  CAGR   13.1%   13.6%   12.5%  vol   7.6%  DD   -9.3%   -6.0% 
+   -> portafoglio con solo CR-TREND su perp                        Sh  1.32 |  1.52 |  1.04  CAGR   13.2%   13.8%   12.4%  vol   7.6%  DD   -9.3%   -6.0% 
+EQ-MR CFD 5 pb, rf+1,5% (base)                                     Sh  0.83 |  1.14 |  0.33  CAGR   13.4%   18.1%    7.8%  vol  13.0%  DD  -12.3%  -11.6% 
+   -> portafoglio con EQ-MR CFD 5 pb, rf+1                         Sh  1.36 |  1.58 |  1.07  CAGR   13.6%   14.4%   12.7%  vol   7.6%  DD   -9.4%   -6.0% 
+EQ-MR CFD caro: 10 pb, rf+2,5%                                     Sh  0.56 |  0.89 |  0.04  CAGR    9.6%   13.9%    4.4%  vol  12.9%  DD  -14.3%  -13.7% 
+   -> portafoglio con EQ-MR CFD caro: 10 p                         Sh  1.27 |  1.49 |  0.98  CAGR   12.8%   13.5%   11.9%  vol   7.6%  DD   -9.8%   -6.2% 
+EQ-MR micro future MES/MNQ: 1 pb, rf+0,5% implicito                Sh  1.04 |  1.34 |  0.57  CAGR   16.7%   21.7%   10.7%  vol  13.1%  DD  -12.1%   -9.9% 
+   -> portafoglio con EQ-MR micro future M                         Sh  1.44 |  1.66 |  1.14  CAGR   14.2%   15.1%   13.3%  vol   7.6%  DD   -9.0%   -5.9% 
+EQ-MR micro future 2 pb, rf+0,5%                                   Sh  0.99 |  1.30 |  0.52  CAGR   16.0%   20.9%   10.1%  vol  13.1%  DD  -12.1%  -10.3% 
+   -> portafoglio con EQ-MR micro future 2                         Sh  1.42 |  1.64 |  1.12  CAGR   14.1%   14.9%   13.1%  vol   7.6%  DD   -9.1%   -5.9% 
+EQ-MR CFD IBKR 3 pb, rf+1,5%                                       Sh  0.92 |  1.23 |  0.44  CAGR   14.9%   19.7%    9.1%  vol  13.1%  DD  -12.1%  -10.9% 
+   -> portafoglio con EQ-MR CFD IBKR 3 pb,                         Sh  1.39 |  1.62 |  1.10  CAGR   13.9%   14.7%   12.9%  vol   7.6%  DD   -9.2%   -5.9% 
+MA-TREND 5 pb per lato                                             Sh  0.25 |  0.44 | -0.01  CAGR    4.3%    4.3%    4.3%  vol   6.9%  DD  -13.7%   -8.6% 
+   -> portafoglio con MA-TREND 5 pb                                Sh  1.39 |  1.61 |  1.09  CAGR   13.8%   14.6%   12.9%  vol   7.6%  DD   -9.2%   -5.9% 
+MA-TREND 10 pb per lato                                            Sh  0.17 |  0.37 | -0.12  CAGR    3.7%    3.7%    3.6%  vol   6.9%  DD  -14.9%   -9.5% 
+   -> portafoglio con MA-TREND 10 pb                               Sh  1.36 |  1.58 |  1.07  CAGR   13.6%   14.4%   12.7%  vol   7.6%  DD   -9.4%   -6.0% 
+MA-TREND 25 pb per lato                                            Sh -0.09 |  0.15 | -0.43  CAGR    1.8%    2.1%    1.5%  vol   7.0%  DD  -18.4%  -12.0% 
+   -> portafoglio con MA-TREND 25 pb                               Sh  1.29 |  1.51 |  0.99  CAGR   13.0%   13.7%   12.0%  vol   7.6%  DD   -9.8%   -6.3% 
+MA-TREND 50 pb per lato                                            Sh -0.51 | -0.21 | -0.93  CAGR   -1.1%   -0.6%   -1.9%  vol   7.0%  DD  -24.0%  -16.1% 
+   -> portafoglio con MA-TREND 50 pb                               Sh  1.16 |  1.39 |  0.85  CAGR   11.9%   12.7%   10.9%  vol   7.6%  DD  -10.6%   -6.7% 
+PORTAFOGLIO: crypto 10 pb + EQ-MR su micro future                  Sh  1.47 |  1.69 |  1.18  CAGR   14.5%   15.3%   13.6%  vol   7.6%  DD   -8.9%   -5.8% 
+   Commissione minima per ordine (conto piccolo): numero di ordini l'anno e costo fisso
+   ordini/anno: MA-TREND 203 (giro 11.9x), EQ-MR 127 (giro 63.7x), CR-TREND 41 (giro 5.4x), CR-XSMOM 139 (giro 20.3x)
+   capitale    12,000 $: ordine medio MA-TREND     235 $ -> commissione IBKR (0,05%, minimo 1,25 EUR) + mezzo spread 5 pb =    62 pb per lato (ricerca: 10 pb); ordine medio EQ-MR    1182 $ =  0.08 contratti MES per gamba; costo fisso minimo MA 2.29% del conto l'anno
+   capitale    50,000 $: ordine medio MA-TREND     979 $ -> commissione IBKR (0,05%, minimo 1,25 EUR) + mezzo spread 5 pb =    19 pb per lato (ricerca: 10 pb); ordine medio EQ-MR    4925 $ =  0.33 contratti MES per gamba; costo fisso minimo MA 0.55% del conto l'anno
+   capitale   200,000 $: ordine medio MA-TREND    3917 $ -> commissione IBKR (0,05%, minimo 1,25 EUR) + mezzo spread 5 pb =    10 pb per lato (ricerca: 10 pb); ordine medio EQ-MR   19699 $ =  1.31 contratti MES per gamba; costo fisso minimo MA 0.14% del conto l'anno
+   capitale 1,000,000 $: ordine medio MA-TREND   19583 $ -> commissione IBKR (0,05%, minimo 1,25 EUR) + mezzo spread 5 pb =    10 pb per lato (ricerca: 10 pb); ordine medio EQ-MR   98494 $ =  6.57 contratti MES per gamba; costo fisso minimo MA 0.03% del conto l'anno
+
+== 5. Sleeve crypto giornalieri e libro dei trade: stesso trend?
+correlazione del libro dei trade (mtm) con CR-TREND: giornaliera 0.72 mensile 0.68;  con CR-XSMOM: 0.52 / 0.63;  con il libro a 6: 0.53 / 0.63
+giorni con trade aperti: 53%; in quei giorni controvalore medio dei trade 0.55 del patrimonio contro esposizione di CR-TREND 0.053 e CR-XSMOM 0.028 (a 1x)
+quota dei giorni di trade in cui CR-TREND e' investito (>5% del suo capitale): 91%; quota dei giorni CR-TREND investito con un trade aperto: 80%
+riduzione media del controvalore dei trade se si sottrae cio' che gli sleeve tengono gia': 9.4% (1x), mediana 7.3%
+scala di CR-TREND (perp) che pareggia la volatilita' del libro dei trade in scelta: 0.89 x il capitale
+  --- libro giornaliero 1x, trade 1%/2% (statistiche MENSILI, mtm) ---
+1x: 6 strategie, senza trade                                       Sh  1.33 |  1.62 |  0.98  CAGR   13.6%   14.4%   12.7%  vol   7.6%  DD   -9.4%   -6.0% 
+1x: 6 strategie + trade (attuale C2)                               Sh  1.04 |  1.20 |  0.90  CAGR   39.5%   39.3%   39.7%  vol  29.9%  DD  -26.4%  -26.4% 
+1x: SENZA CR-TREND (5 strategie) + trade                           Sh  1.04 |  1.21 |  0.90  CAGR   37.9%   36.7%   39.3%  vol  28.5%  DD  -25.9%  -25.9% 
+1x: SENZA CR-TREND e CR-XSMOM (4 strategie) + trade                Sh  1.01 |  1.19 |  0.86  CAGR   34.4%   34.0%   34.9%  vol  26.9%  DD  -25.6%  -25.6% 
+1x: 6 strategie + trade al netto degli sleeve                      Sh  1.04 |  1.21 |  0.91  CAGR   38.1%   36.9%   39.6%  vol  28.1%  DD  -24.7%  -24.7% 
+1x: 6 strategie + CR-TREND perp x0.89 al posto dei trade           Sh  1.09 |  1.32 |  0.78  CAGR   34.4%   43.0%   24.5%  vol  25.8%  DD  -28.1%  -21.2% 
+1x: 6 strategie + meta' trade + meta' CR-TREND perp                Sh  1.12 |  1.32 |  0.89  CAGR   37.5%   41.5%   32.6%  vol  26.5%  DD  -24.6%  -21.7% 
+  --- libro giornaliero 2x, trade 1%/2% (statistiche MENSILI, mtm) ---
+2x: 6 strategie, senza trade                                       Sh  1.23 |  1.51 |  0.88  CAGR   23.0%   26.4%   19.0%  vol  15.2%  DD  -19.8%  -13.4% 
+2x: 6 strategie + trade (attuale C3)                               Sh  1.09 |  1.28 |  0.91  CAGR   49.6%   52.9%   45.6%  vol  35.7%  DD  -32.4%  -32.4% 
+2x: SENZA CR-TREND (5 strategie) + trade                           Sh  1.09 |  1.29 |  0.92  CAGR   46.2%   47.3%   44.9%  vol  32.9%  DD  -31.5%  -31.5% 
+2x: SENZA CR-TREND e CR-XSMOM (4 strategie) + trade                Sh  1.05 |  1.25 |  0.86  CAGR   39.1%   41.7%   36.0%  vol  29.7%  DD  -31.0%  -31.0% 
+2x: 6 strategie + trade al netto degli sleeve                      Sh  1.10 |  1.29 |  0.94  CAGR   46.8%   47.7%   45.7%  vol  32.1%  DD  -29.3%  -29.3% 
+2x: 6 strategie + CR-TREND perp x0.89 al posto dei trade           Sh  1.12 |  1.36 |  0.80  CAGR   44.1%   56.4%   30.2%  vol  32.3%  DD  -35.1%  -24.8% 
+2x: 6 strategie + meta' trade + meta' CR-TREND perp                Sh  1.14 |  1.36 |  0.89  CAGR   47.4%   55.1%   38.4%  vol  32.9%  DD  -31.8%  -28.1% 
+solo trade (mtm)                                                   Sh  0.78 |  0.93 |  0.68  CAGR   24.0%   22.8%   25.7%  vol  25.2%  DD  -24.5%  -24.5% 
+solo CR-TREND perp x0.89                                           Sh  0.80 |  1.08 |  0.42  CAGR   19.6%   26.3%   11.7%  vol  20.1%  DD  -22.0%  -22.0% 
+aritmetica del brief: N = 77 trade/anno, R medio 0.237, sigma_R 1.74, R/sigma 0.136 -> N (R/sigma)^2 = 1.42 (serve 6,3)
+
+== 7. Tasse italiane, liquidazione annuale: 33% crypto (spot, carry), 26% derivati (perp, CFD) ed ETF; minus riportabili 4 anni nella stessa categoria
