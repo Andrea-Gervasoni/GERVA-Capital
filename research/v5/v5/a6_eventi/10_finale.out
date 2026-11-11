@@ -1,0 +1,28 @@
+=== LISTING-SHORT (trade tenuti con il limite di 8 aperti)
+  tutto     n= 773 N/anno=  124 R=+0.179 sigma_R=1.32 R/sigma=+0.135 t(sett.)=+3.37 | N*(R/sigma)^2 ingenuo=2.27 | corretto per il raggruppamento (t^2/anni)=1.82
+  scelta    n= 142 N/anno=   58 R=+0.353 sigma_R=1.37 R/sigma=+0.259 t(sett.)=+2.66 | N*(R/sigma)^2 ingenuo=3.90 | corretto per il raggruppamento (t^2/anni)=2.91
+  verifica  n= 631 N/anno=  175 R=+0.140 sigma_R=1.31 R/sigma=+0.107 t(sett.)=+2.42 | N*(R/sigma)^2 ingenuo=2.00 | corretto per il raggruppamento (t^2/anni)=1.62
+  2025-26   n= 401 N/anno=  243 R=+0.134 sigma_R=1.37 R/sigma=+0.098 t(sett.)=+1.84 | N*(R/sigma)^2 ingenuo=2.34 | corretto per il raggruppamento (t^2/anni)=2.06
+--- stress: slippage sullo stop 100 pb invece di 5 (moneta nuova, strizzata degli short dentro l'ora)
+  R medio +0.152 (verifica +0.113)
+--- stress: i 5 trade migliori di ogni anno tolti
+  R medio +0.044
+--- stress: funding raddoppiato a sfavore (-0,022 R in piu')
+  R medio +0.157
+--- bootstrap a blocchi settimanali (2000 ricampionamenti): intervallo al 90% di R medio
+  [+0.096, +0.269]; probabilita' R<=0: 0.0%
+
+=== GAP-CME BTC (in osservazione)
+  n=180 N/anno=26 R=+0.151 sigma_R=0.98 R/sigma=+0.154 | N*(R/sigma)^2=0.63
+
+scritti trades.parquet (953, 11) e returns.parquet (2496, 2) (rischio 0,5% del capitale per trade, P&L al giorno di uscita)
+  trials_depeg.json                8
+  trials_dipiso.json               11
+  trials_funding.json              32
+  trials_gap.json                  25
+  trials_listing.json              12
+  trials_listing_short.json        15
+  trials_macro.json                25
+  trials_mosse.json                35
+  trials_orologio.json             36
+PROVE TOTALI A6: 199
