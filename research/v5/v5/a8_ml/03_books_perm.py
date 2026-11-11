@@ -43,18 +43,21 @@ BK['NON alta (media+bassa)'] = dict(gate=~alta)
 for q in (0.5, 0.7, 0.8, 0.9): BK[f'modello p>=q{q:.1f} ex-ante'] = dict(gate=ok & (pp >= exante_thr(pp, q)))
 BK['alta E modello p>=mediana'] = dict(gate=alta & ok & (pp >= exante_thr(pp, 0.5))); BK['alta E modello p>=mediana + uscita bassa'] = dict(gate=alta & ok & (pp >= exante_thr(pp, 0.5)), conv_exit=True)
 BK['alta E modello p<mediana (controprova)'] = dict(gate=alta & ok & (pp < exante_thr(pp, 0.5)))
+g9 = ok & (pp >= exante_thr(pp, 0.9)); BK['alta OPPURE modello p>=q0.9'] = dict(gate=alta | g9)
 pr = P['HGBR'].values; BK['[secondario] HGBR E[R]>=q0.8 ex-ante'] = dict(gate=np.isfinite(pr) & (pr >= exante_thr(pr, 0.8)))
 rows = []; TR = {}
 for k, kw in BK.items(): TR[k] = book(**kw); rows.append(line(k, TR[k])); ntr += 1
 A = pd.DataFrame(rows); print(A.round(3).to_string(index=False))
+v_ = (D.date >= SPL).values
+print(f"giorni-candidato in verifica: alta {alta[v_].sum()}, modello q0.9 {g9[v_].sum()} (di cui alta: {(g9 & alta)[v_].sum()}), modello q0.8 {BK['modello p>=q0.8 ex-ante']['gate'][v_].sum()} (di cui alta: {(BK['modello p>=q0.8 ex-ante']['gate'] & alta)[v_].sum()})")
 print('\n-- robustezza in VERIFICA: costi x2, ritardo +1 ora (12 barre 5m), ritardo +1 giorno --'); rows = []
-for k in ('v4: alta + uscita bassa', 'sempre long (nessun filtro)', 'modello p>=q0.8 ex-ante', 'alta E modello p>=mediana'):
-    kw = BK[k]; v = lambda T: rstats(T[T.entry >= SPL].R); g1 = np.roll(kw['gate'], 3)   # +1 giorno: il segnale di ieri (3 coin per data)
+for k in ('v4: alta + uscita bassa', 'sempre long (nessun filtro)', 'modello p>=q0.8 ex-ante', 'modello p>=q0.9 ex-ante', 'alta E modello p>=mediana', '[secondario] HGBR E[R]>=q0.8 ex-ante'):
+    kw = BK[k]; v = lambda T: rstats(T[T.entry >= SPL].R); 
     a, b, c_ = v(book(**kw, cm=2.0)), v(book(**kw, delay=12)), v(book(**{**kw, 'gate': np.concatenate((np.zeros(0, bool), pd.Series(kw['gate']).groupby(D.coin).shift(1).fillna(False).values))}))
     rows.append(dict(libro=k, R_base=v(TR[k])['R'], R_costi2=a['R'], t_costi2=a['t'], R_rit1h=b['R'], t_rit1h=b['t'], R_rit1g=c_['R'], t_rit1g=c_['t']))
 print(pd.DataFrame(rows).round(3).to_string(index=False))
 print('\n-- per anno (R medio / n): --'); rows = []
-for k in ('v4: alta + uscita bassa', 'sempre long (nessun filtro)', 'modello p>=q0.8 ex-ante', 'alta E modello p>=mediana'):
+for k in ('v4: alta + uscita bassa', 'sempre long (nessun filtro)', 'modello p>=q0.8 ex-ante', 'modello p>=q0.9 ex-ante', 'alta E modello p>=mediana', '[secondario] HGBR E[R]>=q0.8 ex-ante'):
     T = TR[k]; g = T.groupby(T.entry.dt.year).R.agg(['mean', 'size']); rows.append(dict(libro=k, **{str(y): f"{g.loc[y, 'mean']:+.2f}/{int(g.loc[y, 'size'])}" for y in g.index}))
 print(pd.DataFrame(rows).to_string(index=False))
 keep = TR['modello p>=q0.8 ex-ante'].drop(columns='j').assign(why_entry='A8 HGBC p>=q0.8 ex-ante (NON raccomandato: nessun vantaggio in verifica)')
@@ -87,25 +90,38 @@ print('\nlogistica sui 12 segnali: coefficiente medio (standardizzato) e quota d
 print('\n== C. Test di permutazione (modello primario, pipeline completa ristimata a ogni permutazione) ==')
 NP = int(sys.argv[1]) if len(sys.argv) > 1 else 300; rng = np.random.default_rng(42); mon = D['date'].dt.to_period('M').astype(str).values
 sel = (D['date'] <= SEL_LAST).values; ver = (D['date'] >= SPL).values
-def stat(p, R):
+dl = D['days_L'].values; CI = {c: np.where((D.coin == c).values)[0] for c in COINS}; CFGR = FZ['fam_best']['HGBR']
+def fast_book(p, R, dd, q):
+    """Libro non sovrapposto calcolato dalle righe del dataset (prossimo ingresso = ingresso + durata). Ritorna R dei trade in verifica."""
+    g = np.isfinite(p) & (p >= exante_thr(p, q)); out = []
+    for c in COINS:
+        ix = CI[c]; nxt = -1
+        for n_, k in enumerate(ix):
+            if n_ < nxt or not g[k]: continue
+            if ver[k]: out.append(R[k])
+            nxt = n_ + int(dd[k])
+    return np.array(out)
+def stat(p, R, dd, pr_):
     o = {}
     for lab, m, bl in (('sel', sel, SEL_BLOCKS), ('ver', ver, VER_BLOCKS)):
         mm = m & np.isfinite(p); o[f'ic_{lab}'] = block_ic(D, np.where(m, p, np.nan), R, bl).mean(); o[f'top20_{lab}'] = top_minus_all(p[mm], R[mm], 0.8); o[f'top10_{lab}'] = top_minus_all(p[mm], R[mm], 0.9)
+    for q in (0.8, 0.9): x = fast_book(p, R, dd, q); o[f'libro_q{q}_ver_R'] = x.mean() if len(x) > 5 else np.nan; o[f'libro_q{q}_ver_t'] = x.mean() / x.std(ddof=1) * np.sqrt(len(x)) if len(x) > 5 else np.nan
+    mm = ver & np.isfinite(pr_); o['HGBR_top20_ver'] = top_minus_all(pr_[mm], R[mm], 0.8); x = fast_book(pr_, R, dd, 0.8); o['HGBR_libro_q0.8_ver_R'] = x.mean(); o['HGBR_libro_q0.8_ver_t'] = x.mean() / x.std(ddof=1) * np.sqrt(len(x))
     return o
-real = stat(pp, r); t0 = time.time()
+real = stat(pp, r, dl, pr); t0 = time.time()
 def perm_month():
-    R = r.copy()
-    for m in np.unique(mon): ix = np.where(mon == m)[0]; R[ix] = R[rng.permutation(ix)]
-    return R
+    ix = np.arange(len(D))
+    for m in np.unique(mon): w = np.where(mon == m)[0]; ix[w] = rng.permutation(w)
+    return r[ix], dl[ix]
 udates = np.sort(D['date'].unique())
 def perm_shift():
     """Spostamento circolare delle etichette nel tempo (stesso scarto per tutti i coin): conserva l'autocorrelazione di etichette e feature."""
-    k = int(rng.integers(60, len(udates) - 60)); mp = dict(zip(udates, np.roll(udates, k))); R = np.full(len(D), np.nan)
-    src = pd.Series(r, index=pd.MultiIndex.from_arrays([D.coin, D.date])); key = pd.MultiIndex.from_arrays([D.coin, D.date.map(mp)])
-    R = src.reindex(key).values; R[np.isnan(R)] = rng.choice(r, np.isnan(R).sum()); return R
-for nm, fn in (('mescolate entro il mese', perm_month), ('spostamento circolare', perm_shift)):
+    k = int(rng.integers(60, len(udates) - 60)); mp = dict(zip(udates, np.roll(udates, k)))
+    src = pd.Series(np.arange(len(D)), index=pd.MultiIndex.from_arrays([D.coin, D.date])); key = pd.MultiIndex.from_arrays([D.coin, D.date.map(mp)])
+    ix = src.reindex(key).values; na = np.isnan(ix); ix[na] = rng.integers(0, len(D), na.sum()); ix = ix.astype(int); return r[ix], dl[ix]
+for nm, fn in (('mescolate entro il mese', perm_month), ('spostamento circolare (>=60 giorni)', perm_shift)):
     S = []
-    for _ in range(NP): R = fn(); S.append(stat(walk(D, F, PRIM, ALLB, R=R), R))
+    for _ in range(NP): R, dd = fn(); S.append(stat(walk(D, F, PRIM, ALLB, R=R), R, dd, walk(D, F, CFGR, ALLB, R=R)))
     S = pd.DataFrame(S); print(f'\n-- nullo: etichette {nm} ({NP} permutazioni, {time.time()-t0:.0f}s) --')
     print(pd.DataFrame(dict(reale=pd.Series(real), nullo_media=S.mean(), nullo_sd=S.std(), nullo_q95=S.quantile(0.95), p_value=pd.Series({k: ((S[k] >= real[k]).sum() + 1) / (NP + 1) for k in real}))).round(3).to_string())
 print(f'\nvarianti (libri) provate in questo script: {ntr}')

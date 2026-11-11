@@ -60,7 +60,7 @@ def features(dt: Data, c: str) -> pd.DataFrame:
     X['perp_spot_vol'] = np.log(gp['quote_volume'].sum().reindex(idx) / qv)
     f = dt.F[c].reindex(idx); X['fund1'] = f * 365; X['fund7'] = f.rolling(7).mean() * 365; X['fund30'] = f.rolling(30).mean() * 365
     # open interest (dal 2021-12)
-    m = dt.MET[c]; oi = m['sum_open_interest'].groupby(m.index.normalize()).last().reindex(idx)
+    m = dt.MET[c]; oi = m['sum_open_interest'].groupby(m.index.normalize()).last().reindex(idx).replace(0, np.nan)   # 0 = buco nei dati
     X['oi1'] = np.log(oi / oi.shift(1)); X['oi7'] = np.log(oi / oi.shift(7))
     X['top_ls'] = m['sum_toptrader_long_short_ratio'].groupby(m.index.normalize()).last().reindex(idx)
     # volatilita' implicita
@@ -75,7 +75,7 @@ def features(dt: Data, c: str) -> pd.DataFrame:
         a = dt.y[k]['adj']; X[f'{nm}_ret5'] = np.log(a / a.shift(5)).reindex(idx, method='ffill'); X[f'{nm}_ret20'] = np.log(a / a.shift(20)).reindex(idx, method='ffill')
     vx = dt.y['^VIX']['close']; X['vix'] = vx.reindex(idx, method='ffill'); X['vix_ch5'] = np.log(vx / vx.shift(5)).reindex(idx, method='ffill')
     X['fng'] = dt.fng.shift(1).reindex(idx, method='ffill')     # il valore datato t esce a inizio giornata t: qui un giorno in piu' di cautela
-    X = X.shift(1)                                              # nota la sera prima
+    X = X.replace([np.inf, -np.inf], np.nan).shift(1)                                              # nota la sera prima
     X['dow'] = idx.dayofweek; X['dom'] = idx.day; X['coin_id'] = COINS.index(c)
     X['atr_stop'] = ((d['high'] - d['low']) / cl).rolling(14).mean().shift(1)   # come nel libro v4
     X['tier'] = E.conviction(S, 'crypto')['tier'].shift(1)

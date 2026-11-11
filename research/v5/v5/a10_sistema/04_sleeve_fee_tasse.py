@@ -44,11 +44,24 @@ for fee in (0.0005, 0.0010, 0.0025, 0.0050):
     m = book.ma_trend_returns(B['adj'], rfd, fee).ret.loc['2018':]; trial('fee', f'MA-TREND {fee*1e4:.0f} pb per lato', m.reindex(IDX).fillna(0)); trial('fee', f'   -> portafoglio con MA-TREND {fee*1e4:.0f} pb', port_with({'MA-TREND': m}))
 best = port_with({'CR-TREND': rows['CT 0.001'], 'CR-XSMOM': rows['XS 0.001'], 'EQ-MR': rows['EQ 0.0001 0.005']}); trial('fee', 'PORTAFOGLIO: crypto 10 pb + EQ-MR su micro future', best)
 print('   Commissione minima per ordine (conto piccolo): numero di ordini l\'anno e costo fisso')
-Wm = B['Wma'].loc['2018-04':]; nord_ma = ((Wm.diff().abs() > 1e-6).sum(axis=1)).mean() * 252; Weq = B['Weq'].loc['2018-04':]; nord_eq = ((Weq.diff().abs() > 1e-6).sum(axis=1)).mean() * 252
-print(f'   MA-TREND: {nord_ma:.0f} ordini/anno; EQ-MR: {nord_eq:.0f} ordini/anno')
-for cap in (12000, 50000, 200000):
-    kma = A6['MA-TREND'].mean() * cap; avg_order = kma * B['TO']['MA-TREND'].loc['2018-04':].mean() * 365 / nord_ma
-    print(f'   capitale {cap:>7,} $: ordine medio MA-TREND {avg_order:6.0f} $ -> minimo 1,25 EUR = {1.35/avg_order*1e4:5.0f} pb per lato (ipotesi di ricerca: 10 pb); costo fisso MA+EQ {(nord_ma*1.35+nord_eq*1.0)/cap:.2%} del conto l\'anno')
+def count_orders(W, R, band):
+    """Replica le decisioni di gerva.backtest.run (lag 1, senza costi): numero di ordini e controvalore scambiato."""
+    cols = list(W.columns); Rv = R[cols].reindex(W.index).fillna(0.0).values; Wv = W.fillna(0.0).values; w = np.zeros(len(cols)); n = 0; tv = 0.0; days = 0
+    for t in range(len(Wv)):
+        g = 1 + float(w @ Rv[t]); w = w * (1 + Rv[t]) / g; tgt = Wv[t]
+        mv = (np.abs(tgt - w) > band) | ((tgt == 0) & (w != 0)); tr = np.abs(np.where(mv, tgt, w) - w)
+        if W.index[t] >= pd.Timestamp('2018-04-01'): n += int((tr > 1e-9).sum()); tv += tr.sum(); days += 1
+        w = np.where(mv, tgt, w)
+    return n / days, tv / days
+c17 = B['adj'][book.TREND_UNIVERSE].loc['2003':]; n_ma, tv_ma = count_orders(book.ma_trend(B['adj']), c17.pct_change(fill_method=None), 0.02); n_ma *= 252; tv_ma *= 252
+Weq = book.eq_mr(H, Lo, Cc).loc['2018-04':]; n_eq = (Weq.diff().abs() > 1e-9).sum().sum() / len(Weq) * 252; tv_eq = Weq.diff().abs().sum().sum() / len(Weq) * 252
+n_ct, tv_ct = count_orders(book.cr_trend(cc), cr[['BTC', 'ETH']], 0.03); n_xs, tv_xs = count_orders(book.cr_xsmom(cc, cdv), cr, 0.03)
+print(f'   ordini/anno: MA-TREND {n_ma:.0f} (giro {tv_ma:.1f}x), EQ-MR {n_eq:.0f} (giro {tv_eq:.1f}x), CR-TREND {n_ct*365:.0f} (giro {tv_ct*365:.1f}x), CR-XSMOM {n_xs*365:.0f} (giro {tv_xs*365:.1f}x)')
+for cap in (12000, 50000, 200000, 1000000):
+    kma = A6['MA-TREND'].mean() * cap; o_ma = kma * tv_ma / n_ma; keq = A6['EQ-MR'].mean() * cap; o_eq = keq * tv_eq / n_eq
+    fee_ma = max(1.35, 0.0005 * o_ma) / o_ma + 0.0005; mes = 0.5 * 5 * 6000
+    print(f'   capitale {cap:>9,} $: ordine medio MA-TREND {o_ma:7.0f} $ -> commissione IBKR (0,05%, minimo 1,25 EUR) + mezzo spread 5 pb = {fee_ma*1e4:5.0f} pb per lato (ricerca: 10 pb); '
+          f'ordine medio EQ-MR {o_eq:7.0f} $ = {o_eq/mes:5.2f} contratti MES per gamba; costo fisso minimo MA {n_ma*1.35/cap:.2%} del conto l\'anno')
 
 print('\n== 5. Sleeve crypto giornalieri e libro dei trade: stesso trend?')
 Tm, mg, no, rk = trade_book()
