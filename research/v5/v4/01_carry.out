@@ -150,48 +150,48 @@ migliore scelta L=3 costi zero (lordo)                         Sh  5.46 |  9.85 
    rendimento annuo % per anno: {2020: 10.4, 2021: 28.6, 2022: 0.1, 2023: 3.1, 2024: 7.4, 2025: 0.2, 2026: -0.1}
 
 == 1d. Hyperliquid: funding orario reale 2023-05 -> oggi (solo periodo di VERIFICA)
-monete Hyperliquid scaricate: ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'DOGE', 'ADA', 'LTC', 'LINK', 'AVAX', 'SUI', 'ARB', 'OP']
+monete Hyperliquid scaricate: ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'DOGE', 'ADA', 'LTC', 'LINK', 'AVAX', 'SUI', 'ARB', 'OP', 'APT', 'NEAR']
 funding medio annuo (media semplice sulle monete in comune; 2023 = da giugno; 2026 = fino a ottobre):
       HL %/anno  Binance %/anno
-2023        4.7             4.7
-2024       22.5            12.2
-2025        7.4             3.3
-2026        3.2             1.7
-spread HL-Binance per moneta, % annuo medio: {'BTC': 7.1, 'ETH': 7.2, 'SOL': 7.5, 'BNB': 5.1, 'XRP': 2.2, 'DOGE': 9.2, 'ADA': 1.0, 'LTC': 4.6, 'LINK': 7.3, 'AVAX': 3.7, 'SUI': 2.4, 'ARB': 3.2, 'OP': 0.8}
-   dev.std giornaliera dello spread (pb): {'BTC': 3.8, 'ETH': 3.6, 'SOL': 5.6, 'BNB': 5.0, 'XRP': 4.4, 'DOGE': 8.5, 'ADA': 4.5, 'LTC': 4.2, 'LINK': 6.2, 'AVAX': 6.6, 'SUI': 8.8, 'ARB': 4.7, 'OP': 6.2}  autocorrelazione a 1g: {'BTC': np.float64(0.67), 'ETH': np.float64(0.66), 'SOL': np.float64(0.73), 'BNB': np.float64(0.69), 'XRP': np.float64(0.74), 'DOGE': np.float64(0.81), 'ADA': np.float64(0.77), 'LTC': np.float64(0.78), 'LINK': np.float64(0.73), 'AVAX': np.float64(0.73), 'SUI': np.float64(0.8), 'ARB': np.float64(0.62), 'OP': np.float64(0.67)}
-HL carry centrale (spot 30pb + HL 7pb)                         Sh  3.99 |   nan |  3.99  CAGR    9.3%    nan%    9.3%  vol    1.1%  DD   -0.4%   -0.4% {'turn_annuo': 2.4, 'liquidazioni': 5, 'ripristini': 59}
-HL carry centrale, costi x2                                    Sh  1.87 |   nan |  1.87  CAGR    7.1%    nan%    7.1%  vol    1.3%  DD   -1.3%   -1.3% {'turn_annuo': 2.4, 'liquidazioni': 5, 'ripristini': 59}
-HL carry centrale, ritardo +1                                  Sh  3.73 |   nan |  3.73  CAGR    9.0%    nan%    9.0%  vol    1.1%  DD   -0.5%   -0.5% {'turn_annuo': 2.4, 'liquidazioni': 5, 'ripristini': 55}
-HL carry centrale, spot 10 pb (IPOTESI)                        Sh  5.23 |   nan |  5.23  CAGR   10.5%    nan%   10.5%  vol    1.1%  DD   -0.1%   -0.1% {'turn_annuo': 2.4, 'liquidazioni': 5, 'ripristini': 59}
-HL carry centrale, spot HL 7pb taker (solo BTC/ETH/SOL esiston Sh  5.42 |   nan |  5.42  CAGR   10.7%    nan%   10.7%  vol    1.1%  DD   -0.1%   -0.1% {'turn_annuo': 2.4, 'liquidazioni': 5, 'ripristini': 59}
-HL carry k3 en0.1 N3                                           Sh  0.83 |   nan |  0.83  CAGR    6.0%    nan%    6.0%  vol    1.7%  DD   -3.3%   -3.3% 
-HL carry k3 en0.1 N8                                           Sh  0.44 |   nan |  0.44  CAGR    5.1%    nan%    5.1%  vol    1.2%  DD   -2.9%   -2.9% 
-HL carry k3 en0.2 N3                                           Sh  3.23 |   nan |  3.23  CAGR    8.9%    nan%    8.9%  vol    1.3%  DD   -0.7%   -0.7% 
-HL carry k3 en0.2 N8                                           Sh  2.65 |   nan |  2.65  CAGR    7.4%    nan%    7.4%  vol    1.0%  DD   -0.4%   -0.4% 
-HL carry k14 en0.1 N3                                          Sh  4.04 |   nan |  4.04  CAGR    9.6%    nan%    9.6%  vol    1.2%  DD   -0.8%   -0.8% 
-HL carry k14 en0.1 N8                                          Sh  4.23 |   nan |  4.23  CAGR    8.9%    nan%    8.9%  vol    1.0%  DD   -0.3%   -0.3% 
-HL carry k14 en0.2 N3                                          Sh  3.61 |   nan |  3.61  CAGR    9.1%    nan%    9.1%  vol    1.2%  DD   -0.7%   -0.7% 
-HL carry k14 en0.2 N8                                          Sh  3.42 |   nan |  3.42  CAGR    7.9%    nan%    7.9%  vol    0.9%  DD   -0.3%   -0.3% 
-   HL carry centrale: rendimento % per anno (2023 da giugno, 2026 fino a ottobre): {2023: 7.4, 2024: 19.2, 2025: 4.8, 2026: 1.1}  giorni investiti: {2023: 0.68, 2024: 1.0, 2025: 0.83, 2026: 0.32}
+2023        4.3             4.4
+2024       23.5            12.6
+2025        6.3             2.1
+2026        3.1             1.4
+spread HL-Binance per moneta, % annuo medio: {'BTC': 7.1, 'ETH': 7.2, 'SOL': 7.5, 'BNB': 5.1, 'XRP': 2.2, 'DOGE': 9.2, 'ADA': 1.0, 'LTC': 4.6, 'LINK': 7.3, 'AVAX': 3.7, 'SUI': 2.4, 'ARB': 3.2, 'OP': 0.8, 'APT': 1.0, 'NEAR': 13.0}
+   dev.std giornaliera dello spread (pb): {'BTC': 3.8, 'ETH': 3.6, 'SOL': 5.6, 'BNB': 5.0, 'XRP': 4.4, 'DOGE': 8.5, 'ADA': 4.5, 'LTC': 4.2, 'LINK': 6.2, 'AVAX': 6.6, 'SUI': 8.8, 'ARB': 4.7, 'OP': 6.2, 'APT': 5.7, 'NEAR': 6.4}  autocorrelazione a 1g: {'BTC': np.float64(0.67), 'ETH': np.float64(0.66), 'SOL': np.float64(0.73), 'BNB': np.float64(0.69), 'XRP': np.float64(0.74), 'DOGE': np.float64(0.81), 'ADA': np.float64(0.77), 'LTC': np.float64(0.78), 'LINK': np.float64(0.73), 'AVAX': np.float64(0.73), 'SUI': np.float64(0.8), 'ARB': np.float64(0.62), 'OP': np.float64(0.67), 'APT': np.float64(0.64), 'NEAR': np.float64(0.69)}
+HL carry centrale (spot 30pb + HL 7pb)                         Sh  4.34 |   nan |  4.34  CAGR    9.8%    nan%    9.8%  vol    1.1%  DD   -0.4%   -0.4% {'turn_annuo': 2.5, 'liquidazioni': 8, 'ripristini': 70}
+HL carry centrale, costi x2                                    Sh  2.08 |   nan |  2.08  CAGR    7.5%    nan%    7.5%  vol    1.3%  DD   -1.3%   -1.3% {'turn_annuo': 2.5, 'liquidazioni': 8, 'ripristini': 70}
+HL carry centrale, ritardo +1                                  Sh  4.03 |   nan |  4.03  CAGR    9.5%    nan%    9.5%  vol    1.2%  DD   -0.5%   -0.5% {'turn_annuo': 2.5, 'liquidazioni': 9, 'ripristini': 63}
+HL carry centrale, spot 10 pb (IPOTESI)                        Sh  5.66 |   nan |  5.66  CAGR   11.1%    nan%   11.1%  vol    1.1%  DD   -0.2%   -0.2% {'turn_annuo': 2.5, 'liquidazioni': 8, 'ripristini': 70}
+HL carry centrale, spot HL 7pb taker (solo BTC/ETH/SOL esiston Sh  5.85 |   nan |  5.85  CAGR   11.3%    nan%   11.3%  vol    1.1%  DD   -0.2%   -0.2% {'turn_annuo': 2.5, 'liquidazioni': 8, 'ripristini': 70}
+HL carry k3 en0.1 N3                                           Sh  1.69 |   nan |  1.69  CAGR    7.6%    nan%    7.6%  vol    1.7%  DD   -2.9%   -2.9% 
+HL carry k3 en0.1 N8                                           Sh  0.82 |   nan |  0.82  CAGR    5.6%    nan%    5.6%  vol    1.3%  DD   -3.0%   -3.0% 
+HL carry k3 en0.2 N3                                           Sh  3.68 |   nan |  3.68  CAGR    9.7%    nan%    9.7%  vol    1.3%  DD   -0.7%   -0.7% 
+HL carry k3 en0.2 N8                                           Sh  3.01 |   nan |  3.01  CAGR    8.0%    nan%    8.0%  vol    1.1%  DD   -0.4%   -0.4% 
+HL carry k14 en0.1 N3                                          Sh  4.27 |   nan |  4.27  CAGR   10.1%    nan%   10.1%  vol    1.2%  DD   -1.0%   -1.0% 
+HL carry k14 en0.1 N8                                          Sh  4.45 |   nan |  4.45  CAGR    9.4%    nan%    9.4%  vol    1.0%  DD   -0.5%   -0.5% 
+HL carry k14 en0.2 N3                                          Sh  3.83 |   nan |  3.83  CAGR    9.6%    nan%    9.6%  vol    1.2%  DD   -0.7%   -0.7% 
+HL carry k14 en0.2 N8                                          Sh  3.75 |   nan |  3.75  CAGR    8.4%    nan%    8.4%  vol    1.0%  DD   -0.3%   -0.3% 
+   HL carry centrale: rendimento % per anno (2023 da giugno, 2026 fino a ottobre): {2023: 7.6, 2024: 19.9, 2025: 4.9, 2026: 1.8}  giorni investiti: {2023: 0.68, 2024: 1.0, 2025: 0.83, 2026: 0.75}
    HL sempre dentro BTC+ETH+SOL: rendimento % per anno: {2023: 7.4, 2024: 20.1, 2025: 6.2, 2026: 2.5}
 HL sempre dentro BTC+ETH+SOL                                   Sh  5.55 |   nan |  5.55  CAGR   10.4%    nan%   10.4%  vol    1.0%  DD   -1.1%   -1.1% 
-CARRY-XS incollato (Binance <=2023-05, Hyperliquid dopo)       Sh  5.23 |  7.43 |  3.33  CAGR   10.9%   14.6%    8.4%  vol    1.4%  DD   -1.0%   -0.4% 
-   >> CANDIDATO CARRY-XS-HL (incollato): corr mensile {'CR-TREND': 0.5, 'CR-XSMOM': 0.3, 'EQ-MR': 0.08, 'MA-TREND': 0.24, 'PORT': 0.36}  Sharpe/anno {2020: 11.6, 2021: 10.79, 2022: -11.71, 2023: 2.35, 2024: 8.34, 2025: 0.88, 2026: -6.17}  Sharpe rf=0 7.46
+CARRY-XS incollato (Binance <=2023-05, Hyperliquid dopo)       Sh  5.39 |  7.43 |  3.66  CAGR   11.1%   14.6%    8.9%  vol    1.4%  DD   -1.0%   -0.4% 
+   >> CANDIDATO CARRY-XS-HL (incollato): corr mensile {'CR-TREND': 0.5, 'CR-XSMOM': 0.3, 'EQ-MR': 0.07, 'MA-TREND': 0.25, 'PORT': 0.36}  Sharpe/anno {2020: 11.6, 2021: 10.79, 2022: -11.71, 2023: 2.5, 2024: 8.53, 2025: 1.07, 2026: -3.85}  Sharpe rf=0 7.60
 
 == 1e. Arbitraggio di funding Hyperliquid vs Binance (perp contro perp; Binance futures NON accessibile a un retail italiano: riferimento)
-spread HL-BN k3 en0.05                                         Sh -1.22 |   nan | -1.22  CAGR    3.4%    nan%    3.4%  vol    0.9%  DD   -3.4%   -3.4% esposizione media 0.71
-spread HL-BN k3 en0.1                                          Sh -0.16 |   nan | -0.16  CAGR    4.4%    nan%    4.4%  vol    0.8%  DD   -1.4%   -1.4% esposizione media 0.45
-spread HL-BN k3 en0.2                                          Sh  0.00 |   nan |  0.00  CAGR    4.5%    nan%    4.5%  vol    0.7%  DD   -0.3%   -0.3% esposizione media 0.24
-spread HL-BN k7 en0.05                                         Sh  2.04 |   nan |  2.04  CAGR    6.3%    nan%    6.3%  vol    0.8%  DD   -0.4%   -0.4% esposizione media 0.72
-spread HL-BN k7 en0.1                                          Sh  1.95 |   nan |  1.95  CAGR    6.1%    nan%    6.1%  vol    0.8%  DD   -0.2%   -0.2% esposizione media 0.45
-spread HL-BN k7 en0.2                                          Sh  0.26 |   nan |  0.26  CAGR    4.7%    nan%    4.7%  vol    0.7%  DD   -0.1%   -0.1% esposizione media 0.22
-spread HL-BN k14 en0.05                                        Sh  2.92 |   nan |  2.92  CAGR    6.9%    nan%    6.9%  vol    0.8%  DD   -0.1%   -0.1% esposizione media 0.72
-spread HL-BN k14 en0.1                                         Sh  2.01 |   nan |  2.01  CAGR    6.1%    nan%    6.1%  vol    0.7%  DD   -0.2%   -0.2% esposizione media 0.45
-spread HL-BN k14 en0.2                                         Sh -0.28 |   nan | -0.28  CAGR    4.4%    nan%    4.4%  vol    0.6%  DD   -0.1%   -0.1% esposizione media 0.22
-spread HL-BN k7 en0.10 costi x2                                Sh -0.34 |   nan | -0.34  CAGR    4.3%    nan%    4.3%  vol    0.8%  DD   -0.8%   -0.8% 
-spread HL-BN k7 en0.10 ritardo +1                              Sh  1.32 |   nan |  1.32  CAGR    5.5%    nan%    5.5%  vol    0.7%  DD   -0.2%   -0.2% 
-spread HL-BN k7 en0.10, nozionale 2x per gamba                 Sh  4.89 |   nan |  4.89  CAGR   12.5%    nan%   12.5%  vol    1.5%  DD   -0.4%   -0.4% 
-   >> CANDIDATO FUND-ARB HL-BN (k7, 10%, 2x): corr mensile {'CR-TREND': 0.45, 'CR-XSMOM': 0.34, 'EQ-MR': 0.19, 'MA-TREND': 0.16, 'PORT': 0.44}  Sharpe/anno {2023: 14.27, 2024: 6.0, 2025: -0.13, 2026: -5.93}  Sharpe rf=0 7.78
+spread HL-BN k3 en0.05                                         Sh -1.19 |   nan | -1.19  CAGR    3.5%    nan%    3.5%  vol    0.9%  DD   -3.7%   -3.7% esposizione media 0.71
+spread HL-BN k3 en0.1                                          Sh -0.31 |   nan | -0.31  CAGR    4.3%    nan%    4.3%  vol    0.8%  DD   -2.0%   -2.0% esposizione media 0.46
+spread HL-BN k3 en0.2                                          Sh  0.04 |   nan |  0.04  CAGR    4.6%    nan%    4.6%  vol    0.7%  DD   -0.3%   -0.3% esposizione media 0.24
+spread HL-BN k7 en0.05                                         Sh  1.99 |   nan |  1.99  CAGR    6.2%    nan%    6.2%  vol    0.8%  DD   -0.6%   -0.6% esposizione media 0.72
+spread HL-BN k7 en0.1                                          Sh  1.95 |   nan |  1.95  CAGR    6.1%    nan%    6.1%  vol    0.8%  DD   -0.3%   -0.3% esposizione media 0.46
+spread HL-BN k7 en0.2                                          Sh  0.47 |   nan |  0.47  CAGR    4.9%    nan%    4.9%  vol    0.7%  DD   -0.1%   -0.1% esposizione media 0.23
+spread HL-BN k14 en0.05                                        Sh  2.87 |   nan |  2.87  CAGR    6.9%    nan%    6.9%  vol    0.8%  DD   -0.3%   -0.3% esposizione media 0.72
+spread HL-BN k14 en0.1                                         Sh  2.05 |   nan |  2.05  CAGR    6.1%    nan%    6.1%  vol    0.7%  DD   -0.3%   -0.3% esposizione media 0.45
+spread HL-BN k14 en0.2                                         Sh -0.10 |   nan | -0.10  CAGR    4.5%    nan%    4.5%  vol    0.6%  DD   -0.1%   -0.1% esposizione media 0.22
+spread HL-BN k7 en0.10 costi x2                                Sh -0.36 |   nan | -0.36  CAGR    4.2%    nan%    4.2%  vol    0.8%  DD   -1.0%   -1.0% 
+spread HL-BN k7 en0.10 ritardo +1                              Sh  1.42 |   nan |  1.42  CAGR    5.6%    nan%    5.6%  vol    0.7%  DD   -0.3%   -0.3% 
+spread HL-BN k7 en0.10, nozionale 2x per gamba                 Sh  4.87 |   nan |  4.87  CAGR   12.5%    nan%   12.5%  vol    1.5%  DD   -0.7%   -0.7% 
+   >> CANDIDATO FUND-ARB HL-BN (k7, 10%, 2x): corr mensile {'CR-TREND': 0.5, 'CR-XSMOM': 0.36, 'EQ-MR': 0.16, 'MA-TREND': 0.15, 'PORT': 0.46}  Sharpe/anno {2023: 15.22, 2024: 6.33, 2025: -0.5, 2026: -5.66}  Sharpe rf=0 7.75
 
 == capacita': volume giornaliero mediano 2026 dei perp (mln $): {'MATIC': 0.0, 'EOS': 0.0, 'FTT': 0.0, 'LUNA': 0.0, 'RUNE': 5.0, 'SAND': 12.0, 'SEI': 17.0, 'TON': 18.0, 'ATOM': 18.0, 'ETC': 24.0, 'TIA': 26.0, 'WIF': 28.0, 'OP': 31.0, 'HBAR': 31.0, 'INJ': 33.0, 'APT': 36.0, 'ARB': 43.0, 'XLM': 45.0, 'TRX': 46.0, 'DOT': 66.0, 'LTC': 66.0, 'UNI': 76.0, 'AAVE': 83.0, 'BCH': 88.0, 'FIL': 95.0, 'AVAX': 116.0, 'LINK': 119.0, 'NEAR': 126.0, 'ADA': 176.0, 'SUI': 190.0, 'BNB': 318.0, 'DOGE': 445.0, 'XRP': 668.0, 'SOL': 1792.0, 'ETH': 8800.0, 'BTC': 11118.0}
 

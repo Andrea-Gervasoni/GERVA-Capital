@@ -1,0 +1,33 @@
+== 6a. BTC/ETH/SOL, barre da 5 minuti. Guadagno LORDO medio per esecuzione (pb) = distanza d - selezione avversa
+ d_pb       esecuzione  quota_barre_eseguite  lordo_pb  lordo_scelta  lordo_verifica  selezione_avversa_pb  netto_uscita_maker_base  netto_uscita_taker  netto_con_sconto_massimo  sharpe_netto_maker
+  1.0            tocco                 0.880     -1.03         -1.25           -0.92                  2.03                    -4.03               -7.53                     -0.43             -130.05
+  1.0 superato di 1 pb                 0.823     -2.02         -2.23           -1.90                  3.02                    -5.02               -8.52                     -1.42             -110.10
+  2.0            tocco                 0.823     -1.02         -1.23           -0.90                  3.02                    -4.02               -7.52                     -0.42              -94.84
+  2.0 superato di 1 pb                 0.768     -2.02         -2.28           -1.87                  4.02                    -5.02               -8.52                     -1.42              -87.91
+  5.0            tocco                 0.670     -0.93         -1.18           -0.78                  5.93                    -3.93               -7.43                     -0.33              -56.17
+  5.0 superato di 1 pb                 0.625     -1.88         -2.13           -1.73                  6.88                    -4.88               -8.38                     -1.28              -56.00
+ 10.0            tocco                 0.475     -0.69         -0.88           -0.57                 10.69                    -3.69               -7.19                     -0.09              -34.66
+ 10.0 superato di 1 pb                 0.444     -1.64         -1.80           -1.55                 11.64                    -4.64               -8.14                     -1.04              -36.20
+ 20.0            tocco                 0.250     -0.37         -0.43           -0.37                 20.37                    -3.37               -6.87                      0.23              -19.94
+ 20.0 superato di 1 pb                 0.236     -1.35         -1.39           -1.36                 21.35                    -4.35               -7.85                     -0.75              -21.70
+ 40.0            tocco                 0.088      0.12          0.17           -0.02                 39.88                    -2.88               -6.38                      0.72               -9.52
+ 40.0 superato di 1 pb                 0.084     -0.85         -0.80           -0.99                 40.85                    -3.85               -7.35                     -0.25              -10.87
+
+== 6b. Sette alt (XRP DOGE ADA LINK AVAX LTC BNB), barre da 1 ora
+ d_pb       esecuzione  quota_barre_eseguite  lordo_pb  lordo_scelta  lordo_verifica  netto_uscita_maker_base  netto_uscita_taker  sharpe_tot  sharpe_scelta  sharpe_verifica
+ 10.0            tocco                 0.862     -0.51         -0.47           -0.54                    -3.51               -7.01      -15.67         -13.00           -17.85
+ 10.0 superato di 1 pb                 0.849     -1.41         -1.32           -1.47                    -4.41               -7.91      -18.75         -15.75           -21.14
+ 25.0            tocco                 0.679      0.57          1.31            0.09                    -2.43               -5.93       -7.11          -4.66            -8.78
+ 25.0 superato di 1 pb                 0.667     -0.36          0.41           -0.87                    -3.36               -6.86       -9.39          -6.92           -11.07
+ 50.0            tocco                 0.443      1.35          3.11           -0.03                    -1.65               -5.15       -3.30           0.00            -5.55
+ 50.0 superato di 1 pb                 0.436      0.39          2.15           -1.00                    -2.61               -6.11       -4.80          -1.71            -6.92
+100.0            tocco                 0.203      2.37          4.79           -0.14                    -0.63               -4.13       -1.25           1.62            -3.38
+100.0 superato di 1 pb                 0.200      1.31          3.69           -1.17                    -1.69               -5.19       -2.10           0.52            -4.06
+200.0            tocco                 0.061      5.27          6.61            3.63                     2.27               -1.23       -0.34           1.37            -1.68
+200.0 superato di 1 pb                 0.060      4.25          5.60            2.61                     1.25               -2.25       -0.68           0.89            -1.93
+
+Lettura: il "lordo" a barre e' un LIMITE SUPERIORE (priorita' di coda perfetta, nessuna latenza, uscita al prezzo di chiusura senza impatto).
+Lo spread reale su BTC/ETH in Hyperliquid e' di circa 0,1-0,3 pb (1 tick): un retail al livello base paga 1,5 pb per lato da maker, cioe' piu' dello spread che incassa.
+Con d ampi (>= 20 pb) si diventa di fatto una strategia di ritorno alla media intrabarra: l'eventuale margine viene dall'inversione, non dallo spread, e va giudicato come tale.
+
+[mm] varianti provate: 22  (Sharpe di scelta: media -30.87, dev.std 35.01, max 1.62)

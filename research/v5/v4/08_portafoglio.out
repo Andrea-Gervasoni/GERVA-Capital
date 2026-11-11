@@ -1,0 +1,129 @@
+candidates.parquet: (3226, 19) ['STABLE-30 (BTC+ETH se offerta stablecoin cresce)', 'FNG-MOM (BTC+ETH se F&G > media 30g)', 'ORE 21-23 UTC (maker 1,5 pb: IPOTESI)', 'NEW-LIST short 7-90g coperto BTC', 'XS-FUNDING L/S perp (k7, settimanale)', 'CARRY-XS (Binance, centrale, L=3)', 'CARRY-XS-HL (incollato)', 'FUND-ARB HL-BN (k7, 10%, 2x)', 'TSMOM-1H lento solo long (perp)', 'GEX-INTRADAY SPX (MR alto + TF non alto, 60m, 1 pb)', 'CASCATA-OI (h4, 24h)', 'DIP-24h (compra il crollo, perp)', 'FUNDING-BASSO long (95/5, 72h)', 'CONTRO-DETTAGLIO (L/S conti, z30)', 'XS top trader (seguire)', 'PAIRS (migliore in scelta)', 'RESID-REV 1D h5', 'SHORT-VAR BTC+ETH (STIMA, filtro 5 punti)', 'SHORT-VAR BTC+ETH (STIMA, sempre)']
+
+== A. Tutti i candidati (netti dei costi dichiarati; Sharpe in eccesso del tasso a breve; cassa a rendimento zero)
+                                   candidato        dal  sh_tot  sh_scelta  sh_verifica  sh_rf0  cagr  cagr_ver  vol  maxdd  c_CR-TREND  c_CR-XSMOM  c_EQ-MR  c_MA-TREND  c_PORT
+STABLE-30 (BTC+ETH se offerta stablecoin cre 2018-01-02    0.76       0.91         0.48    0.80  0.34      0.18 0.60  -0.72        0.81        0.52    -0.05        0.31    0.61
+        FNG-MOM (BTC+ETH se F&G > media 30g) 2018-01-02    0.71       0.87         0.43    0.77  0.28      0.15 0.46  -0.54        0.73        0.53     0.09        0.20    0.62
+       ORE 21-23 UTC (maker 1,5 pb: IPOTESI) 2020-01-01    0.70       0.46         0.99    0.84  0.16      0.22 0.21  -0.45        0.07        0.08     0.14        0.08    0.16
+            NEW-LIST short 7-90g coperto BTC 2020-06-01    0.26       0.07         0.38    0.31  0.01      0.10 0.58  -0.85       -0.20       -0.20    -0.08       -0.19   -0.23
+       XS-FUNDING L/S perp (k7, settimanale) 2020-09-01    0.58       1.59        -0.14    0.71  0.15     -0.01 0.24  -0.32        0.43        0.28    -0.08        0.21    0.34
+           CARRY-XS (Binance, centrale, L=3) 2020-06-01    3.21       7.43        -2.56    5.69  0.07      0.03 0.01  -0.01        0.44        0.23     0.11        0.20    0.30
+                     CARRY-XS-HL (incollato) 2020-06-01    5.39       7.43         3.66    7.60  0.11      0.09 0.01  -0.01        0.50        0.30     0.07        0.25    0.36
+                FUND-ARB HL-BN (k7, 10%, 2x) 2023-06-01    4.87        NaN         4.87    7.75  0.12      0.12 0.02  -0.01        0.50        0.36     0.16        0.15    0.46
+             TSMOM-1H lento solo long (perp) 2020-01-01    0.71       1.31         0.27    0.85  0.17      0.08 0.20  -0.31        0.57        0.61     0.12        0.26    0.67
+GEX-INTRADAY SPX (MR alto + TF non alto, 60m 2018-01-01   -0.41       1.66        -1.21    0.37  0.02     -0.01 0.05  -0.09        0.12        0.11    -0.23       -0.21    0.04
+                        CASCATA-OI (h4, 24h) 2021-12-01    0.30       0.25         0.33    0.38  0.06      0.09 0.51  -0.73        0.44        0.46     0.21        0.30    0.52
+            DIP-24h (compra il crollo, perp) 2020-06-01    0.93       1.23         0.66    1.09  0.21      0.13 0.19  -0.16        0.41        0.39     0.09        0.27    0.41
+              FUNDING-BASSO long (95/5, 72h) 2020-06-01    0.21      -0.02         0.46    0.25 -0.09      0.15 0.74  -0.89        0.17        0.30     0.25        0.17    0.35
+           CONTRO-DETTAGLIO (L/S conti, z30) 2022-01-01    0.79       1.58         0.50    0.89  0.32      0.17 0.40  -0.26        0.23        0.11    -0.29       -0.10    0.12
+                     XS top trader (seguire) 2022-01-01   -1.52      -2.42        -1.55   -1.28 -0.20     -0.22 0.16  -0.67       -0.13       -0.02    -0.05       -0.05   -0.00
+                  PAIRS (migliore in scelta) 2020-10-01   -0.95      -0.69        -1.19   -0.86 -0.32     -0.32 0.37  -0.94       -0.11       -0.02    -0.11       -0.10   -0.10
+                             RESID-REV 1D h5 2020-10-01   -1.44      -1.82        -1.17   -1.38 -0.61     -0.41 0.56  -1.00       -0.47       -0.29    -0.11       -0.17   -0.37
+   SHORT-VAR BTC+ETH (STIMA, filtro 5 punti) 2021-03-24   -1.16       2.03        -4.65    1.17  0.02     -0.00 0.01  -0.03       -0.01        0.06     0.03        0.02    0.05
+           SHORT-VAR BTC+ETH (STIMA, sempre) 2021-03-24   -0.92       1.31        -2.80    0.60  0.01     -0.00 0.02  -0.07       -0.04        0.02     0.17        0.04    0.05
+
+Sharpe per anno:
+                                2018  2019   2020   2021   2022   2023  2024   2025   2026
+STABLE-30 (BTC+ETH se offerta  -0.38  0.55   2.13   1.68  -0.51   1.07  1.16   0.14  -0.59
+FNG-MOM (BTC+ETH se F&G > medi -0.55  0.40   2.83   1.90  -0.48   0.49  0.94   0.01   0.16
+ORE 21-23 UTC (maker 1,5 pb: I   NaN   NaN   1.67   1.68  -1.78   0.88  2.15   0.88  -0.51
+NEW-LIST short 7-90g coperto B   NaN   NaN   1.82  -1.53   0.87   0.88  0.84   0.17  -0.44
+XS-FUNDING L/S perp (k7, setti   NaN   NaN   2.54   2.11   0.24  -0.31  0.40   0.51  -1.15
+CARRY-XS (Binance, centrale, L   NaN   NaN  11.60  10.79 -11.71  -2.87  1.89 -23.21 -45.96
+CARRY-XS-HL (incollato)          NaN   NaN  11.60  10.79 -11.71   2.50  8.53   1.07  -3.85
+FUND-ARB HL-BN (k7, 10%, 2x)     NaN   NaN    NaN    NaN    NaN  15.22  6.33  -0.50  -5.66
+TSMOM-1H lento solo long (perp   NaN   NaN   1.96   2.31  -0.90   1.29  0.38  -0.27  -0.51
+GEX-INTRADAY SPX (MR alto + TF  1.66   NaN    NaN    NaN    NaN    NaN -2.60  -0.04  -2.68
+CASCATA-OI (h4, 24h)             NaN   NaN    NaN    NaN   0.26   1.64  1.39  -1.32  -1.06
+DIP-24h (compra il crollo, per   NaN   NaN   0.61   2.49   0.12   1.90  0.55   0.44  -0.04
+FUNDING-BASSO long (95/5, 72h)   NaN   NaN   1.07   0.24  -0.57   1.21  1.30  -0.22   0.49
+CONTRO-DETTAGLIO (L/S conti, z   NaN   NaN    NaN    NaN   1.58   0.99  0.46   0.15   0.36
+XS top trader (seguire)          NaN   NaN    NaN    NaN  -2.42  -1.72 -1.51  -0.87  -2.70
+PAIRS (migliore in scelta)       NaN   NaN  -0.82   0.01  -1.50  -2.75 -1.47  -0.01   0.55
+RESID-REV 1D h5                  NaN   NaN  -3.23  -1.98  -1.38   0.52 -1.91  -1.69  -1.26
+SHORT-VAR BTC+ETH (STIMA, filt   NaN   NaN    NaN   4.15   0.86  -3.12 -4.40  -7.38  -5.82
+SHORT-VAR BTC+ETH (STIMA, semp   NaN   NaN    NaN   1.63   1.02  -1.37 -2.63  -3.91  -3.14
+
+controllo: il portafoglio ricostruito coincide con PORT di series.parquet? differenza massima 0.0
+
+== B. Portafogli (tot | scelta | verifica). Finestra intera 2018-04 -> 2026-10
+0. ATTUALE: 4 sleeve                                                   Sh  1.18 |  1.49 |  0.86   CAGR  13.8%  14.3%  13.0%   vol  9.0%  9.6%   DD   -9.4%   -8.0%
+1. 4 sleeve + DIP-24h                                                  Sh  1.23 |  1.46 |  0.95   CAGR  14.2%  14.8%  13.5%   vol  9.0%  9.1%   DD   -9.4%   -7.9%
+2. 4 sleeve + CARRY (quota fissa 20%)                                  Sh  1.32 |  1.61 |  0.96   CAGR  13.2%  14.0%  12.3%   vol  7.6%  7.7%   DD   -9.4%   -6.2%
+3. 4 sleeve + DIP-24h + CARRY 20%                                      Sh  1.36 |  1.58 |  1.07   CAGR  13.6%  14.4%  12.7%   vol  7.6%  7.2%   DD   -9.4%   -6.0%
+3b. come 3 ma CARRY 10%                                                Sh  1.29 |  1.52 |  1.00   CAGR  13.9%  14.6%  13.1%   vol  8.3%  8.2%   DD   -9.4%   -6.9%
+3c. come 3 ma CARRY 30%                                                Sh  1.44 |  1.65 |  1.15   CAGR  13.3%  14.1%  12.2%   vol  7.0%  6.3%   DD   -9.4%   -5.1%
+4. parita' di rischio pura con CARRY (artefatto: il carry prende il te Sh  1.64 |  1.83 |  1.60   CAGR  11.8%  14.0%   9.0%   vol  5.2%  2.6%   DD   -9.4%   -2.6%
+5. (NON passa, solo confronto) 3 + NEW-LIST short 7-90g cop            Sh  1.55 |  1.73 |  1.31   CAGR  14.4%  15.0%  13.8%   vol  7.1%  6.6%   DD   -9.4%   -4.7%
+5. (NON passa, solo confronto) 3 + XS-FUNDING L/S perp (k7,            Sh  1.43 |  1.69 |  1.05   CAGR  13.4%  15.0%  11.5%   vol  7.1%  6.3%   DD   -9.4%   -4.3%
+6. (NON passa, solo confronto) 3 + tutti gli extra                     Sh  1.59 |  1.82 |  1.25   CAGR  14.2%  15.6%  12.5%   vol  6.8%  6.0%   DD   -9.4%   -4.9%
+
+   Stessa tabella dalla data in cui i candidati esistono (2020-06 -> 2026-10): e' il confronto alla pari
+0. ATTUALE: 4 sleeve                                                   Sh  1.25 |  1.92 |  0.86   CAGR  15.0%  17.9%  13.0%   vol  9.1%  9.6%   DD   -8.0%   -8.0%
+1. 4 sleeve + DIP-24h                                                  Sh  1.30 |  1.82 |  0.95   CAGR  15.6%  18.7%  13.5%   vol  9.1%  9.1%   DD   -7.9%   -7.9%
+2. 4 sleeve + CARRY (quota fissa 20%)                                  Sh  1.45 |  2.29 |  0.96   CAGR  14.3%  17.3%  12.3%   vol  7.3%  7.7%   DD   -6.2%   -6.2%
+3. 4 sleeve + DIP-24h + CARRY 20%                                      Sh  1.51 |  2.16 |  1.07   CAGR  14.8%  18.0%  12.7%   vol  7.3%  7.2%   DD   -6.0%   -6.0%
+3b. come 3 ma CARRY 10%                                                Sh  1.40 |  1.97 |  1.00   CAGR  15.2%  18.4%  13.1%   vol  8.2%  8.2%   DD   -6.9%   -6.9%
+3c. come 3 ma CARRY 30%                                                Sh  1.66 |  2.39 |  1.15   CAGR  14.4%  17.6%  12.2%   vol  6.4%  6.3%   DD   -5.1%   -5.1%
+4. parita' di rischio pura con CARRY (artefatto: il carry prende il te Sh  2.43 |  3.33 |  1.60   CAGR  12.3%  17.4%   9.0%   vol  3.6%  2.6%   DD   -2.6%   -2.6%
+5. (NON passa, solo confronto) 3 + NEW-LIST short 7-90g cop            Sh  1.81 |  2.53 |  1.31   CAGR  15.9%  19.2%  13.8%   vol  6.6%  6.6%   DD   -4.7%   -4.7%
+5. (NON passa, solo confronto) 3 + XS-FUNDING L/S perp (k7,            Sh  1.63 |  2.40 |  1.05   CAGR  14.6%  19.2%  11.5%   vol  6.7%  6.3%   DD   -4.7%   -4.3%
+6. (NON passa, solo confronto) 3 + tutti gli extra                     Sh  1.89 |  2.77 |  1.25   CAGR  15.6%  20.4%  12.5%   vol  6.2%  6.0%   DD   -4.9%   -4.9%
+
+   Carry valutato SOLO dove un italiano puo' eseguirlo oggi (Hyperliquid, verifica 2023-06 -> 2026-10):
+0. ATTUALE: 4 sleeve                                                   Sh  0.73 |   nan |  0.73   CAGR  10.9%   nan%  10.9%   vol  8.6%  8.6%   DD   -8.0%   -8.0%
+1. 4 sleeve + DIP-24h                                                  Sh  0.80 |   nan |  0.80   CAGR  11.3%   nan%  11.3%   vol  8.3%  8.3%   DD   -7.9%   -7.9%
+2. 4 sleeve + CARRY (quota fissa 20%)                                  Sh  0.88 |   nan |  0.88   CAGR  10.8%   nan%  10.8%   vol  6.8%  6.8%   DD   -6.2%   -6.2%
+3. 4 sleeve + DIP-24h + CARRY 20%                                      Sh  0.95 |   nan |  0.95   CAGR  11.1%   nan%  11.1%   vol  6.6%  6.6%   DD   -6.0%   -6.0%
+
+== C. Scomposizione del portafoglio difendibile [3. 4 sleeve + DIP-24h + CARRY 20%]
+  sleeve  peso_medio  peso_medio_verifica  sh_tot  sh_scelta  sh_verifica  cagr_da_solo   vol  contributo_annuo  contributo_annuo_verifica
+CR-TREND       0.132                0.104   1.022      1.400        0.540         0.262 0.227             0.030                      0.024
+CR-XSMOM       0.094                0.074   1.051      1.035        1.076         0.329 0.283             0.031                      0.036
+   EQ-MR       0.197                0.193   0.825      1.141        0.334         0.134 0.130             0.026                      0.014
+MA-TREND       0.335                0.290   0.165      0.366       -0.115         0.037 0.069             0.014                      0.011
+     DIP       0.091                0.139   0.929      1.226        0.657         0.206 0.188             0.014                      0.021
+   CARRY       0.149                0.200   5.385      7.428        3.657         0.111 0.014             0.016                      0.017
+somma dei contributi annui: 0.130 (verifica 0.122);  quota media investita (somma pesi): 1.00
+Sharpe medio degli sleeve: tot 1.56, scelta 2.10, verifica 1.02  ->  Sharpe del portafoglio: 1.36 | 1.58 | 1.07
+   (senza il CARRY, il cui Sharpe e' gonfiato dalla volatilita' quasi nulla: media sleeve tot 0.80, verifica 0.50)
+correlazioni mensili tra sleeve:
+          CR-TREND  CR-XSMOM  EQ-MR  MA-TREND   DIP  CARRY
+CR-TREND      1.00      0.52   0.18      0.32  0.41   0.50
+CR-XSMOM      0.52      1.00   0.21      0.21  0.39   0.30
+EQ-MR         0.18      0.21   1.00      0.19  0.09   0.07
+MA-TREND      0.32      0.21   0.19      1.00  0.27   0.25
+DIP           0.41      0.39   0.09      0.27  1.00   0.55
+CARRY         0.50      0.30   0.07      0.25  0.55   1.00
+
+== D. Leva a volatilita' obiettivo (leva = obiettivo / volatilita' a 60 giorni, nota il giorno prima; costo: tasso a breve + 1,5% sulla parte presa a prestito)
+ATTUALE 4 sleeve: senza leva                                           Sh  1.18 |  1.49 |  0.86   CAGR  13.8%  14.3%  13.0%   vol  9.0%  9.6%   DD   -9.4%   -8.0%
+ATTUALE 4 sleeve: vol 15%, leva max 2x (media 1.71x)                   Sh  1.07 |  1.38 |  0.74   CAGR  18.8%  21.3%  16.0%   vol 14.6% 15.6%   DD  -15.1%  -15.1%
+                                                                       costo del finanziamento: 3.0% l'anno;  mese peggiore -5.1%
+ATTUALE 4 sleeve: vol 15%, leva max 4x (media 2.12x)                   Sh  0.93 |  1.11 |  0.74   CAGR  18.9%  20.1%  17.5%   vol 17.3% 18.0%   DD  -23.7%  -18.3%
+                                                                       costo del finanziamento: 4.8% l'anno;  mese peggiore -8.0%
+ATTUALE 4 sleeve: vol 25%, leva max 4x (media 3.11x)                   Sh  0.96 |  1.23 |  0.68   CAGR  27.6%  32.9%  21.5%   vol 26.1% 27.9%   DD  -28.2%  -28.2%
+                                                                       costo del finanziamento: 9.0% l'anno;  mese peggiore -10.3%
+ATTUALE 4 sleeve: vol 25%, leva max 6x (media 3.48x)                   Sh  0.90 |  1.09 |  0.69   CAGR  27.5%  31.3%  23.1%   vol 28.5% 29.9%   DD  -35.5%  -30.3%
+                                                                       costo del finanziamento: 10.5% l'anno;  mese peggiore -11.8%
+3. 4 sleeve + DIP-24h + CARRY 20%: senza leva                          Sh  1.36 |  1.58 |  1.07   CAGR  13.6%  14.4%  12.7%   vol  7.6%  7.2%   DD   -9.4%   -6.0%
+3. 4 sleeve + DIP-24h + CARRY 20%: vol 15%, leva max 2x (media 1.85x)  Sh  1.27 |  1.52 |  0.97   CAGR  20.9%  23.3%  18.2%   vol 13.6% 13.6%   DD  -13.6%  -12.8%
+                                                                       costo del finanziamento: 3.7% l'anno;  mese peggiore -6.6%
+3. 4 sleeve + DIP-24h + CARRY 20%: vol 15%, leva max 4x (media 2.44x)  Sh  1.06 |  1.23 |  0.87   CAGR  21.6%  22.8%  20.0%   vol 17.2% 17.7%   DD  -23.7%  -17.9%
+                                                                       costo del finanziamento: 6.4% l'anno;  mese peggiore -8.0%
+3. 4 sleeve + DIP-24h + CARRY 20%: vol 25%, leva max 4x (media 3.41x)  Sh  1.15 |  1.38 |  0.88   CAGR  32.5%  37.7%  26.6%   vol 24.8% 25.1%   DD  -26.6%  -24.2%
+                                                                       costo del finanziamento: 10.4% l'anno;  mese peggiore -11.1%
+3. 4 sleeve + DIP-24h + CARRY 20%: vol 25%, leva max 6x (media 3.97x)  Sh  1.03 |  1.22 |  0.82   CAGR  32.1%  36.3%  27.2%   vol 28.1% 29.0%   DD  -35.5%  -29.4%
+                                                                       costo del finanziamento: 13.0% l'anno;  mese peggiore -11.8%
+
+== E. Prove e Deflated Sharpe
+   trials_altro.json: 61
+   trials_carry.json: 148
+   trials_intraday.json: 207
+   trials_mm.json: 22
+   trials_oi.json: 107
+   trials_statarb.json: 101
+   trials_vol.json: 34
+varianti provate in questo laboratorio (v4): 680 + 10 portafogli;  precedenti (v5: 110, v3: 12): 122;  TOTALE: 812
+ATTUALE 4 sleeve                         Sharpe atteso dal migliore di 812 prove senza abilita': 1.47 (con 110: 1.18);  Sharpe 1.18;  PSR(>0) 1.000;  PSR(>0) verifica 0.959;  DSR 0.20
+3. 4 sleeve + DIP-24h + CARRY 20%        Sharpe atteso dal migliore di 812 prove senza abilita': 1.47 (con 110: 1.18);  Sharpe 1.36;  PSR(>0) 1.000;  PSR(>0) verifica 0.984;  DSR 0.38

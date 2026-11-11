@@ -1,0 +1,68 @@
+== 5a. BTC: premio di volatilita' = DVOL - volatilita' realizzata dei 30 giorni successivi (punti di vol)
+      DVOL medio  RV 30g succ.  premio medio  premio mediano  giorni con premio>0 %  premio minimo
+2021        91.8          75.0          16.7            20.7                   87.6          -51.5
+2022        73.6          60.6          13.0            15.3                   73.2          -26.3
+2023        49.6          42.6           7.1             7.8                   75.6          -16.9
+2024        57.7          51.4           6.3             7.2                   77.3          -19.9
+2025        46.0          42.3           3.8             6.5                   71.2          -21.1
+2026        42.4          42.0           1.1             3.0                   58.9          -25.7
+   intero periodo: premio medio 8.0 punti, positivo nel 74% dei giorni; scelta 14.6, verifica 4.8
+== 5a. ETH: premio di volatilita' = DVOL - volatilita' realizzata dei 30 giorni successivi (punti di vol)
+      DVOL medio  RV 30g succ.  premio medio  premio mediano  giorni con premio>0 %  premio minimo
+2021       109.3          98.3          11.0            23.9                   78.4          -98.0
+2022        91.7          81.2          10.5            16.7                   64.4          -51.6
+2023        51.8          46.2           5.6             5.9                   74.5          -17.1
+2024        65.7          63.3           2.4             4.6                   65.0          -31.2
+2025        69.4          70.7          -1.3             0.3                   51.5          -37.7
+2026        58.6          55.8           3.7             5.8                   66.3          -30.7
+   intero periodo: premio medio 5.2 punti, positivo nel 66% dei giorni; scelta 10.7, verifica 2.5
+
+== 5b. STIMA: vendita sistematica di varianza a 30 giorni (1/30 al giorno), strike = (DVOL - spread)^2, vega = 1% del capitale per punto di vol (un errore di 50 punti = -50% e oltre, per la convessita)
+short varianza BTC, spread 0 punti                             Sh  1.42 |  4.10 | -0.53  CAGR    6.0%   11.0%    3.8%  vol    1.7%  DD   -4.1%   -2.2% | Sharpe rf=0: tot 3.41 scelta 4.59 verifica 2.72
+short varianza BTC, spread 3 punti                             Sh -0.18 |  2.87 | -2.47  CAGR    3.1%    8.2%    0.8%  vol    1.8%  DD   -4.4%   -3.6% | Sharpe rf=0: tot 1.70 scelta 3.34 verifica 0.58
+short varianza BTC, spread 6 punti                             Sh -1.71 |  1.68 | -4.28  CAGR    0.1%    5.4%   -2.2%  vol    1.9%  DD   -9.9%   -9.9% | Sharpe rf=0: tot 0.07 scelta 2.13 verifica -1.43
+short varianza ETH, spread 0 punti                             Sh -0.31 |  1.08 | -1.47  CAGR    2.6%    5.1%    1.4%  vol    2.7%  DD   -9.5%   -6.7% | Sharpe rf=0: tot 0.95 scelta 1.38 verifica 0.67
+short varianza ETH, spread 3 punti                             Sh -1.36 |  0.30 | -2.77  CAGR   -0.4%    2.2%   -1.6%  vol    2.8%  DD  -11.9%  -11.9% | Sharpe rf=0: tot -0.14 scelta 0.59 verifica -0.74
+short varianza ETH, spread 6 punti                             Sh -2.37 | -0.46 | -4.01  CAGR   -3.5%   -0.7%   -4.7%  vol    2.9%  DD  -19.3%  -19.3% | Sharpe rf=0: tot -1.20 scelta -0.17 verifica -2.08
+short varianza BTC+ETH, spread 3 punti                         Sh -0.92 |  1.31 | -2.80  CAGR    1.3%    5.2%   -0.4%  vol    2.2%  DD   -7.1%   -6.8% 
+   giorno peggiore -2.1%, 5 giorni peggiori: {Timestamp('2021-05-19 00:00:00'): -2.1, Timestamp('2022-05-11 00:00:00'): -1.5, Timestamp('2024-08-05 00:00:00'): -1.3, Timestamp('2022-05-12 00:00:00'): -1.0, Timestamp('2025-02-03 00:00:00'): -0.9}
+   Sharpe per anno: {2021: 1.63, 2022: 1.02, 2023: -1.37, 2024: -2.63, 2025: -3.91, 2026: -3.14}  rendimento % per anno: {2021: 4.2, 2022: 4.9, 2023: 3.1, 2024: -0.2, 2025: -3.1, 2026: -1.2}
+
+== 5b-bis. Con filtro: si vende solo se DVOL > volatilita' realizzata degli ultimi 30 giorni + x punti (premio ex-ante positivo), oppure solo se DVOL < percentile (niente vendite in crisi)
+short varianza BTC+ETH solo se DVOL-RV30 passata > 0 punti     Sh -1.01 |  1.93 | -3.48  CAGR    1.6%    5.8%   -0.2%  vol    1.7%  DD   -4.6%   -4.6% | Sharpe rf=0: tot 0.94 scelta 2.40 verifica -0.17
+short varianza BTC+ETH solo se DVOL-RV30 passata > 5 punti     Sh -1.16 |  2.03 | -4.65  CAGR    1.7%    5.6%   -0.0%  vol    1.5%  DD   -3.3%   -2.9% | Sharpe rf=0: tot 1.17 scelta 2.55 verifica -0.04
+short varianza BTC+ETH solo se DVOL-RV30 passata > 10 punti    Sh -1.32 |  2.28 | -7.60  CAGR    1.9%    5.4%    0.3%  vol    1.1%  DD   -3.2%   -1.2% | Sharpe rf=0: tot 1.67 scelta 2.89 verifica 0.57
+short varianza BTC+ETH solo se DVOL < percentile 50 a 1 anno   Sh -2.25 |  0.57 | -4.73  CAGR    0.1%    2.3%   -1.0%  vol    1.5%  DD   -7.2%   -7.2% 
+short varianza BTC+ETH solo se DVOL < percentile 80 a 1 anno   Sh -1.37 |  1.99 | -3.54  CAGR    0.9%    5.5%   -1.1%  vol    1.8%  DD   -8.0%   -8.0% 
+   filtro 5 punti: spread 6 punti (costi x2)                   Sh -2.15 |  1.15 | -5.80  CAGR    0.1%    3.7%   -1.5%  vol    1.5%  DD   -6.6%   -6.6% 
+   filtro 5 punti: ritardo +1 giorno                           Sh -1.15 |  2.03 | -4.65  CAGR    1.7%    5.6%   -0.0%  vol    1.5%  DD   -3.4%   -2.9% 
+   >> CANDIDATO SHORT-VAR BTC+ETH (STIMA, filtro 5 punti): corr mensile {'CR-TREND': -0.01, 'CR-XSMOM': 0.06, 'EQ-MR': 0.03, 'MA-TREND': 0.02, 'PORT': 0.05}  Sharpe/anno {2021: 4.15, 2022: 0.86, 2023: -3.12, 2024: -4.4, 2025: -7.38, 2026: -5.82}  Sharpe rf=0 1.17
+   >> CANDIDATO SHORT-VAR BTC+ETH (STIMA, sempre): corr mensile {'CR-TREND': -0.04, 'CR-XSMOM': 0.02, 'EQ-MR': 0.17, 'MA-TREND': 0.04, 'PORT': 0.05}  Sharpe/anno {2021: 1.63, 2022: 1.02, 2023: -1.37, 2024: -2.63, 2025: -3.91, 2026: -3.14}  Sharpe rf=0 0.60
+
+== 5c. DVOL e vol-della-vol come filtro di regime sulle strategie di trend esistenti (CR-TREND, CR-XSMOM)
+   Il filtro moltiplica l'esposizione per 0 / 0,5 / 1; costo del cambio: 30 pb x esposizione media (0,5) x variazione del moltiplicatore.
+CR-TREND senza filtro (dal 2021-08-01):  Sh 0.45 | 0.12 | 0.54   DD -25.2%
+CR-TREND x [DVOL < percentile 80 (1 anno)]                     Sh  0.20 | -0.02 |  0.26  CAGR    5.7%   -0.1%    7.9%  vol   18.6%  DD  -25.7%  -25.7% 
+CR-TREND x [DVOL < percentile 50 (1 anno)]                     Sh -0.48 | -1.09 | -0.30  CAGR   -5.0%  -12.9%   -1.8%  vol   15.7%  DD  -28.5%  -28.5% 
+CR-TREND x [DVOL > percentile 50 (1 anno)]                     Sh  0.41 |  0.65 |  0.38  CAGR    8.7%    6.6%    9.5%  vol   13.6%  DD  -14.9%  -14.9% 
+CR-TREND x [DVOL in calo a 10 giorni]                          Sh -0.63 | -0.78 | -0.59  CAGR   -5.4%   -7.3%   -4.6%  vol   13.3%  DD  -38.5%  -29.5% 
+CR-TREND x [DVOL in salita a 10 giorni]                        Sh -0.25 | -0.98 | -0.08  CAGR   -1.7%   -9.9%    1.6%  vol   16.0%  DD  -31.6%  -31.6% 
+CR-TREND x [premio ex-ante > 0 (DVOL > RV30 passata)]          Sh  0.18 | -0.12 |  0.26  CAGR    5.4%   -1.6%    8.1%  vol   20.3%  DD  -33.8%  -33.8% 
+CR-TREND x [premio ex-ante < 0]                                Sh -0.78 | -3.03 | -0.68  CAGR    0.2%   -1.8%    0.9%  vol    4.3%  DD  -12.8%  -12.8% 
+CR-TREND x [vol-della-vol < percentile 80]                     Sh  0.33 | -0.21 |  0.47  CAGR    8.6%   -2.7%   13.0%  vol   19.6%  DD  -26.3%  -26.3% 
+CR-TREND x [vol-della-vol > percentile 50]                     Sh  0.23 | -0.04 |  0.28  CAGR    5.7%    1.2%    7.4%  vol   10.8%  DD  -13.4%  -13.4% 
+CR-TREND x [scala continua: min(1, 60% / DVOL)]                Sh  0.39 | -0.24 |  0.53  CAGR    9.9%   -1.8%   14.5%  vol   19.3%  DD  -25.3%  -25.3% 
+CR-XSMOM senza filtro (dal 2021-08-01):  Sh 1.07 | 1.08 | 1.08   DD -26.9%
+CR-XSMOM x [DVOL < percentile 80 (1 anno)]                     Sh  0.78 |  0.68 |  0.82  CAGR   23.9%   14.7%   27.5%  vol   27.6%  DD  -23.3%  -23.3% 
+CR-XSMOM x [DVOL < percentile 50 (1 anno)]                     Sh  0.44 | -0.33 |  0.65  CAGR   12.3%   -6.0%   20.0%  vol   24.5%  DD  -26.2%  -26.2% 
+CR-XSMOM x [DVOL > percentile 50 (1 anno)]                     Sh  0.56 |  1.26 |  0.27  CAGR   12.2%   25.2%    7.8%  vol   16.5%  DD  -20.5%  -20.5% 
+CR-XSMOM x [DVOL in calo a 10 giorni]                          Sh -0.15 | -0.30 | -0.11  CAGR   -1.5%   -5.5%    0.0%  vol   20.5%  DD  -49.0%  -39.6% 
+CR-XSMOM x [DVOL in salita a 10 giorni]                        Sh  0.62 |  0.64 |  0.61  CAGR   15.7%   12.0%   17.1%  vol   21.3%  DD  -26.9%  -26.9% 
+CR-XSMOM x [premio ex-ante > 0 (DVOL > RV30 passata)]          Sh  0.81 |  0.58 |  0.88  CAGR   25.2%   13.4%   29.8%  vol   28.1%  DD  -27.4%  -27.1% 
+CR-XSMOM x [premio ex-ante < 0]                                Sh  0.03 |  0.77 | -0.23  CAGR    3.6%    8.0%    2.0%  vol    9.0%  DD  -17.5%  -17.5% 
+CR-XSMOM x [vol-della-vol < percentile 80]                     Sh  0.82 |  0.42 |  0.94  CAGR   25.6%    8.2%   32.8%  vol   27.9%  DD  -24.4%  -24.4% 
+CR-XSMOM x [vol-della-vol > percentile 50]                     Sh  0.77 |  0.73 |  0.86  CAGR   16.8%    4.4%   21.8%  vol   17.2%  DD  -19.3%  -19.3% 
+CR-XSMOM x [scala continua: min(1, 60% / DVOL)]                Sh  0.98 |  0.69 |  1.07  CAGR   31.1%   13.4%   38.4%  vol   27.9%  DD  -26.0%  -26.0% 
+   nota: la scelta copre solo 2021-08 -> 2022-12 (17 mesi, mercato in discesa): un filtro "migliore" qui e' quasi certamente rumore.
+
+[vol] varianti provate: 34  (Sharpe di scelta: media 0.65, dev.std 1.29, max 4.11)

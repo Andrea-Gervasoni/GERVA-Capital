@@ -95,3 +95,47 @@ if 'metrics' in what:
         return d.resample('1h').last()      # valore all'ultimo campione dell'ora (indice = inizio ora)
     for c in "BTC ETH SOL BNB XRP DOGE ADA LINK AVAX LTC".split(): safe(f'v4_metrics_1h_{c}', lambda: met(c), 'binance.vision')
 print('fine', what)
+
+if 'allperp' in what:
+    # TUTTI i perpetual USDT-M mai quotati (anche quelli tolti dal listino): candele giornaliere e funding. Serve a:
+    # effetto nuove quotazioni, carry trasversale perp-contro-perp. L'elenco viene dall'indice S3 dell'archivio.
+    import re
+    S3 = 'https://s3-ap-northeast-1.amazonaws.com/data.binance.vision?delimiter=/&prefix='
+    def listing(prefix):
+        out = []; marker = ''
+        while True:
+            x = _get(S3 + prefix + (f'&marker={marker}' if marker else '')).decode()
+            out += re.findall(r'<Prefix>([^<]+)</Prefix>', x)[1:] + re.findall(r'<Key>([^<]+)</Key>', x)
+            if '<IsTruncated>true' not in x: break
+            m = re.search(r'<NextMarker>([^<]+)</NextMarker>', x); marker = m.group(1) if m else out[-1]
+        return out
+    syms = sorted({p.rstrip('/').split('/')[-1] for p in listing('data/futures/um/monthly/klines/')})
+    syms = [s for s in syms if s.endswith('USDT') and '_' not in s]
+    print('simboli USDT-M:', len(syms), flush=True)
+    def one(sym):
+        try:
+            ks = [k for k in listing(f'data/futures/um/monthly/klines/{sym}/1d/') if k.endswith('.zip')]
+            fs = [k for k in listing(f'data/futures/um/monthly/fundingRate/{sym}/') if k.endswith('.zip')]
+            kp = []
+            for k in ks:
+                d = _zip_csv(_get('https://data.binance.vision/' + k, tries=3), ['open_time', 'open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_volume', 'trades', 'tb', 'tq', 'ig'])
+                d.columns = ['open_time', 'open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_volume', 'trades', 'tb', 'tq', 'ig'][:len(d.columns)]; kp.append(d)
+            if not kp: return sym, None, None
+            d = pd.concat(kp); d.index = pd.to_datetime(d['open_time'].astype('int64'), unit='ms'); d = d[~d.index.duplicated()].sort_index()
+            fp = []
+            for k in fs:
+                x = _zip_csv(_get('https://data.binance.vision/' + k, tries=3), ['calc_time', 'h', 'rate']); x.columns = ['calc_time', 'h', 'rate'][:len(x.columns)]; fp.append(x)
+            f = None
+            if fp:
+                x = pd.concat(fp); f = pd.Series(x['rate'].astype(float).values, index=pd.DatetimeIndex(pd.to_datetime(x['calc_time'].astype('int64').values, unit='ms') - pd.Timedelta(minutes=5)).normalize()).groupby(level=0).sum()
+            return sym, d[['close', 'quote_volume']].astype(float), f
+        except Exception as e:
+            print('FAIL', sym, str(e)[:80], flush=True); return sym, None, None
+    C, V, Fd = {}, {}, {}
+    with cf.ThreadPoolExecutor(24) as ex:
+        for i, (sym, d, f) in enumerate(ex.map(one, syms)):
+            if d is not None: C[sym] = d['close']; V[sym] = d['quote_volume']
+            if f is not None: Fd[sym] = f
+            if i % 50 == 0: print(i, sym, flush=True)
+    st.put('v4_allperp_close', pd.DataFrame(C), 'binance.vision'); st.put('v4_allperp_qvol', pd.DataFrame(V), 'binance.vision'); st.put('v4_allperp_fund', pd.DataFrame(Fd), 'binance.vision')
+    print('allperp fatto', len(C), len(Fd))
