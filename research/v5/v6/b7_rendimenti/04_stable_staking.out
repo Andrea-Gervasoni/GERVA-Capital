@@ -1,0 +1,84 @@
+APY medio % per anno
+                      2022  2023   2024  2025  2026  ult90g   oggi         dal    tvl_M$
+lido_steth            4.53  4.32   3.17  2.82  2.41    2.41   2.33  2022-05-03  20340.26
+jitosol                NaN   NaN    NaN  6.95  5.42    4.86   4.65  2025-03-26    872.64
+aave_usdc              NaN  3.82   7.17  4.12  3.43    3.77   3.96  2023-02-06    168.44
+comp_usdc             1.74  3.95   7.99  4.67  3.53    4.54   3.22  2022-10-06     37.74
+morpho_steakusdc       NaN   NaN    NaN  3.96  3.99    4.54   4.53  2025-12-04    130.33
+susde                  NaN   NaN  17.47  6.52  4.23    4.85   5.01  2024-02-16   1207.49
+susds                  NaN   NaN    NaN  4.75  3.72    3.66   3.80  2025-02-21   3759.22
+spark_usdc             NaN   NaN    NaN  4.00  3.72    3.66   3.80  2025-12-22    233.13
+pendle_pt_susde        NaN   NaN    NaN   NaN  4.83    4.85   5.31  2026-08-11      5.05
+usdy                   NaN   NaN    NaN   NaN  3.58    3.63   3.75  2026-01-28   1289.63
+buidl                  NaN   NaN    NaN   NaN  3.16    3.07   3.84  2026-03-27    968.17
+hl_usdc_earn           NaN   NaN    NaN   NaN  4.41    4.41   3.11  2026-10-21    194.06
+hlp                    NaN   NaN    NaN   NaN  5.43    5.43  24.79  2026-10-21    149.61
+fluid_usdc             NaN   NaN  11.08  6.80  5.07    5.24   5.36  2024-05-30    133.73
+aave_usdt              NaN  4.14   6.31  4.00  3.07    3.64   3.59  2023-02-13    220.66
+wbeth                  NaN  3.81   3.03  2.68  2.46    2.31   2.81  2023-06-16   7666.10
+reth                   NaN  3.84   2.80  2.56  2.17    2.11   1.79  2023-01-16   1010.44
+T-bill 3m USD (^IRX)  2.00  5.05   4.95  4.05  3.71    3.86   4.03                   NaN
+
+--- quota dei giorni in cui il rendimento supera il T-bill 3m, dal 2023 e nel 2026
+/home/user/GERVA-Capital/research/v5/v6/b7_rendimenti/04_stable_staking.py:12: Pandas4Warning: Sorting by default when concatenating all DatetimeIndex is deprecated.  In the future, pandas will respect the default of `sort=False`. Specify `sort=True` or `sort=False` to silence this message. If you see this warnings when not directly calling concat, report a bug to pandas.
+  x=pd.concat([Y[c],irx],axis=1).ffill().dropna(); x=x[x.index>=Y[c].first_valid_index()]; d=x.iloc[:,0]-x.iloc[:,1]
+  aave_usdc    eccesso medio +0.24 pt ; giorni sopra 37% ; 2026: eccesso -0.28 pt, sopra 18%
+/home/user/GERVA-Capital/research/v5/v6/b7_rendimenti/04_stable_staking.py:12: Pandas4Warning: Sorting by default when concatenating all DatetimeIndex is deprecated.  In the future, pandas will respect the default of `sort=False`. Specify `sort=True` or `sort=False` to silence this message. If you see this warnings when not directly calling concat, report a bug to pandas.
+  x=pd.concat([Y[c],irx],axis=1).ffill().dropna(); x=x[x.index>=Y[c].first_valid_index()]; d=x.iloc[:,0]-x.iloc[:,1]
+  comp_usdc    eccesso medio +0.46 pt ; giorni sopra 43% ; 2026: eccesso -0.18 pt, sopra 27%
+/home/user/GERVA-Capital/research/v5/v6/b7_rendimenti/04_stable_staking.py:12: Pandas4Warning: Sorting by default when concatenating all DatetimeIndex is deprecated.  In the future, pandas will respect the default of `sort=False`. Specify `sort=True` or `sort=False` to silence this message. If you see this warnings when not directly calling concat, report a bug to pandas.
+  x=pd.concat([Y[c],irx],axis=1).ffill().dropna(); x=x[x.index>=Y[c].first_valid_index()]; d=x.iloc[:,0]-x.iloc[:,1]
+  susde        eccesso medio +5.09 pt ; giorni sopra 84% ; 2026: eccesso +0.52 pt, sopra 72%
+/home/user/GERVA-Capital/research/v5/v6/b7_rendimenti/04_stable_staking.py:12: Pandas4Warning: Sorting by default when concatenating all DatetimeIndex is deprecated.  In the future, pandas will respect the default of `sort=False`. Specify `sort=True` or `sort=False` to silence this message. If you see this warnings when not directly calling concat, report a bug to pandas.
+  x=pd.concat([Y[c],irx],axis=1).ffill().dropna(); x=x[x.index>=Y[c].first_valid_index()]; d=x.iloc[:,0]-x.iloc[:,1]
+  susds        eccesso medio +0.37 pt ; giorni sopra 74% ; 2026: eccesso +0.02 pt, sopra 48%
+/home/user/GERVA-Capital/research/v5/v6/b7_rendimenti/04_stable_staking.py:12: Pandas4Warning: Sorting by default when concatenating all DatetimeIndex is deprecated.  In the future, pandas will respect the default of `sort=False`. Specify `sort=True` or `sort=False` to silence this message. If you see this warnings when not directly calling concat, report a bug to pandas.
+  x=pd.concat([Y[c],irx],axis=1).ffill().dropna(); x=x[x.index>=Y[c].first_valid_index()]; d=x.iloc[:,0]-x.iloc[:,1]
+  fluid_usdc   eccesso medio +3.12 pt ; giorni sopra 95% ; 2026: eccesso +1.36 pt, sopra 88%
+/home/user/GERVA-Capital/research/v5/v6/b7_rendimenti/04_stable_staking.py:12: Pandas4Warning: Sorting by default when concatenating all DatetimeIndex is deprecated.  In the future, pandas will respect the default of `sort=False`. Specify `sort=True` or `sort=False` to silence this message. If you see this warnings when not directly calling concat, report a bug to pandas.
+  x=pd.concat([Y[c],irx],axis=1).ffill().dropna(); x=x[x.index>=Y[c].first_valid_index()]; d=x.iloc[:,0]-x.iloc[:,1]
+  lido_steth   eccesso medio -0.82 pt ; giorni sopra 21% ; 2026: eccesso -1.30 pt, sopra 1%
+
+--- depeg e drawdown di prezzo (chiusure giornaliere DefiLlama; il minimo infragiornaliero e' piu' basso)
+  stETH/ETH              minimo 0.7820 il 2021-05-19 ; peggior scarto dalla mediana a 60g -20.72% il 2021-05-19 ; giorni sotto -1%: 258 ; ultimo 0.9999
+  mSOL/SOL (cresce)      minimo 0.8724 il 2022-11-08 ; peggior scarto dalla mediana a 60g -18.91% il 2025-03-03 ; giorni sotto -1%: 179 ; ultimo 1.3614
+  JitoSOL/SOL (cresce)   minimo 0.8184 il 2022-11-08 ; peggior scarto dalla mediana a 60g -19.04% il 2025-03-03 ; giorni sotto -1%: 128 ; ultimo 1.2588
+  USDC/USD               minimo 0.9879 il 2022-06-30 ; peggior scarto dalla mediana a 60g -1.28% il 2022-06-30 ; giorni sotto -1%: 1 ; ultimo 0.9995
+  USDT/USD               minimo 0.9744 il 2021-01-05 ; peggior scarto dalla mediana a 60g -2.55% il 2021-01-05 ; giorni sotto -1%: 1 ; ultimo 0.9991
+  DAI/USD                minimo 0.9669 il 2023-03-12 ; peggior scarto dalla mediana a 60g -3.30% il 2023-03-12 ; giorni sotto -1%: 3 ; ultimo 1.0001
+  USDe/USD               minimo 0.9790 il 2026-02-02 ; peggior scarto dalla mediana a 60g -2.01% il 2026-02-02 ; giorni sotto -1%: 2 ; ultimo 0.9997
+  UST/USD (2022)         minimo 0.0065 il 2022-06-19 ; peggior scarto dalla mediana a 60g -99.32% il 2022-06-16 ; giorni sotto -1%: 55 ; ultimo 0.0467
+  stETH/ETH per anno, minimo: {2020: 0.9734, 2021: 0.782, 2022: 0.8493, 2023: 0.945, 2024: 0.9241, 2025: 0.8686, 2026: 0.9219}
+  stETH/ETH giugno 2022: giorni sotto 0.97 = 54 ; rientro sopra 0.99 il 2022-07-06
+  USDC/USDT orario (Binance) marzo 2023: minimo 0.882 il 2023-03-11 14:00:00 ; ore sotto 0.97: 31 ; ore sotto 0.99: 46
+  USDC/USDT 10-11 ottobre 2025: min 0.985 max 1.0
+  USDe min giornaliero per anno: {2020: nan, 2021: nan, 2022: nan, 2023: 0.9974, 2024: 0.9925, 2025: 0.9967, 2026: 0.979}
+
+--- staking coperto, % annuo lordo costi per anno: rendimento staking + funding dello short (per unita' di nozionale)
+/home/user/GERVA-Capital/research/v5/v6/b7_rendimenti/04_stable_staking.py:33: Pandas4Warning: Sorting by default when concatenating all DatetimeIndex is deprecated.  In the future, pandas will respect the default of `sort=False`. Specify `sort=True` or `sort=False` to silence this message. If you see this warnings when not directly calling concat, report a bug to pandas.
+  x=pd.concat([yy/100/365,f],axis=1,keys=['stk','fund']).dropna(); tot=x.sum(axis=1)
+/home/user/GERVA-Capital/research/v5/v6/b7_rendimenti/04_stable_staking.py:33: Pandas4Warning: Sorting by default when concatenating all DatetimeIndex is deprecated.  In the future, pandas will respect the default of `sort=False`. Specify `sort=True` or `sort=False` to silence this message. If you see this warnings when not directly calling concat, report a bug to pandas.
+  x=pd.concat([yy/100/365,f],axis=1,keys=['stk','fund']).dropna(); tot=x.sum(axis=1)
+Traceback (most recent call last):
+  File "/home/user/GERVA-Capital/research/v5/v6/b7_rendimenti/04_stable_staking.py", line 37, in <module>
+    print(pd.DataFrame(T).T.round(2).to_string())
+          ~~~~~~~~~~~~^^^
+  File "/tmp/gv/lib/python3.13/site-packages/pandas/core/frame.py", line 533, in __init__
+    mgr = dict_to_mgr(data, index, columns, dtype=dtype, copy=copy)
+  File "/tmp/gv/lib/python3.13/site-packages/pandas/core/internals/construction.py", line 463, in dict_to_mgr
+    return arrays_to_mgr(arrays, columns, index, dtype=dtype, consolidate=copy)
+  File "/tmp/gv/lib/python3.13/site-packages/pandas/core/internals/construction.py", line 116, in arrays_to_mgr
+    index = _extract_index(arrays)
+  File "/tmp/gv/lib/python3.13/site-packages/pandas/core/internals/construction.py", line 643, in _extract_index
+    index, _ = union_indexes(indexes)
+               ~~~~~~~~~~~~~^^^^^^^^^
+  File "/tmp/gv/lib/python3.13/site-packages/pandas/core/indexes/api.py", line 286, in union_indexes
+    index = index.sort_values()
+  File "/tmp/gv/lib/python3.13/site-packages/pandas/core/indexes/base.py", line 6248, in sort_values
+    _as = nargsort(
+        items=self, ascending=ascending, na_position=na_position, key=key
+    )
+  File "/tmp/gv/lib/python3.13/site-packages/pandas/core/sorting.py", line 473, in nargsort
+    indexer = non_nan_idx[non_nans.argsort(kind=kind)]
+                          ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+TypeError: '<' not supported between instances of 'str' and 'int'

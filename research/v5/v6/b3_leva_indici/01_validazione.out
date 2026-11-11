@@ -1,0 +1,26 @@
+=== A. Prodotti USA (stessa chiusura del sottostante): differenza di CAGR sintetico - reale, tracking giornaliero
+prodotto  k        dal CAGR reale sint(spread 0)  spread che pareggia  corr g. TE annuo
+SSO       2 2006-06-23     15.40%         16.34%                0.80%   0.9956    3.64%
+QLD       2 2006-06-23     24.14%         25.40%                0.99%   0.9960    3.93%
+UPRO      3 2009-06-29     31.89%         33.82%                0.72%   0.9983    3.00%
+SPXL      3 2008-11-07     28.78%         30.76%                0.75%   0.9971    4.24%
+TQQQ      3 2010-02-16     39.94%         42.35%                0.84%   0.9990    2.95%
+TMF       3 2009-04-20     -6.42%         -3.23%                1.65%   0.9858    8.31%
+RYOCX     1 1994-02-16     12.99%         13.04%                6.00%   0.9771    5.81%
+
+=== B. Prodotti UCITS (linee USD/EUR; chiusura europea != chiusura USA -> confronto su rendimenti MENSILI e CAGR)
+prodotto   val  k        dal CAGR reale$ sint(TER,sp0) spread pareggio corr mens. salti tolti
+QQQ3.L     USD  3 2012-12-17      38.77%        39.04%           0.10%     0.9658          0
+QQQ3.MI    EUR  3 2014-04-25      33.88%        38.81%           1.79%     0.9577          0
+3USL.L     USD  3 2012-12-17      27.24%        29.79%           1.00%     0.9540          3
+3USL.MI    EUR  3 2014-05-12      22.86%        32.54%           3.77%     0.9330          1
+LQQ.PA     EUR  2 2009-01-06      32.03%        34.31%           1.70%     0.9599          1
+CL2.PA     EUR  2 2009-06-18      25.33%        26.41%           0.85%     0.8870         19
+DBPG.DE    EUR  2 2010-03-22      14.09%        23.57%           7.93%     0.8599          2
+5QQQ.L     USD  5 2022-01-04     -58.32%       -51.31%           3.87%     0.9556          1
+5SPY.L     USD  5 2022-01-04      -2.28%        10.26%           3.02%     0.9402          0
+3DEL.MI    EUR  3 2013-11-14       8.19%         7.92%          -0.12%     0.9958          1
+LVE.PA     EUR  2 2008-01-04       2.28%         5.67%           3.25%     0.9313          0
+
+Nota: 'spread pareggio' = spread annuo sopra il T-bill, applicato a (k-1) di debito, che rende il CAGR sintetico uguale al reale.
+Per le linee EUR del DAX il tasso usato e' quello USA (errore noto: i tassi euro erano piu' bassi -> spread negativo atteso).

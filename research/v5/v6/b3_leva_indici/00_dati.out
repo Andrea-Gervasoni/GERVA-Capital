@@ -63,3 +63,4 @@ RYOCX      1994-02-14 -> 2026-11-10 n=8240 last=103.05
 FRED DTB3 ERRORE https://fred.stlouisfed.org/graph/fredgraph.csv?id=DTB3: The read operation time
 FRED DGS10 ERRORE https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10: The read operation tim
 FRED DGS30 ERRORE https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS30: The read operation tim
+FRED DGS20 ERRORE https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS20: The read operation tim
