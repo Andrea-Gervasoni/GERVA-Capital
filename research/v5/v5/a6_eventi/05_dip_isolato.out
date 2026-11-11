@@ -1,0 +1,9 @@
+controllo di troncamento dello stato DIP (SOL, XRP): 0 differenze
+monete con storia sufficiente, per anno (mediana): {2020: 13.0, 2021: 26.0, 2022: 26.0, 2023: 31.0, 2024: 34.0, 2025: 33.0, 2026: 33.0}
+distribuzione dellampiezza nelle ore con almeno un DIP: {'count': 7542, 'unique': 34, 'top': 1, 'freq': 3549}
+
+=== DIP per ampiezza nota alla decisione (scelta del taglio sul periodo di scelta)
+DIP, ampiezza tra 1 e 1                                    n= 1002 ev/a= 113.5 R=+0.041 t=+1.78 | sel +0.111 (t +2.15, n 331) | ver +0.006 (t +0.59, n 671) | x2 +0.021 | rit +0.004 | hit 52% stop 17% s~8.72% | {2020: 0.11, 2021: 0.19, 2022: -0.01, 2023: 0.05, 2024: -0.02, 2025: 0.05, 2026: -0.05}
+DIP, ampiezza tra 2 e 2                                    n=  946 ev/a=  59.7 R=-0.019 t=-0.21 | sel +0.017 (t +0.01, n 314) | ver -0.037 (t -0.28, n 632) | x2 -0.039 | rit -0.025 | hit 52% stop 21% s~7.89% | {2020: -0.0, 2021: -0.02, 2022: 0.1, 2023: 0.03, 2024: -0.05, 2025: -0.05, 2026: -0.08}
+DIP, ampiezza tra 3 e 4                                    n= 1362 ev/a=  50.7 R=+0.016 t=+1.96 | sel +0.026 (t +1.11, n 451) | ver +0.010 (t +1.63, n 911) | x2 -0.004 | rit +0.023 | hit 54% stop 21% s~8.00% | {2020: -0.03, 2021: 0.05, 2022: 0.06, 2023: 0.09, 2024: 0.01, 2025: 0.02, 2026: -0.09}
+DIP, ampiezza tra 5 e 8                                    n= 1859 ev/a=  39.1 R=+0.030 t=+1.70 | sel +0.043 (t +1.43, n 682) | ver +0.022 (t +0.96, n 1177) | x2 +0.010 | rit +0.017 | hit 54% stop 22% s~7.82% | {2020: -0.07, 2021: 0.12, 2022: 0.05, 2023: 0.08, 2024: 0.08, 2025: -0.08, 2026: -0.04}

@@ -18,8 +18,6 @@ def components(d, tk, f, bars, btc_close):
     X['mtf'] = lib.mtf(bars).reindex(d.index)
     X['btc'] = lib.trend_quality(btc_close).reindex(d.index)
     return X
-def _unused():
-    pass
 def panel(probe_kw=dict(atr_k=1.0, trail=2.0, maxhold=7), tag='C'):
     rows = []
     for c in COINS:
