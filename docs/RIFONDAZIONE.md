@@ -23,6 +23,8 @@ La versione precedente è in [`archivio_RIFONDAZIONE_v2.md`](archivio_RIFONDAZIO
 | **AI** | Può ridurre o vietare le strategie | In più: moltiplicatore sul rischio del singolo trade, sempre tra 0 e 1 |
 | **Evidenza statistica** | Deflated Sharpe 0,51 su 110 prove | **0,38 su 812 prove** (0,20 per il vecchio portafoglio): contare tutte le prove ha abbassato la fiducia, non alzata |
 
+**Aggiornamento, quinta tornata.** Dieci analisti hanno rivisto tutto (sezione 11). Hanno corretto i profili di questa versione in entrambe le direzioni, ritirato il livello a 30x e aggiunto un flusso di trade a leva sugli indici. Dove la sezione 11 e le sezioni 2–3 divergono, vale la sezione 11.
+
 **Un errore mio corretto in questa versione.** La prima misura del fondo combinato dava uno Sharpe di 1,50. Era gonfiata: attribuivo l'intero guadagno di un trade al giorno di uscita, e la correlazione giornaliera con il resto del portafoglio risultava 0,16 invece di 0,64. Sui rendimenti mensili lo Sharpe è 1,17. Tutti i numeri del fondo combinato qui sotto sono mensili.
 
 ---
@@ -438,6 +440,81 @@ dati ─► 6 strategie giornaliere ─► quote ─► leva 2x ─┐
 | 4 | 3–6 mesi | Profilo prudente C1 (0,5% / 1%) | 100 trade reali, caduta entro il 15% |
 | 5 | Poi | Profilo massimo C3 (1% / 2%, libro giornaliero a 2x) | Decisione tua, con i dati reali davanti |
 | — | Dicembre 2026 | Ricontrollare la legge di bilancio 2027 e la posizione ESMA sulla leva | — |
+
+---
+
+## 11. Quinta tornata: dieci analisti sul rendimento
+
+Dieci analisti indipendenti, ognuno con un mandato e una cartella in [`research/v5/v5/`](../research/v5/v5/), hanno provato circa 1.800 varianti in più. Il criterio comune è aritmetico: con N trade indipendenti l'anno, guadagno medio R̄ e deviazione σ per trade (in multipli del rischio), la crescita massima è N·(R̄/σ)²/2. **Per il 30% al mese serve N·(R̄/σ)² = 6,3.** Tutto SIMULATO.
+
+### 11.1 Che cosa ha trovato ciascuno
+
+| Analista | Mandato | Varianti | Esito | Effetto su N·(R̄/σ)² |
+|---|---|---:|---|---|
+| A1 | Indicatore d'ingresso originale (GQ: qualità del trend della moneta e di Bitcoin, distanza dal VWAP del mese) | 79 | Non batte il livello eccezionale; come soglia d'ingresso a 11x porta R da +0,24 a +0,34 (verifica +0,18 → +0,28), probabilità 0,83 che sia reale in verifica. Correlazione 0,85 con la conviction | Da 1,4 a 1,4–2,4 |
+| A2 | Gestione del trade: piramidare, uscite parziali, stop a tempo, rientri | 276 | **Negativo.** Nessuna regola scelta fino al 2022 migliora dopo. Piramidare a 30x: serie di 57–152 perdite | 0 |
+| A3 | Rotture intraday e compressione di volatilità | 323 | **Negativo** per gli stop stretti: tutte le rotture a 30–40x perdono dopo i costi. Una rottura a 4 ore con stop largo rende +0,31 R ma è il trend che il fondo ha già (correlazione 0,54) | Circa +0,3 |
+| A4 | Universo ampio: 30 perpetual, long e short | 67 | **Negativo.** I trade indipendenti si fermano a 85 l'anno e R scende a zero. Il libro attuale vale 50 trade indipendenti, non 89 | Il valore di partenza scende a 0,9 |
+| A5 | Trade a leva su indici, oro, cambi (IBKR) | 157 | **Positivo, piccolo.** Indici dopo una chiusura debole con VIX ≥ 20: +0,11 R, 32 trade l'anno; con turn-of-month e altri, 52 trade l'anno a +0,13 R. Correlazione 0,13 con i trade crypto | Circa +1 |
+| A6 | Trade su eventi | 199 | **Uno su nove.** Short delle nuove quotazioni a 24 ore: +0,16 R, 128 trade l'anno, correlazione −0,18. In calo, e non verificato eseguibile | Circa +1,3 sulla carta |
+| A7 | Dimensionamento e matematica dell'obiettivo | 62 | Rischio proporzionale alla conviction: in verifica i trade a 11x passano dal 16% al 26% l'anno a parità di caduta. Tabelle sull'obiettivo e sulla sala di trading (11.3) | +0,1–0,4 |
+| A8 | Modelli statistici (gradient boosting, logistica, walk-forward con purging) | 60 | **Negativo.** Il modello non ordina i trade meglio dei pesi uguali; importanza delle variabili instabile | 0 |
+| A9 | Esecuzione e costi | 290 | Ingresso con ordine limite all'apertura: +0,013 R. **Sui prezzi veri dei perpetual il livello a 30x si dimezza** (verifica +0,20 → +0,10 R); funding su Hyperliquid 2,1 volte Binance | Il 30x perde sostegno |
+| A10 | Revisione dell'intero sistema | 189 | Errori nei profili della versione 3, in entrambe le direzioni (11.2) | 0 |
+
+### 11.2 Correzioni ai numeri della versione 3
+
+| Correzione | Effetto sul profilo massimo (C3) |
+|---|---|
+| Costo del debito calcolato sul debito vero, non su tutto il capitale | CAGR 49,3% → 55,0% |
+| Trade valutati ogni giorno, non alla chiusura | Caduta tipica a tre anni −20% → −30%; nel 5% peggiore −37% → −46% |
+| Tasse italiane, liquidazione annua | 55% → circa 41% netto |
+| Motore di rischio con gli scalini di oggi (−10%, −15%, −20%) | CAGR 25%; in verifica 12%. **I profili ad alta volatilità e questi scalini sono incompatibili: è una scelta da fare** |
+| Solana scelta con il senno di poi | Senza Solana lo Sharpe dei trade in verifica è 0,45 e non 0,68 |
+| Commissione minima su un conto da 12.000 $ | La strategia sugli ETF costa 62 pb per lato e non 10: −1,7 punti l'anno; ribilanciarla ogni mese |
+| Livello a 30x sui prezzi veri dei perpetual, con il funding di Hyperliquid | R in verifica +0,08, non distinguibile da zero: **il livello a 30x è ritirato** |
+
+Il libro dei trade, da solo, non si distingue dal trend su Bitcoin ed Ether portato alla stessa volatilità. Il suo merito dimostrato è la perdita limitata per trade.
+
+### 11.3 La sala di trading e la matematica del 30%
+
+100.000 trader simulati **senza alcun vantaggio**, rischio 2–5% per trade a 20–30x. Su 1.000:
+
+| | Su 1.000 |
+|---|---:|
+| Tre mesi di fila sopra il 30% entro un anno | 56 |
+| Sei mesi di fila | 0,3 |
+| Dodici su dodici | 0 |
+| Azzerati entro 12 / 36 mesi | 444 / 839 |
+
+Bastano 12 trader senza vantaggio perché una sala abbia da mostrare tre mesi di fila al 30%; il 69% di chi li ha mostrati è azzerato entro tre anni.
+
+Forzando il rischio sui trade a 11x fino a un mese **medio** del 30% (12% di rischio per trade): mese composto tipico 3,8%, caduta tipica 96%, probabilità di perdere il 90% in tre anni tra il 37% e il 66%. Anche con un vantaggio vero e noto, ogni combinazione che rende il 30% al mese ha una caduta tipica di almeno il 70%.
+
+### 11.4 Il fondo rifatto
+
+Statistiche mensili, aprile 2018 – ottobre 2026, con le correzioni di 11.2 ([`sintesi/fondo_v5.out`](../research/v5/v5/sintesi/fondo_v5.out)). Monte Carlo a tre anni; "metà vantaggio" va letto come scenario centrale, dopo oltre 2.600 varianti provate.
+
+| Profilo | Sharpe (tutto \| verifica) | CAGR lordo | Mese mediano | Caduta massima giornaliera | Mese composto: base / metà vantaggio | P(caduta ≥ 50%) a metà vantaggio |
+|---|---|---:|---:|---:|---|---:|
+| Libro giornaliero 1x, cassa remunerata | 1,47 \| 1,20 | 14,7% | 0,7% | −9% | 1,2% / 0,7% | 0% |
+| Libro giornaliero 2x | 1,47 \| 1,21 | 27,7% | 1,1% | −18% | 2,1% / 1,1% | 0% |
+| Prudente (C1) | 1,15 \| 0,96 | 26,8% | 0,6% | −17% | 2,0% / 1,1% | 0% |
+| **Prudente + indici a leva** | 1,35 \| 1,16 | 36,7% | 1,1% | −20% | 2,7% / 1,4% | 0% |
+| Massimo (C3) | 1,20 \| 1,04 | 55,0% | 1,1% | −31% | 3,8% / 1,8% | 9% |
+| **Massimo + indici a leva** | 1,32 \| 1,15 | 67,0% | 2,1% | −32% | 4,5% / 2,2% | 10% |
+| Massimo con il motore di rischio di oggi | 1,00 \| 0,46 | 25,1% | 0,2% | −19% | 2,0% / 1,0% | 0% |
+| Massimo + indici + short delle nuove quotazioni (**non verificato eseguibile**) | 1,51 \| 1,39 | 80,8% | 3,0% | −30% | 5,2% / 2,4% | 8% |
+
+Dopo le tasse i rendimenti scendono di circa un quarto.
+
+- **Scelta:** il flusso sugli indici entra nel libro dei trade; il rischio per trade segue la conviction; il livello a 30x esce; l'ingresso avviene con ordine limite all'apertura; la strategia sugli ETF si ribilancia ogni mese sotto i 100.000 $.
+- **In osservazione, senza capitale:** l'indicatore GQ come soglia d'ingresso e lo short delle nuove quotazioni, finché il validatore e il paper trading non li confermano.
+- **Alternative scartate:** gestione attiva del trade, rotture intraday a stop stretto, universo ampio, modelli statistici, tutti con i numeri nelle cartelle degli analisti.
+
+### 11.5 Risposta alla domanda
+
+Il fondo rifatto rende, nello scenario base, tra il 2,7% e il 4,5% al mese composto; nello scenario centrale tra l'1,4% e il 2,2%. **Il 30% al mese non è raggiunto e, con i vantaggi misurati, non è raggiungibile a nessun livello di rischio**: il massimo assoluto del rendimento composto, a qualunque rischio, è intorno al 12% al mese nello scenario base, con caduta tipica del 90%. La leva non crea vantaggio: moltiplica quello che c'è, e oltre un certo punto lo distrugge.
 
 ---
 
