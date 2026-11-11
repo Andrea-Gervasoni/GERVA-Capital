@@ -10,9 +10,19 @@ Regole del banco (per non ingannarsi, docs/research/alpha_research.md §0-6):
   * se nessuna variante supera tutti i cancelli si TIENE la v3. E' il risultato piu' probabile, ed
     e' un buon risultato: vuol dire che il motore non e' stato adattato al passato.
 
+Tasso a breve e tesoreria (correzione dell'audit del 10/11, rilievo 9):
+  * OGNI cancello (Sharpe, PSR, DSR, PBO, bootstrap appaiato, holdout) lavora sui rendimenti IN ECCESSO del
+    tasso a breve giornaliero (`short_rate`: ^IRX / 100 / giorni l'anno). Sui rendimenti grezzi il banco
+    premiava chi teneva piu' liquidita' remunerata: su mercati di puro rumore promuoveva la variante
+    "con cassa" 9-12 volte su 12, e una serie di soli T-bill aveva Deflated Sharpe 1,000;
+  * la liquidita' ferma rende il tasso a breve meno 0,10% (ETF monetario UCITS) in TUTTE le varianti,
+    riferimento compreso. E' una scelta di TESORERIA (data["tesoreria"], default True), uguale per tutti,
+    non un miglioramento candidato: mettere la cassa in un monetario non richiede abilita' e non dice
+    nulla sul motore. In eccesso del tasso la cassa vale -0,10% l'anno: non puo' piu' sembrare alpha;
+  * il banco stampa anche il risultato con un giorno di ritardo in piu' tra segnale ed esecuzione (lag=1):
+    il motore senza prezzi di apertura esegue sulla stessa chiusura che genera il segnale (backtest.py).
+
 Miglioramenti candidati, ciascuno con un meccanismo documentato:
-  cash   la quota non investita (oggi ~43% del libro azionario) rende il tasso a breve, meno 0,10%
-         di costo, tramite un ETF UCITS monetario: rendimento quasi senza rischio che la v3 non prende
   dyn    momentum settoriale con il freno di Daniel-Moskowitz (bear market + volatilita' alta)
   vix    reversal dimensionato con il VIX (Nagel 2012), con lo stesso tetto per titolo
   erc    allocazione tra sleeve a contributi di rischio uguali con covarianza Ledoit-Wolf, mensile
@@ -46,26 +56,24 @@ TD = 252
 class Variant:
     name: str
     comb: str = "equal"        # equal | erc | hrp
-    cash: bool = False
     dyn: bool = False
     vix: bool = False
     band: float = 0.02
     vt: bool = False
 
     def params(self) -> dict:
-        return dict(comb=self.comb, cash=self.cash, dyn=self.dyn, vix=self.vix, band=self.band, vt=self.vt)
+        return dict(comb=self.comb, dyn=self.dyn, vix=self.vix, band=self.band, vt=self.vt)
 
 
 VARIANTS = [
     Variant("v3_riferimento"),
-    Variant("cash", cash=True),
     Variant("dyn", dyn=True),
     Variant("vix", vix=True),
     Variant("erc", comb="erc"),
     Variant("hrp", comb="hrp"),
     Variant("band5", band=0.05),
     Variant("vt", vt=True),
-    Variant("tutto", comb="erc", cash=True, dyn=True, vix=True, band=0.05),
+    Variant("tutto", comb="erc", dyn=True, vix=True, band=0.05),
 ]
 
 
@@ -162,7 +170,34 @@ def scale_exposure(W: pd.DataFrame, k: float) -> pd.DataFrame:
     return W.mul(f, axis=0)
 
 
-def run_variant(data: dict, v: Variant, cost: float = 0.0008, scale: float = 1.0, return_result: bool = False):
+CASH_FEE = 0.001            # costo annuo dell'ETF monetario che remunera la liquidita'
+
+
+def short_rate(data: dict, periods: int = TD) -> pd.Series:
+    """Tasso a breve PER PERIODO (giornaliero), allineato ai prezzi: ^IRX (T-bill a 13 settimane, % annuo) / 100 / periodi.
+    Senza ^IRX vale data["cash_rate"] (annuo, default 2%). E' la stessa serie che remunera la liquidita' e che
+    si sottrae nei cancelli: le due cose devono usare lo stesso numero, altrimenti la differenza diventa Sharpe."""
+    close = data["close"]
+    if "^IRX" in close:
+        annual = (close["^IRX"].astype(float) / 100).ffill().bfill()
+    else:
+        annual = pd.Series(float(data.get("cash_rate", 0.02)), index=close.index)
+    return (annual / periods).rename("tasso")
+
+
+def treasury(r: pd.Series, gross: pd.Series, data: dict, periods: int = TD) -> pd.Series:
+    """Accredita alla liquidita' ferma il tasso a breve meno CASH_FEE. Vale per ogni variante, riferimento compreso;
+    data["tesoreria"] = False la spegne per tutte (liquidita' a rendimento zero)."""
+    if not data.get("tesoreria", True):
+        return r
+    idle = (1 - gross).clip(lower=0)
+    return r + idle * (short_rate(data, periods) - CASH_FEE / periods).clip(lower=0)
+
+
+def run_variant(data: dict, v: Variant, cost: float = 0.0008, scale: float = 1.0, return_result: bool = False,
+                lag: int = 0):
+    """Rendimento TOTALE giornaliero della variante (mercato + liquidita' remunerata). lag: giorni di ritardo in piu'
+    tra segnale ed esecuzione (0 = stessa chiusura, come finora; 1 = chiusura del giorno dopo)."""
     close = data["close"]
     sl = sleeves(close, v, data.get("stocks"))
     W = combine(close, sl, v.comb, cost)
@@ -170,12 +205,8 @@ def run_variant(data: dict, v: Variant, cost: float = 0.0008, scale: float = 1.0
         W = vol_target(close, W, cost=cost)
     if scale != 1.0:
         W = scale_exposure(W, scale)
-    res = BT.run(W, close[W.columns], cost_rate=cost, band=v.band)
-    r = res.returns
-    if v.cash:
-        rate = (close["^IRX"] / 100).ffill() if "^IRX" in close else pd.Series(data.get("cash_rate", 0.02), index=close.index)
-        idle = (1 - res.daily["gross"]).clip(lower=0)
-        r = r + idle * (rate - 0.001).clip(lower=0) / TD
+    res = BT.run(W, close[W.columns], cost_rate=cost, band=v.band, lag=lag)
+    r = treasury(res.returns, res.daily["gross"], data)
     return (r, res) if return_result else r
 
 
@@ -187,7 +218,7 @@ def risk_ladder(data: dict, v: Variant, scales=(1.0, 1.25, 1.5, 2.0), capital: f
     for k in scales:
         r, res = run_variant(data, v, scale=k, return_result=True)
         r = r.iloc[start_skip:]
-        p = QS.performance(r.values)
+        p = QS.performance(r.values, rf=short_rate(data).reindex(r.index).values)       # Sharpe in eccesso del tasso
         yearly = (1 + r).groupby(r.index.year).prod() - 1
         rows[f"x{k:g}"] = dict(lorda_media=float(res.daily["gross"].iloc[start_skip:].mean()), Sharpe=p["Sharpe"],
                                CAGR=p["CAGR"], Vol=p["Vol"], MaxDD=p["MaxDD"], anno_peggiore=float(yearly.min()),
@@ -219,16 +250,30 @@ class BenchResult:
     motivo: str
     holdout: dict
     confronti: dict = field(default_factory=dict)
+    ritardo: pd.DataFrame | None = None         # stesse varianti con un giorno di ritardo in piu' (solo informazione)
+    tasso_medio: float = 0.0                    # tasso a breve medio annuo sottratto nel periodo di scelta
 
     def to_markdown(self) -> str:
         lines = ["# GERVA-Q v4 — banco di prova contro la v3", "",
                  f"**Scelta: {self.scelta}** — {self.motivo}", "",
+                 f"Sharpe, PSR, PBO e confronti sono calcolati sui rendimenti **in eccesso del tasso a breve** "
+                 f"(media {self.tasso_medio:.2%} l'anno nel periodo di scelta). La liquidita' ferma rende il tasso meno 0,10% "
+                 "in tutte le varianti, riferimento compreso: e' tesoreria, non una variante.", "",
                  f"PBO su {len(self.tabella)} varianti: **{self.pbo['pbo']:.2f}** (0,5 = scegliere la migliore equivale a tirare a caso)", "",
                  "| Variante | Sharpe | CAGR | Vol | MaxDD | Calmar | PSR | P(Sharpe > v3) |", "|---|---|---|---|---|---|---|---|"]
         for name, r in self.tabella.iterrows():
             lines.append(f"| {name} | {r.Sharpe:.2f} | {r.CAGR:.1%} | {r.Vol:.1%} | {r.MaxDD:.1%} | {r.Calmar:.2f} | "
                          f"{r.PSR0:.3f} | {self.confronti.get(name, float('nan')):.2f} |")
         lines += ["", f"Holdout (mai usato per scegliere): {self.holdout}"]
+        if self.ritardo is not None and len(self.ritardo):
+            lines += ["", "## Con un giorno di ritardo tra segnale ed esecuzione", "",
+                      "Sopra, il motore esegue sulla stessa chiusura che genera il segnale (ipotesi ottimistica). Qui il segnale "
+                      "di stasera si esegue alla chiusura di domani. Non e' un cancello: e' la misura di quanto il risultato "
+                      "dipende dall'esecuzione immediata.", "",
+                      "| Variante | Sharpe (stessa chiusura) | Sharpe (+1 giorno) | CAGR (+1 giorno) | P(Sharpe > v3) (+1 giorno) |",
+                      "|---|---|---|---|---|"]
+            for name, r in self.ritardo.iterrows():
+                lines.append(f"| {name} | {self.tabella.loc[name, 'Sharpe']:.2f} | {r.Sharpe:.2f} | {r.CAGR:.1%} | {r.P_v3:.2f} |")
         return "\n".join(lines)
 
 
@@ -251,11 +296,22 @@ def paired_sharpe_prob(a, b, n_boot: int = 1000, block: int = 20, seed: int = 11
     return float((sr(a[idx]) > sr(b[idx])).mean())
 
 
+def _accepts(fn, name: str) -> bool:
+    import inspect
+    try:
+        return name in inspect.signature(fn).parameters
+    except (TypeError, ValueError):
+        return False
+
+
 def bench(data: dict, variants=VARIANTS, holdout_years: float = 2.0, register=None, start_skip: int = 300,
           dsr_fn=None, p_min: float = 0.90, pbo_max: float = 0.30, runner=None, ref: str = "v3_riferimento",
-          periods: int = 252) -> BenchResult:
+          periods: int = 252, rf=None, with_lag: bool = True) -> BenchResult:
     """register(variant) -> trial_id; dsr_fn(trial_id, returns) -> dsr. Entrambi facoltativi (test).
-    runner(data, variant) -> rendimenti: di default il motore azionario; il banco crypto passa il suo."""
+    runner(data, variant) -> rendimenti TOTALI: di default il motore azionario; il banco crypto passa il suo.
+    rf: tasso a breve per periodo (Serie indicizzata come i prezzi, oppure scalare); se manca si usa short_rate(data).
+    Tutti i cancelli lavorano su rendimento - rf; anche dsr_fn riceve i rendimenti in eccesso.
+    with_lag: riesegue ogni variante con lag=1 e lo riporta in `ritardo` (se il runner accetta `lag`)."""
     run = runner or run_variant
     R = {}
     for v in variants:
@@ -263,17 +319,24 @@ def bench(data: dict, variants=VARIANTS, holdout_years: float = 2.0, register=No
         r = run(data, v).iloc[start_skip:]
         R[v.name] = (r, tid)
     M = pd.DataFrame({k: v[0] for k, v in R.items()}).dropna()
+    rate = short_rate(data, periods) if rf is None else (rf if isinstance(rf, pd.Series) else pd.Series(float(rf), index=M.index))
+    rate = rate.reindex(M.index).ffill().bfill()
+    if rate.isna().any():
+        raise ValueError("tasso a breve mancante per il periodo del banco")
+    X = M.sub(rate, axis=0)                               # rendimenti in eccesso: e' su questi che si giudica
     split = M.index[-1] - pd.DateOffset(years=holdout_years)
-    sel, hold = M[M.index <= split], M[M.index > split]
+    is_sel = M.index <= split
+    sel, hold, xsel, xhold = M[is_sel], M[~is_sel], X[is_sel], X[~is_sel]
+    rsel, rhold = rate[is_sel].values, rate[~is_sel].values
     rows, comp = {}, {}
     for k in M.columns:
-        p = QS.performance(sel[k].values, periods=periods)
+        p = QS.performance(sel[k].values, periods=periods, rf=rsel)
         if dsr_fn and R[k][1]:
-            p["DSR"] = dsr_fn(R[k][1], sel[k].values)
+            p["DSR"] = dsr_fn(R[k][1], xsel[k].values)
         rows[k] = p
-        comp[k] = paired_sharpe_prob(sel[k].values, sel[ref].values) if k != ref else 0.5
+        comp[k] = paired_sharpe_prob(xsel[k].values, xsel[ref].values) if k != ref else 0.5
     tab = pd.DataFrame(rows).T
-    pbo = QS.pbo_cscv(sel.values, n_blocks=10).to_dict()
+    pbo = QS.pbo_cscv(xsel.values, n_blocks=10).to_dict()
     cand = tab.drop(index=ref).sort_values("Sharpe", ascending=False)
     choice, why = ref, "nessuna variante supera tutti i cancelli: si tiene la v3"
     best = cand.index[0]
@@ -281,8 +344,8 @@ def bench(data: dict, variants=VARIANTS, holdout_years: float = 2.0, register=No
                   dsr=("DSR" not in tab or tab.loc[best].get("DSR", 1) >= 0.95))
     hold_info = {}
     if all(checks.values()):
-        hs_best = QS.performance(hold[best].values, periods=periods)["Sharpe"]
-        hs_ref = QS.performance(hold[ref].values, periods=periods)["Sharpe"]
+        hs_best = QS.performance(hold[best].values, periods=periods, rf=rhold)["Sharpe"]
+        hs_ref = QS.performance(hold[ref].values, periods=periods, rf=rhold)["Sharpe"]
         hold_info = dict(variante=best, sharpe_holdout=round(hs_best, 3), sharpe_v3_holdout=round(hs_ref, 3))
         if hs_best > hs_ref:
             choice, why = best, (f"supera la v3 nel periodo di scelta (P={comp[best]:.2f}), PBO {pbo['pbo']:.2f}, "
@@ -291,4 +354,17 @@ def bench(data: dict, variants=VARIANTS, holdout_years: float = 2.0, register=No
             why = f"{best} batte la v3 nel periodo di scelta ma non nell'holdout: si tiene la v3"
     else:
         why += f" (migliore candidata {best}: " + ", ".join(f"{k}={'ok' if v else 'no'}" for k, v in checks.items()) + ")"
-    return BenchResult(tabella=tab, pbo=pbo, scelta=choice, motivo=why, holdout=hold_info, confronti=comp)
+    lagged = None
+    if with_lag and _accepts(run, "lag"):
+        L = pd.DataFrame({v.name: run(data, v, lag=1).iloc[start_skip:] for v in variants}).reindex(sel.index).dropna()
+        rl = rate.reindex(L.index)
+        XL = L.sub(rl, axis=0)
+        lagged = pd.DataFrame({k: dict(Sharpe=QS.performance(L[k].values, periods=periods, rf=rl.values)["Sharpe"],
+                                       CAGR=QS.performance(L[k].values, periods=periods, rf=rl.values)["CAGR"],
+                                       P_v3=paired_sharpe_prob(XL[k].values, XL[ref].values) if k != ref else 0.5)
+                               for k in L.columns}).T
+        if choice != ref and lagged.loc[choice, "P_v3"] < p_min:
+            why += (f". ATTENZIONE: con un giorno di ritardo P(Sharpe > v3) scende a {lagged.loc[choice, 'P_v3']:.2f}: "
+                    "il vantaggio dipende dall'esecuzione sulla stessa chiusura del segnale")
+    return BenchResult(tabella=tab, pbo=pbo, scelta=choice, motivo=why, holdout=hold_info, confronti=comp,
+                       ritardo=lagged, tasso_medio=float(np.mean(rsel) * periods))

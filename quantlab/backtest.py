@@ -1,9 +1,15 @@
 """
 Backtester con deriva dei pesi (corregge il rilievo R3 dell'audit di GERVA-Q).
 
-Convenzione temporale (identica a GERVA-Q):
+Convenzione temporale:
   * i pesi target W[t] sono decisi con dati fino alla CHIUSURA di t;
-  * si eseguono all'APERTURA di t+1 (se si passano gli open), altrimenti alla chiusura di t+1;
+  * CON i prezzi di apertura si eseguono all'APERTURA di t+1+lag;
+  * SENZA i prezzi di apertura si eseguono alla CHIUSURA di t+lag. Con lag=0 (il default, tenuto per non
+    cambiare i risultati gia' registrati) e' la STESSA chiusura che ha generato il segnale: si guadagna gia'
+    il rendimento da close(t) a close(t+1). E' un'ipotesi ottimistica (ordine "in chiusura" calcolato un
+    attimo prima della campana, senza slippage): fino al 10/11 questo testo diceva "chiusura di t+1", e non
+    era vero. Per l'ipotesi prudente passare lag=1: decido stasera, eseguo alla chiusura di domani.
+    Un vantaggio che sparisce con lag=1 non e' eseguibile da chi legge il segnale dopo la chiusura;
   * tra un ribilanciamento e l'altro le QUANTITA' restano ferme e i pesi derivano con i prezzi.
 
 `rebalance` dice quando si tocca il portafoglio: una soglia (banda) evita di inseguire
@@ -29,14 +35,19 @@ class BacktestResult:
 
 def run(W: pd.DataFrame, close: pd.DataFrame, open_: pd.DataFrame | None = None,
         cost_rate: float | pd.Series = 0.0008, band: float = 0.0,
-        rebalance_mask: pd.Series | None = None) -> BacktestResult:
+        rebalance_mask: pd.Series | None = None, lag: int = 0) -> BacktestResult:
     """
     W: pesi target (frazione del NAV) decisi alla chiusura di ogni riga.
     close/open_: prezzi allineati a W (stesse colonne).
     cost_rate: costo per unita' di turnover (scalare o per colonna).
     band: si ritocca un peso solo se |target - attuale| > band (o se il target e' 0).
     rebalance_mask: True nei giorni in cui e' permesso ribilanciare (default: sempre).
+    lag: righe di ritardo IN PIU' tra decisione ed esecuzione (0 = stessa chiusura senza open, apertura
+         successiva con gli open; 1 = un giorno dopo). La maschera segue la decisione, quindi ritarda con lei.
     """
+    if int(lag) != lag or lag < 0:
+        raise ValueError("lag deve essere un intero >= 0: un ritardo negativo sarebbe guardare il futuro")
+    lag = int(lag)
     cols = list(W.columns)
     close = close[cols].astype(float)
     W = W.reindex(close.index).fillna(0.0)
@@ -48,13 +59,18 @@ def run(W: pd.DataFrame, close: pd.DataFrame, open_: pd.DataFrame | None = None,
     O = opn.values if opn is not None else None
     T, N = C.shape
     mask = np.ones(T, bool) if rebalance_mask is None else rebalance_mask.reindex(close.index).fillna(False).values
+    if lag:
+        # la decisione della riga t diventa eseguibile lag righe dopo: nelle prime lag righe non c'e' ancora nulla da eseguire
+        k = min(lag, T)
+        Wv = np.vstack([np.zeros((k, N)), Wv[:T - k]])
+        mask = np.concatenate([np.zeros(k, bool), mask[:T - k]])
     w = np.zeros(N)                      # pesi a fine giornata t (dopo la deriva)
     out = np.zeros((T, 4))
     wout = np.zeros((T, N))
     for t in range(1, T):
         prev_c, cur_c = C[t - 1], C[t]
         valid = np.isfinite(prev_c) & np.isfinite(cur_c) & (prev_c > 0)
-        # 1) decisione di ieri sera, eseguita oggi
+        # 1) ultima decisione eseguibile (riga t-1-lag): senza open matura da close(t-1) a close(t), con gli open si esegue all'apertura di t
         tgt = Wv[t - 1]
         tgt = np.where(np.isfinite(tgt), tgt, 0.0)
         if mask[t - 1]:

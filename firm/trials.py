@@ -43,16 +43,22 @@ def register(agent_id: str, strategy_id: str, family: str, params: dict, hypothe
 PERIODS = 252                      # periodi l'anno di una prova, se non dichiarati (azioni ed ETF: giorni di borsa)
 
 
-def record_result(trial_id: str, returns, data_fingerprint: str = "", extra: dict | None = None, periods: int = PERIODS) -> dict:
-    """periods: osservazioni l'anno della serie (252 per azioni ed ETF, 365 per le crypto, che si negoziano anche nel weekend).
+def record_result(trial_id: str, returns, data_fingerprint: str = "", extra: dict | None = None, periods: int = PERIODS,
+                  rf=None) -> dict:
+    """rf: tasso a breve per periodo (scalare o serie allineata) da sottrarre prima di calcolare Sharpe, PSR e DSR. Chi tiene
+    liquidita' remunerata DEVE passarlo (o passare rendimenti gia' in eccesso): una serie di soli T-bill, sui rendimenti
+    grezzi, aveva Deflated Sharpe 1,000. None: i rendimenti sono usati come sono (compatibile con le prove gia' registrate).
+    periods: osservazioni l'anno della serie (252 per azioni ed ETF, 365 per le crypto, che si negoziano anche nel weekend).
     Resta scritto nel risultato della prova: Sharpe annuo e anni di storia si calcolano con il SUO calendario."""
     t = db.one("SELECT * FROM trials WHERE id=?", (trial_id,))
     if not t:
         raise KeyError(trial_id)
     if t["status"] != "registrata":
         raise ValueError("risultato gia' registrato: una nuova variante e' una NUOVA prova")
-    m = QS.moments(returns)
+    m = QS.moments(returns, rf)
     extra = dict(extra or {})
+    if rf is not None:
+        extra["in_eccesso_del_tasso"] = True
     if int(periods) != PERIODS:
         extra["periodi"] = int(periods)
     db.ex("UPDATE trials SET status='testata', sharpe_daily=?, n_obs=?, skew=?, kurt=?, result=?, "

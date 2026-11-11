@@ -116,13 +116,13 @@ def tsmom_weights(close: pd.DataFrame, p: dict) -> pd.DataFrame:
 def bt_crypto_tsmom(close: pd.DataFrame, p: dict) -> pd.Series:
     """Rendimento orario netto: i pesi decisi alla chiusura di un'ora valgono per l'ora dopo; si ribilancia solo oltre la banda."""
     w = tsmom_weights(close, p)
-    held = w.copy()
-    prev = pd.Series(0.0, index=w.columns)
-    rows = []
-    for t, row in w.iterrows():                                  # banda: non si insegue il rumore (i costi lo mangerebbero)
-        new = row.where((row - prev).abs() > p["band"], prev)
-        rows.append(new); prev = new
-    held = pd.DataFrame(rows, index=w.index)
+    vals = w.values.astype(float)
+    held_v = np.empty_like(vals)
+    prev = np.zeros(vals.shape[1])
+    for i in range(len(vals)):                                   # banda: non si insegue il rumore (i costi lo mangerebbero)
+        prev = np.where(np.abs(vals[i] - prev) > p["band"], vals[i], prev)
+        held_v[i] = prev                                         # stessi numeri di prima, senza iterrows: il test anti look-ahead ricalcola ~100 volte
+    held = pd.DataFrame(held_v, index=w.index, columns=w.columns)
     r = close.pct_change(fill_method=None).fillna(0.0)
     gross = (held.shift(1).fillna(0.0) * r).sum(axis=1)
     cost = held.diff().abs().sum(axis=1).fillna(0.0) * p["cost_bps"] / 1e4
@@ -170,6 +170,35 @@ def to_daily(hourly: pd.Series) -> pd.Series:
     return (1 + hourly).groupby(hourly.index.floor("D")).prod() - 1
 
 
+# ---------------------------------------------------------------------------------------------- test anti look-ahead (eseguito, non dichiarato)
+def _spy_by_last_bar(bars: pd.DataFrame, p: dict) -> pd.Series:
+    """Il backtest SPY indicizzato con l'ULTIMA barra di ogni giornata: cosi' "fino al taglio" ha senso anche per una serie giornaliera."""
+    d = bt_spy_intraday(bars, p)
+    if d.empty:
+        return pd.Series(dtype=float, index=bars.index[:0])
+    ny = bars.index.tz_convert("America/New_York") if bars.index.tz is not None else bars.index.tz_localize("UTC").tz_convert("America/New_York")
+    last = pd.Series(bars.index, index=ny.date).groupby(level=0).last()
+    return pd.Series(d.values, index=pd.DatetimeIndex([last[x.date()] for x in d.index]))
+
+
+def lookahead_check(name: str, data, p: dict) -> dict:
+    """Test di troncamento sul backtest VERO della strategia: i rendimenti fino a un istante non devono cambiare se si tolgono i dati successivi.
+    Si taglia a ogni fine/inizio mese piu' 60 righe a caso (seme fisso). Un errore durante il test vale come test non superato."""
+    from quantlab import lookahead as LA
+    try:
+        if name == "crypto_tsmom":
+            res = LA.truncation_test(lambda c: bt_crypto_tsmom(c, p), data, cut_points=5, min_history=min(400, max(len(data) // 3, 1)))
+        else:
+            ny = data.index.tz_convert("America/New_York") if data.index.tz is not None else data.index.tz_localize("UTC").tz_convert("America/New_York")
+            days = pd.Series(ny.date, index=data.index)
+            end_of_day = days != days.shift(-1)                  # si taglia solo a giornata finita: una giornata a meta' non ha rendimento
+            res = LA.truncation_test(lambda b: _spy_by_last_bar(b, p), data, cut_points=5, min_history=min(78 * 20, max(len(data) // 3, 1)),
+                                     allowed_mask=end_of_day)
+        return dict(ok=bool(res["ok"]), tagli=res["tagli"], violazioni=res["violazioni"][:3])
+    except Exception as e:
+        return dict(ok=False, tagli=0, violazioni=[], errore=f"{type(e).__name__}: {str(e)[:120]}")
+
+
 # ---------------------------------------------------------------------------------------------- dal backtest al comitato
 def backtest(name: str, data=None, propose: bool = True) -> dict:
     """Backtest con i dati di Alpaca (o quelli passati), prova registrata (anche a costi doppi), proposta al comitato di accenderla."""
@@ -187,15 +216,16 @@ def backtest(name: str, data=None, propose: bool = True) -> dict:
         daily = bt_spy_intraday(bars, p)
         daily2 = bt_spy_intraday(bars, dict(p, cost_bps=p["cost_bps"] * 2))
         bench = None
+    la = lookahead_check(name, close if name == "crypto_tsmom" else bars, p)       # eseguito sui dati di questo backtest: prima era True scritto a mano
     st, st2 = stats(daily, periods), stats(daily2, periods)
     if not st.get("ok"):
         return dict(ok=False, motivo=st.get("motivo"))
     tid = trials.register(spec["autore"], f"algo:{name}", name, p, spec["ipotesi"])
     d = trials.record_result(tid, daily.values, extra=dict(stats=st), periods=periods)
-    g = trials.gate(tid, cost2x_sharpe=st2.get("sharpe"), lookahead_ok=True)
+    g = trials.gate(tid, cost2x_sharpe=st2.get("sharpe"), lookahead_ok=la["ok"])
     res = dict(ok=True, strategia=name, prova=tid, risultati=st, costi_doppi=st2, deflated=dict(dsr=round(d["dsr"], 4), psr=round(d["psr"], 4), prove_totali=d["n_trials"]),
                cancello=dict(passa=bool(g.get("passa")), controlli={k: v for k, v in (g.get("controlli") or {}).items()}),
-               confronto=stats(bench, periods) if bench is not None else None, ts=db.now_iso())
+               confronto=stats(bench, periods) if bench is not None else None, look_ahead=la, ts=db.now_iso())
     db.runtime_set(f"algo.{name}.backtest", res)
     db.runtime_set(f"algo.{name}.serie", dict(d=[str(i)[:10] for i in daily.index], v=[round(float(x), 6) for x in daily.values]))      # per la pagina Portafoglio di strategie
     audit.log(spec["autore"], "algo.backtest", dict(strategia=name, sharpe=st.get("sharpe"), dsr=res["deflated"]["dsr"]))

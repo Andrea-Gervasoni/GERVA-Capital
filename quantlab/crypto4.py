@@ -11,13 +11,16 @@ Riferimento "v3_crypto": la sleeve di GERVA-Q (crypto_lab.v3_weights) RIESPRESSA
     qui e' approssimato con 9 / 3 giorni, perche' Yahoo non da' lo storico a 4 ore. E' un'APPROSSIMAZIONE dichiarata.
   * 50% H1 + 50% H2, solo long/flat, niente leva, costo 0,23% per lato (commissione IBKR + slippage, come la v3).
 
+Tasso a breve e tesoreria (audit del 10/11, come nel banco azionario): tutti i cancelli lavorano sui rendimenti in
+eccesso del tasso a breve; la quota ferma rende il tasso meno 0,10% in TUTTE le varianti, riferimento compreso
+(data["tesoreria"], default True). La "cassa" non e' piu' una variante: e' una scelta di tesoreria uguale per tutti.
+
 Varianti candidate (meccanismo documentato, scritto PRIMA del test):
-  cash    la quota ferma rende il tasso a breve (meno 0,10%): nella crypto la sleeve e' spesso flat
   ibkr3   paniere H1 ridotto a BTC/ETH/SOL: meno monete piccole, meno spread e rischio di liquidita'
   slow    lookback piu' lunghi (20/40/80/160) e Donchian 20/10: meno operazioni, meno costi (0,23% per lato pesa)
   vt      volatilita' target sull'intera sleeve (40%), mai oltre il 100% investito
   erc     H1 e H2 a contributi di rischio uguali (inverso della volatilita' a 60 giorni) invece di 50/50
-  tutto   cash + slow + vt + erc
+  tutto   slow + vt + erc
 """
 from __future__ import annotations
 
@@ -38,24 +41,22 @@ TD = 365
 @dataclass(frozen=True)
 class CVariant:
     name: str
-    cash: bool = False
     univ: str = "all"
     slow: bool = False
     vt: bool = False
     comb: str = "half"
 
     def params(self) -> dict:
-        return dict(cash=self.cash, univ=self.univ, slow=self.slow, vt=self.vt, comb=self.comb)
+        return dict(univ=self.univ, slow=self.slow, vt=self.vt, comb=self.comb)
 
 
 VARIANTS = [
     CVariant("v3_crypto"),
-    CVariant("cash", cash=True),
     CVariant("ibkr3", univ="ibkr3"),
     CVariant("slow", slow=True),
     CVariant("vt", vt=True),
     CVariant("erc", comb="erc"),
-    CVariant("tutto", cash=True, slow=True, vt=True, comb="erc"),
+    CVariant("tutto", slow=True, vt=True, comb="erc"),
 ]
 
 
@@ -118,23 +119,22 @@ def weights(close: pd.DataFrame, v: CVariant) -> pd.DataFrame:
     return W
 
 
-def run_variant(data: dict, v: CVariant, scale: float = 1.0, return_result: bool = False):
+def run_variant(data: dict, v: CVariant, scale: float = 1.0, return_result: bool = False, lag: int = 0):
+    """Rendimento TOTALE giornaliero (mercato + liquidita' remunerata). lag: giorni di ritardo in piu' nell'esecuzione."""
+    from . import gervaq4 as G4
     close = data["close"]
     W = weights(close, v)
     if scale != 1.0:
         g = W.abs().sum(axis=1)
         W = W.mul(np.minimum(scale, np.where(g > 0, 1 / g.where(g > 0, 1.0), scale)), axis=0)
     D = close[W.columns]
-    res = BT.run(W, D, cost_rate=COST, band=0.05)
-    r = res.returns
-    if v.cash:
-        rate = (close["^IRX"] / 100).ffill().bfill() if "^IRX" in close else pd.Series(0.02, index=close.index)
-        idle = (1 - res.daily["gross"]).clip(lower=0)
-        r = r + idle * (rate - 0.001).clip(lower=0) / TD
+    res = BT.run(W, D, cost_rate=COST, band=0.05, lag=lag)
+    r = G4.treasury(res.returns, res.daily["gross"], data, periods=TD)
     return (r, res) if return_result else r
 
 
 def bench(data: dict, **kw):
     """Stesso banco (e stessi cancelli) di quello azionario, con il motore crypto e 365 giorni l'anno."""
     from . import gervaq4 as G4
-    return G4.bench(data, variants=VARIANTS, runner=run_variant, ref="v3_crypto", periods=TD, **kw)
+    kw.setdefault("variants", VARIANTS)
+    return G4.bench(data, runner=run_variant, ref="v3_crypto", periods=TD, **kw)

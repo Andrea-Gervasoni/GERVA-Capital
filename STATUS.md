@@ -25,8 +25,53 @@
 - L'adattatore Alpaca del nuovo motore è collaudato contro un servizio finto, non contro Alpaca.
 - Manca l'adattatore IBKR per il nuovo motore (il vecchio `firm/ibkr.py` va incapsulato).
 - Rischio di cambio non modellato; festività di borsa non gestite a calendario.
-- Nel vecchio `quantlab/`: Sharpe in eccesso nei banchi, ritardo di esecuzione, test anti look-ahead più fitto.
-  **La decisione "v4 approvata" e la regola del portafoglio ombra a 40 giorni vanno considerate sospese** (audit, sezione 1).
+- Valute non modellate anche nel vecchio `quantlab/` (rilievo 13: tasso americano accreditato a un conto in euro).
+- `firm/strategies.py` (`stats`) calcola ancora lo Sharpe delle due strategie Alpaca sui rendimenti grezzi: lì la liquidità
+  rende zero, quindi il tasso non gonfia nulla, ma lo Sharpe non è in eccesso del tasso.
+
+## 11/11 — i tre rilievi aperti dell'audit su `quantlab/` sono corretti (rilievi 9–12)
+20 test di regressione in `tests/test_audit_quantlab.py`: 19 falliscono sul codice di prima, uno verifica che una riscrittura
+dia gli stessi numeri. Suite intera verde (`python -m pytest`).
+
+1. **Sharpe in eccesso del tasso a breve.** `quantlab/stats.py`: `moments`, `performance` e `sharpe_ci_bootstrap` accettano
+   `rf` (tasso per periodo, scalare o serie giornaliera); chi non lo passa ottiene i numeri di prima. I banchi
+   (`gervaq4.bench`, `crypto4.bench`) usano il tasso in ogni cancello: Sharpe, PSR, DSR, PBO, bootstrap appaiato, holdout.
+   La liquidità ferma rende tasso − 0,10% in **tutte** le varianti, riferimento compreso (`data["tesoreria"]`): la variante
+   "cash" non esiste più e "tutto" non la contiene. `firm/trials.record_result` accetta `rf`.
+2. **Ritardo di esecuzione.** `quantlab/backtest.run(..., lag=0)`: il docstring ora dice il vero (senza prezzi di apertura
+   si esegue sulla stessa chiusura del segnale); `lag=1` esegue un giorno dopo. I banchi stampano entrambe le tabelle.
+3. **Test anti look-ahead.** `quantlab/lookahead.truncation_test` taglia a ogni riga di ribilanciamento (fine e inizio mese,
+   più quelle dichiarate da chi chiama) e a 60 righe casuali a seme fisso; gli ingressi in più passano da `extra` e vengono
+   tagliati insieme ai prezzi. `firm/strategies.backtest` esegue davvero il test (prima `lookahead_ok=True` era scritto a mano).
+   Tutti i segnali esistenti passano anche il test più fitto.
+
+### Conseguenza: la v4 "tutto" NON supera più il suo cancello
+Banco rieseguito su dati reali Yahoo (2004 – 11/11/2026, 116 serie, impronta `5d1c81ef0cacdc12`):
+`research/gervaq4/2026-11-11.md`. Periodo di scelta, Sharpe in eccesso del tasso (media 1,55% l'anno).
+
+| Come si giudica "tutto" contro la v3 | Sharpe v3 | Sharpe "tutto" | P(Sharpe > v3) | Cancello ≥ 0,90 |
+|---|---|---|---|---|
+| Come il 5/11: rendimenti grezzi, cassa remunerata solo a "tutto" | 0,70 | 0,87 | 0,97 | passava |
+| Stesse serie, in eccesso del tasso (il conto dell'audit, che dava 0,66) | 0,52 | 0,54 | **0,59** | no |
+| Corretto: in eccesso del tasso, cassa remunerata a entrambe | 0,57 | 0,54 | **0,39** | **no** |
+| Corretto, con un giorno di ritardo nell'esecuzione | 0,52 | 0,51 | 0,43 | no |
+
+- **Scelta del banco: si tiene la v3.** Nessuna variante supera i cancelli. La migliore candidata è `erc`
+  (Sharpe 0,61, P = 0,81); il PBO su 8 varianti è 0,73, cioè scegliere la migliore in campione è peggio che tirare a caso.
+- Il vantaggio della v4 era per intero il tasso incassato sulla liquidità: "tutto" tiene metà del capitale fermo, e sui
+  rendimenti grezzi questo dimezzava la volatilità senza dimezzare il rendimento. Una serie di soli T-bill, misurata allo
+  stesso modo, aveva PSR e Deflated Sharpe pari a 1,000.
+- Il mio 0,59 differisce dallo 0,66 dell'audit: stessi segnali, ma dati scaricati oggi e fino all'11/11. La conclusione è la stessa.
+- Il "dsr=ok" stampato dal banco in questa sessione non vale: il registro delle prove qui è nuovo (8 prove), non quello
+  del Mac con le 64 prove. Va riletto dopo aver rieseguito sul Mac.
+- **Crypto** (`research/crypto/2026-11-11.md`, 2017 – 11/11/2026): si tiene la v3 crypto; PBO 0,88. Con un giorno di ritardo
+  lo Sharpe del riferimento scende da 1,72 a 1,54.
+- **Portafoglio ombra** (`firm/shadow.py`): la regola di adozione a 40 giorni è **sospesa**. Continua a registrare, con la
+  stessa tesoreria per v3 e v4 e il confronto in eccesso del tasso, ma non propone più l'adozione. Su 120 coppie di serie
+  simulate senza alcun vantaggio la regola di prima approvava spesso (il test lo riproduce); l'audit misurò il 35% su 136
+  finestre storiche. I giorni già scritti sul Mac dal 5/11 hanno la v4 con la cassa e la v3 senza: la sintesi lo segnala.
+- **Da decidere (Andrea):** se riscrivere la regola. Una regola nuova deve dichiarare prima la frequenza di falsa
+  approvazione (al più 5%) e dimostrarla in simulazione; con una differenza di Sharpe di 0,2 servono anni, non 40 giorni.
 
 ## Che cosa serve da Andrea
 1. Leggere `docs/RIFONDAZIONE.md` e `research/v5/RESULTS.md`.
@@ -151,6 +196,9 @@ Dettagli, fonti e livelli di fiducia in `docs/research/fonti_esterne_2026-11.md`
   DeepSeek Super-Agent, Grok come secondo modello. OpenBB e Lean restano utili sul Mac, piu' avanti.
 
 ## 5/11/2026: il banco v4 su dati REALI (2004-oggi, 116 serie, Yahoo Finance)
+> **Superato l'11/11.** I numeri di questa sezione sono su rendimenti grezzi, con la cassa remunerata solo alla v4: in
+> eccesso del tasso la v4 non supera il cancello (P = 0,39 contro 0,90) e la regola a 40 giorni è sospesa. Vedi in alto.
+
 Report: `research/gervaq4/2026-11-05.md`. Solo il motore azionario (meta' della v3); la sleeve crypto non e' toccata.
 
 | | Sharpe | CAGR | Vol | MaxDD |

@@ -1,4 +1,4 @@
-"""GERVA-Q v4: il banco di prova non promuove varianti per fortuna, e il miglioramento 'cash' fa quel che dice."""
+"""GERVA-Q v4: il banco di prova non promuove varianti per fortuna, e la tesoreria (liquidita' al tasso a breve) vale per tutte."""
 import numpy as np
 import pandas as pd
 import pytest
@@ -15,12 +15,14 @@ def synth(seed=0, years=10, trend=0.0):
     return dict(close=close, stocks=[f"STK{i}" for i in range(8)])
 
 
-def test_cash_sleeve_adds_about_rate_times_idle():
+def test_treasury_adds_about_rate_times_idle_to_every_variant():
+    """La liquidita' remunerata e' tesoreria: vale per il riferimento come per ogni variante (prima era la variante 'cash')."""
     d = synth(1, years=4)
-    base = G4.run_variant(d, G4.Variant("b"))
-    cash = G4.run_variant(d, G4.Variant("c", cash=True))
-    extra = (cash - base).mean() * 252
-    assert 0.0 < extra < 0.02 - 0.001 + 1e-9          # al massimo (2% - 0,1%) se tutto in liquidita'
+    for v in (G4.VARIANTS[0], G4.Variant("b", comb="erc")):
+        base = G4.run_variant(dict(d, tesoreria=False), v)
+        cash = G4.run_variant(d, v)
+        extra = (cash - base).mean() * 252
+        assert 0.0 < extra < 0.02 - 0.001 + 1e-9          # al massimo (2% - 0,1%) se tutto in liquidita'
 
 
 def test_combined_weights_have_no_lookahead():
@@ -33,8 +35,8 @@ def test_combined_weights_have_no_lookahead():
 def test_bench_on_noise_does_not_promote_a_lucky_signal():
     d = synth(3, years=7)
     res = G4.bench(d, variants=[G4.Variant("v3_riferimento"), G4.Variant("dyn", dyn=True),
-                                G4.Variant("erc", comb="erc"), G4.Variant("cash", cash=True)], holdout_years=2)
-    assert res.scelta in ("v3_riferimento", "cash"), res.motivo
+                                G4.Variant("erc", comb="erc")], holdout_years=2)
+    assert res.scelta == "v3_riferimento", res.motivo     # prima era ammessa anche "cash": la cassa non e' piu' una variante
     assert 0 <= res.pbo["pbo"] <= 1
     assert "Sharpe" in res.tabella.columns and "v3 " in res.to_markdown() or "v3_riferimento" in res.to_markdown()
 

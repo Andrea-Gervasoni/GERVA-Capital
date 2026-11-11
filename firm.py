@@ -142,21 +142,22 @@ def _research_crypto():
     close = pd.read_pickle(p)
     fp = QD.fingerprint(close)
     hyp = {"v3_crypto": "Riferimento: sleeve crypto della v3 riespressa su candele giornaliere (H2 approssimato).",
-           "cash": "La quota ferma della sleeve rende il tasso a breve: la crypto e' spesso flat.",
            "ibkr3": "Solo BTC/ETH/SOL nel trend: meno monete piccole, meno spread e rischio di liquidita'.",
            "slow": "Lookback piu' lunghi: meno operazioni, quindi meno costi a 0,23% per lato.",
            "vt": "Vol target sulla sleeve intera (40%): meno esposizione quando la volatilita' esplode.",
            "erc": "Trend e breakout a contributi di rischio uguali invece di 50/50.",
            "tutto": "Combinazione: verifica che i guadagni si sommino e non si annullino."}
     reg = lambda v: trials.register("senior_crypto", f"crypto4:{v.name}", "crypto4", v.params(), hyp[v.name])
-    dsr = lambda tid, r: trials.record_result(tid, r, fp, periods=C4.TD)["dsr"]      # crypto: 365 giorni l'anno, non 252
+    # crypto: 365 giorni l'anno, non 252. Il banco passa i rendimenti gia' IN ECCESSO del tasso a breve: lo si scrive nella prova
+    dsr = lambda tid, r: trials.record_result(tid, r, fp, dict(in_eccesso_del_tasso=True), periods=C4.TD)["dsr"]
     res = C4.bench(dict(close=close), register=reg, dsr_fn=dsr, start_skip=200)
     chosen = next(v for v in C4.VARIANTS if v.name == res.scelta)
     lad = []
     for k in (1.0, 1.5, 2.0):
         r, rr = C4.run_variant(dict(close=close), chosen, scale=k, return_result=True)
         from quantlab import stats as QS
-        pf = QS.performance(r.iloc[200:].values, periods=C4.TD)
+        pf = QS.performance(r.iloc[200:].values, periods=C4.TD,
+                            rf=G4.short_rate(dict(close=close), C4.TD).reindex(r.index).iloc[200:].values)
         lad.append(f"| x{k:g} | {rr.daily['gross'].iloc[200:].mean():.0%} | {pf['Sharpe']:.2f} | {pf['CAGR']:.1%} | "
                    f"{pf['Vol']:.1%} | {pf['MaxDD']:.1%} |")
     md = (res.to_markdown().replace("GERVA-Q v4 — banco di prova contro la v3", "Zona ricerca crypto — sleeve crypto contro la v3")
@@ -580,7 +581,6 @@ def cmd_research(a):
     close = pd.read_pickle(p)
     fp = QD.fingerprint(close)
     hyp = {"v3_riferimento": "Riferimento: GERVA-Q v3 riespressa nel motore quantlab (stessi segnali, deriva dei pesi).",
-           "cash": "La quota non investita rende il tasso a breve via ETF UCITS monetario: premio quasi senza rischio.",
            "dyn": "Il momentum crolla nei rimbalzi dopo i bear market con vol alta (Daniel-Moskowitz 2016): frenarlo li.",
            "vix": "Il premio della fornitura di liquidita' cresce col VIX (Nagel 2012): dimensionare il reversal col VIX.",
            "erc": "Contributi di rischio uguali tra sleeve con covarianza ristretta: meno peso al rischio azionario comune.",
@@ -589,7 +589,7 @@ def cmd_research(a):
            "vt": "Vol target con stima di crisi: meno esposizione quando le correlazioni salgono (Longin-Solnik 2001).",
            "tutto": "Combinazione di tutti i miglioramenti: verifica che i guadagni si sommino e non si annullino."}
     reg = lambda v: trials.register("head_research", f"gervaq4:{v.name}", "gervaq4", v.params(), hyp[v.name])
-    dsr = lambda tid, r: trials.record_result(tid, r, fp)["dsr"]
+    dsr = lambda tid, r: trials.record_result(tid, r, fp, dict(in_eccesso_del_tasso=True))["dsr"]   # il banco passa rendimenti in eccesso
     res = G4.bench(dict(close=close, stocks=[s for s in G4.STOCKS if s in close]), register=reg, dsr_fn=dsr)
     out = os.path.join(paths.RESEARCH, "gervaq4")
     os.makedirs(out, exist_ok=True)

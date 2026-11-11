@@ -5,7 +5,13 @@ intervalli di confidenza con bootstrap a blocchi.
 Convenzioni (docs/research/alpha_research.md §3-5):
   * gli Sharpe dentro le formule sono alla frequenza ORIGINALE (giornaliera), non annualizzati;
   * gamma4 e' la curtosi NON in eccesso (3 per la normale): pandas.kurt() restituisce
-    quella in eccesso, quindi qui si converte sempre in modo esplicito.
+    quella in eccesso, quindi qui si converte sempre in modo esplicito;
+  * lo Sharpe e' un rapporto tra PREMIO e rischio (Sharpe 1966, 1994): il numeratore e' il rendimento in
+    eccesso del tasso a breve, non il rendimento grezzo. `rf` e' il tasso PER PERIODO (giornaliero se i
+    rendimenti sono giornalieri: tasso annuo / periodi l'anno), scalare oppure serie allineata ai rendimenti.
+    Chi non passa nulla (rf=None) ottiene il comportamento di prima, cioe' rf = 0: va bene solo per serie
+    gia' in eccesso o autofinanziate (long/short a capitale zero). Una serie che incassa il tasso sulla
+    liquidita' DEVE passare rf, altrimenti il tasso viene scambiato per abilita' (audit del 10/11, rilievo 9).
 """
 from __future__ import annotations
 
@@ -30,9 +36,24 @@ class Moments:
     kurt: float      # gamma4, NON in eccesso
 
 
-def moments(returns) -> Moments:
+def excess(returns, rf=None) -> np.ndarray:
+    """Rendimenti in eccesso del tasso a breve, ripuliti dai non finiti.
+    rf: None (nessuna sottrazione, come prima), scalare per periodo, oppure serie lunga quanto i rendimenti."""
     r = np.asarray(returns, dtype=float)
-    r = r[np.isfinite(r)]
+    if rf is None:
+        return r[np.isfinite(r)]
+    f = np.asarray(rf, dtype=float)
+    if f.ndim == 0:
+        f = np.full(r.shape, float(f))
+    if f.shape != r.shape:
+        raise ValueError(f"rf deve essere scalare o allineato ai rendimenti: {f.shape} contro {r.shape}")
+    ok = np.isfinite(r) & np.isfinite(f)
+    return r[ok] - f[ok]
+
+
+def moments(returns, rf=None) -> Moments:
+    """Momenti dei rendimenti IN ECCESSO di rf (rf=None: rendimenti cosi' come sono)."""
+    r = excess(returns, rf)
     if len(r) < 3 or r.std(ddof=1) == 0:
         raise ValueError("servono almeno 3 rendimenti non costanti")
     sr = r.mean() / r.std(ddof=1)
@@ -89,21 +110,31 @@ def min_trl(m: Moments, sr_star: float = 0.0, alpha: float = 0.05) -> float:
 # ---------------------------------------------------------------------------
 # Metriche di base di una serie di rendimenti
 # ---------------------------------------------------------------------------
-def performance(returns, periods: int = 252) -> dict:
+def performance(returns, periods: int = 252, rf=None) -> dict:
+    """CAGR, volatilita' e drawdown sono quelli del conto (rendimento totale); Sharpe, PSR e MinTRL sono
+    calcolati sul rendimento in eccesso di rf (tasso per periodo, scalare o serie). rf=None: come prima."""
     r = np.asarray(returns, dtype=float)
-    r = r[np.isfinite(r)]
+    if rf is not None and np.ndim(rf) > 0:
+        f = np.asarray(rf, dtype=float)
+        if f.shape != r.shape:
+            raise ValueError(f"rf deve essere scalare o allineato ai rendimenti: {f.shape} contro {r.shape}")
+        ok = np.isfinite(r) & np.isfinite(f)
+        r, rf = r[ok], f[ok]
+    else:
+        r = r[np.isfinite(r)]
     nav = np.cumprod(1 + r)
     yrs = len(r) / periods
     cagr = nav[-1] ** (1 / yrs) - 1 if yrs > 0 and nav[-1] > 0 else float("nan")
     peak = np.maximum.accumulate(nav)
     dd = float((nav / peak - 1).min())
     vol = float(r.std(ddof=1) * math.sqrt(periods))
-    m = moments(r)
+    m = moments(r, rf)
     tail = np.sort(r)[: max(1, int(0.05 * len(r)))]
     return dict(CAGR=float(cagr), Vol=vol, Sharpe=annualize_sr(m.sr, periods),
                 MaxDD=dd, Calmar=float(cagr / abs(dd)) if dd < 0 else float("nan"),
                 CVaR95=float(tail.mean()), Skew=m.skew, Kurt=m.kurt, N=m.n,
-                PSR0=psr(m), MinTRL_anni=min_trl(m) / periods)
+                PSR0=psr(m), MinTRL_anni=min_trl(m) / periods,
+                Tasso=float(np.mean(rf) * periods) if rf is not None else 0.0)
 
 
 # ---------------------------------------------------------------------------
@@ -161,11 +192,11 @@ def pbo_cscv(M, n_blocks: int = 16, metric=None) -> PBOResult:
 # Bootstrap stazionario (Politis-Romano 1994) per l'intervallo di confidenza dello Sharpe
 # ---------------------------------------------------------------------------
 def sharpe_ci_bootstrap(returns, periods: int = 252, mean_block: int = 20,
-                        n_boot: int = 2000, ci: float = 0.90, seed: int = 7) -> tuple[float, float]:
+                        n_boot: int = 2000, ci: float = 0.90, seed: int = 7, rf=None) -> tuple[float, float]:
     """Intervallo di confidenza dello Sharpe annualizzato con blocchi di lunghezza
-    geometrica: rispetta l'autocorrelazione, a differenza del bootstrap i.i.d."""
-    r = np.asarray(returns, dtype=float)
-    r = r[np.isfinite(r)]
+    geometrica: rispetta l'autocorrelazione, a differenza del bootstrap i.i.d.
+    rf: tasso per periodo da sottrarre (None: nessuno, come prima)."""
+    r = excess(returns, rf)
     n = len(r)
     rng = np.random.default_rng(seed)
     t = np.arange(n)
