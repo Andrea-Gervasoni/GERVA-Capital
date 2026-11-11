@@ -18,7 +18,7 @@ limits:
   daily_loss: 0.04          # -4% in 24 ore: esposizione dimezzata
   weekly_loss: 0.08         # -8% in 7 giorni: come dd_halt
   max_weight: 0.35          # peso massimo di un singolo strumento
-  max_venue: {crypto: 0.60} # al massimo il 60% del patrimonio esposto su una sede crypto (rischio di controparte)
+  max_venue: {crypto: 0.40} # al massimo il 40% del patrimonio esposto su una sede crypto (rischio di controparte)
   max_order_frac: 0.25
   max_price_dev: 0.05
   min_order: 25.0

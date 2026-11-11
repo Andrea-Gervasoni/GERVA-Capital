@@ -1,5 +1,42 @@
 # GERVA Capital
 
+> **Novembre 2026: rifondazione (v5).** Il documento da leggere per primo è
+> [`docs/RIFONDAZIONE.md`](docs/RIFONDAZIONE.md): audit, ricerca su dati reali, GEX e VWAP verificati, portafoglio e leva,
+> validazione, architettura, struttura societaria, dashboard, roadmap. I numeri sono in
+> [`research/v5/RESULTS.md`](research/v5/RESULTS.md) e sono tutti **simulati**.
+
+## Il motore nuovo: `gerva/`
+
+Deterministico, senza LLM nel percorso degli ordini, solo paper finché i cancelli numerici non sono verdi.
+
+```bash
+python -m venv .venv && .venv/bin/pip install -r requirements.txt
+.venv/bin/python -m pytest                 # 380 test circa
+.venv/bin/python -m gerva research         # rifà tutti i backtest -> research/v5/RESULTS.md
+.venv/bin/python -m gerva demo             # fotografia dimostrativa dal backtest (SIMULATO)
+.venv/bin/python -m dashboard.server       # http://127.0.0.1:8787
+.venv/bin/python -m gerva cycle            # un giro del ciclo live in paper, con prezzi veri
+.venv/bin/python -m gerva supervise -- run # ciclo continuo con riavvio automatico
+.venv/bin/python -m gerva gates            # cancelli paper -> reale
+.venv/bin/python -m gerva kill "motivo"    # chiude tutto e ferma il sistema
+```
+
+| Cartella | Che cosa contiene |
+|---|---|
+| `gerva/strategies/book.py` | Le quattro strategie in produzione: una sola definizione per backtest e live |
+| `gerva/risk/engine.py` | Stati NORMAL / REDUCED / HALTED / KILLED, scalini a −10%, −15%, −20%, leva massima 2x (mai oltre 3x) |
+| `gerva/live/runner.py` | Il ciclo: recupero ordini, dati, conto, rischio, pesi, ordini, fotografia |
+| `gerva/ops/` | Registro durevole, retry, interruttore, allarmi, supervisore |
+| `gerva/agents/` | Consiglio di ricerca: gli agenti propongono schede, il codice misura e decide |
+| `gerva/research/run.py` | Tutti i backtest del documento |
+| `dashboard/` | Pagina in sola lettura: P&L, esposizione, rischio, strategie, ordini, sistema |
+| `config/gerva.yaml` | Limiti di rischio e parametri del ciclo |
+| `.claude/` | Sotto-agenti (`gerva-ricercatore`, `gerva-validatore`, `gerva-rischio`, `gerva-operazioni`) e comandi (`/gerva-ricerca`, `/gerva-stato`, `/gerva-ipotesi`) |
+
+Tutto ciò che segue descrive la società di agenti preesistente (`firm/`), che resta come laboratorio in paper.
+
+---
+
 Una società di trading quantitativo **simulata ma vera nelle regole**, fatta di agenti AI e costruita
 attorno al motore GERVA-Q v3 (Pod Zero). Solo conto paper. Il rischio, i costi, i punteggi e le
 esecuzioni sono codice deterministico e testato; gli agenti leggono, verificano, propongono e giudicano.

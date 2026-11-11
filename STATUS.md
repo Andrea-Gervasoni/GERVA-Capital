@@ -1,3 +1,35 @@
+# STATUS — GERVA Capital (11/11/2026, v5)
+
+**Rifondazione.** Documento: [`docs/RIFONDAZIONE.md`](docs/RIFONDAZIONE.md). Risultati (tutti simulati): [`research/v5/RESULTS.md`](research/v5/RESULTS.md).
+
+## Che cosa c'è di nuovo
+- `gerva/`: motore deterministico (dati, backtest con leva e costi, strategie, validazione, portafoglio, rischio, esecuzione
+  paper, registro, supervisore, ciclo live, consiglio di ricerca). `python -m gerva --help`.
+- `dashboard/`: nuova pagina professionale in sola lettura.
+- Ricerca su dati reali: 110 configurazioni; quattro strategie tenute; portafoglio con Sharpe 1,18 (0,86 nel periodo di
+  verifica), caduta massima −9,4% senza leva. Deflated Sharpe 0,51: **sotto la soglia di 0,95**.
+- GEX, VWAP, momentum intraday, Kronos: verificati e scartati come segnali (motivi e numeri nel documento).
+- Leva: massimo operativo 2x, tetto nel codice 3x. KILL a −20% a ritenuta.
+- `firm/`: 8 difetti critici o alti corretti (KILL su ogni strada, voti che alzano il rischio in attesa di Andrea, battito
+  isolato, banco libero, gateway, misure), 20 test in `tests/test_audit_v5.py`.
+
+## Che cosa NON è fatto (dichiarato)
+- Nessun cancello paper -> reale è verde: il paper trading deve ancora cominciare.
+- L'adattatore Alpaca del nuovo motore è collaudato contro un servizio finto, non contro Alpaca.
+- Manca l'adattatore IBKR per il nuovo motore (il vecchio `firm/ibkr.py` va incapsulato).
+- Rischio di cambio non modellato; festività di borsa non gestite a calendario.
+- Nel vecchio `quantlab/`: Sharpe in eccesso nei banchi, ritardo di esecuzione, test anti look-ahead più fitto.
+  **La decisione "v4 approvata" e la regola del portafoglio ombra a 40 giorni vanno considerate sospese** (audit, sezione 1).
+
+## Che cosa serve da Andrea
+1. Leggere `docs/RIFONDAZIONE.md` e `research/v5/RESULTS.md`.
+2. Un server Linux e le chiavi del conto paper Alpaca per avviare i 90 giorni di paper.
+3. Le tre verifiche con IBKR, commercialista e avvocato (sezione 7.5).
+
+Tutto ciò che segue è lo stato precedente (4–8 novembre), conservato com'era.
+
+---
+
 # STATUS — GERVA Capital (4/11/2026)
 
 Test: **84 verdi** (`python -m pytest`). Branch `claude/gifted-ramanujan-n3a5gg`.
