@@ -1,0 +1,70 @@
+=== 1. Serie del candidato: rotazione del carry (N=3, k=30, ingresso>25%, uscita<0%). Binance fino al 2024-01 (proxy), Hyperliquid dopo
+per unita' di nozionale (senza leva) pieno                 n  2507 CAGR  17.88% vol  1.62% Sharpe  10.19 maxDD  -0.62% t 26.69
+per unita' di nozionale (senza leva) scelta                n  1097 CAGR  23.48% vol  2.08% Sharpe  10.16 maxDD  -0.62% t 17.62
+per unita' di nozionale (senza leva) verifica              n  1410 CAGR  13.69% vol  1.10% Sharpe  11.70 maxDD  -0.37% t 23.00
+   per anno %: {2019: 0.0, 2020: 22.17, 2021: 41.14, 2022: 0.17, 2023: 1.49, 2024: 22.68, 2025: 14.36, 2026: 11.08} | ult. 12 mesi 12.65% | ult. 90 g annuo 20.68%
+sul capitale, short a 2x (67% investito) pieno             n  2507 CAGR  11.25% vol  1.08% Sharpe   9.90 maxDD  -0.42% t 25.95
+sul capitale, short a 2x (67% investito) scelta            n  1097 CAGR  15.11% vol  1.39% Sharpe  10.16 maxDD  -0.42% t 17.62
+sul capitale, short a 2x (67% investito) verifica          n  1410 CAGR   8.34% vol  0.73% Sharpe  11.03 maxDD  -0.25% t 21.68
+   per anno %: {2019: 0.0, 2020: 14.78, 2021: 27.43, 2022: 0.11, 2023: 0.99, 2024: 14.71, 2025: 8.6, 2026: 6.67} | ult. 12 mesi 7.54% | ult. 90 g annuo 13.06%
+   eccesso sul T-bill 3m USD, sul capitale a 2x, per anno %: {2019: -0.0, 2020: 14.43, 2021: 27.39, 2022: -1.86, 2023: -4.04, 2024: 9.74, 2025: 4.55, 2026: 3.48} | ult. 12 mesi 3.84%
+   NB: Sharpe>3 e' un artefatto: la volatilita' misurata (1-2%) non contiene il rischio vero (sede, stablecoin, ADL). Vedi punto 3.
+
+=== 2. Leva della gamba corta (Hyperliquid 2024-02 -> oggi): crescita geometrica annua sul capitale, liquidazioni comprese
+  leva 1x: crescita   8.38%/anno =  0.70%/mese composto | 2025   6.96% | 2026   5.36% | capitale presso Hyperliquid (margine) 50%
+  leva 2x: crescita  10.69%/anno =  0.89%/mese composto | 2025   8.60% | 2026   6.67% | capitale presso Hyperliquid (margine) 33%
+  leva 3x: crescita   8.78%/anno =  0.73%/mese composto | 2025   4.96% | 2026   3.44% | capitale presso Hyperliquid (margine) 25%
+  leva 5x: crescita -32.56%/anno = -2.68%/mese composto | 2025 -38.86% | 2026 -64.99% | capitale presso Hyperliquid (margine) 17%
+  leva che massimizza la crescita misurata: 2 x ; meta': 1.0 x (=1x: 50% spot, 50% margine)
+
+=== 3. Eventi di coda fuori serie (probabilita' annua, perdita sulla parte esposta) - STIMA
+  Hyperliquid: fallimento/hack del bridge/blocco prelievi            p  5.0%  perdita  80% di: margine
+  Kraken (sede UE regolata): fallimento/blocco                       p  1.0%  perdita  50% di: spot
+  ADL o chiusura forzata dello short + rimbalzo (10/10/2025, JELLY)  p 40.0%  perdita   3% di: nozionale
+  USDC depeg permanente (margine in USDC)                            p  0.5%  perdita 100% di: margine
+  costo atteso delle code a leva 1x: 3.10%/anno del capitale nello stack (raddoppiando le probabilita': 6.20%)
+  costo atteso delle code a leva 2x: 2.63%/anno del capitale nello stack (raddoppiando le probabilita': 5.27%)
+  costo atteso delle code a leva 3x: 2.40%/anno del capitale nello stack (raddoppiando le probabilita': 4.80%)
+
+=== 4. Bootstrap a blocchi mensili, 3 anni, 20.000 percorsi, code del punto 3 iniettate (base: mesi Hyperliquid 2024-02 -> oggi)
+  base (tutti i mesi 2024-26)      leva 2x: mese composto mediano  0.77% (media geometrica  0.62%) | P(-20%) 17.7% | P(-50%) 0.26% | 5° percentile CAGR   -3.0%
+  base (tutti i mesi 2024-26)      leva 1x: mese composto mediano  0.61% (media geometrica  0.38%) | P(-20%) 17.2% | P(-50%) 1.50% | 5° percentile CAGR   -9.9%
+  meta' vantaggio                  leva 2x: mese composto mediano  0.35% (media geometrica  0.19%) | P(-20%) 17.8% | P(-50%) 0.38% | 5° percentile CAGR   -7.9%
+  meta' vantaggio                  leva 1x: mese composto mediano  0.28% (media geometrica  0.03%) | P(-20%) 17.6% | P(-50%) 1.89% | 5° percentile CAGR  -13.2%
+  regime di oggi (ultimi 12 mesi)  leva 2x: mese composto mediano  0.50% (media geometrica  0.34%) | P(-20%) 17.6% | P(-50%) 0.25% | 5° percentile CAGR   -6.0%
+  regime di oggi (ultimi 12 mesi)  leva 1x: mese composto mediano  0.41% (media geometrica  0.15%) | P(-20%) 18.1% | P(-50%) 1.73% | 5° percentile CAGR  -11.9%
+  oggi, meta' vantaggio            leva 2x: mese composto mediano  0.21% (media geometrica  0.05%) | P(-20%) 17.4% | P(-50%) 0.53% | 5° percentile CAGR   -9.5%
+  oggi, meta' vantaggio            leva 1x: mese composto mediano  0.18% (media geometrica -0.09%) | P(-20%) 18.3% | P(-50%) 2.04% | 5° percentile CAGR  -14.3%
+  base, probabilita' di coda x2, leva 2x: mese 0.65% | P(-20%) 32.4% | P(-50%) 1.06%
+
+=== 5. Quota ottima della cassa del fondo da mettere nello stack invece che in T-bill (crescita con salti), leva 2x
+  eccesso medio 2024-26      mu  6.46%/a: quota ottima 100% (guadagno di crescita +3.49%/a) ; con code x2:  84% (+0.55%/a)
+  eccesso 2026               mu  4.05%/a: quota ottima 100% (guadagno di crescita +1.08%/a) ; con code x2:   0% (+0.00%/a)
+  eccesso ultimi 12 mesi     mu  3.84%/a: quota ottima 100% (guadagno di crescita +0.87%/a) ; con code x2:   0% (+0.00%/a)
+  meta' dell'eccesso 2026    mu  2.02%/a: quota ottima   0% (guadagno di crescita +0.00%/a) ; con code x2:   0% (+0.00%/a)
+
+=== 6. Dopo le tasse (residente italiano 2026: 33% su cripto-attivita' e funding; 12,5% su titoli di Stato) - rendimento annuo netto, oggi
+  T-bill 3m USD (via ETF monetario di titoli di Stato / BOT) lordo  4.03%  netto  3.53%  netto meno code  3.53%
+  stack carry 2x, livello 2026                               lordo  7.76%  netto  5.20%  netto meno code  2.56%
+  stack carry 2x, ultimi 12 mesi                             lordo  7.54%  netto  5.05%  netto meno code  2.42%
+  USDC su Aave (oggi 3,96%)                                  lordo  3.96%  netto  2.65%  netto meno code  1.15%
+  sUSDe (oggi 5,0%)                                          lordo  5.01%  netto  3.36%  netto meno code  1.86%
+  sUSDS / Sky (oggi 3,8%)                                    lordo  3.80%  netto  2.55%  netto meno code  1.05%
+
+=== 7. Correlazione con il fondo esistente (a10_sistema)
+  serie lunga (nozionale, 2020->)    vs B_cassa_in_tbill             corr giornaliera +0.088 | mensile +0.414 (n mesi 83)
+  serie lunga (nozionale, 2020->)    vs C1_mtm_limiti                corr giornaliera +0.076 | mensile +0.282 (n mesi 83)
+  serie lunga (nozionale, 2020->)    vs C3_mtm_limiti_debito_reale   corr giornaliera +0.077 | mensile +0.278 (n mesi 83)
+  solo Hyperliquid 2x (2024-02->)    vs B_cassa_in_tbill             corr giornaliera +0.028 | mensile +0.631 (n mesi 33)
+  solo Hyperliquid 2x (2024-02->)    vs C1_mtm_limiti                corr giornaliera -0.001 | mensile +0.483 (n mesi 33)
+  solo Hyperliquid 2x (2024-02->)    vs C3_mtm_limiti_debito_reale   corr giornaliera +0.000 | mensile +0.485 (n mesi 33)
+
+=== 8. Effetto sul fondo: cassa (circa 47% del libro a 1x) nello stack invece che in T-bill
+  eccesso 2026             quota del fondo 25%: +1.01 punti/anno lordi ; netti di code attese +0.35 = +0.029%/mese
+  eccesso 2026             quota del fondo 47%: +1.90 punti/anno lordi ; netti di code attese +0.67 = +0.055%/mese
+  eccesso ultimi 12 mesi   quota del fondo 25%: +0.96 punti/anno lordi ; netti di code attese +0.30 = +0.025%/mese
+  eccesso ultimi 12 mesi   quota del fondo 47%: +1.80 punti/anno lordi ; netti di code attese +0.57 = +0.047%/mese
+  eccesso medio 2024-26    quota del fondo 25%: +1.61 punti/anno lordi ; netti di code attese +0.96 = +0.080%/mese
+  eccesso medio 2024-26    quota del fondo 47%: +3.03 punti/anno lordi ; netti di code attese +1.80 = +0.150%/mese
+
+salvato returns.parquet (2508, 6) {'carry_rot_nozionale_1x': 2507, 'carry_rot_capitale_short2x': 2507, 'carry_big3_hold_nozionale': 1014, 'carry_rot_spotHL_nozionale': 1014, 'steth_short_eth_hl_nozionale_lordo': 1280, 'carry_hip3_nozionale': 361}

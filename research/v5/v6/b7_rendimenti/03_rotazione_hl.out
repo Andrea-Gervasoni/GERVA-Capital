@@ -1,0 +1,79 @@
+parametri congelati: {'k': 30, 'N': 3, 'ent': 0.25, 'ext': 0.0}
+monete con funding scaricato: 336 | dex principale 135 (di cui oggi fuori listino 12 ) | HIP-3 201 | periodo 2023-05-12 2026-11-10
+copertura dex principale: quotati oggi 179 scaricati 123
+spot Hyperliquid, primi per volume (M$/g): {'UBTC': 41.2, 'HYPE': 37.0, 'UZEC': 27.3, 'UETH': 13.3, 'XMR1': 6.2, 'KNTQ': 5.4, 'USOL': 3.8, 'ONEAR': 2.2, 'NBT': 1.8, 'UPUMP': 1.5, 'TBC': 1.0, 'NVDAX': 0.9, 'USDT0': 0.9, 'XAUT0': 0.7}
+copribili con spot Kraken (lista di OGGI: lieve look-ahead): 112 su 135 | con spot Hyperliquid (volume>0,3 M$/g): ['BTC', 'ENA', 'ETH', 'HYPE', 'PUMP', 'PURR', 'SOL', 'ZEC']
+
+=== A. per unita' di NOZIONALE (senza leva: 1 di spot + margine a parte), netto costi, 2024-02 -> oggi
+rotazione TUTTE (spot Kraken), N=3                         n  1014 CAGR  18.72% vol  1.17% Sharpe  14.68 maxDD  -0.34% t 24.46
+   per anno %: {2024: 22.26, 2025: 14.36, 2026: 11.08, 'ult90g_annuo': np.float64(20.68), 'ult30g_annuo': np.float64(18.36)} | occupazione 0.97 | durata media g 454.9 | ingressi/anno 2.5
+   monete tenute piu' a lungo (giorni): {'BTC': 874, 'HYPE': 612, 'FARTCOIN': 565, 'ETH': 513, 'SOL': 480, 'XMR': 140}
+   costi x2                                                n  1014 CAGR  18.30% vol  1.23% Sharpe  13.69 maxDD  -0.49% t 22.82
+   un giorno di ritardo in piu'                            n  1014 CAGR  18.61% vol  1.17% Sharpe  14.60 maxDD  -0.34% t 24.33
+rotazione solo BTC/ETH/SOL (stesse soglie)                 n  1014 CAGR  10.03% vol  1.05% Sharpe   9.11 maxDD  -0.18% t 15.18
+   per anno %: {2024: 22.26, 2025: 4.17, 2026: 0.15, 'ult90g_annuo': np.float64(0.0), 'ult30g_annuo': np.float64(0.0)} | occupazione 0.54
+BTC/ETH/SOL sempre dentro (lordo costi d'ingresso)         n  1014 CAGR  13.02% vol  0.93% Sharpe  13.15 maxDD  -0.61% t 21.92
+   per anno %: {2024: 22.31, 2025: 8.16, 2026: 3.54, 'ult90g_annuo': np.float64(8.4), 'ult30g_annuo': np.float64(7.49)}
+   idem dal 2023-06, per anno %: {2023: 10.36, 2024: 24.84, 2025: 8.16, 2026: 3.54, 'ult90g_annuo': np.float64(8.4), 'ult30g_annuo': np.float64(7.49)}
+rotazione TUTTE, N=10 (variante)                           n  1014 CAGR  13.86% vol  1.29% Sharpe  10.06 maxDD  -0.80% t 16.77
+   per anno %: {2024: 23.5, 2025: 9.11, 2026: 3.48, 'ult90g_annuo': np.float64(7.44), 'ult30g_annuo': np.float64(7.48)}
+rotazione TUTTE, veloce k=7 ent15 ext5 (variante)          n  1014 CAGR  19.55% vol  1.87% Sharpe   9.58 maxDD  -1.40% t 15.97
+   per anno %: {2024: 28.1, 2025: 14.39, 2026: 7.19, 'ult90g_annuo': np.float64(19.93), 'ult30g_annuo': np.float64(13.52)}
+rotazione TUTTE, liquidita' >20 M$/g (variante)            n  1014 CAGR  15.57% vol  1.18% Sharpe  12.29 maxDD  -0.34% t 20.49
+   per anno %: {2024: 22.26, 2025: 14.36, 2026: 3.62, 'ult90g_annuo': np.float64(6.34), 'ult30g_annuo': np.float64(6.43)}
+rotazione con SPOT HYPERLIQUID (10 pb), N=3                n  1014 CAGR  15.36% vol  1.17% Sharpe  12.18 maxDD  -0.67% t 20.30
+   per anno %: {2024: 22.26, 2025: 11.69, 2026: 5.76, 'ult90g_annuo': np.float64(8.4), 'ult30g_annuo': np.float64(6.6)} | occupazione 0.9
+lato NEGATIVO: perp lungo + spot corto a prestito (0,02%/4h Kraken) n  1014 CAGR   0.20% vol  0.61% Sharpe   0.33 maxDD  -1.11% t  0.55
+   occupazione 0.06
+controllo di troncamento (diario posizioni chiuse entro 2025-06-30 identico): True 2
+
+=== B. leva sulla gamba corta e liquidazioni (massimi giornalieri = massimo dei massimi orari; rimargine a meta' strada)
+capitale = spot (nozionale) + margine (nozionale/leva): rendimento sul capitale = rendimento sul nozionale x leva/(leva+1), meno liquidazioni
+  rotazione TUTTE            leva 1x: quota investita 50% | CAGR sul capitale  8.74% | liquidazioni 0 (0.0/anno), rimargini 19 | costo liquidazioni 0.20%/anno | 2026: 5.36% | ult90g annuo 10.11%
+  rotazione TUTTE            leva 2x: quota investita 67% | CAGR sul capitale 11.28% | liquidazioni 0 (0.0/anno), rimargini 103 | costo liquidazioni 0.75%/anno | 2026: 6.67% | ult90g annuo 13.06%
+  rotazione TUTTE            leva 3x: quota investita 75% | CAGR sul capitale  9.18% | liquidazioni 7 (2.5/anno), rimargini 184 | costo liquidazioni 4.07%/anno | 2026: 3.44% | ult90g annuo 14.53%
+     esempi: [('SOL', '2025-01-18', np.float64(0.4)), ('HYPE', '2026-01-27', np.float64(0.29)), ('HYPE', '2026-06-16', np.float64(0.29)), ('FARTCOIN', '2025-11-09', np.float64(0.29)), ('FARTCOIN', '2025-11-24', np.float64(0.29)), ('FARTCOIN', '2025-11-26', np.float64(0.35)), ('FARTCOIN', '2026-04-08', np.float64(0.46))]
+  rotazione TUTTE            leva 5x: quota investita 83% | CAGR sul capitale -27.79% | liquidazioni 82 (29.5/anno), rimargini 380 | costo liquidazioni 46.46%/anno | 2026: -64.99% | ult90g annuo -99.49%
+  BTC/ETH/SOL sempre dentro  leva 1x: quota investita 50% | CAGR sul capitale  6.11% | liquidazioni 0 (0.0/anno), rimargini 16 | costo liquidazioni 0.19%/anno | 2026: 1.64% | ult90g annuo 3.95%
+  BTC/ETH/SOL sempre dentro  leva 2x: quota investita 67% | CAGR sul capitale  8.10% | liquidazioni 0 (0.0/anno), rimargini 47 | costo liquidazioni 0.37%/anno | 2026: 2.00% | ult90g annuo 5.17%
+  BTC/ETH/SOL sempre dentro  leva 3x: quota investita 75% | CAGR sul capitale  8.50% | liquidazioni 2 (0.7/anno), rimargini 96 | costo liquidazioni 1.02%/anno | 2026: 1.72% | ult90g annuo 3.53%
+  BTC/ETH/SOL sempre dentro  leva 5x: quota investita 83% | CAGR sul capitale  7.15% | liquidazioni 9 (3.2/anno), rimargini 246 | costo liquidazioni 3.29%/anno | 2026: 0.16% | ult90g annuo 0.99%
+  leva massima consentita da Hyperliquid per le monete tenute dalla rotazione: {'SOL': 20, 'ETH': 25, 'BTC': 40, 'XMR': 5, 'HYPE': 10, 'FARTCOIN': 10}
+
+=== C. HIP-3 (perps su azioni/materie prime, dex xyz e altri): funding annuo % dalla quotazione e ultimi 90 g; copertura = titolo vero su IBKR
+                     dal  annuo%  ult90%  ult30%  pos%  vol_M$  maxlev
+xyz:SKHX      2026-02-20    43.7    12.6    14.9  74.2   327.4      10
+xyz:XYZ100    2025-10-14     5.1     4.9     5.6  79.4   279.6      30
+xyz:SP500     2026-03-19    -0.8     2.6     2.0  57.4   278.3      50
+xyz:CL        2026-01-07   -16.6   -23.2   -12.5  56.8   203.7      20
+xyz:SNDK      2026-01-13     8.8     6.8    11.0  77.2   186.4      10
+xyz:BRENTOIL  2026-03-05   -24.2   -37.8   -29.2  55.8   134.4      20
+xyz:SOXL      2026-08-07     8.4     9.0    12.3  77.1   131.9      10
+xyz:MU        2025-12-20    12.6     7.5     9.3  84.7   127.7      10
+xyz:SPCX      2026-05-18     4.6     2.6     9.3  65.0   114.2      20
+xyz:NVDA      2025-11-13    10.1     5.3     5.0  88.2   108.5      20
+xyz:DRAM      2026-05-05    17.9     8.6     8.8  89.5   105.1      20
+xyz:SKHY      2026-07-10    -4.8    -3.8    -0.7  45.2   103.9      10
+xyz:SILVER    2025-12-26     9.9     7.4     7.6  89.1    97.2      25
+xyz:GOOGL     2025-11-19    10.6     7.6     9.4  89.6    59.9      20
+xyz:INTC      2025-12-04    13.2     8.5     9.4  86.8    53.8      10
+xyz:META      2025-11-21     7.4     7.2     9.1  87.9    51.8      20
+xyz:SMSN      2026-02-20    22.2    -4.5     0.3  61.4    47.0      10
+xyz:TSLA      2025-11-14     6.5     6.3     6.3  81.8    42.8      20
+xyz:GOLD      2025-12-23     8.3     7.0     7.6  90.7    41.5      25
+xyz:CRCL      2025-12-16    10.3    10.5     9.1  83.3    37.9      10
+xyz:KORU      2026-08-06     2.9     2.7     9.5  61.9    36.1      10
+xyz:AMD       2025-12-05     5.7     5.9     7.2  81.8    30.8      10
+xyz:AAPL      2025-11-22     2.1     1.9     0.6  68.4    28.3      20
+xyz:NBIS      2026-06-10    15.3     8.2    10.0  84.4    28.1      10
+xyz:EWY       2026-03-03     6.2     5.2     7.0  75.5    27.8      20
+io:SNDK       2026-08-20     7.8     7.8    13.2  78.3    25.3      15
+xyz:MSFT      2025-11-20     7.1     3.3     3.1  85.7    19.7      20
+xyz:CRWV      2026-01-28     6.8     2.9     4.1  73.9    19.3      10
+xyz:UNITREE   2026-08-06   -66.2   -71.4  -161.6  46.4    19.0      10
+xyz:CXMT      2026-07-15   -64.2   -20.5    19.2  47.9    18.0      10
+  mediana di tutti (n=70): annuo 8.8% | ult90 7.3% ; media pesata per volume: 7.6%
+rotazione HIP-3 xyz (hedge IBKR, 30 pb a/r), N=5           n   361 CAGR  14.41% vol  2.70% Sharpe   5.01 maxDD  -0.68% t  4.98
+   per anno %: {2025: 0.06, 2026: 13.29, 'ult90g_annuo': np.float64(23.45), 'ult30g_annuo': np.float64(34.0)} occupazione 0.69 | tenute: {'xyz:SKHX': 169, 'xyz:DRAM': 160, 'xyz:NATGAS': 146, 'xyz:NVDA': 127, 'xyz:NBIS': 122, 'xyz:INTC': 79, 'xyz:SILVER': 75, 'xyz:COPPER': 71, 'xyz:SMSN': 69, 'xyz:CRWV': 53}
+
+varianti provate in questo script: 16

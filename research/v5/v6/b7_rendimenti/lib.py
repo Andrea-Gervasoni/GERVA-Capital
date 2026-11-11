@@ -37,5 +37,26 @@ def rotate(F,elig,k=7,N=5,ent=0.15,ext=0.05,cost_rt=0.0073,delay=1,dP=None,minho
             out[i]+=Fv[i,j]/N
             if Pv is not None and hold[j]<i: out[i]-=Pv[i,j]/N
         nh[i]=len(hold)
+    for j in hold: log.append((cols[j],idx[hold[j]],idx[-1]+pd.Timedelta(days=1)))
     L=pd.DataFrame(log,columns=['coin','in','out'])
     return pd.Series(out,index=idx),pd.Series(nh,index=idx),L
+
+def liq_scan(L,O,Hi,Cl,maxlev,lev,N,thr=0.5,cost_rebal=0.00365):
+    """Rischio di liquidazione della gamba corta. Per ogni posizione (moneta, in, out): margine = nozionale/leva_eff, leva_eff=min(lev,maxlev);
+    distanza di liquidazione d = 1/leva_eff - 1/(2*maxlev) (margine di mantenimento Hyperliquid = meta' dell'iniziale alla leva massima).
+    Riferimento = apertura del giorno d'ingresso; se il MASSIMO del giorno (= massimo dei massimi orari) supera rif*(1+d): liquidazione,
+    perdita = (mantenimento + 0,2%) del nozionale dello slot e rientro; se la chiusura si e' mossa piu' di thr*d dal riferimento: si rimargina
+    (costo = |movimento| * 36,5 pb, le due gambe). Ritorna serie giornaliera di perdita per unita' di nozionale pieno e conteggi."""
+    idx=O.index; loss=pd.Series(0.0,index=idx); nl=0; nr=0; ev=[]
+    for c,a,b in L.itertuples(index=False):
+        if c not in O: continue
+        ml=float(maxlev.get(c,3)); le=min(lev,ml); mm=1/(2*ml); d=1/le-mm
+        days=idx[(idx>=a)&(idx<b)]
+        if not len(days): continue
+        ref=O.at[days[0],c]
+        for t in days:
+            h=Hi.at[t,c]; cl=Cl.at[t,c]
+            if not np.isfinite(h) or not np.isfinite(ref): continue
+            if h>=ref*(1+d): loss[t]+=(mm+0.002)/N; nl+=1; ev.append((c,t,h/ref-1)); ref=cl
+            elif abs(cl/ref-1)>thr*d: loss[t]+=abs(cl/ref-1)*cost_rebal/N; nr+=1; ref=cl
+    return loss,nl,nr,ev

@@ -1,0 +1,27 @@
+periodo comune 2023-06-01 2026-10-31 1249 giorni
+HLP da solo                                    CAGR=+0.372 vol mens.=0.177 Sharpe mens. (ecc. T-bill)=+1.64 maxDD=-0.059 mese medio=+0.0278
+  print(f"{lab:46s} CAGR={eq.iloc[-1]**(365.25/len(x))-1:+.3f} vol mens.={mm.std()*np.sqrt(12):.3f} Sharpe mens. (ecc. T-bill)={ex.mean()/ex.std()*np.sqrt(12):+.2f} maxDD={(eq/eq.cummax()-1).min():.3f} mese medio={mm.mean():+.4f}")
+T-bill                                         CAGR=+0.045 vol mens.=0.002 Sharpe mens. (ecc. T-bill)=+nan maxDD=0.000 mese medio=+0.0037
+B_cassa_in_tbill                               CAGR=+0.130 vol mens.=0.070 Sharpe mens. (ecc. T-bill)=+1.15 maxDD=-0.056 mese medio=+0.0104
+B_cassa_in_tbill + 40% (HLP - Tbill)           CAGR=+0.260 vol mens.=0.095 Sharpe mens. (ecc. T-bill)=+2.06 maxDD=-0.048 mese medio=+0.0198
+      di cui 2023-06..2024-12: contributo annuo +0.1943
+      di cui 2025-01..2026-10: contributo annuo +0.0354
+C1_mtm_limiti                                  CAGR=+0.239 vol mens.=0.218 Sharpe mens. (ecc. T-bill)=+0.89 maxDD=-0.165 mese medio=+0.0199
+C1_mtm_limiti + 40% (HLP - Tbill)              CAGR=+0.382 vol mens.=0.223 Sharpe mens. (ecc. T-bill)=+1.38 maxDD=-0.155 mese medio=+0.0292
+      di cui 2023-06..2024-12: contributo annuo +0.1943
+      di cui 2025-01..2026-10: contributo annuo +0.0354
+C3_mtm_limiti_debito_reale                     CAGR=+0.469 vol mens.=0.442 Sharpe mens. (ecc. T-bill)=+0.98 maxDD=-0.310 mese medio=+0.0397
+C3_mtm_limiti_debito_reale + 40% (HLP - Tbill) CAGR=+0.639 vol mens.=0.444 Sharpe mens. (ecc. T-bill)=+1.23 maxDD=-0.302 mese medio=+0.0491
+      di cui 2023-06..2024-12: contributo annuo +0.1943
+      di cui 2025-01..2026-10: contributo annuo +0.0354
+
+ultimi 12 mesi: HLP +0.0722, T-bill +0.0376, eccesso +0.0346; contributo al fondo con il 40%: +0.0138/anno
+
+bootstrap 3 anni, mesi 2025-01..2026-10 di HLP (leva 1: un deposito non si puo' mettere a leva):
+  base (storia 2025-26, nessuna coda)                                                    mese composto medio=+0.0111 (5° pct +0.0060) P(DD<=-50%)=0.000 P(DD<=-20%)=0.000 DD mediano=-0.007
+  meta' rendimento                                                                       mese composto medio=+0.0056 (5° pct +0.0030) P(DD<=-50%)=0.000 P(DD<=-20%)=0.000 DD mediano=-0.003
+  base + coda: 3%/anno di probabilita' di perdere il 50% (exploit/bridge/manipolazione)  mese composto medio=+0.0093 (5° pct -0.0081) P(DD<=-50%)=0.027 P(DD<=-20%)=0.084 DD mediano=-0.007
+  meta' + coda 3%/anno x -50%                                                            mese composto medio=+0.0038 (5° pct -0.0136) P(DD<=-50%)=0.025 P(DD<=-20%)=0.084 DD mediano=-0.003
+  base + coda 10%/anno x -30%                                                            mese composto medio=+0.0081 (5° pct -0.0035) P(DD<=-50%)=0.007 P(DD<=-20%)=0.255 DD mediano=-0.010
+  NB: le probabilita' di coda sono IPOTESI dichiarate, non stime: 3,5 anni di storia non contengono una perdita > 6%.
+salvato returns.parquet
