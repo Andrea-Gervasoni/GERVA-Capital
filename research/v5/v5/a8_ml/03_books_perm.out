@@ -1,0 +1,72 @@
+== A. Libri eseguibili, 2020-01 -> 2026-10 (sel = 2020-2022, ver = 2023-2026). R netto; NIR2 = N/anno x (R/sd)^2 ==
+                                   libro  n_sel  anno_sel  R_sel  sd_sel  ir_sel  t_sel  hit_sel  NIR2_sel  n_ver  anno_ver  R_ver  sd_ver  ir_ver  t_ver  hit_ver  NIR2_ver
+                 v4: alta + uscita bassa    219    77.434  0.292   1.719   0.170  2.513    0.457     2.233    366    96.801  0.181   1.727   0.105  2.010    0.415     1.068
+                   alta (trade generico)    219    77.434  0.292   1.719   0.170  2.513    0.457     2.233    366    96.801  0.181   1.727   0.105  2.010    0.415     1.068
+             sempre long (nessun filtro)    554   184.793  0.107   1.517   0.071  1.668    0.399     0.928    817   215.302  0.042   1.576   0.027  0.758    0.382     0.152
+                  NON alta (media+bassa)    429   143.098  0.024   1.405   0.017  0.361    0.378     0.043    586   154.427 -0.025   1.530  -0.016 -0.397    0.363    -0.042
+                 modello p>=q0.5 ex-ante    326   117.196  0.177   1.545   0.115  2.074    0.423     1.547    394   106.757 -0.026   1.436  -0.018 -0.361    0.393    -0.035
+                 modello p>=q0.7 ex-ante    233    84.344  0.243   1.524   0.160  2.435    0.442     2.146    178    48.627  0.156   1.493   0.105  1.395    0.461     0.531
+                 modello p>=q0.8 ex-ante    184    66.607  0.303   1.498   0.202  2.741    0.467     2.720     99    27.208  0.321   1.687   0.190  1.895    0.485     0.987
+                 modello p>=q0.9 ex-ante     97    38.594  0.521   1.666   0.312  3.078    0.526     3.769     45    14.342  0.460   1.653   0.278  1.867    0.578     1.111
+               alta E modello p>=mediana    184    66.148  0.252   1.650   0.153  2.071    0.429     1.543    189    51.211  0.002   1.428   0.002  0.022    0.392     0.000
+alta E modello p>=mediana + uscita bassa    184    66.148  0.252   1.650   0.153  2.071    0.429     1.543    189    51.211  0.002   1.428   0.002  0.022    0.392     0.000
+  alta E modello p<mediana (controprova)     81    28.640  0.253   1.965   0.129  1.158    0.395     0.474    270    71.410  0.183   1.866   0.098  1.607    0.396     0.683
+             alta OPPURE modello p>=q0.9    259    91.578  0.326   1.714   0.190  3.062    0.471     3.316    370    97.858  0.185   1.738   0.107  2.053    0.416     1.115
+    [secondario] HGBR E[R]>=q0.8 ex-ante    152    51.597  0.516   1.676   0.308  3.795    0.513     4.889    206    56.445  0.377   2.255   0.167  2.403    0.417     1.582
+giorni-candidato in verifica: alta 1722, modello q0.9 143 (di cui alta: 106), modello q0.8 326 (di cui alta: 206)
+
+-- robustezza in VERIFICA: costi x2, ritardo +1 ora (12 barre 5m), ritardo +1 giorno --
+                               libro  R_base  R_costi2  t_costi2  R_rit1h  t_rit1h  R_rit1g  t_rit1g
+             v4: alta + uscita bassa   0.181     0.142     1.576    0.105    1.227    0.058    0.741
+         sempre long (nessun filtro)   0.042     0.004     0.072    0.036    0.639    0.042    0.758
+             modello p>=q0.8 ex-ante   0.321     0.289     1.705    0.297    1.785    0.417    2.423
+             modello p>=q0.9 ex-ante   0.460     0.429     1.739    0.468    1.914    0.546    2.073
+           alta E modello p>=mediana   0.002    -0.033    -0.321   -0.009   -0.089    0.091    0.851
+[secondario] HGBR E[R]>=q0.8 ex-ante   0.377     0.330     2.102    0.338    2.202    0.395    2.692
+
+-- per anno (R medio / n): --
+                               libro      2020      2021      2022      2023      2024      2025      2026
+             v4: alta + uscita bassa  +0.45/95 +0.25/108  -0.34/16 +0.32/119 +0.17/114  +0.01/84  +0.15/49
+         sempre long (nessun filtro) +0.54/136 +0.11/190 -0.15/228 +0.28/199 +0.09/221 -0.09/219 -0.13/178
+             modello p>=q0.8 ex-ante  +0.43/51  +0.45/96  -0.27/37  +0.43/17  +0.15/41  +0.34/16  +0.51/25
+             modello p>=q0.9 ex-ante  +0.74/19  +0.56/59  +0.18/19  +0.51/12  +0.32/20   -1.02/1  +0.77/12
+           alta E modello p>=mediana  +0.46/73 +0.12/101  +0.06/10  +0.08/58  +0.09/77  -0.31/25  -0.11/29
+[secondario] HGBR E[R]>=q0.8 ex-ante  +0.74/75  +0.64/41  -0.09/36  +0.51/76  +0.42/36  +0.25/53  +0.26/41
+
+== B. I trade veri del libro v4 (1xATR, alta, trail 2) ordinati per probabilita prevista alla data d'ingresso ==
+scelta OOS 2019H2-2022 (n=234, IC p-R = +0.048, IC E[R]-R = -0.019)
+          n      R     sd    hit      t
+terzile                                
+basso    78  0.327  2.016  0.423  1.431
+medio    78  0.046  1.456  0.385  0.277
+alto     78  0.363  1.579  0.513  2.030
+verifica (n=366, IC p-R = +0.040, IC E[R]-R = -0.047)
+           n      R     sd    hit      t
+terzile                                 
+basso    122  0.331  2.039  0.410  1.793
+medio    122  0.134  1.786  0.393  0.829
+alto     122  0.079  1.272  0.443  0.689
+
+== D. Stabilita dell'importanza delle feature (modello primario; importanza per permutazione sul blocco di TEST, metrica AUC) ==
+correlazione di rango media dell'importanza tra coppie di fold: -0.004 (min -0.51, max +0.46); fold consecutivi: +0.032
+               imp_media  quota_fold_positiva  quota_fold_top10       t
+btc_ret30         0.0122               0.4667            0.4667  1.4677
+dom               0.0113               0.6000            0.6000  1.2501
+atr_pct           0.0082               0.6000            0.6000  1.1438
+vix_ch5           0.0049               0.4000            0.4000  1.5407
+ethbtc30          0.0047               0.6000            0.5333  1.6845
+usd_ret5          0.0030               0.2000            0.2000  0.9582
+usd_ret20         0.0027               0.2000            0.2000  0.5718
+oi7               0.0023               0.2667            0.2667  1.5578
+dvol              0.0022               0.3333            0.2667  1.4888
+vix               0.0022               0.4667            0.4667  2.1818
+perp_spot_vol     0.0007               0.2000            0.1333  0.8705
+vol_pct           0.0005               0.2000            0.2000  1.1781
+feature con importanza positiva in >=80% dei fold: []
+
+logistica sui 12 segnali: coefficiente medio (standardizzato) e quota di fold con segno positivo
+           trend10  trend30  trend60  trend120  ma100  ma200  brk20  lowvol  ibs_low   mom7  btc_ma100  fund_ok
+coef         0.021    0.066   -0.017     0.071 -0.019 -0.004  0.001  -0.046      0.0 -0.008      0.085    0.009
+quota_pos    1.000    0.933    0.333     1.000  0.400  0.333  0.533   0.067      0.4  0.333      1.000    0.533
+
+== C. Test di permutazione (modello primario, pipeline completa ristimata a ogni permutazione) ==

@@ -88,7 +88,7 @@ C = pd.DataFrame({str(b.date()): m[-1].coef_[0][:len(SIG)] for b, m in m12.items
 print('\nlogistica sui 12 segnali: coefficiente medio (standardizzato) e quota di fold con segno positivo'); print(pd.DataFrame(dict(coef=C.mean(axis=1), quota_pos=(C > 0).mean(axis=1))).round(3).T.to_string())
 
 print('\n== C. Test di permutazione (modello primario, pipeline completa ristimata a ogni permutazione) ==')
-NP = int(sys.argv[1]) if len(sys.argv) > 1 else 300; rng = np.random.default_rng(42); mon = D['date'].dt.to_period('M').astype(str).values
+NP = int(sys.argv[1]) if len(sys.argv) > 1 else 200; mon = D['date'].dt.to_period('M').astype(str).values
 sel = (D['date'] <= SEL_LAST).values; ver = (D['date'] >= SPL).values
 dl = D['days_L'].values; CI = {c: np.where((D.coin == c).values)[0] for c in COINS}; CFGR = FZ['fam_best']['HGBR']
 def fast_book(p, R, dd, q):
@@ -109,19 +109,34 @@ def stat(p, R, dd, pr_):
     mm = ver & np.isfinite(pr_); o['HGBR_top20_ver'] = top_minus_all(pr_[mm], R[mm], 0.8); x = fast_book(pr_, R, dd, 0.8); o['HGBR_libro_q0.8_ver_R'] = x.mean(); o['HGBR_libro_q0.8_ver_t'] = x.mean() / x.std(ddof=1) * np.sqrt(len(x))
     return o
 real = stat(pp, r, dl, pr); t0 = time.time()
-def perm_month():
+udates = np.sort(D['date'].unique()); SRC = pd.Series(np.arange(len(D)), index=pd.MultiIndex.from_arrays([D.coin, D.date]))
+def _remap(newdate, rng):
+    ix = SRC.reindex(pd.MultiIndex.from_arrays([D.coin, newdate])).to_numpy(dtype=float, copy=True); na = np.isnan(ix)
+    ix[na] = rng.integers(0, len(D), na.sum()); return ix.astype(int)
+def perm_month(rng):
+    """Come da mandato: etichette mescolate entro il mese. ATTENZIONE: nullo NON valido qui (vedi nota in fondo)."""
     ix = np.arange(len(D))
     for m in np.unique(mon): w = np.where(mon == m)[0]; ix[w] = rng.permutation(w)
-    return r[ix], dl[ix]
-udates = np.sort(D['date'].unique())
-def perm_shift():
-    """Spostamento circolare delle etichette nel tempo (stesso scarto per tutti i coin): conserva l'autocorrelazione di etichette e feature."""
-    k = int(rng.integers(60, len(udates) - 60)); mp = dict(zip(udates, np.roll(udates, k)))
-    src = pd.Series(np.arange(len(D)), index=pd.MultiIndex.from_arrays([D.coin, D.date])); key = pd.MultiIndex.from_arrays([D.coin, D.date.map(mp)])
-    ix = src.reindex(key).values; na = np.isnan(ix); ix[na] = rng.integers(0, len(D), na.sum()); ix = ix.astype(int); return r[ix], dl[ix]
-for nm, fn in (('mescolate entro il mese', perm_month), ('spostamento circolare (>=60 giorni)', perm_shift)):
-    S = []
-    for _ in range(NP): R, dd = fn(); S.append(stat(walk(D, F, PRIM, ALLB, R=R), R, dd, walk(D, F, CFGR, ALLB, R=R)))
-    S = pd.DataFrame(S); print(f'\n-- nullo: etichette {nm} ({NP} permutazioni, {time.time()-t0:.0f}s) --')
-    print(pd.DataFrame(dict(reale=pd.Series(real), nullo_media=S.mean(), nullo_sd=S.std(), nullo_q95=S.quantile(0.95), p_value=pd.Series({k: ((S[k] >= real[k]).sum() + 1) / (NP + 1) for k in real}))).round(3).to_string())
+    return ix
+def perm_shift(rng):
+    """Spostamento circolare delle etichette nel tempo (stesso scarto per tutti i coin, >=60 giorni): conserva l'autocorrelazione."""
+    k = int(rng.integers(60, len(udates) - 60)); return _remap(D.date.map(dict(zip(udates, np.roll(udates, k)))), rng)
+def perm_blocks(rng):
+    """Permutazione di blocchi mensili interi: il mese m riceve le etichette del mese s(m), giorno per giorno (ordine interno conservato)."""
+    ms = np.unique(mon); sig = dict(zip(ms, rng.permutation(ms))); dom = D.date.dt.day.clip(upper=28)
+    return _remap(pd.to_datetime(pd.Series(mon).map(sig).values + '-' + dom.astype(str).str.zfill(2).values), rng)
+FN = dict(mese=perm_month, shift=perm_shift, blocchi=perm_blocks)
+def one(a):
+    nm, seed = a; ix = FN[nm](np.random.default_rng(seed)); R, dd = r[ix], dl[ix]
+    return stat(walk(D, F, PRIM, ALLB, R=R), R, dd, walk(D, F, CFGR, ALLB, R=R))
+if __name__ == '__main__':
+    import multiprocessing as mp
+    with mp.get_context('fork').Pool(4) as pool:
+        for nm, lab in (('shift', 'spostamento circolare (>=60 giorni)'), ('blocchi', 'blocchi mensili permutati'), ('mese', 'mescolate ENTRO il mese (mandato; nullo contaminato, vedi nota)')):
+            S = pd.DataFrame(pool.map(one, [(nm, 1000 + k) for k in range(NP)])); print(f'\n-- nullo: etichette {lab} ({NP} permutazioni, {time.time()-t0:.0f}s) --')
+            print(pd.DataFrame(dict(reale=pd.Series(real), nullo_media=S.mean(), nullo_sd=S.std(), nullo_q95=S.quantile(0.95), p_value=pd.Series({k: ((S[k] >= real[k]).sum() + 1) / (NP + 1) for k in real}))).round(3).to_string())
+    print("""\nNOTA sul nullo 'entro il mese': l'etichetta del giorno d (esito dei 7 giorni successivi) e' contenuta nelle feature dei giorni d+7..d+30
+(ret7, ret14, ret30, dd20, brk20...). Mescolando entro il mese, quell'etichetta finisce su righe le cui feature GIA' la conoscono: il nullo
+diventa prevedibile (look-ahead artificiale) e la sua distribuzione e' spostata verso l'alto. I due nulli validi sono lo spostamento circolare
+e la permutazione di blocchi mensili. 'libro_*' qui usa l'approssimazione rapida (prossimo ingresso = ingresso + durata), uguale per reale e nullo.""")
 print(f'\nvarianti (libri) provate in questo script: {ntr}')

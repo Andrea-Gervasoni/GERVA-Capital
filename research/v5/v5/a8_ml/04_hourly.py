@@ -37,6 +37,7 @@ def hfeat(c, H, HS, dt, cut=None):
         ec = H['ETH']['close'].reindex(h.index)
         for k in (1, 4, 24): X[f'btc_r{k}'] = np.log(ec / ec.shift(k))          # per BTC: lo stato di ETH
         X['rel24'] = X['r24'] - X['btc_r24']
+    X = X.replace([np.inf, -np.inf], np.nan)
     X['hour'] = h.index.hour; X['dow'] = h.index.dayofweek; X['h8'] = h.index.hour % 8; X['coin_id'] = COINS.index(c)
     return X
 
