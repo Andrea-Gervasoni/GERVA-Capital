@@ -1,0 +1,26 @@
+# Brief comune per gli analisti della quinta tornata (v5)
+
+Owner goal, stated plainly: **30% per month by opening leveraged trades**. He says he has seen a trading room do it. Your job is to find, with mathematics and real data, whatever raises the fund's profit: a better strategy, a better indicator (an original one is welcome), better trade management, better sizing. No opinions, no emotions: numbers. A negative result reported plainly is a valid deliverable; a fabricated or overfit positive one is the worst possible outcome.
+
+## Where things stand (all SIMULATED on real historical data; nothing has traded)
+- Repo: /home/user/GERVA-Capital. Python: /tmp/gv/bin/python. Data cache: data_cache/ (gitignored; loaders in gerva/data/sources.py: binance_klines, binance_funding, binance_recent, yahoo, fred, gex_squeezemetrics, Store). Hyperliquid public API and data.binance.vision are reachable; Bybit and fapi.binance.com are geo-blocked; Yahoo intraday is rate-limited (cached: yahoo_1h_{SPY,QQQ,IWM,GLD,TLT}, 2023-12 → 2026-11). Cached 5-minute spot bars: bn_spot_5m_{BTC,ETH,SOL}USDT (2017/2020 → 2026-10). research/v5/v4/00_dati.py and lab.py show how the previous lab loaded perps, funding, OI metrics, DVOL, etc. (cache keys `v4_*`).
+- Read first: docs/RIFONDAZIONE.md (v3, the whole picture), research/v5/v4/RISULTATI.md (680 variants tried, what failed and why), research/v5/v4/leva_trade_isolato.py + .out and leva_trade_livelli.out (the leveraged trade book), gerva/risk/isolated.py, gerva/ensemble.py (conviction score), gerva/strategies/book.py.
+- Current best: daily book of 6 strategies (Sharpe 1.34 monthly, CAGR 13.6% unlevered) + isolated-margin trade book on BTC/ETH/SOL (entries on high-conviction days; stop 1×ATR ≈ 11x: mean +0.24 R per trade, +0.18 R in verification, 77 trades/yr, 43% winners; stop 1.7% = 30x: +0.36 R / +0.20 R, 129 trades/yr, 18% winners). Whole fund "maximum" profile: CAGR 53% base, median month 0.4%, mean month 4.2%. Series: research/v5/v4/fondo_serie.parquet, candidates.parquet, research/v5/series.parquet.
+- 812 variants already tried in total. Deflated Sharpe 0.38 vs threshold 0.95.
+- The arithmetic of the goal: 30%/month compounding = +2,230%/yr. With risk r per trade, N trades/yr and mean R̄ (std σ_R), log-growth ≈ N·(r·R̄ − r²σ_R²/2), maximised at Kelly r* = R̄/σ_R², giving N·R̄²/(2σ_R²). To reach ln(1.30)·12 = 3.15 you need N·(R̄/σ_R)² ≈ 6.3 at full Kelly (≈ an annual Sharpe of 2.5 on the trade stream, traded at full Kelly, with drawdowns to match). Today: N=77, R̄/σ_R ≈ 0.14 → 1.5. So the levers are: more independent trades per year, higher R̄/σ_R per trade, or both. Say which lever your work moves and by how much.
+
+## Mandatory conventions
+- Selection period ≤ 2022-12-31; verification ≥ 2023-01-01. Choose parameters on selection only. Report full / selection / verification for everything.
+- Trades are measured in R (P&L divided by the risk at the stop) on an intraday path (5m or 1h bars), net of costs: perps 4.5 bp taker + 2 bp slippage per side, +5 bp extra on stops, real funding where available (else 0.01%/8h for longs); spot 30 bp per side; index CFD/futures 1–5 bp. Also report with costs doubled and with one extra bar of delay.
+- Stops: gap through the stop fills at the bar open; a stop must sit within 60% of the distance to liquidation (leverage = min(venue cap, 1/(stop/0.6+0.005))); isolated margin caps the loss at notional/leverage.
+- No look-ahead: signals use data known at decision time; execute at the next bar's open. Add a truncation check (recompute the signal on data cut at t; it must be identical).
+- A Sharpe above 3, a hit rate above 65% with payoff ≥ 1, or mean R above 0.5 on more than 100 trades must be assumed to be a bug until you have re-derived it a second way.
+- Count every variant you try (it feeds the Deflated Sharpe) and report the count. Report the t-statistic of mean R and the per-year breakdown (decay).
+- Legal reality for sizing claims: Italian retail gets 10x on EU-regulated crypto perps (Kraken, OKX Europe), up to 40x on Hyperliquid (unregulated, grey area), 20x on index CFDs/futures at IBKR. State which venue your idea needs.
+
+## Deliverables
+Work only inside your own folder `research/v5/v5/<your id>/` (create it). Do not touch git, do not edit files outside that folder (data_cache writes are fine, prefix keys `v5_`).
+- Scripts runnable with /tmp/gv/bin/python and their `.out` text outputs.
+- `returns.parquet`: daily net returns (calendar-day index) of each candidate you consider worth keeping, at a stated risk per trade; and/or `trades.parquet` (entry, exit, symbol, side, stop distance, leverage, R, why).
+- `REPORT.md` (Italian, ≤ 150 lines): what you tested, a table of results (full / selection / verification, costs ×2, delay, t-stat, per-year), your single best finding with the exact rule, what it adds to the fund in the terms of the arithmetic above (ΔN, ΔR̄/σ_R), what failed, trial count, what you are unsure of. Mark everything SIMULATO; label FATTO / STIMA / IPOTESI.
+- Final message to me: best finding with numbers, the honest answer to "does this move the fund toward 30%/month, and by how much", trial count, doubts. Keep it under 400 words.
