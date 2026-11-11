@@ -25,3 +25,45 @@ LONG rottura N=2016 stop=1.5hv trail6 72h 4009 589.013     0.012   40.000 0.109 
   BTC/ETH/SOL: R_sel 0.505 R_ver 0.310 n 495 | altri 7: R_sel 0.433 R_ver 0.165 n 1039
 
 ######## B. rottura 7 giorni in vol compressa (hvr<0.4), stop 6 hv, trailing 6R, 72h (long+short)   {'smax': 0.1, 'trail_R': 6.0, 'maxhold': 864}
+  base              n= 1935 n/anno= 288 stop med=3.60% leva med=15x | R=0.153 t=3.31 t_giorni=1.99 hit=0.39 R/sig=0.075 | SCELTA R=0.235 t_g=2.69 sh=1.57 | VERIFICA R=0.089 t_g=0.75 sh=0.39
+  costi x2          n= 1935 n/anno= 288 stop med=3.60% leva med=15x | R=0.104 t=2.25 t_giorni=1.36 hit=0.38 R/sig=0.051 | SCELTA R=0.196 t_g=2.25 sh=1.31 | VERIFICA R=0.032 t_g=0.27 sh=0.14
+  ritardo +1 barra  n= 1936 n/anno= 288 stop med=3.57% leva med=15x | R=0.138 t=3.10 t_giorni=1.91 hit=0.39 R/sig=0.071 | SCELTA R=0.230 t_g=2.64 sh=1.54 | VERIFICA R=0.067 t_g=0.61 sh=0.31
+  per anno (R medio, n): {2020: (0.462, 199), 2021: (0.107, 327), 2022: (0.223, 320), 2023: (0.209, 191), 2024: (-0.048, 294), 2025: (0.166, 328), 2026: (0.06, 276)}
+  per lato: {-1: (np.float64(0.037), np.float64(0.15), np.float64(-0.042), 876), 1: (np.float64(0.248), np.float64(0.297), np.float64(0.207), 1059)}  (tutto, scelta, verifica, n)
+  per simbolo (R scelta | R verifica): {'ADA': (np.float64(0.43), np.float64(-0.11)), 'AVAX': (np.float64(0.25), np.float64(0.23)), 'BNB': (np.float64(0.1), np.float64(0.02)), 'BTC': (np.float64(0.06), np.float64(-0.02)), 'DOGE': (np.float64(0.3), np.float64(0.34)), 'ETH': (np.float64(0.26), np.float64(0.14)), 'LINK': (np.float64(0.2), np.float64(0.01)), 'LTC': (np.float64(0.28), np.float64(-0.19)), 'SOL': (np.float64(0.32), np.float64(0.12)), 'XRP': (np.float64(0.21), np.float64(0.44))}
+  uscite: {'stop': 0.55, 'tempo/segnale': 0.45}  R peggiore -1.37  R migliore 28.6
+  troncamento: 0 differenze su 25 punti
+  sovrapposizione col libro 11x: {'quota_in_giorni_libro': 0.57, 'quota_calendario_libro': 0.579, 'R_in': 0.222, 'R_fuori': 0.061, 'corr_mese_trade11': 0.379, 'corr_mese_new': 0.14, 'corr_giorno_trade11': 0.14}
+  scelta   Sharpe candidato 1.55 (Sharpe^2 = N(R/sig)^2 ~ 2.39) | alfa/anno 62.6% t=2.52 beta trade11 0.02 beta new 0.17 | Sharpe trade11 1.12 -> con candidato 1.87 | Sharpe C3 1.97 -> con candidato 2.35
+  verifica Sharpe candidato 0.38 (Sharpe^2 = N(R/sig)^2 ~ 0.15) | alfa/anno 18.0% t=0.54 beta trade11 0.51 beta new -0.55 | Sharpe trade11 1.05 -> con candidato 0.70 | Sharpe C3 1.43 -> con candidato 0.92
+  BTC/ETH/SOL: R_sel 0.210 R_ver 0.078 n 596 | altri 7: R_sel 0.246 R_ver 0.094 n 1339
+
+######## C. LONG rottura N=8640 stop=6.0hv trail6 72h (migliore della griglia long in scelta)   {'smax': 0.1, 'trail_R': 6.0, 'maxhold': 864}
+  base              n=  969 n/anno= 145 stop med=4.90% leva med=12x | R=0.262 t=4.22 t_giorni=3.13 hit=0.43 R/sig=0.136 | SCELTA R=0.407 t_g=3.42 sh=1.98 | VERIFICA R=0.160 t_g=1.40 sh=0.72
+  costi x2          n=  969 n/anno= 145 stop med=4.90% leva med=12x | R=0.227 t=3.65 t_giorni=2.72 hit=0.42 R/sig=0.117 | SCELTA R=0.378 t_g=3.18 sh=1.85 | VERIFICA R=0.121 t_g=1.06 sh=0.55
+  ritardo +1 barra  n=  986 n/anno= 148 stop med=4.91% leva med=12x | R=0.255 t=4.18 t_giorni=3.34 hit=0.42 R/sig=0.133 | SCELTA R=0.428 t_g=3.63 sh=2.10 | VERIFICA R=0.134 t_g=1.34 sh=0.69
+  per anno (R medio, n): {2020: (0.555, 136), 2021: (0.512, 174), 2022: (-0.029, 88), 2023: (0.15, 176), 2024: (0.189, 182), 2025: (0.185, 113), 2026: (0.1, 100)}
+  per lato: {1: (np.float64(0.262), np.float64(0.407), np.float64(0.16), 969)}  (tutto, scelta, verifica, n)
+  per simbolo (R scelta | R verifica): {'ADA': (np.float64(0.92), np.float64(0.07)), 'AVAX': (np.float64(1.06), np.float64(0.33)), 'BNB': (np.float64(0.19), np.float64(0.07)), 'BTC': (np.float64(0.16), np.float64(0.07)), 'DOGE': (np.float64(1.87), np.float64(0.5)), 'ETH': (np.float64(0.32), np.float64(0.22)), 'LINK': (np.float64(-0.12), np.float64(0.12)), 'LTC': (np.float64(0.42), np.float64(-0.37)), 'SOL': (np.float64(0.59), np.float64(0.4)), 'XRP': (np.float64(0.61), np.float64(0.41))}
+  uscite: {'tempo/segnale': 0.51, 'stop': 0.49}  R peggiore -1.37  R migliore 10.1
+  troncamento: 0 differenze su 25 punti
+  sovrapposizione col libro 11x: {'quota_in_giorni_libro': 0.878, 'quota_calendario_libro': 0.579, 'R_in': 0.304, 'R_fuori': -0.044, 'corr_mese_trade11': 0.613, 'corr_mese_new': 0.525, 'corr_giorno_trade11': 0.178}
+  scelta   Sharpe candidato 1.83 (Sharpe^2 = N(R/sig)^2 ~ 3.34) | alfa/anno 42.3% t=2.50 beta trade11 0.13 beta new 0.49 | Sharpe trade11 1.12 -> con candidato 2.03 | Sharpe C3 1.97 -> con candidato 2.48
+  verifica Sharpe candidato 0.73 (Sharpe^2 = N(R/sig)^2 ~ 0.53) | alfa/anno 14.2% t=0.86 beta trade11 0.26 beta new 0.20 | Sharpe trade11 1.05 -> con candidato 1.11 | Sharpe C3 1.43 -> con candidato 1.38
+  BTC/ETH/SOL: R_sel 0.306 R_ver 0.219 n 360 | altri 7: R_sel 0.469 R_ver 0.127 n 609
+
+######## D. LONG rottura 7 giorni, stop 3 hv (~1,8%, ~28x), trailing 6R, 72h   {'smax': 0.1, 'trail_R': 6.0, 'maxhold': 864}
+  base              n= 2822 n/anno= 415 stop med=2.25% leva med=23x | R=0.246 t=4.33 t_giorni=2.71 hit=0.27 R/sig=0.081 | SCELTA R=0.317 t_g=2.64 sh=1.53 | VERIFICA R=0.193 t_g=1.48 sh=0.75
+  costi x2          n= 2822 n/anno= 415 stop med=2.25% leva med=23x | R=0.163 t=2.87 t_giorni=1.81 hit=0.27 R/sig=0.054 | SCELTA R=0.251 t_g=2.11 sh=1.22 | VERIFICA R=0.098 t_g=0.75 sh=0.38
+  ritardo +1 barra  n= 2828 n/anno= 415 stop med=2.23% leva med=24x | R=0.235 t=4.11 t_giorni=2.60 hit=0.27 R/sig=0.077 | SCELTA R=0.282 t_g=2.47 sh=1.43 | VERIFICA R=0.200 t_g=1.50 sh=0.77
+  per anno (R medio, n): {2020: (0.551, 372), 2021: (0.345, 500), 2022: (0.013, 334), 2023: (0.164, 451), 2024: (0.171, 473), 2025: (0.259, 386), 2026: (0.187, 306)}
+  per lato: {1: (np.float64(0.246), np.float64(0.317), np.float64(0.193), 2822)}  (tutto, scelta, verifica, n)
+  per simbolo (R scelta | R verifica): {'ADA': (np.float64(0.77), np.float64(0.16)), 'AVAX': (np.float64(0.16), np.float64(0.14)), 'BNB': (np.float64(0.41), np.float64(0.1)), 'BTC': (np.float64(0.2), np.float64(0.29)), 'DOGE': (np.float64(1.28), np.float64(0.18)), 'ETH': (np.float64(0.62), np.float64(0.44)), 'LINK': (np.float64(0.07), np.float64(-0.0)), 'LTC': (np.float64(-0.0), np.float64(-0.09)), 'SOL': (np.float64(0.0), np.float64(0.65)), 'XRP': (np.float64(0.04), np.float64(0.1))}
+  uscite: {'stop': 0.74, 'tempo/segnale': 0.26}  R peggiore -1.62  R migliore 41.8
+  troncamento: 0 differenze su 25 punti
+  sovrapposizione col libro 11x: {'quota_in_giorni_libro': 0.699, 'quota_calendario_libro': 0.579, 'R_in': 0.326, 'R_fuori': 0.06, 'corr_mese_trade11': 0.671, 'corr_mese_new': 0.489, 'corr_giorno_trade11': 0.228}
+  scelta   Sharpe candidato 1.61 (Sharpe^2 = N(R/sig)^2 ~ 2.58) | alfa/anno 102.8% t=2.27 beta trade11 0.60 beta new 0.58 | Sharpe trade11 1.12 -> con candidato 1.77 | Sharpe C3 1.97 -> con candidato 2.07
+  verifica Sharpe candidato 0.84 (Sharpe^2 = N(R/sig)^2 ~ 0.71) | alfa/anno 52.3% t=1.09 beta trade11 0.95 beta new 0.27 | Sharpe trade11 1.05 -> con candidato 1.02 | Sharpe C3 1.43 -> con candidato 1.17
+  BTC/ETH/SOL: R_sel 0.304 R_ver 0.454 n 869 | altri 7: R_sel 0.322 R_ver 0.079 n 1953
+
+varianti: 13

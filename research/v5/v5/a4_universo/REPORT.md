@@ -131,7 +131,7 @@ due soglie su cinque universi, più lo stop 2×ATR). Nessuna va aggiunta ai cand
   R̄ sulle alt salirebbe di circa 0,01 R: non cambia il verdetto.
 - Venue: i prezzi sono Binance, che un retail italiano non può usare. Su Hyperliquid e Kraken gli spread delle alt minori sono più larghi (IPOTESI: peggio, non meglio).
 - Il volume è in dollari e il conto in euro: il tetto di liquidità è calcolato 1:1.
-- N_eff dipende dalla finestra con cui si misura la varianza (settimanale qui). Con quella giornaliera cambia di poco per i long, di più per il neutrale.
+- N_eff dipende dalla finestra con cui si misura la varianza (settimanale qui). Con quella giornaliera: trio 58 invece di 50, top 30 88 invece di 85, neutrale 1.036 invece di 1.105. Il verdetto non cambia.
 - Il segnale di conviction è stato costruito su BTC/ETH; non ho cercato un segnale nato per le alt. È la domanda aperta: il neutrale ha i trade
   indipendenti, manca un margine di +0,15 R lordi per gamba. Non l'ho trovato e la v4 (coppie, residui, funding trasversale) nemmeno.
 

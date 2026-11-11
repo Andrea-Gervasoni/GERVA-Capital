@@ -71,3 +71,19 @@ solo CR-TREND perp x0.89                                           Sh  0.80 |  1
 aritmetica del brief: N = 77 trade/anno, R medio 0.237, sigma_R 1.74, R/sigma 0.136 -> N (R/sigma)^2 = 1.42 (serve 6,3)
 
 == 7. Tasse italiane, liquidazione annuale: 33% crypto (spot, carry), 26% derivati (perp, CFD) ed ETF; minus riportabili 4 anni nella stessa categoria
+                                       lordo_tot  netto_tot  lordo_sel  netto_sel  lordo_ver  netto_ver  netto_perp33  netto_crypto26  netto_etf_simm  mese_netto
+profilo                                                                                                                                                          
+B. 6 strategie 1x                           13.6        9.6       14.4       10.1       12.7        8.8           9.3            10.1             9.6         0.8
+B + cassa in T-bill                         14.7       10.5       14.8       10.4       14.5       10.5          10.2            11.1            10.5         0.8
+B2. 6 strategie 2x (09)                     23.0       15.0       26.4       17.9       19.0       11.3          14.5            16.1            15.1         1.2
+B2 con debito reale                         27.7       19.5       29.6       20.9       25.4       17.6          19.0            20.6            19.5         1.5
+C1. 1x + trade 0,5/1%                       26.9       19.6       26.9       19.5       26.9       19.5          18.5            20.2            19.6         1.5
+C2. 1x + trade 1/2%                         39.5       29.3       39.3       28.9       39.7       29.3          27.3            29.9            29.3         2.2
+C3. 2x + trade 1/2% (profilo massimo)       49.6       35.3       52.9       38.2       45.6       31.4          33.2            36.5            35.3         2.6
+C3 con debito reale                         55.3       40.6       56.7       41.7       53.5       38.9          38.4            41.8            40.6         2.9
+C6. 3x + trade 1,5/3%                       71.0       50.2       80.0       58.0       60.5       40.5          47.2            52.0            50.2         3.4
+   lordo/netto = CAGR prima/dopo le imposte; netto_perp33 = se i perpetual su crypto fossero tassati al 33%; netto_crypto26 = aliquota crypto del 2025; netto_etf_simm = se gli ETF compensassero come i derivati
+   Nota: gli interessi passivi del debito non sono deducibili per una persona fisica; le imposte si pagano il 31/12 (in realta' a giugno dell'anno dopo: leggero vantaggio non contato).
+   B con CR-TREND e CR-XSMOM su perpetual (26% invece di 33%): lordo 13.1% netto 9.6%  (B spot: lordo 13.6% netto 9.6%)
+
+varianti provate in questo script: {'fee': 35, 'interazione': 16} totale 51

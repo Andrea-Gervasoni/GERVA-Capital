@@ -31,3 +31,71 @@ CONFIGURAZIONE CONGELATA (primaria): HGBC {'kind': 'hgbc', 'depth': 2, 'iters': 
 secondarie (migliore di ogni famiglia): {'LOGIT12': {'C': 0.003}, 'LOGITALL': {'C': 0.003}, 'HGBC': {'depth': 2, 'iters': 50, 'leaf': 300}, 'HGBR': {'depth': 3, 'iters': 150, 'leaf': 100}}
 
 == 2. Verifica (>=2023): configurazione congelata, walk-forward semestrale ==
+ modello      per    n     ic   ic_t ic_pos  Rall  R_top30  t_top30  R_top20  t_top20  R_top10  t_top10  R_bot20
+ LOGIT12   scelta 3162 -0.072 -1.269    4/7 0.068    0.162    0.718    0.148    0.596    0.065   -0.021    0.035
+ LOGIT12 verifica 4176 -0.033 -0.816    2/8 0.145    0.116   -0.235    0.094   -0.401   -0.068   -1.342    0.429
+LOGITALL   scelta 3162  0.036  0.428    5/7 0.068    0.102    0.223    0.132    0.337    0.193    0.533   -0.013
+LOGITALL verifica 4176  0.051  0.778    4/8 0.145    0.039   -0.880    0.091   -0.365    0.026   -0.615    0.132
+   HGBC*   scelta 3162  0.081  1.371    6/7 0.068    0.281    1.403    0.230    0.924    0.377    1.118    0.060
+   HGBC* verifica 4176  0.013  0.212    3/8 0.145   -0.001   -1.302    0.040   -0.798    0.152    0.043    0.356
+    HGBR   scelta 3162  0.020  0.447    5/7 0.068    0.336    1.510    0.456    1.960    0.369    1.267   -0.066
+    HGBR verifica 4176 -0.015 -0.285    3/8 0.145    0.355    0.883    0.554    1.270    0.658    1.158    0.097
+    CONV   scelta 3162 -0.076 -1.387    3/7 0.068    0.311    1.566    0.378    1.784    0.378    1.784   -0.158
+    CONV verifica 4176 -0.108 -2.379    2/8 0.145    0.113   -0.225    0.168    0.150    0.234    0.447    0.093
+(* = primaria. t_top = t della differenza R(top)-R(tutti) con errori raggruppati per mese. Soglie dei quantili calcolate nel periodo stesso: descrittivo.)
+
+-- R per decile di probabilita prevista, modello primario, SCELTA (OOS 2019H2-2022) --
+      n  p_medio    hit      R     sd   R/sd  t_mese
+q                                                   
+1   317    0.293  0.404  0.093  1.441  0.065   0.575
+2   316    0.347  0.367  0.026  1.576  0.017   0.125
+3   316    0.374  0.367 -0.013  1.609 -0.008  -0.058
+4   316    0.398  0.392  0.134  1.589  0.084   0.656
+5   316    0.413  0.339 -0.101  1.347 -0.075  -0.829
+6   316    0.428  0.291 -0.309  1.162 -0.266  -2.908
+7   316    0.443  0.415  0.016  1.318  0.012   0.125
+8   316    0.462  0.487  0.372  1.596  0.233   2.205
+9   316    0.486  0.399  0.128  1.553  0.082   0.585
+10  317    0.532  0.473  0.332  1.557  0.213   1.322
+
+-- R per decile di probabilita prevista, modello primario, VERIFICA (2023-2026) --
+      n  p_medio    hit      R     sd   R/sd  t_mese
+q                                                   
+1   418    0.320  0.414  0.531  2.443  0.217   0.972
+2   418    0.350  0.397  0.180  1.679  0.107   0.871
+3   417    0.370  0.381  0.175  1.962  0.089   0.794
+4   418    0.384  0.419  0.424  2.265  0.187   1.331
+5   417    0.395  0.400  0.084  1.525  0.055   0.643
+6   418    0.404  0.416  0.067  1.418  0.047   0.485
+7   417    0.414  0.360 -0.009  1.594 -0.006  -0.053
+8   418    0.424  0.359 -0.090  1.306 -0.069  -0.661
+9   417    0.439  0.388 -0.065  1.348 -0.048  -0.459
+10  418    0.483  0.488  0.150  1.385  0.109   0.862
+
+-- stessa tabella per la conviction a pesi uguali (quintili dello score), VERIFICA --
+     n  p_medio    hit      R     sd   R/sd  t_mese
+q                                                  
+1  836    0.172  0.428  0.132  1.559  0.085   0.893
+2  835    0.365  0.420  0.305  2.154  0.142   1.434
+3  835    0.556  0.393  0.075  1.659  0.045   0.603
+4  835    0.700  0.383  0.058  1.619  0.036   0.383
+5  835    0.837  0.387  0.155  1.651  0.094   0.898
+
+-- uplift in verifica se si tengono solo i decili alti (candidati giornalieri SOVRAPPOSTI: non e' ancora un libro eseguibile) --
+                insieme    n      R    sd     ir   hit  cand_anno
+         tutti i giorni 4176  0.145 1.743  0.083 0.402   1096.538
+regola: conviction alta 1722  0.113 1.641  0.069 0.386    452.164
+        modello top 30% 1253 -0.001 1.350 -0.001 0.412    329.014
+        modello top 20%  837  0.040 1.369  0.029 0.437    219.780
+        modello top 10%  419  0.152 1.384  0.110 0.489    110.021
+
+-- per anno: IC e R(top20%)-R(tutti) del modello primario; R(alta)-R(tutti) della regola --
+ anno    n     ic  ic_conv  top20_modello  alta_regola  R_tutti
+ 2019  368  0.137    0.128         -0.106       -0.090   -0.356
+ 2020  732 -0.105   -0.114          0.116       -0.056    0.581
+ 2021  988  0.187    0.032          0.349        0.156    0.111
+ 2022 1095  0.049   -0.185          0.075       -0.048   -0.166
+ 2023 1095  0.062   -0.080          0.009       -0.132    0.360
+ 2024 1098 -0.094   -0.087         -0.172       -0.017    0.171
+ 2025 1095  0.013   -0.076         -0.062        0.076   -0.005
+ 2026  888 -0.022   -0.130         -0.216       -0.258    0.033
