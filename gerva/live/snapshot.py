@@ -23,6 +23,7 @@ from ..validation import metrics as M
 from . import gates as G
 
 LABEL = {"paper": "PAPER: conto simulato, prezzi reali", "alpaca-paper": "PAPER: conto di prova Alpaca",
+         "ibkr-paper": "PAPER: conto di prova IBKR (azioni) e Alpaca (crypto)",
          "backtest": "SIMULATO: backtest su dati storici", "live": "REALE"}
 
 

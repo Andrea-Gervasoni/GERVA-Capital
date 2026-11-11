@@ -423,9 +423,31 @@ dati ─► 6 strategie giornaliere ─► quote ─► leva 2x ─┐
 | DIP-24h e carry | **Solo ricerca**: non sono nel motore |
 | Livello AI su strategie | Fatto; moltiplicatore sul singolo trade: previsto dall'interfaccia, **non collegato** |
 | Adattatori: Alpaca | Provato solo contro un servizio finto |
-| Adattatori: IBKR, Kraken, Hyperliquid | **Da scrivere** |
+| Adattatore: IBKR paper (`gerva/execution/ibkr.py`), modalità `ibkr-paper` | Scritto e provato **solo contro un `ib_async` finto** (15 test); **mai collegato a TWS o IB Gateway**: vedi 9.1 |
+| Adattatori: Kraken, Hyperliquid | **Da scrivere** |
 | Due libri paper in parallelo (con e senza AI) | **Da costruire** |
 | Liquidità ferma in un fondo monetario (+1,1 punti l'anno) | **Da fare** |
+
+### 9.1 Adattatore IBKR: che cosa c'è e che cosa non è verificato
+
+Stato all'11 novembre 2026. Sostituisce la voce "da scrivere" per IBKR; lo stato resta **non verificato sul broker**.
+
+**Che cosa c'è.** `gerva/execution/ibkr.py` implementa l'interfaccia `Broker` sul conto paper di IBKR. La meccanica dell'ordine non è riscritta: viene da `firm/ibkr.py` (ordine limite sul tick, `orderRef` come chiave di idempotenza, attesa limitata, annullamento del residuo confermato prima di contare gli eseguiti, involucro di sola lettura). La modalità `ibkr-paper` di `config/gerva.yaml` usa un broker composito (`gerva/execution/composite.py`): azioni ed ETF su IBKR, crypto su Alpaca paper (o sul simulato interno con `ibkr.crypto: paper`); il conto è la somma dei due, le posizioni l'unione.
+
+**Perché non può partire un ordine verso un conto reale.** Le porte dei conti reali (7496, 4001) sono rifiutate prima di collegarsi; dopo il collegamento tutti i conti visibili nella sessione devono iniziare per `DU`, e ne basta uno reale per scollegarsi; il conto della sfida GERVA-Q è escluso; esiste un solo punto che chiama `placeOrder`, e ricontrolla il conto; `check-broker`, `status`, `gates` e `ai` aprono IBKR in sola lettura. La configurazione accetta solo `paper`, `alpaca-paper`, `ibkr-paper`.
+
+**Strumenti.** `config/ibkr_gerva.yaml` traduce il simbolo di ricerca nello strumento negoziabile (PRIIPs vieta gli ETF quotati negli USA; una riga che ne indichi uno fa fallire l'avvio). SPY e QQQ vanno sui CFD su indice `IBUS500` e `IBUS100`; undici ETF di MA-TREND sui rispettivi UCITS quotati a Londra in dollari. **Tutte le righe hanno `verified: false`**: al primo ordine di ogni simbolo l'adattatore lo scrive nel registro e l'ordine va guardato in TWS. L'ordine conserva il controvalore in dollari, non il numero di pezzi.
+
+**Non verificato, in ordine di importanza.**
+
+1. **Nessun collegamento reale.** Nell'ambiente in cui è stato scritto non c'erano TWS né IB Gateway: `python -m gerva check-broker` risponde "IBKR non raggiungibile". Il primo passo è lanciarlo sul Mac con TWS in paper.
+2. **Orario.** La finestra delle azioni è 15:45–16:00 di New York; Londra chiude alle 16:30 locali, cinque ore prima. Con la finestra attuale si eseguono solo i due CFD su indice (quindi tutta EQ-MR e la parte SPY/QQQ di MA-TREND); gli ordini sugli UCITS vengono rifiutati con "borsa chiusa" senza essere inviati. Per scambiarli la finestra va spostata nell'orario di Londra, e allora il segnale non nasce più dalla chiusura USA: va rifatto il backtest con quell'orario prima di decidere.
+3. **Simboli senza equivalente.** EFA, UUP, FXE, FXY non hanno una riga: l'ordine è rifiutato e il peso resta in cassa. HYG → `IHYU` e USO → `CRUD` sono candidati nuovi, non presenti nell'anagrafica precedente.
+4. **Scostamento dal backtest.** Un UCITS o un CFD non replica l'ETF americano: orario, valuta di quotazione, costo di finanziamento del CFD, dividendi. Il cancello "scostamento" della sezione 4.2 lo misurerà; il backtest non lo contiene.
+5. **Valuta del conto.** Il patrimonio è convertito in dollari con i cambi che IBKR pubblica tra i valori del conto. Se mancano, l'adattatore si ferma invece di inventare un cambio; il comportamento su un conto in euro senza saldo in dollari va visto dal vero.
+6. **Taglio minimo.** Un CFD `IBUS500` vale circa dieci volte SPY: sotto qualche decina di migliaia di dollari di patrimonio molti ordini sono "meno di un pezzo" e vengono rifiutati. Il conto paper di IBKR parte da un milione, quello reale no.
+7. **Memoria di IBKR.** Eseguiti e ordini conclusi sono interrogabili solo nella giornata: dopo un fermo di più giorni un ordine eseguito risulterebbe "mai inviato". La riconciliazione delle posizioni lo rivela, ma a mano.
+8. **KILL a borsa chiusa.** `flatten` non dichiara chiuso ciò che non lo è: solleva, e il ciclo riprova a ogni giro finché la borsa riapre. Le posizioni che non sono del motore non vengono toccate.
 
 ---
 

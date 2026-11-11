@@ -1,0 +1,46 @@
+# Mappatura per l'adattatore IBKR del motore GERVA (gerva/execution/ibkr.py):
+#     simbolo di ricerca (quello dei backtest, ETF quotato negli USA)  ->  strumento NEGOZIABILE da un cliente al dettaglio UE.
+#
+# Perche' serve: un residente UE non puo' comprare ETF quotati negli USA (regolamento PRIIPs: manca il KID). Il codice
+# rifiuta all'avvio qualunque riga che punti a un'azione/ETF su una borsa americana.
+#
+# OGNI riga ha `verified: false`: nessuna e' stata provata contro IBKR dall'ambiente in cui il file e' stato scritto.
+# Al primo ordine su un simbolo l'adattatore lo scrive nel registro ("mappatura da verificare"); guarda l'ordine in TWS,
+# controlla che lo strumento sia quello giusto, e solo allora metti `verified: true` a mano.
+#
+# Campi:  symbol, sec_type (STK | CFD), exchange, currency   il contratto IBKR
+#         session   orario di contrattazione usato per NON inviare ordini a borsa chiusa: LSEETF 8:00-16:30 Londra,
+#                   IBIS 9:00-17:30 Berlino, SMART 9:30-16:00 New York
+#
+# ATTENZIONE all'orario: la finestra delle azioni (gerva.yaml, equity_window) e' 15:45-16:00 di New York, quando Londra
+# e' chiusa da ore. Con quella finestra si eseguono SOLO le righe con session SMART (i due CFD su indice); gli ETF UCITS
+# vengono rifiutati con "borsa chiusa" senza che parta alcun ordine. Vedi docs/RIFONDAZIONE.md, sezione 9.1.
+#
+# Le righe UCITS vengono da config/instruments.yaml (anagrafica dell'esecutore dei pod, copiata da GERVA-Q).
+
+# --- EQ-MR e MA-TREND: S&P 500 e Nasdaq 100 con CFD su indice (si scambiano anche alla chiusura di New York) ---
+SPY: {symbol: IBUS500, sec_type: CFD, exchange: SMART, currency: USD, session: SMART, verified: false}
+QQQ: {symbol: IBUS100, sec_type: CFD, exchange: SMART, currency: USD, session: SMART, verified: false}
+# alternativa UCITS (senza leva, senza costo di finanziamento, ma solo in orario di Londra):
+#   SPY: {symbol: CSPX, sec_type: STK, exchange: LSEETF, currency: USD, session: LSEETF, verified: false}
+#   QQQ: {symbol: CNDX, sec_type: STK, exchange: LSEETF, currency: USD, session: LSEETF, verified: false}
+
+# --- MA-TREND: ETF UCITS equivalenti, quotati a Londra in dollari ---
+IWM: {symbol: R2US, sec_type: STK, exchange: LSEETF, currency: USD, session: LSEETF, verified: false}
+EEM: {symbol: EIMI, sec_type: STK, exchange: LSEETF, currency: USD, session: LSEETF, verified: false}
+TLT: {symbol: IDTL, sec_type: STK, exchange: LSEETF, currency: USD, session: LSEETF, verified: false}
+IEF: {symbol: IBTM, sec_type: STK, exchange: LSEETF, currency: USD, session: LSEETF, verified: false}
+LQD: {symbol: LQDE, sec_type: STK, exchange: LSEETF, currency: USD, session: LSEETF, verified: false}
+GLD: {symbol: IGLN, sec_type: STK, exchange: LSEETF, currency: USD, session: LSEETF, verified: false}
+SLV: {symbol: PHAG, sec_type: STK, exchange: LSEETF, currency: USD, session: LSEETF, verified: false}
+DBC: {symbol: CMOD, sec_type: STK, exchange: LSEETF, currency: USD, session: LSEETF, verified: false}
+VNQ: {symbol: IUSP, sec_type: STK, exchange: LSEETF, currency: USD, session: LSEETF, verified: false}
+# candidati NUOVI (non erano in instruments.yaml): il ticker va controllato con piu' cura degli altri
+HYG: {symbol: IHYU, sec_type: STK, exchange: LSEETF, currency: USD, session: LSEETF, verified: false}
+USO: {symbol: CRUD, sec_type: STK, exchange: LSEETF, currency: USD, session: LSEETF, verified: false}
+
+# --- senza equivalente scelto: l'adattatore RIFIUTA l'ordine senza inviarlo (il peso resta in cassa) ---
+EFA:        # azioni sviluppate fuori dagli USA: nessun UCITS identico; EXSA (Europa 600) copre solo l'Europa
+UUP:        # paniere del dollaro: nessun UCITS equivalente; si replicherebbe con cambi a pronti
+FXE:        # euro contro dollaro: si replicherebbe con EUR.USD a pronti (IDEALPRO), non implementato
+FXY:        # yen contro dollaro: come sopra, con USD.JPY

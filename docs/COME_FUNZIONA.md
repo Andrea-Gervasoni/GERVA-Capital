@@ -86,6 +86,6 @@ In una riga: la versione precedente era costruita per sembrare una società; que
 
 - Nessun giorno di paper trading: i cancelli per il denaro reale sono tutti da superare.
 - Il valore degli agenti AI: si misura solo in avanti, con due libri paper in parallelo, ancora da costruire.
-- L'adattatore per Interactive Brokers nel nuovo motore manca; quello per Alpaca è provato solo contro un servizio finto.
+- Gli adattatori per Interactive Brokers e per Alpaca nel nuovo motore sono provati solo contro servizi finti, mai contro il broker vero.
 - Conviction e leva del singolo trade sono moduli pronti e testati, non ancora collegati al ciclo.
 - La liquidità ferma non è ancora remunerata nel codice.

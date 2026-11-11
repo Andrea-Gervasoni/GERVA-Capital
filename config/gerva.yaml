@@ -2,7 +2,7 @@
 # docs/RIFONDAZIONE.md; ogni numero ha la sua motivazione nella sezione 4. Li cambia solo Andrea, a mano, su questo file.
 # Nessun agente LLM ha strumenti che lo scrivono (test: tests/test_gerva_live.py::test_agents_cannot_touch_limits).
 
-mode: paper                 # paper | alpaca-paper. "live" non esiste finche' i cancelli non sono verdi (python -m gerva gates)
+mode: paper                 # paper | alpaca-paper | ibkr-paper. "live" non esiste finche' i cancelli non sono verdi (python -m gerva gates)
 home: var/gerva             # registro, fotografia per la dashboard, file KILL, battito
 start_cash: 12000           # solo per il paper interno, in dollari
 interval_s: 900             # un giro ogni 15 minuti
@@ -28,6 +28,13 @@ limits:
 paper:
   fee: {crypto: 0.0025, ibkr: 0.0005}        # commissione per lato simulata
   slippage: {crypto: 0.0005, ibkr: 0.0002}
+
+ibkr:                       # solo con mode: ibkr-paper. Azioni ed ETF sul conto PAPER di IBKR (gerva/execution/ibkr.py)
+  crypto: alpaca            # dove vanno le crypto: alpaca (conto paper di Alpaca) | paper (simulato interno)
+  # Strumenti negoziati: config/ibkr_gerva.yaml. Collegamento: variabili IBKR_GERVA_HOST / _PORT / _CLIENT_ID / _ACCOUNT.
+  # Gli ETF UCITS si scambiano a Londra (8:00-16:30): con equity_window 15:45-16:00 di New York si eseguono solo i CFD
+  # su indice (SPY, QQQ). Per scambiare anche gli UCITS la finestra va portata nell'orario di Londra, per esempio
+  # ["11:00", "11:25"]: e' una scelta di ricerca (il segnale nasce dalla chiusura USA), non un dettaglio tecnico.
 
 ai:                         # livello AI (gerva/ai): puo' solo RIDURRE l'esposizione; il motore di rischio decide per ultimo
   regime_scaling: false     # il regime si mostra ma non scala: nel backtest ridurre in "teso"/"crisi" peggiora lo Sharpe (1,18 -> 1,10)

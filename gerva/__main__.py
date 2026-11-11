@@ -25,7 +25,10 @@ import sys
 from .config import ROOT, load
 
 
-def _runner():
+READ_ONLY_CMDS = ("check-broker", "status", "gates", "ai")     # comandi che non inviano ordini: IBKR in sola lettura
+
+
+def _runner(read_only: bool = False):
     from .data import Store
     from .execution.broker import PaperBroker
     from .live.market import Market
@@ -34,12 +37,26 @@ def _runner():
     s, limits, cfg = load()
     market = Market(Store(os.environ.get("GERVA_CACHE") or os.path.join(ROOT, "data_cache")))
     j = Journal(os.path.join(s.home, "journal.sqlite"))
+
+    def internal():
+        p = cfg.get("paper") or {}
+        return PaperBroker(j, market.last_prices, s.start_cash, p.get("fee"), p.get("slippage"), market.venue_of)
+
     if s.mode == "alpaca-paper":
         from .execution.alpaca import AlpacaPaper
         broker = AlpacaPaper()
+    elif s.mode == "ibkr-paper":
+        # azioni ed ETF sul conto paper di IBKR; crypto su Alpaca paper (o sul simulato interno, con ibkr.crypto: paper)
+        from .execution.composite import CompositeBroker
+        from .execution.ibkr import IBKRPaper
+        if (cfg.get("ibkr") or {}).get("crypto", "alpaca") == "alpaca":
+            from .execution.alpaca import AlpacaPaper
+            crypto = AlpacaPaper()
+        else:
+            crypto = internal()
+        broker = CompositeBroker({"ibkr": IBKRPaper(read_only=read_only), "crypto": crypto}, market.venue_of)
     else:
-        p = cfg.get("paper") or {}
-        broker = PaperBroker(j, market.last_prices, s.start_cash, p.get("fee"), p.get("slippage"), market.venue_of)
+        broker = internal()
     return Runner(s, limits, broker, market, j)
 
 
@@ -147,7 +164,7 @@ def main(argv=None) -> int:
         out = Council(lab, os.path.join(ROOT, "research", "v5", "trials.jsonl")).review(StrategySpec(**raw))
         print(json.dumps(out, indent=1, ensure_ascii=False, default=str))
         return 0 if out["verdetto"]["passa"] else 1
-    run = _runner()
+    run = _runner(read_only=a.cmd in READ_ONLY_CMDS)
     if a.cmd == "ai":
         from .ai import decay, desk, feeds, overlay, regime
         from .live import pipeline
@@ -179,8 +196,14 @@ def main(argv=None) -> int:
         run.j.event("info", "runner", "avvio del ciclo")
         return run.run_forever()
     if a.cmd == "check-broker":
-        acct = run.broker.account()
-        print(f"{run.broker.name}: patrimonio {acct.equity:,.2f}, cassa {acct.cash:,.2f}, posizioni {len(run.broker.positions())}")
+        from .execution.broker import BrokerError
+        try:
+            acct = run.broker.account()                     # sola lettura: nessun ordine parte da qui
+            n = len(run.broker.positions())
+        except (BrokerError, PermissionError) as e:
+            print(f"{run.broker.name}: collegamento NON riuscito: {e}")
+            return 1
+        print(f"{run.broker.name}: patrimonio {acct.equity:,.2f}, cassa {acct.cash:,.2f}, posizioni {n}")
         return 0
     if a.cmd == "status":
         j = run.j

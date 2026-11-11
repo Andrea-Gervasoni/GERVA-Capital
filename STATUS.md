@@ -23,7 +23,7 @@
 ## Che cosa NON è fatto (dichiarato)
 - Nessun cancello paper -> reale è verde: il paper trading deve ancora cominciare.
 - L'adattatore Alpaca del nuovo motore è collaudato contro un servizio finto, non contro Alpaca.
-- Manca l'adattatore IBKR per il nuovo motore (il vecchio `firm/ibkr.py` va incapsulato).
+- L'adattatore IBKR del nuovo motore (`gerva/execution/ibkr.py`, modalità `ibkr-paper`) incapsula `firm/ibkr.py` ed è collaudato contro un `ib_async` finto, non contro TWS o IB Gateway. Limiti aperti in `docs/RIFONDAZIONE.md` 9.1.
 - Rischio di cambio non modellato; festività di borsa non gestite a calendario.
 - Nel vecchio `quantlab/`: Sharpe in eccesso nei banchi, ritardo di esecuzione, test anti look-ahead più fitto.
   **La decisione "v4 approvata" e la regola del portafoglio ombra a 40 giorni vanno considerate sospese** (audit, sezione 1).
