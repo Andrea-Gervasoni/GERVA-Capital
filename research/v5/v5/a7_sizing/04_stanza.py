@@ -44,7 +44,7 @@ for npm,lab in ((11,'11 trade/mese (frequenza del fondo, 129/anno)'),(21,'21 tra
     T=pd.DataFrame({e:run(f,npm) for e,f in EDGE.items()}); ALL[lab]=T
     print(f'\n##### {lab} — valori PER 1.000 TRADER (le righe mediana/media sono rendimenti, non conteggi)')
     Z=T.copy(); cnt=[i for i in Z.index if not i.startswith('media') or 'composta' in i]; cnt=[i for i in cnt if not i.startswith('mediana') and not i.startswith('fra chi')]
-    Z.loc[cnt]=Z.loc[cnt]*1000; print(Z.round(2).to_string())
+    Z.loc[cnt]=Z.loc[cnt]*1000; print(Z.map(lambda v:'%.2f'%v if abs(v)<1e5 else '%.2e'%v).to_string())
 pd.concat(ALL).to_csv('stanza.csv')
 print('\n##### Sensibilita\' al rischio per trade (vantaggio zero netto, 21 trade/mese), per 1.000 trader')
 rows={}
