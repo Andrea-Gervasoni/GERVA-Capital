@@ -1,0 +1,32 @@
+== (a) rottura massimo 7 giorni, LONG, trailing 6R, 72h: larghezza dello stop
+                   cfg    n  stop_med  lev_med  costo_R      R   hit  RsuSig  R_sel  sh_sel  R_ver  sh_ver
+stop 0.75 x vol oraria 6452     0.006   40.000    0.241 -0.141 0.146  -0.037 -0.067  -0.486 -0.198  -1.153
+ stop 1.5 x vol oraria 4009     0.012   40.000    0.125  0.109 0.173   0.029  0.182   0.892  0.055   0.221
+ stop 3.0 x vol oraria 2839     0.023   23.447    0.064  0.246 0.269   0.082  0.316   1.528  0.193   0.754
+ stop 6.0 x vol oraria 2329     0.044   12.707    0.033  0.208 0.407   0.103  0.285   1.987  0.151   0.767
+stop 12.0 x vol oraria 2081     0.085    6.791    0.017  0.118 0.482   0.109  0.156   1.848  0.091   0.835
+
+== (a2) Donchian 4h N=100 trailing 4R: larghezza dello stop
+               cfg    n  stop_med  lev_med  costo_R     R   hit  RsuSig  R_sel  sh_sel  R_ver  sh_ver
+stop 0.5 x ATR(4h) 3142     0.013   37.608    0.111 0.025 0.210   0.009  0.050   0.303  0.006   0.030
+stop 1.0 x ATR(4h) 2183     0.025   21.498    0.058 0.214 0.245   0.071  0.252   1.232  0.187   0.762
+stop 2.0 x ATR(4h) 1652     0.048   11.869    0.030 0.284 0.336   0.108  0.408   1.722  0.196   0.929
+stop 4.0 x ATR(4h) 1395     0.092    6.333    0.016 0.220 0.452   0.126  0.353   1.971  0.131   0.962
+
+== (b) candidato A scomposto
+A tutto                          n=1534 R_sel 0.456 tg 3.02 | R_ver 0.211 tg 1.91 | corr mese trade11 0.54 | SCELTA Sh 1.77; Sh^2: trade11 1.25 -> +cand 4.23; C3 3.76 -> +cand 6.86 | VERIFICA Sh 0.89; Sh^2: trade11 1.10 -> +cand 1.49; C3 1.66 -> +cand 2.02
+A solo short                     n= 656 R_sel 0.204 tg 1.03 | R_ver 0.083 tg 0.55 | corr mese trade11 -0.08 | SCELTA Sh 0.64; Sh^2: trade11 1.25 -> +cand 1.64; C3 3.76 -> +cand 4.42 | VERIFICA Sh 0.23; Sh^2: trade11 1.10 -> +cand 1.16; C3 1.66 -> +cand 1.75
+A solo long                      n= 878 R_sel 0.626 tg 2.92 | R_ver 0.314 tg 1.97 | corr mese trade11 0.69 | SCELTA Sh 1.68; Sh^2: trade11 1.25 -> +cand 3.91; C3 3.76 -> +cand 6.21 | VERIFICA Sh 0.98; Sh^2: trade11 1.10 -> +cand 1.50; C3 1.66 -> +cand 1.96
+A solo 7 monete fuori dal libro  n=1039 R_sel 0.433 tg 2.36 | R_ver 0.165 tg 1.37 | corr mese trade11 0.39 | SCELTA Sh 1.35; Sh^2: trade11 1.25 -> +cand 3.02; C3 3.76 -> +cand 5.68 | VERIFICA Sh 0.66; Sh^2: trade11 1.10 -> +cand 1.28; C3 1.66 -> +cand 1.84
+A fuori dai giorni del libro     n= 586 R_sel 0.165 tg 0.92 | R_ver 0.173 tg 0.92 | corr mese trade11 0.12 | SCELTA Sh 0.59; Sh^2: trade11 1.25 -> +cand 1.56; C3 3.76 -> +cand 4.13 | VERIFICA Sh 0.37; Sh^2: trade11 1.10 -> +cand 1.14; C3 1.66 -> +cand 1.68
+A nei giorni del libro           n= 948 R_sel 0.700 tg 3.00 | R_ver 0.231 tg 1.69 | corr mese trade11 0.57 | SCELTA Sh 1.73; Sh^2: trade11 1.25 -> +cand 4.10; C3 3.76 -> +cand 6.66 | VERIFICA Sh 0.87; Sh^2: trade11 1.10 -> +cand 1.53; C3 1.66 -> +cand 2.09
+  (Sh^2 della combinazione ottima ex-post: e' un tetto, non una stima; in VERIFICA i pesi ottimi sono scelti sugli stessi dati)
+  pesi da SCELTA (C3=1, A tutto=0.51 x rischio 1%): VERIFICA Sharpe C3 1.29 -> 1.39 ; Sharpe^2 1.66 -> 1.95
+  pesi da SCELTA (C3=1, A solo short=0.44 x rischio 1%): VERIFICA Sharpe C3 1.29 -> 1.28 ; Sharpe^2 1.66 -> 1.65
+  pesi da SCELTA (C3=1, A fuori dai giorni del libro=0.34 x rischio 1%): VERIFICA Sharpe C3 1.29 -> 1.27 ; Sharpe^2 1.66 -> 1.61
+  Kelly A SCELTA: rischio/trade ottimo ~ 3.48%; crescita log/anno a Kelly pieno 1.97, a mezzo Kelly 1.24 (obiettivo 3.15); mese mediano a mezzo Kelly 2.9%
+  Kelly A VERIFICA: rischio/trade ottimo ~ 1.53%; crescita log/anno a Kelly pieno 0.47, a mezzo Kelly 0.31 (obiettivo 3.15); mese mediano a mezzo Kelly -1.1%
+
+returns.parquet: rischio per trade 0.50%, colonne ['A_don4h_100_2atr_trail4', 'A_solo_short', 'D_long_7g_stop3hv']
+trades.parquet: (4356, 9)
+varianti per file: {'trials_cand.json': 13, 'trials_donchian.json': 36, 'trials_eventi.json': 69, 'trials_fade.json': 18, 'trials_finale.json': 4, 'trials_ign.json': 24, 'trials_orb.json': 36, 'trials_squeeze.json': 24, 'trials_sqzreg.json': 75, 'trials_vol.json': 24} TOTALE 323

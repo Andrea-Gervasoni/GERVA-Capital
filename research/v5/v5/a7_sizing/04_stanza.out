@@ -1,1 +1,98 @@
 costo per trade in R: 30x 0.138, 20x 0.087
+
+##### 11 trade/mese (frequenza del fondo, 129/anno) — valori PER 1.000 TRADER (le righe mediana/media sono rendimenti, non conteggi)
+                                                  zero netto (R medio = 0) zero lordo (R medio = -costi) fondo, verifica (0,196R a 30x; 0,124R a 20x) fondo, intero campione (0,364R; 0,246R) doppio del fondo (0,73R; 0,49R)
+primi 3 mesi tutti >=30%                                              4.64                          2.75                                         8.05                                   13.84                           36.81
+3 di fila in 12 mesi                                                 38.58                         25.01                                        63.79                                  103.55                          239.44
+6 di fila in 12 mesi                                                  0.14                          0.04                                         0.44                                    1.18                            7.96
+12 su 12                                                              0.00                          0.00                                         0.00                                    0.00                            0.01
+3 di fila in 36 mesi                                                120.15                         81.42                                       193.85                                  296.79                          570.78
+6 di fila in 36 mesi                                                  0.64                          0.25                                         1.66                                    4.92                           32.41
+12 di fila in 36 mesi                                                 0.00                          0.00                                         0.00                                    0.00                            0.05
+media composta >=30%/mese su 3                                       59.60                         42.81                                        91.57                                  136.21                          272.28
+su 6                                                                 17.93                          9.48                                        36.81                                   72.85                          219.65
+su 12                                                                 1.93                          0.62                                         8.17                                   26.36                          166.32
+su 36                                                                 0.00                          0.00                                         0.10                                    1.11                           84.63
+anno chiuso in utile                                                246.31                        142.92                                       446.99                                  665.82                          956.86
+anno >= +100%                                                       103.72                         52.14                                       236.36                                  423.82                          842.97
+mediana anno                                                         -0.56                         -0.73                                        -0.14                                    0.61                            4.98
+media anno                                                            0.01                         -0.40                                         1.21                                    3.44                           24.10
+-50% entro 12 mesi                                                  736.24                        835.93                                       553.79                                  357.57                           67.58
+-90% entro 12 mesi (saltato)                                        193.87                        307.12                                        76.09                                   21.89                            0.18
+-50% entro 36 mesi                                                  920.84                        974.04                                       744.60                                  471.15                           73.22
+-90% entro 36 mesi (saltato)                                        629.49                        809.16                                       312.75                                   93.79                            0.52
+mediana capitale a 36 mesi                                            0.09                          0.02                                         0.70                                    4.62                          245.22
+in utile a 36 mesi                                                  133.45                         41.35                                       428.82                                  781.86                          998.36
+fra chi ha fatto 3 di fila: saltati entro 36 mesi                     0.42                          0.65                                         0.15                                    0.03                            0.00
+fra chi ha fatto 3 di fila: in utile a 36 mesi                        0.31                          0.14                                         0.65                                    0.91                            1.00
+
+##### 21 trade/mese (1 al giorno) — valori PER 1.000 TRADER (le righe mediana/media sono rendimenti, non conteggi)
+                                                  zero netto (R medio = 0) zero lordo (R medio = -costi) fondo, verifica (0,196R a 30x; 0,124R a 20x) fondo, intero campione (0,364R; 0,246R) doppio del fondo (0,73R; 0,49R)
+primi 3 mesi tutti >=30%                                              6.99                          3.97                                        16.53                                   31.94                          117.56
+3 di fila in 12 mesi                                                 55.97                         33.33                                       119.99                                  216.20                          540.98
+6 di fila in 12 mesi                                                  0.29                          0.12                                         1.46                                    5.65                           57.32
+12 su 12                                                              0.00                          0.00                                         0.00                                    0.00                            0.26
+3 di fila in 36 mesi                                                177.06                        106.39                                       344.51                                  549.90                          904.19
+6 di fila in 36 mesi                                                  1.28                          0.48                                         6.23                                   23.19                          206.63
+12 di fila in 36 mesi                                                 0.00                          0.00                                         0.00                                    0.04                            3.54
+media composta >=30%/mese su 3                                       80.67                         49.89                                       145.74                                  237.62                          519.59
+su 6                                                                 25.95                         11.69                                        75.36                                  172.71                          544.05
+su 12                                                                 3.58                          0.66                                        24.76                                  100.61                          570.63
+su 36                                                                 0.00                          0.00                                         0.39                                   21.01                          620.14
+anno chiuso in utile                                                179.69                         77.70                                       442.51                                  732.33                          990.84
+anno >= +100%                                                        89.32                         33.01                                       281.46                                  567.62                          968.28
+mediana anno                                                         -0.78                         -0.91                                        -0.21                                    1.60                           30.88
+media anno                                                           -0.03                         -0.61                                         3.67                                   20.61                          687.50
+-50% entro 12 mesi                                                  864.61                        936.77                                       673.37                                  433.15                           71.67
+-90% entro 12 mesi (saltato)                                        444.16                        623.37                                       201.12                                   60.65                            0.54
+-50% entro 36 mesi                                                  971.15                        994.80                                       812.56                                  504.94                           72.36
+-90% entro 36 mesi (saltato)                                        839.22                        953.88                                       471.27                                  134.30                            0.67
+mediana capitale a 36 mesi                                            0.01                          0.00                                         0.56                                   19.28                        39783.70
+in utile a 36 mesi                                                   69.55                         11.62                                       419.36                                  857.19                          999.98
+fra chi ha fatto 3 di fila: saltati entro 36 mesi                     0.69                          0.88                                         0.28                                    0.05                            0.00
+fra chi ha fatto 3 di fila: in utile a 36 mesi                        0.17                          0.04                                         0.61                                    0.94                            1.00
+
+##### 42 trade/mese (2 al giorno) — valori PER 1.000 TRADER (le righe mediana/media sono rendimenti, non conteggi)
+                                                  zero netto (R medio = 0) zero lordo (R medio = -costi) fondo, verifica (0,196R a 30x; 0,124R a 20x) fondo, intero campione (0,364R; 0,246R) doppio del fondo (0,73R; 0,49R)
+primi 3 mesi tutti >=30%                                              9.09                          3.68                                        28.95                                   69.95                          303.34
+3 di fila in 12 mesi                                                 71.15                         30.45                                       195.80                                  398.43                          872.75
+6 di fila in 12 mesi                                                  0.35                          0.03                                         4.09                                   22.88                          273.00
+12 su 12                                                              0.00                          0.00                                         0.00                                    0.02                            9.30
+3 di fila in 36 mesi                                                217.01                         97.06                                       512.89                                  811.09                          998.07
+6 di fila in 36 mesi                                                  1.82                          0.34                                        17.49                                   90.75                          701.94
+12 di fila in 36 mesi                                                 0.00                          0.00                                         0.01                                    0.46                           79.94
+media composta >=30%/mese su 3                                       89.97                         45.54                                       207.98                                  382.93                          802.79
+su 6                                                                 31.37                          8.77                                       133.68                                  347.59                          887.85
+su 12                                                                 4.51                          0.56                                        62.58                                  300.88                          952.52
+su 36                                                                 0.00                          0.00                                         4.60                                  195.22                          994.85
+anno chiuso in utile                                                106.55                         26.69                                       429.55                                  810.63                          999.52
+anno >= +100%                                                        60.06                         12.02                                       313.79                                  716.70                          998.53
+mediana anno                                                         -0.95                         -0.99                                        -0.34                                    6.11                         1116.08
+media anno                                                           -0.16                         -0.84                                        26.73                                 1177.01                        1.06e+06
+-50% entro 12 mesi                                                  944.89                        985.35                                       771.09                                  486.10                           71.71
+-90% entro 12 mesi (saltato)                                        718.66                        879.60                                       370.74                                  109.05                            0.48
+-50% entro 36 mesi                                                  992.60                        999.73                                       869.38                                  524.23                           71.76
+-90% entro 36 mesi (saltato)                                        955.12                        996.21                                       617.44                                  162.70                            0.48
+mediana capitale a 36 mesi                                            0.00                          0.00                                         0.32                                  401.32                        1.99e+09
+in utile a 36 mesi                                                   25.37                          1.09                                       396.06                                  927.23                         1000.00
+fra chi ha fatto 3 di fila: saltati entro 36 mesi                     0.88                          0.98                                         0.43                                    0.08                            0.00
+fra chi ha fatto 3 di fila: in utile a 36 mesi                        0.07                          0.01                                         0.56                                    0.97                            1.00
+
+##### Sensibilita' al rischio per trade (vantaggio zero netto, 21 trade/mese), per 1.000 trader
+                                r 0.5-1%  r 1.0-2%  r 2.0-5%  r 5.0-10%  r 10.0-20%
+3 di fila in 12 mesi                0.84     13.98     59.43      56.90       18.99
+6 di fila in 12 mesi                0.00      0.08      0.36       0.32        0.04
+12 su 12                            0.00      0.00      0.00       0.00        0.00
+media composta >=30%/mese su 3      1.82     24.00     80.41      78.57       27.85
+su 12                               0.00      0.25      3.62       3.47        0.23
+-50% entro 12 mesi                124.19    494.49    864.16     985.81      999.68
+-90% entro 12 mesi (saltato)        0.00     22.00    444.33     916.14      997.94
+-90% entro 36 mesi (saltato)       12.27    263.04    836.97     996.00     1000.00
+
+##### Quanti trader a vantaggio ZERO servono perche' la stanza abbia in vetrina almeno un track record (P>=50%): n = ln(0,5)/ln(1-p)
+  3 di fila in 12 mesi                   p=0.05597  -> servono 12 trader
+  6 di fila in 12 mesi                   p=0.00029  -> servono 2,390 trader
+  12 su 12                               p=0.0 (0 su 100,000: meno di 1 su 33,333)
+  media composta >=30%/mese su 3         p=0.08067  -> servono 8 trader
+  su 6                                   p=0.02595  -> servono 26 trader
+  su 12                                  p=0.00358  -> servono 193 trader

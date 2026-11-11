@@ -100,5 +100,9 @@ for nm, (L, rc, re) in (('B2 libro 2x', (2, 0, 0)), ('C3 2x+trade', (2, .01, .02
                 a, i = account(L, rc, re, limits=True, engine=True, m=m, h=h, hww=hww)
                 t = line(f'{nm}: soglie x{m} isteresi {h} massimo {"storico" if hww is None else "365g"}', a, monthly=True, extra=f"| kill {i['kill']} giorni ridotti/fermi {i['giorni']['REDUCED']}/{i['giorni']['HALTED']}"); TR5[f'{nm} {m} {h} {hww}'] = round(float(t['sh_sel']), 3)
 json.dump(TR5, open(HERE + '/trials_02.json', 'w')); print('varianti provate:', len(TR5) + 5)
-r, pt, pb, _ = account(2, .01, .02, limits=True, ret_parts=True)
-pd.DataFrame({'C3_conto_limiti': r, 'trade11_mtm': Tm, 'new': NEW}).to_parquet(HERE + '/_mtm.parquet')
+SER = {'trade11_mtm': Tm, 'B_pubblicato': NEW,
+       'C2_mtm_limiti': account(1, .01, .02, limits=True)[0], 'C3_mtm_limiti': account(2, .01, .02, limits=True)[0],
+       'C3_mtm_limiti_debito_reale': account(2, .01, .02, limits=True, fin='reale')[0], 'B2_debito_reale': account(2, 0, 0, fin='reale')[0],
+       'C3_motore_di_rischio_attuale': account(2, .01, .02, limits=True, engine=True)[0], 'B2_motore_di_rischio_attuale': account(2, 0, 0, engine=True)[0],
+       'C1_mtm_limiti': account(1, .005, .01, limits=True)[0], 'C1_motore_di_rischio_attuale': account(1, .005, .01, limits=True, engine=True)[0]}
+pd.DataFrame(SER).to_parquet(HERE + '/_mtm.parquet')

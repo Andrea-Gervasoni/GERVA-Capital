@@ -1,0 +1,35 @@
+== 1. Controllo di troncamento (il segnale ricalcolato sui dati tagliati a t deve essere identico)
+   pesi di parita' di rischio, leva a volatilita' obiettivo, quota parcheggiata: 25 date a caso x 3 segnali, differenze: 0
+   NB: l'esposizione degli sleeve (G6) usa DIP = 0,07 costante (media dell'intero periodo, dal .out della ricerca v4): e' l'unica grandezza non puntuale; pesa 0,6% del capitale.
+
+== 2. Robustezza delle due correzioni di conto
+B pubblicato                                                       Sh  1.36 |  1.58 |  1.07  CAGR   13.6%   14.4%   12.7%  vol   7.6%  DD   -9.4%   -6.0% 
+B + T-bill (10 pb, ritardo 1)                                      Sh  1.49 |  1.63 |  1.29  CAGR   14.7%   14.8%   14.5%  vol   7.6%  DD   -8.8%   -5.6% 
+B + T-bill costi x2 (20 pb)                                        Sh  1.47 |  1.61 |  1.28  CAGR   14.5%   14.6%   14.4%  vol   7.6%  DD   -8.9%   -5.6% 
+B + T-bill ritardo +1 giorno                                       Sh  1.48 |  1.63 |  1.29  CAGR   14.7%   14.8%   14.5%  vol   7.6%  DD   -8.8%   -5.6% 
+B + T-bill, cuscinetto 20% (cassa ferma sulle sedi crypto)         Sh  1.44 |  1.61 |  1.20  CAGR   14.2%   14.6%   13.8%  vol   7.6%  DD   -9.0%   -5.8% 
+B 2x debito reale, spread 1.5%                                     Sh  1.51 |  1.64 |  1.33  CAGR   27.7%   29.6%   25.4%  vol  15.2%  DD  -17.9%  -12.0% 
+B 3x debito reale, spread 1.5%                                     Sh  1.49 |  1.63 |  1.30  CAGR   40.5%   44.7%   35.4%  vol  22.8%  DD  -26.0%  -18.5% 
+B 2x debito reale, spread 3.0%                                     Sh  1.50 |  1.63 |  1.32  CAGR   27.5%   29.4%   25.2%  vol  15.2%  DD  -17.9%  -12.1% 
+B 3x debito reale, spread 3.0%                                     Sh  1.45 |  1.59 |  1.25  CAGR   39.2%   43.5%   34.1%  vol  22.8%  DD  -26.1%  -18.8% 
+B 2x debito reale, spread 6.0%                                     Sh  1.47 |  1.61 |  1.29  CAGR   27.0%   28.9%   24.8%  vol  15.2%  DD  -17.9%  -12.2% 
+B 3x debito reale, spread 6.0%                                     Sh  1.37 |  1.52 |  1.16  CAGR   36.7%   41.1%   31.4%  vol  22.8%  DD  -26.3%  -19.3% 
+B 2x debito per sede (nessun trasferimento tra sedi), rf+1,5%      Sh  1.49 |  1.63 |  1.32  CAGR   27.4%   29.3%   25.2%  vol  15.2%  DD  -18.2%  -12.1% | debito medio 0.17
+B 3x debito per sede (nessun trasferimento tra sedi), rf+1,5%      Sh  1.48 |  1.62 |  1.30  CAGR   40.2%   44.2%   35.4%  vol  22.8%  DD  -26.6%  -18.5% | debito medio 0.66
+
+== 3. Profili: pubblicato -> corretto (statistiche MENSILI; DD giornaliero a mercato)
+B. 6 strategie 1x (pubblicato)                                             Sh  1.33 |  1.62 |  0.98  CAGR  13.6%  14.4%  12.7%  DD giorn   -9.4%  mese medio  1.1% mediano  0.6% peggiore   -3.4%
+B + cassa libera in T-bill                                                 Sh  1.46 |  1.68 |  1.20  CAGR  14.7%  14.8%  14.5%  DD giorn   -8.8%  mese medio  1.2% mediano  0.7% peggiore   -3.4%
+B2. 6 strategie 2x (pubblicato)                                            Sh  1.23 |  1.51 |  0.88  CAGR  23.0%  26.4%  19.0%  DD giorn  -19.8%  mese medio  1.8% mediano  0.8% peggiore   -7.0%
+B2 con debito reale                                                        Sh  1.47 |  1.69 |  1.21  CAGR  27.7%  29.6%  25.4%  DD giorn  -17.9%  mese medio  2.2% mediano  1.1% peggiore   -6.9%
+B2 con il motore di rischio attuale                                        Sh  0.79 |  1.05 |  0.48  CAGR  12.9%  14.9%  10.4%  DD giorn  -15.1%  mese medio  1.1% mediano  0.5% peggiore   -7.0%
+C1 pubblicato (uscita)                                                     Sh  1.20 |  1.43 |  1.00  CAGR  27.5%  27.3%  27.9%  DD giorn  -15.4%  mese medio  2.2% mediano  0.4% peggiore   -8.4%
+C1 a mercato + limiti live                                                 Sh  1.15 |  1.35 |  0.96  CAGR  26.8%  26.7%  26.9%  DD giorn  -16.5%  mese medio  2.2% mediano  0.6% peggiore   -8.6%
+C1 con il motore di rischio attuale                                        Sh  1.00 |  1.29 |  0.68  CAGR  18.7%  21.3%  15.6%  DD giorn  -13.4%  mese medio  1.5% mediano  0.3% peggiore   -8.6%
+C3. 2x + trade (pubblicato: P&L sul giorno di uscita)                      Sh  1.17 |  1.38 |  0.99  CAGR  52.8%  54.9%  50.3%  DD giorn  -30.2%  mese medio  4.2% mediano  0.4% peggiore  -16.7%
+C3 a mercato + limiti del libro live                                       Sh  1.11 |  1.30 |  0.93  CAGR  49.3%  52.2%  45.8%  DD giorn  -32.1%  mese medio  4.0% mediano  0.8% peggiore  -17.0%
+C3 a mercato + limiti + debito reale                                       Sh  1.20 |  1.37 |  1.04  CAGR  55.0%  56.0%  53.7%  DD giorn  -31.0%  mese medio  4.3% mediano  1.1% peggiore  -16.7%
+C3 con il motore di rischio attuale (config/gerva.yaml)                    Sh  1.00 |  1.35 |  0.46  CAGR  25.1%  37.0%  11.7%  DD giorn  -19.3%  mese medio  2.1% mediano  0.2% peggiore  -10.0%
+
+returns.parquet: (3136, 11) ['B_pubblicato', 'B_cassa_in_tbill', 'trade11_mtm', 'C2_mtm_limiti', 'C3_mtm_limiti', 'C3_mtm_limiti_debito_reale', 'B2_debito_reale', 'C3_motore_di_rischio_attuale', 'B2_motore_di_rischio_attuale', 'C1_mtm_limiti', 'C1_motore_di_rischio_attuale']
+rischio per trade delle serie con il libro dei trade: 1% (confermato) / 2% (eccezionale), stop 1 x ATR, leva ~11x; C1: 0,5% / 1%.
