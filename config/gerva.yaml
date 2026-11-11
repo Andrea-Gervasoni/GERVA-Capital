@@ -1,0 +1,30 @@
+# GERVA core: configurazione del ciclo live (gerva.live.runner). I valori qui sono quelli difesi dal documento
+# docs/RIFONDAZIONE.md; ogni numero ha la sua motivazione nella sezione 4. Li cambia solo Andrea, a mano, su questo file.
+# Nessun agente LLM ha strumenti che lo scrivono (test: tests/test_gerva_live.py::test_agents_cannot_touch_limits).
+
+mode: paper                 # paper | alpaca-paper. "live" non esiste finche' i cancelli non sono verdi (python -m gerva gates)
+home: var/gerva             # registro, fotografia per la dashboard, file KILL, battito
+start_cash: 12000           # solo per il paper interno, in dollari
+interval_s: 900             # un giro ogni 15 minuti
+band: 0.02                  # non si ritocca una posizione per meno del 2% del patrimonio
+equity_window: ["15:45", "16:00"]   # ora di New York: le azioni si scambiano solo a ridosso della chiusura
+
+limits:
+  vol_target: 0.15          # volatilita' annua obiettivo del portafoglio (sezione 4.3)
+  max_leverage: 2.0         # tetto operativo; il codice rifiuta qualunque valore sopra 3,0 (HARD_MAX_LEVERAGE)
+  dd_reduce: 0.10           # -10% dal massimo: esposizione dimezzata
+  dd_halt: 0.15             # -15%: un quarto dell'esposizione, nessun aumento
+  dd_kill: 0.20             # -20%: chiude tutto e si ferma (a ritenuta)
+  daily_loss: 0.04          # -4% in 24 ore: esposizione dimezzata
+  weekly_loss: 0.08         # -8% in 7 giorni: come dd_halt
+  max_weight: 0.35          # peso massimo di un singolo strumento
+  max_venue: {crypto: 0.60} # al massimo il 60% del patrimonio esposto su una sede crypto (rischio di controparte)
+  max_order_frac: 0.25
+  max_price_dev: 0.05
+  min_order: 25.0
+  max_data_age_h: {crypto: 36.0, ibkr: 100.0}
+  max_errors: 5
+
+paper:
+  fee: {crypto: 0.0025, ibkr: 0.0005}        # commissione per lato simulata
+  slippage: {crypto: 0.0005, ibkr: 0.0002}
