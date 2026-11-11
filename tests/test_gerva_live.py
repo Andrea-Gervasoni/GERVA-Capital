@@ -161,7 +161,7 @@ def test_clamp_weights_only_reduces(tmp_path):
     venue = {"BTC": "crypto", "ETH": "crypto", "SOL": "crypto", "SPY": "ibkr", "TLT": "ibkr", "GLD": "ibkr", "DBC": "ibkr"}
     w, notes = e.clamp_weights({"BTC": 0.5, "ETH": 0.3, "SOL": 0.3, "SPY": 0.9, "TLT": 0.3, "GLD": 0.3, "DBC": 0.3}, venue)
     assert w["BTC"] <= 0.35 and w["SPY"] <= 0.35
-    assert sum(abs(v) for k, v in w.items() if venue[k] == "crypto") <= 0.60 + 1e-9
+    assert sum(abs(v) for k, v in w.items() if venue[k] == "crypto") <= e.l.max_venue["crypto"] + 1e-9
     assert sum(abs(v) for v in w.values()) <= 2.0 + 1e-9 and notes
     small = {"BTC": 0.1, "SPY": 0.1}
     assert e.clamp_weights(small, venue)[0] == small

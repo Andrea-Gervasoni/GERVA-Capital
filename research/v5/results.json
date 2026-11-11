@@ -3111,6 +3111,103 @@
    "2026": 1.1
   }
  },
+ "6b. Walk-forward: scegliere i parametri contro non sceglierli (trend BTC+ETH, 2021 -> oggi)": {
+  "walk-forward: ogni anno la migliore dei 3 anni precedenti": {
+   "anni": 5.84,
+   "cagr": 0.1409474363913361,
+   "vol": 0.2326148817093947,
+   "sharpe": 0.5422089230027535,
+   "sortino": 0.582074772565537,
+   "max_dd": -0.2932268195400419,
+   "calmar": 0.4806771652484839,
+   "dd_giorni": 840,
+   "skew": 0.04541066493009387,
+   "kurt": 15.942958604416589,
+   "mese_medio": 0.013005285498474586,
+   "mese_mediano": 0.0,
+   "mese_peggiore": -0.12469189307445461,
+   "mese_migliore": 0.30366615485554993,
+   "mesi_positivi": 0.4714285714285714,
+   "mesi_ge_20": 0.02857142857142857,
+   "mesi_le_m20": 0.0,
+   "giorno_peggiore": -0.1255695274211618,
+   "psr0": 0.9045592621502696
+  },
+  "insieme delle 6 configurazioni (nessuna scelta)": {
+   "anni": 5.84,
+   "cagr": 0.15005139195369943,
+   "vol": 0.20186885828890877,
+   "sharpe": 0.6307278717163362,
+   "sortino": 0.7986669588341802,
+   "max_dd": -0.23382681768767033,
+   "calmar": 0.6417201988957815,
+   "dd_giorni": 792,
+   "skew": 0.40973407050953486,
+   "kurt": 8.256819065081913,
+   "mese_medio": 0.013711637996228803,
+   "mese_mediano": -0.003574402054436321,
+   "mese_peggiore": -0.07502861249579973,
+   "mese_migliore": 0.3192106624822564,
+   "mesi_positivi": 0.42857142857142855,
+   "mesi_ge_20": 0.02857142857142857,
+   "mesi_le_m20": 0.0,
+   "giorno_peggiore": -0.06275291188422194,
+   "psr0": 0.9371823621313958
+  },
+  "la peggiore delle 6 (col senno di poi)": {
+   "anni": 5.84,
+   "cagr": 0.09984664677712929,
+   "vol": 0.20816732813545757,
+   "sharpe": 0.4030757882565271,
+   "sortino": 0.49402719091217306,
+   "max_dd": -0.34291925835432413,
+   "calmar": 0.2911666357156352,
+   "dd_giorni": 841,
+   "skew": 0.8273115430076982,
+   "kurt": 10.295673554448062,
+   "mese_medio": 0.010377238100546388,
+   "mese_mediano": -0.006789074862665667,
+   "mese_peggiore": -0.10869573862165993,
+   "mese_migliore": 0.26135459753213586,
+   "mesi_positivi": 0.37142857142857144,
+   "mesi_ge_20": 0.05714285714285714,
+   "mesi_le_m20": 0.0,
+   "giorno_peggiore": -0.06726162457013385,
+   "psr0": 0.836804402544481
+  },
+  "la migliore delle 6 (col senno di poi, non ottenibile)": {
+   "anni": 5.84,
+   "cagr": 0.1709429876170654,
+   "vol": 0.21729044469343195,
+   "sharpe": 0.6837304456269665,
+   "sortino": 0.690879185642953,
+   "max_dd": -0.2506352363691501,
+   "calmar": 0.6820389267424899,
+   "dd_giorni": 792,
+   "skew": 0.27762406109542725,
+   "kurt": 8.810265152780751,
+   "mese_medio": 0.015121894319185892,
+   "mese_mediano": 0.0,
+   "mese_peggiore": -0.08978863698739958,
+   "mese_migliore": 0.30366615485554993,
+   "mesi_positivi": 0.4714285714285714,
+   "mesi_ge_20": 0.02857142857142857,
+   "mesi_le_m20": 0.0,
+   "giorno_peggiore": -0.07617707396735662,
+   "psr0": 0.9512097178250639
+  }
+ },
+ "walk_forward": {
+  "scelte": {
+   "2021": "10-40",
+   "2022": "10-40",
+   "2023": "30-120",
+   "2024": "30-120",
+   "2025": "20-80",
+   "2026": "10-40"
+  },
+  "sharpe_addestramento_medio": 1.3985992560211615
+ },
  "8a. Le quattro strategie scelte (rendimenti sul capitale assegnato a ciascuna)": {
   "CR-TREND": {
    "anni": 8.84,
@@ -3363,6 +3460,33 @@
    "mesi_le_m20": 0.0,
    "giorno_peggiore": -0.020879416411926255,
    "psr0": 0.4105375564990482
+  }
+ },
+ "robustezza": {
+  "CR-TREND": {
+   "base": 0.9940875057551373,
+   "costi_doppi": 0.9231327249874767,
+   "ritardo_1g": 0.9531430495296778
+  },
+  "CR-XSMOM": {
+   "base": 1.0402323748064652,
+   "costi_doppi": 0.9593738795978605,
+   "ritardo_1g": 0.7942937761040876
+  },
+  "EQ-MR": {
+   "base": 0.7318245248917536,
+   "costi_doppi": 0.48740296222425994,
+   "ritardo_1g": 0.22069613059965826
+  },
+  "MA-TREND": {
+   "base": 0.16101598732676234,
+   "costi_doppi": -0.048748567173917304,
+   "ritardo_1g": 0.10666884321034309
+  },
+  "PORTAFOGLIO": {
+   "base": 1.1827661722327756,
+   "costi_doppi": 0.9703915766809058,
+   "ritardo_1g": 0.8343855657687815
   }
  },
  "8c. Portafoglio e leva (costo della leva: tasso a breve + 1,5% sulla parte presa a prestito)": {
@@ -3815,17 +3939,17 @@
   }
  },
  "significativita": {
-  "prove_riprodotte": 59,
+  "prove_riprodotte": 65,
   "prove_esplorative": 45,
-  "prove": 104,
+  "prove": 110,
   "varianza_sharpe_prove": 0.21013241220495105,
-  "sharpe_atteso_dal_migliore_a_caso": 1.1663450072091666,
+  "sharpe_atteso_dal_migliore_a_caso": 1.17532275522628,
   "sharpe_tutto": 1.1827661722327756,
   "sharpe_scelta": 1.489780482288924,
   "sharpe_verifica": 0.8565664410813679,
   "psr_zero": 0.9997869612344393,
   "psr_zero_verifica": 0.9585521050928811,
-  "dsr": 0.5195075007167613,
+  "dsr": 0.5088451989995775,
   "errore_standard_sharpe": 0.34116023525969286
  },
  "monte_carlo": {
@@ -4668,6 +4792,12 @@
   "momentum trasversale, 5 su 20, solo con BTC sopra la media a 100 giorni, 30 pb": 1.1807534666070578,
   "CR-XSMOM: momentum 5 su 20 con filtro, 30 pb, ridotto a volatilita' 25% (mai sopra 1x)": 1.0161597002975054,
   "carry su 10 monete, sempre dentro": 4.084343535300445,
-  "carry su 10 monete, solo con funding > 5% annuo": 7.089435199005198
+  "carry su 10 monete, solo con funding > 5% annuo": 7.089435199005198,
+  "walk-forward trend BTC+ETH 5-20": 1.008591139535901,
+  "walk-forward trend BTC+ETH 10-40": 1.2523189422280647,
+  "walk-forward trend BTC+ETH 20-80": 1.1734921541842225,
+  "walk-forward trend BTC+ETH 30-120": 1.349328393527587,
+  "walk-forward trend BTC+ETH 60-200": 1.013171027951274,
+  "walk-forward trend BTC+ETH 10-120": 1.184863970334014
  }
 }

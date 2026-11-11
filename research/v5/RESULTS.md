@@ -1,6 +1,6 @@
 # Ricerca v5: risultati
 
-Generato da `python -m gerva.research.run` il 2026-11-11 01:34 UTC. Dati fino al 2026-11-09 (azioni) e al 2026-10-31 (crypto).
+Generato da `python -m gerva.research.run` il 2026-11-11 01:40 UTC. Dati fino al 2026-11-09 (azioni) e al 2026-10-31 (crypto).
 
 **Tutti i numeri sono SIMULATI su dati storici**, al netto dei costi indicati in ogni tabella. Nessuno e' un risultato reale.
 «scelta» = fino al 31/12/2022; «verifica» = dal 1/1/2023, mai usato per scegliere. Sharpe in eccesso del tasso a breve.
@@ -243,6 +243,17 @@ Lo Sharpe qui e' in eccesso del tasso a breve. Il rischio vero non e' nei dati g
 
 Il premio era del 30-40% nel 2021 ed e' sceso al 2-5% nel 2025-2026: oggi rende meno di un titolo di Stato a breve.
 
+## 6b. Walk-forward: scegliere i parametri contro non sceglierli (trend BTC+ETH, 2021 -> oggi)
+
+| strategia | anni | cagr | vol | sharpe | max_dd | mese_medio | mese_peggiore | mesi_ge_20 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| walk-forward: ogni anno la migliore dei 3 anni precedenti | 5.84 | 14.1% | 23.3% | 0.54 | -29.3% | 1.3% | -12.5% | 2.9% |
+| insieme delle 6 configurazioni (nessuna scelta) | 5.84 | 15.0% | 20.2% | 0.63 | -23.4% | 1.4% | -7.5% | 2.9% |
+| la peggiore delle 6 (col senno di poi) | 5.84 | 10.0% | 20.8% | 0.40 | -34.3% | 1.0% | -10.9% | 5.7% |
+| la migliore delle 6 (col senno di poi, non ottenibile) | 5.84 | 17.1% | 21.7% | 0.68 | -25.1% | 1.5% | -9.0% | 2.9% |
+
+Scelte anno per anno: 2021: 10-40, 2022: 10-40, 2023: 30-120, 2024: 30-120, 2025: 20-80, 2026: 10-40. Sharpe medio delle configurazioni scelte NEI LORO 3 anni di addestramento: 1.40; Sharpe ottenuto nell'anno dopo: 0.54. La differenza e' il sovradattamento da selezione, misurato. Per questo le strategie in produzione mediano su piu' orizzonti invece di scegliere il migliore.
+
 ## 8a. Le quattro strategie scelte (rendimenti sul capitale assegnato a ciascuna)
 
 | strategia | anni | cagr | vol | sharpe | max_dd | mese_medio | mese_peggiore | mesi_ge_20 |
@@ -270,6 +281,18 @@ Il premio era del 30-40% nel 2021 ed e' sceso al 2-5% nel 2025-2026: oggi rende 
 | MA-TREND | 0.32 | 0.25 | -0.08 | 1.00 |
 
 Pesi medi (parita' di rischio): CR-TREND 17%, CR-XSMOM 12%, EQ-MR 27%, MA-TREND 44%.
+
+## 8b-bis. Robustezza: costi raddoppiati e ritardo di esecuzione (2018 -> oggi)
+
+| | Sharpe di base | con i costi raddoppiati | con un giorno di ritardo |
+|---|---:|---:|---:|
+| CR-TREND | 0.99 | 0.92 | 0.95 |
+| CR-XSMOM | 1.04 | 0.96 | 0.79 |
+| EQ-MR | 0.73 | 0.49 | 0.22 |
+| MA-TREND | 0.16 | -0.05 | 0.11 |
+| PORTAFOGLIO | 1.18 | 0.97 | 0.83 |
+
+EQ-MR e' l'unica che dipende dall'eseguire sulla chiusura del segnale: in produzione va scambiata tra le 15:45 e le 16:00 di New York.
 
 ## 8c. Portafoglio e leva (costo della leva: tasso a breve + 1,5% sulla parte presa a prestito)
 
@@ -299,11 +322,11 @@ Pesi medi (parita' di rischio): CR-TREND 17%, CR-XSMOM 12%, EQ-MR 27%, MA-TREND 
 
 ## 8d. Quanto puo' essere fortuna
 
-- Configurazioni provate: **104** (59 riprodotte da questo programma + 45 esplorative provate a mano e scartate); varianza dello Sharpe di una strategia SENZA abilita' su 4.8 anni: 0.21 (quella empirica delle prove, 1.43, e' gonfiata dalle regole distrutte dai costi e non si usa).
-- Sharpe che ci si aspetta dal MIGLIORE di 104 tentativi senza alcuna abilita': **1.17**.
+- Configurazioni provate: **110** (65 riprodotte da questo programma + 45 esplorative provate a mano e scartate); varianza dello Sharpe di una strategia SENZA abilita' su 4.8 anni: 0.21 (quella empirica delle prove, 1.38, e' gonfiata dalle regole distrutte dai costi e non si usa).
+- Sharpe che ci si aspetta dal MIGLIORE di 110 tentativi senza alcuna abilita': **1.18**.
 - Sharpe del portafoglio: 1.18 su tutto il periodo, 1.49 nel periodo di scelta, **0.86 nel periodo di verifica**.
 - Probabilita' che lo Sharpe vero sia sopra zero (PSR): 1.000 su tutto il periodo, 0.959 sul solo periodo di verifica.
-- Deflated Sharpe (probabilita' che lo Sharpe vero superi quello del migliore a caso): **0.52**. La soglia del progetto e' 0,95: il portafoglio NON la supera. Il test e' severo (il portafoglio e' una combinazione, non la migliore delle prove), ma il verdetto onesto e': evidenza promettente, non conclusiva. Decide il paper trading.
+- Deflated Sharpe (probabilita' che lo Sharpe vero superi quello del migliore a caso): **0.51**. La soglia del progetto e' 0,95: il portafoglio NON la supera. Il test e' severo (il portafoglio e' una combinazione, non la migliore delle prove), ma il verdetto onesto e': evidenza promettente, non conclusiva. Decide il paper trading.
 - Errore standard dello Sharpe con 8.6 anni di dati: ±0.34.
 
 ## 9a. Monte Carlo a 3 anni: il portafoglio a leva costante (4.000 percorsi, blocchi di 30 giorni)

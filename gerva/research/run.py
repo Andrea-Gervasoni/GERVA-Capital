@@ -382,6 +382,40 @@ def lab_crypto(L: Lab):
     L.json["funding_annuo_pct"] = json.loads(fy.to_json())
 
 
+def lab_walkforward(L: Lab):
+    """Walk-forward vero su una famiglia: ogni 1 gennaio si sceglie la configurazione con lo Sharpe migliore nei 3 anni
+    precedenti e la si usa per l'anno che segue. Misura quanto costa SCEGLIERE rispetto a non scegliere affatto."""
+    close, ret, rf = L.cclose[["BTC", "ETH"]], L.cret[["BTC", "ETH"]], L.rf365
+    grid = [(5, 20), (10, 40), (20, 80), (30, 120), (60, 200), (10, 120)]
+    R = {}
+    for f, sl in grid:
+        W = SD.trend(close, lookbacks=(f, (f + sl) // 2, sl), long_only=True, asset_vol=0.40, span=30, periods=365).clip(upper=0.5)
+        R[f"{f}-{sl}"] = run(SD.hold(W, 7), ret, 0.0, Costs(trade=book.CRYPTO_FEE, cash_haircut=1.0), periods=365, band=0.03).ret.loc["2018":]
+        L.reg(f"walk-forward trend BTC+ETH {f}-{sl}", R[f"{f}-{sl}"], rf, 365)
+    R = pd.DataFrame(R)
+    sh = lambda x: x.mean() / x.std() * math.sqrt(365)
+    parts, picks, train_sh = [], {}, []
+    for y in range(2021, R.index[-1].year + 1):
+        train = R.loc[str(y - 3):str(y - 1)]
+        best = sh(train).idxmax()
+        picks[y] = best
+        train_sh.append(float(sh(train)[best]))
+        parts.append(R.loc[str(y), best])
+    wf = pd.concat(parts)
+    test = R.loc[wf.index]
+    rows = {"walk-forward: ogni anno la migliore dei 3 anni precedenti": M.summary(wf, rf, 365),
+            "insieme delle 6 configurazioni (nessuna scelta)": M.summary(test.mean(axis=1), rf, 365),
+            "la peggiore delle 6 (col senno di poi)": M.summary(test[sh(test).idxmin()], rf, 365),
+            "la migliore delle 6 (col senno di poi, non ottenibile)": M.summary(test[sh(test).idxmax()], rf, 365)}
+    L.table("6b. Walk-forward: scegliere i parametri contro non sceglierli (trend BTC+ETH, 2021 -> oggi)", rows, COLS,
+            f"Scelte anno per anno: {', '.join(f'{y}: {k}' for y, k in picks.items())}. Sharpe medio delle configurazioni scelte "
+            f"NEI LORO 3 anni di addestramento: {sum(train_sh) / len(train_sh):.2f}; Sharpe ottenuto nell'anno dopo: "
+            f"{rows['walk-forward: ogni anno la migliore dei 3 anni precedenti']['sharpe']:.2f}. "
+            "La differenza e' il sovradattamento da selezione, misurato. Per questo le strategie in produzione mediano su piu' "
+            "orizzonti invece di scegliere il migliore.")
+    L.json["walk_forward"] = dict(scelte=picks, sharpe_addestramento_medio=sum(train_sh) / len(train_sh))
+
+
 def lab_portfolio(L: Lab):
     idx = pd.date_range("2018-01-01", L.cclose.index[-1], freq="D")
     S = pd.DataFrame({k: L.series[k] for k in ("CR-TREND", "CR-XSMOM", "EQ-MR", "MA-TREND")}).reindex(idx).fillna(0.0)
@@ -399,6 +433,31 @@ def lab_portfolio(L: Lab):
     md += "".join(f"| {i} | " + " | ".join(f"{v:.2f}" for v in row) + " |\n" for i, row in mm.iterrows())
     L.tables.append(("8b. Correlazione dei rendimenti mensili", md + "\nPesi medi (parita' di rischio): " +
                      ", ".join(f"{k} {v:.0%}" for k, v in a.mean().items()) + "."))
+    # robustezza delle quattro: costi raddoppiati e un giorno di ritardo nell'esecuzione
+    rb = {}
+    H, Lo, C = L.P["high"], L.P["low"], L.P["close"]
+    variants = {
+        "CR-TREND": lambda fee, lag: book.cr_trend_returns(L.cclose, L.cret, book.CRYPTO_FEE * fee, lag).ret.loc["2018":],
+        "CR-XSMOM": lambda fee, lag: (lambda raw: raw * book.xs_scale(raw))(
+            book.cr_xsmom_returns(L.cclose, L.cdvol, L.cret, book.CRYPTO_FEE * fee, lag).ret.loc["2018":]),
+        "EQ-MR": lambda fee, lag: book.eq_mr_returns(H, Lo, C, L.ret, L.rf, book.INDEX_FEE * fee, lag).loc["2018":],
+        "MA-TREND": lambda fee, lag: book.ma_trend_returns(L.adj, L.rf, book.ETF_FEE * fee, lag).ret.loc["2018":],
+    }
+    alt = {"costi_doppi": {}, "ritardo_1g": {}}
+    for k, fn in variants.items():
+        per = book.SLEEVES[k].periods
+        rfx = rf if per == 365 else L.rf
+        r2, rl = fn(2.0, 1), fn(1.0, 2)
+        alt["costi_doppi"][k], alt["ritardo_1g"][k] = r2, rl
+        rb[k] = dict(base=M.sharpe(S[k], rf, 365), costi_doppi=M.sharpe(r2, rfx, per), ritardo_1g=M.sharpe(rl, rfx, per))
+    for nm, d in alt.items():
+        S2 = pd.DataFrame(d).reindex(idx).fillna(0.0)
+        rb.setdefault("PORTAFOGLIO", dict(base=M.sharpe(port, rf, 365)))[nm] = M.sharpe(combine(S2, risk_parity(S2)), rf, 365)
+    md = "| | Sharpe di base | con i costi raddoppiati | con un giorno di ritardo |\n|---|---:|---:|---:|\n"
+    md += "".join(f"| {k} | {v['base']:.2f} | {v['costi_doppi']:.2f} | {v['ritardo_1g']:.2f} |\n" for k, v in rb.items())
+    L.tables.append(("8b-bis. Robustezza: costi raddoppiati e ritardo di esecuzione (2018 -> oggi)", md +
+                     "\nEQ-MR e' l'unica che dipende dall'eseguire sulla chiusura del segnale: in produzione va scambiata tra le 15:45 e le 16:00 di New York."))
+    L.json["robustezza"] = rb
     rows = {}
 
     def three(name, r, extra=None):
@@ -488,7 +547,7 @@ def main(root: str | None = None, refresh: bool = False, quick: bool = False):
     L = Lab(root, refresh)
     L.load_daily()
     L.load_crypto()
-    labs = [lab_benchmarks, lab_trend, lab_equity, lab_gex] + ([] if quick else [lab_intraday]) + [lab_crypto, lab_portfolio]
+    labs = [lab_benchmarks, lab_trend, lab_equity, lab_gex] + ([] if quick else [lab_intraday]) + [lab_crypto, lab_walkforward, lab_portfolio]
     for f in labs:
         f(L)
         print("fatto:", f.__name__, flush=True)

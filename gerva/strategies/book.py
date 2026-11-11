@@ -73,23 +73,23 @@ def ma_trend(adj: pd.DataFrame) -> pd.DataFrame:
 
 
 # ---- rendimenti simulati (stesse ipotesi di costo della ricerca) -----------
-def cr_trend_returns(close: pd.DataFrame, ret: pd.DataFrame, fee: float = CRYPTO_FEE):
-    return run(cr_trend(close), ret[["BTC", "ETH"]], 0.0, Costs(trade=fee, cash_haircut=1.0), periods=365, band=0.03)
+def cr_trend_returns(close: pd.DataFrame, ret: pd.DataFrame, fee: float = CRYPTO_FEE, lag: int = 1):
+    return run(cr_trend(close), ret[["BTC", "ETH"]], 0.0, Costs(trade=fee, cash_haircut=1.0), lag=lag, periods=365, band=0.03)
 
 
-def cr_xsmom_returns(close: pd.DataFrame, dollar_volume: pd.DataFrame, ret: pd.DataFrame, fee: float = CRYPTO_FEE):
-    return run(cr_xsmom(close, dollar_volume), ret, 0.0, Costs(trade=fee, cash_haircut=1.0), periods=365, band=0.03)
+def cr_xsmom_returns(close: pd.DataFrame, dollar_volume: pd.DataFrame, ret: pd.DataFrame, fee: float = CRYPTO_FEE, lag: int = 1):
+    return run(cr_xsmom(close, dollar_volume), ret, 0.0, Costs(trade=fee, cash_haircut=1.0), lag=lag, periods=365, band=0.03)
 
 
-def eq_mr_returns(high, low, close, ret: pd.DataFrame, rf_daily: pd.Series, fee: float = INDEX_FEE) -> pd.Series:
+def eq_mr_returns(high, low, close, ret: pd.DataFrame, rf_daily: pd.Series, fee: float = INDEX_FEE, lag: int = 1) -> pd.Series:
     """Long via CFD o margine: ogni notte in posizione costa (tasso + spread) sul controvalore; la cassa non rende."""
     W = eq_mr(high, low, close)
-    held = W.shift(1).fillna(0.0)
+    held = W.shift(lag).fillna(0.0)
     carry = rf_daily + CFD_SPREAD / 252
     return (held * ret[W.columns].sub(carry, axis=0)).sum(axis=1) - W.diff().abs().fillna(0.0).sum(axis=1) * fee
 
 
-def ma_trend_returns(adj: pd.DataFrame, rf_daily: pd.Series, fee: float = ETF_FEE):
+def ma_trend_returns(adj: pd.DataFrame, rf_daily: pd.Series, fee: float = ETF_FEE, lag: int = 1):
     W = ma_trend(adj)
     R = adj[TREND_UNIVERSE].loc["2003":].pct_change(fill_method=None)
-    return run(W, R, rf_daily, Costs(trade=fee, cash_haircut=1.0), band=0.02)
+    return run(W, R, rf_daily, Costs(trade=fee, cash_haircut=1.0), lag=lag, band=0.02)

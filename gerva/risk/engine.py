@@ -39,7 +39,7 @@ class Limits:
     daily_loss: float = 0.04
     weekly_loss: float = 0.08
     max_weight: float = 0.35             # peso massimo di un singolo strumento (valore assoluto)
-    max_venue: dict = field(default_factory=lambda: {"crypto": 0.60})   # esposizione massima per sede (rischio di controparte)
+    max_venue: dict = field(default_factory=lambda: {"crypto": 0.40})   # esposizione massima per sede (rischio di controparte)
     max_order_frac: float = 0.25         # nessun ordine sopra il 25% del patrimonio (errore di battitura)
     max_price_dev: float = 0.05          # prezzo dell'ordine entro il 5% dall'ultimo prezzo noto
     min_order: float = 25.0              # ordini piu' piccoli non si inviano (costano piu' di quanto valgono)

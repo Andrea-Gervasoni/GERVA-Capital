@@ -22,7 +22,7 @@ from typing import Callable
 
 from .spec import FAMILIES, StrategySpec, TrialRegistry, evaluate, gate
 
-BASELINE_TRIALS = 104          # prove gia' consumate dalla ricerca v5 (research/v5/RESULTS.md, sezione 8d)
+BASELINE_TRIALS = 110          # prove gia' consumate dalla ricerca v5 (research/v5/RESULTS.md, sezione 8d)
 
 
 def default_roles() -> dict[str, Callable]:
