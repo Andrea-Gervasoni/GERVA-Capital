@@ -131,7 +131,7 @@ export function mount(root) {
       h('ol', { class: 'rules' },
         h('li', null, h('strong', { text: 'La leva segue dallo stop. ' }), 'Non si sceglie «quanta leva»: si sceglie dove mettere lo stop, e la leva possibile ne discende. Stop largo, leva bassa; stop stretto, leva alta.'),
         h('li', null, h('strong', { text: 'Su un\'operazione si può perdere il margine isolato. ' }), `È circa ${fmtNum(typical, 1)} volte il rischio dichiarato: se rischi 100 e lo stop non viene eseguito, la perdita peggiore è intorno a ${fmtNum(typical * 100, 0)}. Il resto del conto non è toccato.`),
-        h('li', null, h('strong', { text: 'Rendimento e rovina dipendono dal rischio per trade, non dalla leva. ' }), 'Rischiare l\'1% a 11x o a 30x porta a risultati simili; rischiare il 2% invece dell\'1% raddoppia guadagni e cadute.'))));
+        h('li', null, h('strong', { text: 'Rendimento e rovina dipendono dal rischio per trade, non dalla leva. ' }), 'Raddoppiare il rischio per trade raddoppia circa guadagni e cadute. A 30x lo stop è più stretto e scatta più spesso (18% di trade vincenti contro 43% a 11x): per avere cadute simili il rischio per trade va dimezzato.'))));
   }
 
   function paintR() {

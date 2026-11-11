@@ -385,9 +385,19 @@ Gli agenti propongono e filtrano; il motore di rischio deterministico decide. Co
 
 ## 8. Dashboard
 
-Console in [`dashboard/`](../dashboard/): dieci pagine, senza librerie esterne, due livelli di lettura (Semplice ed Esperto), glossario, conto aggiornato ogni 5 secondi e ricerca ogni 10 minuti. Pagine: Panoramica, Performance, Esposizione, Rischio, Strategie, Ordini, Sistema, AI, Ricerca, Come funziona. Avvio: `python -m dashboard.server`, poi `http://127.0.0.1:8787`.
+Console in [`dashboard/`](../dashboard/): undici pagine, senza librerie esterne, due livelli di lettura (Semplice ed Esperto), glossario, conto aggiornato ogni 5 secondi e ricerca ogni 10 minuti. Pagine: Panoramica, Performance, Esposizione, Rischio, Strategie, Ordini, Sistema, AI, Ricerca, Leva per trade, Come funziona. Avvio: `python -m dashboard.server`, poi `http://127.0.0.1:8787`.
 
-In aggiornamento per questa versione: pagina "Leva per trade" (tabella stop / leva / esito, schemi di rischio per scenario, stress), sezione "Il fondo intero" con la scomposizione del rendimento, tabella delle strategie provate con il loro decadimento, tabella delle sedi. I dati vengono da `research/v5/quant_v4.json`.
+Aggiunte in questa versione, con i dati di `research/v5/quant_v4.json` (`GET /api/v1/quant4`):
+
+- **Leva per trade**: tabella stop / leva / giudizio, guadagno medio per leva, schemi di rischio con selettore di scenario, probabilità di raggiungere la liquidazione se la sede non risponde.
+- **Ricerca → Il fondo intero**: curve cumulate, portafogli a confronto con mese medio e mese mediano, Monte Carlo, scomposizione del rendimento (l'AI compare come "da misurare in paper", mai come numero), strategie provate con il loro decadimento anno per anno.
+- **Come funziona**: tabella delle sedi con lo stato legale per un residente italiano.
+
+Verificate nel browser le tre pagine nuove o modificate, nei due temi, a schermo largo e da telefono. **Non riverificate** dopo l'ultima correzione alla larghezza delle tabelle: le altre otto pagine e i selettori interattivi delle sezioni nuove. La frase riassuntiva della pagina Ricerca descrive ancora le tornate precedenti.
+
+![Leva per trade (ricerca simulata)](img/dashboard-v3-leva.png)
+
+![Il fondo intero (ricerca simulata)](img/dashboard-v3-fondo.png)
 
 ![Panoramica in modalità Semplice (dati di esempio)](img/dashboard-v2-semplice-panoramica.png)
 
