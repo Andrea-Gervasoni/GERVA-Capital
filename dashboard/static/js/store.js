@@ -11,6 +11,7 @@ const HEALTH_URL = 'api/v1/health';
 const POLL_MS = 5000;
 const HEALTH_MS = 20000;
 const QUANT_URL = 'api/v1/quant';
+const QUANT4_URL = 'api/v1/quant4';
 const QUANT_MS = 600000;         // la ricerca è statica: una volta al caricamento, poi ogni 10 minuti
 const QUANT_RETRY_MS = 60000;    // se manca o non si legge si riprova più spesso
 const TIMEOUT_MS = 4500;
@@ -41,14 +42,15 @@ export function createStore() {
     quant: null,         // risultati della ricerca (/api/v1/quant), tutti simulati
     quantStatus: 'loading', // loading | ok | missing | error
     quantAt: null,       // quando è arrivata l'ultima copia valida (ms locali)
+    quant4: null,        // quarta tornata di ricerca (/api/v1/quant4)
+    quant4Status: 'loading',
+    quant4At: null,
   };
   const subscribers = new Set();
   let lastText = null;
   let timer = null;
   let busy = false;
   let lastHealthAt = 0;
-  let lastQuantAt = 0;
-  let lastQuantText = null;
 
   const serverNow = () => Date.now() + state.clockOffset;
 
@@ -115,33 +117,41 @@ export function createStore() {
     }
   }
 
-  async function pollQuant(force = false) {
-    const every = state.quantStatus === 'ok' ? QUANT_MS : QUANT_RETRY_MS;
-    if (!force && lastQuantAt && Date.now() - lastQuantAt < every) return;
-    lastQuantAt = Date.now();
-    const before = state.quantStatus;
-    let changed = false;
-    try {
-      const { res, text, body } = await getJson(QUANT_URL);
-      if (res.status === 404) {
-        changed = state.quant !== null;
-        state.quant = null;
-        state.quantStatus = 'missing';
-        lastQuantText = null;
-      } else if (res.ok && body && typeof body === 'object' && !Array.isArray(body)) {
-        changed = text !== lastQuantText;
-        lastQuantText = text;
-        state.quant = body;
-        state.quantStatus = 'ok';
-        state.quantAt = Date.now();
-      } else if (!state.quant) {
-        state.quantStatus = 'error';
+  /** Un file di ricerca (statico): letto al caricamento, poi ogni 10 minuti; più spesso se manca. */
+  function research(url, key) {
+    let lastAt = 0;
+    let lastText = null;
+    const K = { data: key, status: `${key}Status`, at: `${key}At` };
+    return async function poll(force = false) {
+      const every = state[K.status] === 'ok' ? QUANT_MS : QUANT_RETRY_MS;
+      if (!force && lastAt && Date.now() - lastAt < every) return;
+      lastAt = Date.now();
+      const before = state[K.status];
+      let changed = false;
+      try {
+        const { res, text, body } = await getJson(url);
+        if (res.status === 404) {
+          changed = state[K.data] !== null;
+          state[K.data] = null;
+          state[K.status] = 'missing';
+          lastText = null;
+        } else if (res.ok && body && typeof body === 'object' && !Array.isArray(body)) {
+          changed = text !== lastText;
+          lastText = text;
+          state[K.data] = body;
+          state[K.status] = 'ok';
+          state[K.at] = Date.now();
+        } else if (!state[K.data]) {
+          state[K.status] = 'error';
+        }
+      } catch (e) {
+        if (!state[K.data]) state[K.status] = 'error';
       }
-    } catch (e) {
-      if (!state.quant) state.quantStatus = 'error';
-    }
-    if (changed || before !== state.quantStatus) for (const fn of subscribers) fn(state, true);
+      if (changed || before !== state[K.status]) for (const fn of subscribers) fn(state, true);
+    };
   }
+  const pollQuant = research(QUANT_URL, 'quant');
+  const pollQuant4 = research(QUANT4_URL, 'quant4');
 
   async function tick() {
     if (busy) return;
@@ -150,6 +160,7 @@ export function createStore() {
       await pollSnapshot();
       await pollHealth();
       await pollQuant();
+      await pollQuant4();
     } finally {
       busy = false;
       schedule();

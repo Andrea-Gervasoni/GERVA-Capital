@@ -7,6 +7,7 @@ Che cosa fa:
                            se il file non esiste serve l'esempio, marcato "DEMO: dati di esempio";
   * GET  /api/v1/health    {"ok": true, "snapshot_age_s": ...};
   * GET  /api/v1/quant     i risultati della ricerca (env GERVA_QUANT, default research/v5/quant.json): tutto SIMULATO;
+  * GET  /api/v1/quant4    la quarta tornata di ricerca (env GERVA_QUANT4, default research/v5/quant_v4.json): SIMULATO;
   * POST /api/v1/kill      crea in modo atomico il file KILL (env GERVA_KILL_FILE). Non lo cancella mai.
 
 Sicurezza:
@@ -75,6 +76,11 @@ def snapshot_path() -> Path:
 def quant_path() -> Path:
     raw = os.environ.get("GERVA_QUANT", "").strip()
     return Path(raw).expanduser() if raw else ROOT / "research" / "v5" / "quant.json"
+
+
+def quant4_path() -> Path:
+    raw = os.environ.get("GERVA_QUANT4", "").strip()
+    return Path(raw).expanduser() if raw else ROOT / "research" / "v5" / "quant_v4.json"
 
 
 def kill_path() -> Path:
@@ -289,7 +295,16 @@ def get_snapshot():
 @app.get("/api/v1/quant")
 def get_quant():
     """Risultati della ricerca su dati storici: statici, simulati, serviti così come sono (NaN -> null)."""
-    path = quant_path()
+    return _research(quant_path())
+
+
+@app.get("/api/v1/quant4")
+def get_quant4():
+    """Quarta tornata di ricerca (leva per trade, fondo intero, strategie provate): stesse regole di /quant."""
+    return _research(quant4_path())
+
+
+def _research(path: Path):
     if not path.is_file():
         return _error(404, "ricerca non disponibile")
     try:

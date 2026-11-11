@@ -29,7 +29,7 @@ ogni 15 minuti
 | **EQ-MR** | Compra S&P 500 e Nasdaq dopo una giornata chiusa sui minimi, rivende al rimbalzo | IBS < 0,2 per entrare, > 0,7 per uscire; in posizione il 30% del tempo; va eseguita in chiusura. Sharpe 0,73 |
 | **MA-TREND** | Segue le tendenze lente di azioni, obbligazioni, oro, materie prime | Trend a 3, 6, 12 mesi su 17 ETF, solo long, senza leva. Sharpe 0,16–0,46: è un diversificatore |
 
-Insieme, senza leva: 13,8% l'anno, volatilità 9,0%, caduta massima −9,4%, Sharpe 1,18 (0,86 nel periodo mai usato per scegliere).
+Insieme, senza leva: 13,8% l'anno, volatilità 9,0%, caduta massima −9,4%, Sharpe 1,18 (0,86 nel periodo mai usato per scegliere). La ricerca v4 aggiunge due strategie non ancora nel motore (acquisto dei crolli a 24 ore, carry su Hyperliquid): Sharpe 1,34, stessa resa, meno volatilità.
 
 ## Le tre difese
 
@@ -39,19 +39,22 @@ Insieme, senza leva: 13,8% l'anno, volatilità 9,0%, caduta massima −9,4%, Sha
 
 ## Leva: due numeri diversi
 
-- **Sul conto:** al massimo 2x, con un tetto di 3x scritto nel codice. Oltre, nei dati il capitale viene dimezzato troppo spesso (a 5x nel 20% dei casi in tre anni nello scenario prudente, a 10x nel 62%).
-- **Sul singolo trade:** anche 20x su indici e cambi, perché lì la leva decide solo quanto margine impegni, non quanto rischi. Il rischio per trade è fisso: 0,5% o 1% del patrimonio.
+- **Sul libro giornaliero:** al massimo 2x, con un tetto di 3x scritto nel codice. Oltre, nei dati il capitale viene dimezzato troppo spesso (a 5x nel 20% dei casi in tre anni nello scenario prudente, a 10x nel 62%).
+- **Sul singolo trade, a margine isolato:** 11x sui setup confermati, 30x sugli eccezionali. La leva discende da quanto è stretto lo stop; ciò che puoi perdere su un trade è il margine, circa 1,7 volte il rischio dichiarato (1% o 2% del patrimonio). A 50x i dati dicono no: 9% di trade vincenti e 53 perdite di fila.
+
+Il modulo è in `gerva/risk/isolated.py`, testato, non ancora collegato al ciclo.
 
 ## Che cosa aspettarsi
 
-| Scenario a leva 2x | Rendimento annuo |
-|---|---:|
-| Ottimista | 43% |
-| Base | 23% |
-| Pessimista (metà del rendimento del backtest) | 10% |
-| Di coda | −6% |
+Simulato, tre anni, rendimento annuo mediano:
 
-Il Deflated Sharpe, che sconta tutte le prove fatte, è 0,51 contro una soglia di 0,95: **l'evidenza è promettente, non è una prova**. Per questo il sistema parte in paper per 90 giorni, con cancelli numerici.
+| Profilo | Base | Prudente | Caduta tipica | Probabilità di dimezzare il conto |
+|---|---:|---:|---:|---:|
+| Solo libro giornaliero, 2x | 23% | 12% | −9% | 0% |
+| Prudente: libro giornaliero 1x + trade a 0,5% / 1% | 28% | 15% | −9% | 0% |
+| Massimo: libro giornaliero 2x + trade a 1% / 2% | 55% | 22% | −19% | 0–4,5% |
+
+Il mese tipico resta sotto l'1% in tutti i profili: il rendimento arriva in pochi mesi grandi. Il Deflated Sharpe, che sconta le 812 prove fatte, è 0,38 contro una soglia di 0,95: **l'evidenza è promettente, non è una prova**. Per questo il sistema parte in paper per 90 giorni, con cancelli numerici. Dettaglio in [`RIFONDAZIONE.md`](RIFONDAZIONE.md).
 
 ## Perché è meglio della versione su GitHub
 

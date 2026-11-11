@@ -88,6 +88,36 @@ export const GLOSSARY = [
     text: 'Un punto base (pb) è lo 0,01%. Cento punti base fanno l\'1%. Si usa per i rendimenti giornalieri e per i costi, dove le percentuali sarebbero numeri troppo piccoli: 5 pb al giorno sono lo 0,05% al giorno.',
     expert: '1 pb = 0,0001. 10 pb al giorno ≈ 44% l\'anno composto su 365 giorni.',
   },
+  {
+    id: 'rischio-trade', term: 'Rischio per trade', match: ['rischio per trade', 'Rischio per trade', 'rischio dichiarato'],
+    short: 'Quanto del conto si accetta di perdere su una singola operazione.',
+    text: 'La quota di patrimonio che si perde se l\'operazione va male ed esce allo stop: per esempio lo 0,5% o l\'1% del conto. È questa scelta, non la leva, a decidere quanto il conto può guadagnare o perdere nel tempo. Raddoppiare il rischio per trade raddoppia più o meno sia i rendimenti sia le cadute.',
+    expert: 'Rischio = controvalore × distanza dello stop / patrimonio. I livelli usati: 0,5% (setup confermato) e 1% (eccezionale), o loro multipli negli schemi S1–S9.',
+  },
+  {
+    id: 'r', term: 'R', match: ['R medio', 'in R', 'multipli di R'],
+    short: 'Unità di misura: il rischio di un\'operazione.',
+    text: '1 R è la somma che si era deciso di rischiare su un\'operazione. Un\'operazione chiusa a +2 R ha guadagnato il doppio di quanto rischiava; una chiusa allo stop vale −1 R. «R medio 0,2» vuol dire che, in media, ogni operazione rende un quinto del suo rischio, al netto dei costi. Sopra zero è positivo; più alto è meglio.',
+    expert: 'R = P&L dell\'operazione / (controvalore × distanza dello stop). Aspettativa per operazione = media di R; costo in R = commissioni e slippage / rischio.',
+  },
+  {
+    id: 'margine-isolato', term: 'Margine isolato', match: ['margine isolato', 'Margine isolato'],
+    short: 'Il denaro bloccato su una singola operazione: è il massimo che quella operazione può perdere.',
+    text: 'Con il margine isolato ogni operazione a leva ha il suo «salvadanaio» separato. Se il prezzo arriva alla liquidazione si perde quel salvadanaio e nient\'altro: il resto del conto non viene toccato. Nelle simulazioni il margine è circa 1,7 volte il rischio dichiarato: è la perdita peggiore se lo stop non viene eseguito.',
+    expert: 'Margine = controvalore / leva. Perdita massima ≈ margine; rapporto margine / rischio = distanza di liquidazione / distanza dello stop (≈ 1,67 con stop a 0,6 × la distanza di liquidazione).',
+  },
+  {
+    id: 'dist-liq', term: 'Distanza dalla liquidazione', match: ['distanza dalla liquidazione', 'Distanza dalla liquidazione', 'distanza di liquidazione'],
+    short: 'Di quanto deve muoversi il prezzo contro perché il broker chiuda la posizione.',
+    text: 'Più alta è la leva del trade, più vicino è il prezzo al quale il margine finisce e la posizione viene chiusa d\'ufficio. A 10x bastano circa 10% di movimento contrario, a 30x meno del 3%. Lo stop deve sempre stare prima di quel punto, con un margine di sicurezza.',
+    expert: 'Distanza di liquidazione ≈ 1 / leva − margine di mantenimento. Vincolo del piano di trade: distanza stop ≤ 0,6 × distanza di liquidazione.',
+  },
+  {
+    id: 'funding', term: 'Carry e funding', match: ['funding', 'carry', 'Carry'],
+    short: 'Il pagamento periodico tra chi è lungo e chi è corto sui perpetual.',
+    text: 'Sui contratti perpetual, ogni poche ore chi sta dalla parte più affollata paga una piccola somma all\'altra parte: è il funding. Incassarlo stando dalla parte meno affollata, coperti sul prezzo, si chiama carry. Nel 2021 rendeva il 30–40% l\'anno, oggi il 2–5%: è un premio che si è consumato.',
+    expert: 'Carry = Σ funding incassato − costi di copertura. Dipende dalla venue; le serie di venue diverse non vanno incollate senza dichiararlo.',
+  },
 ];
 
 const BY_ID = new Map(GLOSSARY.map((g) => [g.id, g]));

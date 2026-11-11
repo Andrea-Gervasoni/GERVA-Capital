@@ -18,6 +18,7 @@ import * as sistema from './views/sistema.js';
 import * as comefunziona from './views/comefunziona.js';
 import * as ricerca from './views/ricerca.js';
 import * as ai from './views/ai.js';
+import * as leva from './views/leva.js';
 
 const ROUTES = [
   { id: 'panoramica', label: 'Panoramica', icon: 'overview', view: panoramica },
@@ -29,6 +30,7 @@ const ROUTES = [
   { id: 'sistema', label: 'Sistema', icon: 'system', view: sistema },
   { id: 'ai', label: 'AI', icon: 'ai', view: ai, group: true },
   { id: 'ricerca', label: 'Ricerca', icon: 'research', view: ricerca },
+  { id: 'leva-trade', label: 'Leva per trade', icon: 'lever', view: leva },
   { id: 'come-funziona', label: 'Come funziona', icon: 'flow', view: comefunziona },
 ];
 const VIEW_REFRESH_MS = 30000;        // anche a dati invariati le età ("3 min fa") vanno aggiornate
@@ -221,6 +223,8 @@ function syncSources() {
   const gen = parseTs(obj(st.quant).generated);
   if (st.quantStatus === 'ok') parts.push(`Ricerca: letta ${fmtAgo(since)}${gen == null ? '' : `, generata il ${fmtDate(gen)}`}`);
   else parts.push(`Ricerca: ${st.quantStatus === 'loading' ? 'in caricamento' : 'non disponibile'}`);
+  if (st.quant4Status === 'ok') parts.push('Quarta tornata: letta');
+  else if (st.quant4Status !== 'loading') parts.push('Quarta tornata: non disponibile');
   setText(el.sources, parts.join('  ·  '));
 }
 
@@ -302,7 +306,7 @@ function placeholder() {
 
 function context() {
   const st = store.state;
-  return { snap: st.snap, health: st.health, status: st.status, now: store.serverNow(), ccy: str(obj(st.snap.meta).base_ccy) || 'EUR', quant: st.quant, quantStatus: st.quantStatus, level };
+  return { snap: st.snap, health: st.health, status: st.status, now: store.serverNow(), ccy: str(obj(st.snap.meta).base_ccy) || 'EUR', quant: st.quant, quantStatus: st.quantStatus, quant4: st.quant4, quant4Status: st.quant4Status, level };
 }
 
 const api = {
