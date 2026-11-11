@@ -1,0 +1,111 @@
+/* GERVA Capital · Dashboard — token di design.
+   Ogni colore della pagina è una variabile definita qui: scuro di base, chiaro con [data-theme="light"].
+   Verde e rosso servono solo al segno di P&L (sempre con + / − e freccia); ambra e rosso di stato solo alle anomalie. */
+
+@font-face { font-family: "General Sans"; src: url("../fonts/general-sans-400.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "General Sans"; src: url("../fonts/general-sans-500.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "General Sans"; src: url("../fonts/general-sans-600.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Bodoni Moda"; src: url("../fonts/bodoni-moda-roman.woff2") format("woff2"); font-weight: 400 900; font-style: normal; font-display: swap; }
+
+:root {
+  /* tipografia: General Sans per l'interfaccia; le cifre usano il sans di sistema perché ha i numeri tabellari */
+  --font-ui: "General Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-num: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif;
+  --font-brand: "Bodoni Moda", "Bodoni 72", Didot, "Times New Roman", serif;
+
+  --fs-micro: 11px;
+  --fs-small: 12px;
+  --fs-body: 13px;
+  --fs-lead: 14px;
+  --fs-title: 16px;
+  --fs-stat: 20px;
+  --fs-kpi: 26px;
+  --fs-hero: 44px;
+
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+
+  --radius-s: 4px;
+  --radius-m: 6px;
+  --rail-w: 216px;
+  --modebar-h: 30px;
+  --topbar-h: 52px;
+}
+
+/* ---- scuro (predefinito) ---- */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0b0d10;              /* piano della pagina */
+  --surface: #121519;         /* schede */
+  --surface-2: #181c21;       /* intestazioni di tabella, hover, campi */
+  --surface-3: #1f242b;       /* tracce delle barre, incavi */
+  --border: #252a31;          /* filetti */
+  --border-strong: #343a43;   /* bordi dei controlli, assi */
+  --text: #e9ecf0;
+  --text-2: #aab1bb;
+  --text-3: #7f8792;          /* etichette, assi (≥ 4.5:1 sulle schede) */
+  --accent: #3987e5;          /* unico accento: serie del fondo, selezione, focus */
+  --accent-ink: #6ea8f7;      /* accento usato come testo */
+  --accent-soft: rgba(57, 135, 229, 0.14);
+  --on-accent: #ffffff;
+  --pos: #61d19a;             /* P&L positivo (testo e celle) */
+  --neg: #f05f5a;             /* P&L negativo */
+  --bench: #666e7a;           /* serie di confronto, de-enfatizzata */
+  --warn: #fab219;            /* stato: attenzione (riempimento) */
+  --warn-ink: #fab219;
+  --warn-soft: rgba(250, 178, 25, 0.12);
+  --serious: #ec835a;
+  --serious-ink: #f09a78;
+  --serious-soft: rgba(236, 131, 90, 0.14);
+  --crit: #d03b3b;            /* stato: critico (riempimento) */
+  --crit-ink: #f4706b;
+  --crit-soft: rgba(208, 59, 59, 0.16);
+  --on-crit: #ffffff;
+  --grid: #20252b;            /* griglia dei grafici */
+  --axis: #343a43;
+  --shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+  --scrim: rgba(4, 6, 8, 0.66);
+  --hatch: rgba(250, 178, 25, 0.10);
+}
+
+/* ---- chiaro ---- */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f3f4f6;
+  --surface: #ffffff;
+  --surface-2: #f7f8fa;
+  --surface-3: #eceef1;
+  --border: #e1e4e9;
+  --border-strong: #c9ced6;
+  --text: #111418;
+  --text-2: #474d57;
+  --text-3: #656d79;
+  --accent: #2a78d6;
+  --accent-ink: #1c5fc0;
+  --accent-soft: rgba(42, 120, 214, 0.10);
+  --on-accent: #ffffff;
+  --pos: #117555;
+  --neg: #c9212e;
+  --bench: #8b929c;
+  --warn: #fab219;
+  --warn-ink: #855600;
+  --warn-soft: rgba(250, 178, 25, 0.16);
+  --serious: #ec835a;
+  --serious-ink: #a4441b;
+  --serious-soft: rgba(236, 131, 90, 0.14);
+  --crit: #d03b3b;
+  --crit-ink: #b3262f;
+  --crit-soft: rgba(208, 59, 59, 0.10);
+  --on-crit: #ffffff;
+  --grid: #eceef1;
+  --axis: #c9ced6;
+  --shadow: 0 8px 28px rgba(17, 20, 24, 0.14);
+  --scrim: rgba(17, 20, 24, 0.42);
+  --hatch: rgba(133, 86, 0, 0.09);
+}

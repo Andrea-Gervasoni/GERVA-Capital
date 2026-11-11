@@ -1,0 +1,676 @@
+// Grafici scritti a mano in SVG/HTML, senza librerie.
+//   timeChart   linee/aree su uno o più pannelli con asse del tempo comune, mirino e tooltip (mouse, tocco, tastiera)
+//   sparkline   andamento compatto senza assi
+//   heatmap     rendimenti mensili anni × mesi (una vera <table>: ogni cella porta il suo numero)
+//   barTable    barre orizzontali lordo/netto con i valori a fianco
+//   bullet      barra di utilizzo di un limite
+//   dumbbell    due valori sulla stessa scala (Sharpe da backtest → reale)
+// I colori arrivano dalle classi CSS (token), quindi il cambio di tema non richiede di ridisegnare.
+
+import { h, s } from './dom.js';
+import { DASH, fmtDayMonth, fmtMonth, fmtMonthLong, fmtNum, fmtPct, fmtPctSigned, fmtSigned, list, num } from './format.js';
+
+const DAY = 86400000;
+
+// ---- tooltip (uno solo per tutta la pagina) -------------------------------------------------------------------------
+
+let tipNode = null;
+const tip = () => tipNode || (tipNode = document.getElementById('tooltip'));
+
+/** content: { title, rows: [{ key, label, value, cls }], note } — nel tooltip il valore è l'elemento forte. */
+export function showTip(clientX, clientY, content) {
+  const el = tip();
+  if (!el || !content) return;
+  el.replaceChildren();
+  if (content.title) el.append(h('div', { class: 'tooltip__title', text: content.title }));
+  for (const r of content.rows || []) {
+    el.append(h('div', { class: 'tooltip__row' },
+      h('span', { class: 'tooltip__label' }, r.key ? h('span', { class: `key key--${r.key}`, 'aria-hidden': 'true' }) : null, r.label),
+      h('span', { class: `tooltip__value num ${r.cls || ''}`.trim(), text: r.value })));
+  }
+  if (content.note) el.append(h('div', { class: 'tooltip__note', text: content.note }));
+  el.hidden = false;
+  const w = el.offsetWidth;
+  const hh = el.offsetHeight;
+  const vw = document.documentElement.clientWidth;
+  const vh = window.innerHeight;
+  let left = clientX + 14;
+  if (left + w > vw - 8) left = clientX - w - 14;
+  left = Math.max(8, Math.min(left, vw - w - 8));
+  let top = clientY + 16;
+  if (top + hh > vh - 8) top = clientY - hh - 12;
+  el.style.setProperty('left', `${Math.round(left)}px`);
+  el.style.setProperty('top', `${Math.round(Math.max(8, top))}px`);
+}
+
+export function hideTip() {
+  const el = tip();
+  if (el) el.hidden = true;
+}
+
+/** Tooltip su un singolo segno (barra, cella): stesso contenuto al passaggio del mouse e al focus da tastiera. */
+export function bindTip(el, getContent) {
+  const show = (e) => showTip(e.clientX, e.clientY, getContent());
+  el.addEventListener('pointerenter', show);
+  el.addEventListener('pointermove', show);
+  el.addEventListener('pointerleave', hideTip);
+  el.addEventListener('focus', () => {
+    const r = el.getBoundingClientRect();
+    showTip(r.left + r.width / 2, r.bottom - 6, getContent());
+  });
+  el.addEventListener('blur', hideTip);
+  return el;
+}
+
+// ---- ridisegno al cambio di larghezza -------------------------------------------------------------------------------
+
+const sizeCallbacks = new WeakMap();
+const sizeObserver = typeof ResizeObserver === 'function'
+  ? new ResizeObserver((entries) => {
+    for (const entry of entries) {
+      const el = entry.target;
+      if (!el.isConnected) {
+        sizeObserver.unobserve(el);
+        continue;
+      }
+      const cb = sizeCallbacks.get(el);
+      if (cb) cb(entry.contentRect.width);
+    }
+  })
+  : null;
+
+function onResize(el, cb) {
+  if (!sizeObserver) return;
+  sizeCallbacks.set(el, cb);
+  sizeObserver.observe(el);
+}
+
+// ---- scale e tacche ---------------------------------------------------------------------------------------------------
+
+function niceStep(raw) {
+  const p = 10 ** Math.floor(Math.log10(raw));
+  const f = raw / p;
+  return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p;
+}
+
+function linearTicks(lo, hi, count) {
+  if (!(hi > lo)) return [lo];
+  const step = niceStep((hi - lo) / Math.max(1, count));
+  const out = [];
+  for (let v = Math.ceil(lo / step - 1e-9) * step; v <= hi + step * 1e-9; v += step) {
+    out.push(Math.abs(v) < step * 1e-9 ? 0 : Number(v.toPrecision(12)));
+  }
+  return out;
+}
+
+function logTicks(lo, hi, count) {
+  let out = [];
+  for (let k = Math.floor(Math.log10(lo)); k <= Math.ceil(Math.log10(hi)); k++) {
+    for (const m of [1, 2, 5]) {
+      const v = m * 10 ** k;
+      if (v >= lo && v <= hi) out.push(Number(v.toPrecision(12)));
+    }
+  }
+  if (out.length < 3) return linearTicks(lo, hi, count);
+  while (out.length > count + 2) out = out.filter((_, i) => i % 2 === 0);
+  return out;
+}
+
+/** Tacche dell'asse del tempo (date in UTC): giorni per intervalli brevi, poi mesi, poi anni. */
+function timeTicks(t0, t1, maxTicks) {
+  const out = [];
+  const span = t1 - t0;
+  if (!(span > 0)) return out;
+  const max = Math.max(2, maxTicks);
+  if (span <= 75 * DAY) {
+    const stepDays = [1, 2, 7, 14, 28].find((d) => span / (d * DAY) <= max) || 28;
+    let t = Math.ceil(t0 / DAY) * DAY;
+    if (stepDays >= 7) while (new Date(t).getUTCDay() !== 1) t += DAY;       // settimane: dal lunedì
+    for (; t <= t1; t += stepDays * DAY) out.push({ t, label: fmtDayMonth(t, true) });
+    return out;
+  }
+  const months = span / (30.44 * DAY);
+  const step = [1, 2, 3, 6, 12, 24, 60, 120].find((m) => months / m <= max) || 120;
+  const d0 = new Date(t0);
+  let idx = d0.getUTCFullYear() * 12 + d0.getUTCMonth();
+  if (d0.getUTCDate() > 1) idx += 1;
+  idx = Math.ceil(idx / step) * step;
+  for (;; idx += step) {
+    const y = Math.floor(idx / 12);
+    const m = idx % 12;
+    const t = Date.UTC(y, m, 1);
+    if (t > t1) break;
+    out.push({ t, label: step >= 12 || m === 0 ? String(y) : fmtMonth(t, true) });
+  }
+  return out;
+}
+
+/** Indice del punto più vicino a t in un array ordinato. */
+function nearest(xs, t) {
+  let lo = 0;
+  let hi = xs.length - 1;
+  if (hi < 0) return -1;
+  while (hi - lo > 1) {
+    const mid = (lo + hi) >> 1;
+    if (xs[mid] < t) lo = mid;
+    else hi = mid;
+  }
+  return Math.abs(xs[lo] - t) <= Math.abs(xs[hi] - t) ? lo : hi;
+}
+
+/**
+ * Punti (x, y) in pixel → segmenti da disegnare. Con più punti che pixel tiene, per ogni colonna di pixel,
+ * primo, minimo, massimo e ultimo: la forma resta identica e 3.000 punti costano come 600.
+ */
+function segmentsOf(px, py, plotWidth) {
+  const n = px.length;
+  const segments = [];
+  let cur = [];
+  const flush = () => {
+    if (cur.length) segments.push(cur);
+    cur = [];
+  };
+  if (n <= plotWidth * 2) {
+    for (let i = 0; i < n; i++) {
+      if (py[i] == null) flush();
+      else cur.push([px[i], py[i]]);
+    }
+    flush();
+    return segments;
+  }
+  let bucket = null;
+  let first = -1;
+  let last = -1;
+  let lo = -1;
+  let hi = -1;
+  const emit = () => {
+    if (first < 0) return;
+    for (const i of [...new Set([first, lo, hi, last])].sort((a, b) => a - b)) cur.push([px[i], py[i]]);
+    first = -1;
+  };
+  for (let i = 0; i < n; i++) {
+    if (py[i] == null) {
+      emit();
+      flush();
+      bucket = null;
+      continue;
+    }
+    const b = Math.round(px[i]);
+    if (b !== bucket) {
+      emit();
+      bucket = b;
+      first = i;
+      lo = i;
+      hi = i;
+    } else {
+      if (py[i] < py[lo]) lo = i;
+      if (py[i] > py[hi]) hi = i;
+    }
+    last = i;
+  }
+  emit();
+  flush();
+  return segments;
+}
+
+const pathOf = (seg) => 'M' + seg.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join('L');
+
+// ---- timeChart -----------------------------------------------------------------------------------------------------------
+
+/**
+ * Grafico temporale a pannelli sovrapposti con un solo asse x (ogni pannello ha la sua scala y: non è un doppio asse).
+ *
+ * chart.update({
+ *   x: [ms…],                                  date ordinate
+ *   panels: [{
+ *     height, title,                           altezza in px, etichetta sopra il pannello
+ *     scale: 'linear' | 'log',
+ *     series: [{ values, cls, area, end }],    cls → .c-line--<cls>; area: riempimento fino alla base; end: pallino finale
+ *     format: (v, passo) => testo,             etichette dell'asse y (passo = distanza tra due tacche)
+ *     top, bottom,                             estremi fissi (es. top: 0 per il drawdown)
+ *     refs: [{ value, label }],                linee di riferimento tratteggiate
+ *   }],
+ *   tip: (i) => ({ title, rows }),             contenuto del tooltip per il punto i
+ *   say: (i) => testo,                         stessa cosa in una frase, per i lettori di schermo
+ * })
+ */
+export function timeChart(host, { label = 'Grafico' } = {}) {
+  const svg = s('svg', { class: 'chart', role: 'img', tabindex: '0', 'aria-label': label });
+  const live = h('div', { class: 'sr-only', 'aria-live': 'polite' });
+  host.append(svg, live);
+
+  let spec = null;
+  let geo = null;
+  let hover = null;          // indice del punto sotto il mirino
+  let pointer = null;        // ultima posizione del puntatore, se è sul grafico
+  let keyboard = false;      // mirino guidato dalla tastiera
+  let lastWidth = 0;
+  let overlay = null;
+
+  function draw() {
+    const width = Math.floor(host.clientWidth);
+    svg.replaceChildren();
+    geo = null;
+    overlay = null;
+    if (!spec || width < 60) return;
+    lastWidth = width;
+    const xs = spec.x;
+    const n = xs.length;
+    const panels = spec.panels.map((p) => ({ ...p, dom: domainOf(p) })).filter((p) => p.dom);
+    if (n < 2 || !panels.length) return;
+
+    // etichette y: decise prima, per sapere quanto è largo il margine destro
+    for (const p of panels) {
+      const count = Math.max(2, Math.round(p.height / 46));
+      p.ticks = (p.scale === 'log' ? logTicks(p.dom[0], p.dom[1], count) : linearTicks(p.dom[0], p.dom[1], count)).filter((v) => v >= p.dom[0] && v <= p.dom[1]);
+      const step = p.ticks.length > 1 ? Math.abs(p.ticks[1] - p.ticks[0]) : null;       // serve a scegliere i decimali
+      p.labels = p.ticks.map((v) => (p.format ? p.format(v, step) : fmtNum(v, 2, 0)));
+    }
+    const longest = Math.max(4, ...panels.flatMap((p) => p.labels.map((t) => t.length)));
+    const gutter = Math.min(86, Math.max(40, Math.round(longest * 6.6 + 14)));
+    const left = 1;
+    const right = width - gutter;
+    const plotW = right - left;
+    const t0 = xs[0];
+    const t1 = xs[n - 1];
+    const xOf = (t) => left + ((t - t0) / (t1 - t0)) * plotW;
+    const px = xs.map(xOf);
+
+    let y = 6;
+    for (const p of panels) {
+      if (p.title) {
+        svg.append(s('text', { class: 'c-panel-title', x: left, y: y + 10 }, p.title));
+        y += 20;
+      }
+      p.y0 = y;
+      p.y1 = y + p.height;
+      const f = p.scale === 'log' ? Math.log10 : (v) => v;
+      const a = f(p.dom[0]);
+      const b = f(p.dom[1]);
+      p.yOf = (v) => p.y1 - ((f(v) - a) / (b - a)) * p.height;
+      y = p.y1 + 14;
+    }
+    const total = y - 14 + 24;
+    svg.setAttribute('viewBox', `0 0 ${width} ${total}`);
+    svg.setAttribute('width', width);
+    svg.setAttribute('height', total);
+
+    const refLabels = [];
+    for (const p of panels) {
+      const g = s('g', {});
+      p.ticks.forEach((v, i) => {
+        const yy = Math.round(p.yOf(v)) + 0.5;
+        g.append(s('line', { class: v === 0 ? 'c-grid c-grid--zero' : 'c-grid', x1: left, x2: right, y1: yy, y2: yy }));
+        g.append(s('text', { class: 'c-tick', x: right + 8, y: yy + 3.5 }, p.labels[i]));
+      });
+      for (const ref of p.refs || []) {
+        const v = num(ref.value);
+        if (v == null || v < p.dom[0] || v > p.dom[1]) continue;
+        const yy = Math.round(p.yOf(v)) + 0.5;
+        g.append(s('line', { class: 'c-ref', x1: left, x2: right, y1: yy, y2: yy }));
+        if (ref.label) refLabels.push({ x: left + 4, y: yy - 5, text: ref.label });
+      }
+      for (const sr of p.series) {
+        const py = sr.values.map((v) => (v == null || (p.scale === 'log' && v <= 0) ? null : p.yOf(v)));
+        const segs = segmentsOf(px, py, plotW);
+        if (!segs.length) continue;
+        if (sr.area) {
+          const base = p.top === 0 ? p.yOf(0) : p.y1;
+          const d = segs.map((seg) => `${pathOf(seg)}L${seg[seg.length - 1][0].toFixed(1)},${base.toFixed(1)}L${seg[0][0].toFixed(1)},${base.toFixed(1)}Z`).join('');
+          g.append(s('path', { class: `c-area c-area--${sr.cls}`, d }));
+        }
+        g.append(s('path', { class: `c-line c-line--${sr.cls}`, d: segs.map(pathOf).join('') }));
+        if (sr.end) {
+          for (let i = n - 1; i >= 0; i--) {
+            if (py[i] != null) {
+              g.append(s('circle', { class: `c-dot c-dot--${sr.cls}`, cx: px[i].toFixed(1), cy: py[i].toFixed(1), r: 4 }));
+              break;
+            }
+          }
+        }
+        sr.py = py;
+      }
+      svg.append(g);
+    }
+
+    // asse del tempo sotto l'ultimo pannello
+    const bottom = panels[panels.length - 1].y1;
+    svg.append(s('line', { class: 'c-axis', x1: left, x2: right, y1: bottom + 0.5, y2: bottom + 0.5 }));
+    for (const tk of timeTicks(t0, t1, Math.floor(plotW / 60))) {
+      const x = xOf(tk.t);
+      if (x < left + 14 || x > right - 14) continue;
+      svg.append(s('line', { class: 'c-axis', x1: Math.round(x) + 0.5, x2: Math.round(x) + 0.5, y1: bottom, y2: bottom + 4 }));
+      svg.append(s('text', { class: 'c-tick c-tick--x', x: x.toFixed(1), y: bottom + 17 }, tk.label));
+    }
+
+    // etichette delle linee di riferimento: sopra le serie, su un fondo del colore della scheda per restare leggibili
+    for (const rl of refLabels) {
+      const text = s('text', { class: 'c-ref-label', x: rl.x, y: rl.y }, rl.text);
+      svg.append(text);
+      const box = typeof text.getBBox === 'function' ? text.getBBox() : null;
+      if (box && box.width > 0) svg.insertBefore(s('rect', { class: 'c-ref-bg', x: box.x - 3, y: box.y - 1, width: box.width + 6, height: box.height + 2, rx: 2 }), text);
+    }
+
+    overlay = s('g', { class: 'c-overlay' });
+    svg.append(overlay);
+    geo = { left, right, t0, t1, px, panels, top: panels[0].y0, bottom, n };
+    paintHover();
+  }
+
+  function domainOf(p) {
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (const sr of p.series) {
+      for (const v of sr.values) {
+        if (v == null || (p.scale === 'log' && v <= 0)) continue;
+        if (v < lo) lo = v;
+        if (v > hi) hi = v;
+      }
+    }
+    for (const ref of p.refs || []) {
+      const v = num(ref.value);
+      if (v == null) continue;
+      lo = Math.min(lo, v);
+      hi = Math.max(hi, v);
+    }
+    if (lo === Infinity) return null;
+    if (p.scale === 'log') {
+      const f = Math.max(1.01, (hi / lo) ** 0.06);
+      return [lo / f, hi * f];
+    }
+    const pad = (hi - lo) * 0.08 || Math.abs(hi) * 0.02 || 1;
+    let a = lo - pad;
+    let b = hi + pad;
+    if (p.top != null) b = p.top;
+    if (p.bottom != null) a = p.bottom;
+    if (lo >= 0 && a < 0 && p.bottom == null) a = 0;            // una serie positiva non scende sotto zero per il margine
+    if (!(b > a)) a = b - (Math.abs(b) * 0.02 || 0.01);
+    return [a, b];
+  }
+
+  function paintHover() {
+    if (!overlay || !geo) return;
+    overlay.replaceChildren();
+    if (hover == null || hover < 0 || hover >= geo.n) return;
+    const x = geo.px[hover];
+    overlay.append(s('line', { class: 'c-cross', x1: x.toFixed(1), x2: x.toFixed(1), y1: geo.top, y2: geo.bottom }));
+    for (const p of geo.panels) {
+      for (const sr of p.series) {
+        const yv = sr.py ? sr.py[hover] : null;
+        if (yv != null) overlay.append(s('circle', { class: `c-dot c-dot--${sr.cls}`, cx: x.toFixed(1), cy: yv.toFixed(1), r: 4 }));
+      }
+    }
+  }
+
+  function showHoverTip() {
+    if (hover == null || !geo || !spec || !spec.tip) return;
+    const content = spec.tip(hover);
+    if (pointer) {
+      showTip(pointer.x, pointer.y, content);
+    } else if (keyboard) {
+      const r = svg.getBoundingClientRect();
+      showTip(r.left + geo.px[hover], r.top + geo.top + 8, content);
+      if (spec.say) live.textContent = spec.say(hover);
+    }
+  }
+
+  function setHover(i) {
+    hover = i;
+    paintHover();
+    if (i == null) hideTip();
+    else showHoverTip();
+  }
+
+  function indexAt(clientX) {
+    if (!geo) return null;
+    const r = svg.getBoundingClientRect();
+    const frac = (clientX - r.left - geo.left) / (geo.right - geo.left);
+    return nearest(spec.x, geo.t0 + Math.min(1, Math.max(0, frac)) * (geo.t1 - geo.t0));
+  }
+
+  const onPointer = (e) => {
+    pointer = { x: e.clientX, y: e.clientY };
+    keyboard = false;
+    setHover(indexAt(e.clientX));
+  };
+  const onLeave = () => {
+    pointer = null;
+    if (!keyboard) setHover(null);
+  };
+  svg.addEventListener('pointermove', onPointer);
+  svg.addEventListener('pointerdown', onPointer);
+  svg.addEventListener('pointerleave', onLeave);
+  svg.addEventListener('pointercancel', onLeave);
+  svg.addEventListener('focus', () => {
+    if (!geo || pointer || !svg.matches(':focus-visible')) return;
+    keyboard = true;
+    setHover(hover == null ? geo.n - 1 : hover);
+  });
+  svg.addEventListener('blur', () => {
+    keyboard = false;
+    if (!pointer) setHover(null);
+  });
+  svg.addEventListener('keydown', (e) => {
+    if (!geo) return;
+    const n = geo.n;
+    const cur = hover == null ? n - 1 : hover;
+    const big = Math.max(1, Math.round(n / 20));
+    const moves = { ArrowLeft: -1, ArrowRight: 1, PageUp: -big, PageDown: big };
+    let next = null;
+    if (e.key in moves) next = cur + moves[e.key] * (e.shiftKey && Math.abs(moves[e.key]) === 1 ? 10 : 1);
+    else if (e.key === 'Home') next = 0;
+    else if (e.key === 'End') next = n - 1;
+    else if (e.key === 'Escape') {
+      keyboard = false;
+      setHover(null);
+      return;
+    } else return;
+    e.preventDefault();
+    keyboard = true;
+    pointer = null;
+    setHover(Math.min(n - 1, Math.max(0, next)));
+  });
+
+  onResize(host, (w) => {
+    if (Math.abs(Math.floor(w) - lastWidth) >= 1) draw();
+  });
+
+  return {
+    update(next) {
+      const keepT = hover != null && spec && spec.x[hover] != null ? spec.x[hover] : null;
+      spec = next && Array.isArray(next.x) && next.x.length >= 2 ? next : null;
+      hover = spec && keepT != null && (pointer || keyboard) ? nearest(spec.x, keepT) : null;
+      draw();
+      if (hover != null) showHoverTip();
+    },
+    get empty() {
+      return !spec;
+    },
+  };
+}
+
+// ---- sparkline -------------------------------------------------------------------------------------------------------------
+
+/** Andamento compatto: linea neutra, livello di partenza come filetto, ultimo punto nell'accento. */
+export function sparkline(values, { width = 132, height = 36, label = 'Andamento' } = {}) {
+  const pts = list(values).map(num).filter((v) => v != null);
+  if (pts.length < 2) return h('span', { class: 'spark spark--empty num', text: DASH });
+  const lo = Math.min(...pts);
+  const hi = Math.max(...pts);
+  const span = hi - lo || Math.abs(hi) * 0.01 || 1;
+  const pad = 5;
+  const xOf = (i) => pad + (i / (pts.length - 1)) * (width - pad * 2);
+  const yOf = (v) => pad + (1 - (v - lo) / span) * (height - pad * 2);
+  const change = pts[0] !== 0 ? pts[pts.length - 1] / pts[0] - 1 : null;
+  const svg = s('svg', {
+    class: 'spark', width, height, viewBox: `0 0 ${width} ${height}`, role: 'img',
+    'aria-label': `${label}: ${change == null ? 'variazione non calcolabile' : fmtPctSigned(change, 1)} su ${pts.length} punti`,
+  });
+  const y0 = (Math.round(yOf(pts[0])) + 0.5).toFixed(1);
+  svg.append(s('line', { class: 'spark__base', x1: pad, x2: width - pad, y1: y0, y2: y0 }));
+  svg.append(s('path', { class: 'spark__line', d: 'M' + pts.map((v, i) => `${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`).join('L') }));
+  svg.append(s('circle', { class: 'spark__dot', cx: xOf(pts.length - 1).toFixed(1), cy: yOf(pts[pts.length - 1]).toFixed(1), r: 3.5 }));
+  return svg;
+}
+
+// ---- heatmap dei rendimenti mensili ------------------------------------------------------------------------------------------
+
+const MONTHS = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+
+/**
+ * grid: risultato di monthlyGrid(). Verde/rosso sono il segno del rendimento, e ogni cella porta comunque
+ * il numero con il suo segno: il colore non è mai l'unico canale. Su schermi stretti la tabella si traspone
+ * (mesi in riga, anni in colonna) così i numeri restano leggibili.
+ */
+export function heatmap(host, grid) {
+  let narrow = null;
+
+  function cell(year, month) {
+    const r = grid.cell.get(`${year}-${month}`);
+    if (r == null) return h('td', { class: 'hm__cell hm__cell--empty' });
+    const k = Math.min(1, Math.abs(r) / grid.scale);
+    const td = h('td', {
+      class: `hm__cell num ${r > 0 ? 'hm__cell--pos' : r < 0 ? 'hm__cell--neg' : ''}`.trim(),
+      style: { '--k': k.toFixed(3) },
+      text: fmtSigned(r * 100, 1),
+    });
+    const when = Date.UTC(year, month - 1, 1);
+    bindTip(td, () => ({ title: fmtMonthLong(when, true), rows: [{ label: 'Rendimento', value: fmtPctSigned(r, 2), cls: r > 0 ? 'pos' : r < 0 ? 'neg' : '' }] }));
+    return td;
+  }
+
+  const total = (year) => {
+    const v = grid.totals.get(year);
+    return h('td', { class: `hm__total num ${v > 0 ? 'pos' : v < 0 ? 'neg' : ''}`.trim(), text: fmtPctSigned(v, 1) });
+  };
+
+  function build(isNarrow) {
+    const table = h('table', { class: `hm ${isNarrow ? 'hm--narrow' : ''}`.trim() });
+    table.append(h('caption', { class: 'sr-only', text: 'Rendimenti mensili in percentuale, per anno e per mese' }));
+    if (!isNarrow) {
+      const years = [...grid.years].reverse();                  // l'anno più recente in alto
+      table.append(h('thead', null, h('tr', null,
+        h('th', { scope: 'col', class: 'hm__corner', text: 'Anno' }),
+        MONTHS.map((m) => h('th', { scope: 'col', text: m })),
+        h('th', { scope: 'col', class: 'hm__total-head', text: 'Totale' }))));
+      table.append(h('tbody', null, years.map((y) => h('tr', null,
+        h('th', { scope: 'row', class: 'num', text: String(y) }),
+        MONTHS.map((_, i) => cell(y, i + 1)),
+        total(y)))));
+    } else {
+      const years = grid.years;                                 // il tempo scorre da sinistra a destra
+      table.append(h('thead', null, h('tr', null,
+        h('th', { scope: 'col', class: 'hm__corner', text: 'Mese' }),
+        years.map((y) => h('th', { scope: 'col', class: 'num', text: String(y) })))));
+      table.append(h('tbody', null,
+        MONTHS.map((m, i) => h('tr', null, h('th', { scope: 'row', text: m }), years.map((y) => cell(y, i + 1)))),
+        h('tr', { class: 'hm__total-row' }, h('th', { scope: 'row', text: 'Totale' }), years.map((y) => total(y)))));
+    }
+    return table;
+  }
+
+  function render(width) {
+    const isNarrow = width < 620;
+    if (isNarrow === narrow) return;
+    narrow = isNarrow;
+    const wrap = h('div', { class: 'hm-wrap' }, build(isNarrow));
+    const steps = [-1, -0.5, 0, 0.5, 1];
+    const legend = h('div', { class: 'hm-legend', 'aria-hidden': 'true' },
+      h('span', { class: 'num', text: fmtPctSigned(-grid.scale, 0) }),
+      steps.map((k) => h('span', { class: `hm-legend__swatch ${k > 0 ? 'hm__cell--pos' : k < 0 ? 'hm__cell--neg' : ''}`.trim(), style: { '--k': Math.abs(k) } })),
+      h('span', { class: 'num', text: fmtPctSigned(grid.scale, 0) }),
+      h('span', { class: 'hm-legend__note', text: 'intensità del colore = ampiezza del rendimento' }));
+    host.replaceChildren(wrap, legend);
+    if (isNarrow) wrap.scrollLeft = wrap.scrollWidth;           // parte dagli anni più recenti
+  }
+
+  render(host.clientWidth || 800);
+  onResize(host, (w) => { if (w > 0) render(w); });
+}
+
+// ---- barre orizzontali lordo / netto ---------------------------------------------------------------------------------------
+
+/**
+ * rows: [{ name, gross, net }] in frazioni del NAV. Una riga per voce: due barre sottili sulla stessa scala
+ * (lordo in grigio, netto nell'accento, a sinistra dello zero se corto) e i due valori a fianco.
+ */
+export function barTable(rows, { nameHead = 'Voce', amount = null } = {}) {
+  const vals = rows.flatMap((r) => [num(r.gross), num(r.net)]).filter((v) => v != null);
+  const hi = Math.max(0.0001, ...vals.map((v) => Math.max(0, v)));
+  const lo = Math.min(0, ...vals);
+  const span = hi - lo;
+  const zero = ((0 - lo) / span) * 100;
+  const hasShort = lo < 0;
+  const bar = (v, cls) => {
+    if (v == null) return null;
+    const w = (Math.abs(v) / span) * 100;
+    return h('span', { class: `bars__bar bars__bar--${cls} ${v < 0 ? 'bars__bar--left' : ''}`.trim(), style: { left: `${(v < 0 ? zero - w : zero).toFixed(2)}%`, width: `${Math.max(w, 0.6).toFixed(2)}%` } });
+  };
+  const table = h('table', { class: 'bars' },
+    h('thead', null, h('tr', null,
+      h('th', { scope: 'col', text: nameHead }),
+      h('th', { scope: 'col', class: 'bars__viz-head' }, h('span', { class: 'sr-only', text: 'Grafico' })),
+      h('th', { scope: 'col', class: 'bars__num' }, h('span', { class: 'key key--bench', 'aria-hidden': 'true' }), 'Lordo'),
+      h('th', { scope: 'col', class: 'bars__num' }, h('span', { class: 'key key--fund', 'aria-hidden': 'true' }), 'Netto'))),
+    h('tbody', null, rows.map((r) => {
+      const g = num(r.gross);
+      const nt = num(r.net);
+      const viz = h('td', { class: 'bars__viz' },
+        h('span', { class: 'bars__track' }, bar(g, 'gross'), bar(nt, 'net'), hasShort ? h('span', { class: 'bars__zero', style: { left: `${zero.toFixed(2)}%` } }) : null));
+      const tr = h('tr', { tabindex: '0' },
+        h('th', { scope: 'row', class: 'bars__name', text: r.name || DASH }),
+        viz,
+        h('td', { class: 'bars__num num', text: fmtPct(g, 1) }),
+        h('td', { class: 'bars__num num', text: hasShort ? fmtPctSigned(nt, 1) : fmtPct(nt, 1) }));
+      bindTip(tr, () => ({
+        title: r.name || '',
+        rows: [
+          { key: 'bench', label: 'Lordo', value: amount && g != null ? `${fmtPct(g, 1)} · ${amount(g)}` : fmtPct(g, 1) },
+          { key: 'fund', label: 'Netto', value: amount && nt != null ? `${fmtPctSigned(nt, 1)} · ${amount(nt)}` : fmtPctSigned(nt, 1) },
+        ],
+        note: 'in percentuale del patrimonio',
+      }));
+      return tr;
+    })));
+  return table;
+}
+
+// ---- barra di utilizzo di un limite ------------------------------------------------------------------------------------------
+
+/** ratio: valore / soglia (1 = alla soglia). kind: ok | warn | crit | muted. La traccia intera è la soglia. */
+export function bullet({ ratio, kind = 'ok', label = 'Utilizzo', text = '' }) {
+  const r = num(ratio);
+  const shown = r == null ? 0 : Math.min(1, Math.max(0, r));
+  const el = h('span', { class: `bullet bullet--${kind} ${r != null && r > 1 ? 'bullet--over' : ''}`.trim() },
+    h('span', { class: 'bullet__fill', style: { width: `${(shown * 100).toFixed(1)}%` } }));
+  if (r != null) {
+    el.setAttribute('role', 'meter');
+    el.setAttribute('aria-valuemin', '0');
+    el.setAttribute('aria-valuemax', '100');
+    el.setAttribute('aria-valuenow', String(Math.round(shown * 100)));
+    el.setAttribute('aria-label', label);
+    if (text) el.setAttribute('aria-valuetext', text);
+  }
+  return el;
+}
+
+// ---- dumbbell: backtest → reale -----------------------------------------------------------------------------------------------
+
+/** Due valori sulla stessa scala: cerchio vuoto = backtest, pieno = reale. Scala condivisa tra le righe (min, max). */
+export function dumbbell({ from, to, min = 0, max = 1, width = 132, label = '' }) {
+  const a = num(from);
+  const b = num(to);
+  const height = 18;
+  const pad = 7;
+  if (a == null && b == null) return h('span', { class: 'num muted', text: DASH });
+  const span = max - min || 1;
+  const xOf = (v) => pad + (Math.min(max, Math.max(min, v)) - min) / span * (width - pad * 2);
+  const svg = s('svg', { class: 'dumbbell', width, height, viewBox: `0 0 ${width} ${height}`, role: 'img', 'aria-label': label });
+  svg.append(s('line', { class: 'dumbbell__track', x1: pad, x2: width - pad, y1: 9.5, y2: 9.5 }));
+  if (min < 0 && max > 0) svg.append(s('line', { class: 'dumbbell__zero', x1: xOf(0).toFixed(1), x2: xOf(0).toFixed(1), y1: 4, y2: 15 }));
+  if (a != null && b != null) svg.append(s('line', { class: 'dumbbell__link', x1: xOf(a).toFixed(1), x2: xOf(b).toFixed(1), y1: 9.5, y2: 9.5 }));
+  if (a != null) svg.append(s('circle', { class: 'dumbbell__from', cx: xOf(a).toFixed(1), cy: 9.5, r: 4 }));
+  if (b != null) svg.append(s('circle', { class: 'dumbbell__to', cx: xOf(b).toFixed(1), cy: 9.5, r: 4.5 }));
+  return svg;
+}
+

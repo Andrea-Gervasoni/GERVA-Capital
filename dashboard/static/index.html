@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<meta name="robots" content="noindex, nofollow">
+<title>GERVA Capital · Console</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preload" href="fonts/general-sans-500.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/app.css">
+<script src="js/theme-init.js"></script>
+<script type="module" src="js/main.js"></script>
+</head>
+<body data-conn="loading">
+<a class="skip-link" href="#main">Salta al contenuto</a>
+
+<svg xmlns="http://www.w3.org/2000/svg" class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-overview" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="9" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="5" rx="1.5"/><rect x="13.5" y="11.5" width="7" height="9" rx="1.5"/><rect x="3.5" y="15.5" width="7" height="5" rx="1.5"/></symbol>
+  <symbol id="i-performance" viewBox="0 0 24 24"><path d="M3.5 17.5 9 11.5l4 3.5 7.5-8.5"/><path d="M15.5 6.5h5v5"/></symbol>
+  <symbol id="i-exposure" viewBox="0 0 24 24"><path d="M4 6.5h13M4 12h16M4 17.5h9"/></symbol>
+  <symbol id="i-risk" viewBox="0 0 24 24"><path d="M12 3.5 19.5 6.3v5.4c0 4.4-3 7.6-7.5 8.8-4.5-1.2-7.5-4.4-7.5-8.8V6.3z"/><path d="M12 8.5V13M12 16v.2"/></symbol>
+  <symbol id="i-strategies" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.2"/><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="12" r="2.2"/><path d="M8.2 6h3.3c2 0 3 1 3.6 2.6l.9 1.6M8.2 18h3.3c2 0 3-1 3.6-2.6l.9-1.6"/></symbol>
+  <symbol id="i-orders" viewBox="0 0 24 24"><path d="M8.5 6.5h11M8.5 12h11M8.5 17.5h11M4.3 6.5h.4M4.3 12h.4M4.3 17.5h.4"/></symbol>
+  <symbol id="i-system" viewBox="0 0 24 24"><path d="M3 12h4l2.5-6.5 5 13L17 12h4"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5 9.5 17 19 7.5"/></symbol>
+  <symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8 12.3l2.8 2.8L16 9.6"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 4.2 20.6 19.2H3.4z"/><path d="M12 10v4.4M12 17v.2"/></symbol>
+  <symbol id="i-crit" viewBox="0 0 24 24"><path d="M8.3 3.5h7.4l4.8 4.8v7.4l-4.8 4.8H8.3l-4.8-4.8V8.3z"/><path d="M12 8v5M12 16v.2"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8v.2"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M10 9v6M14 9v6"/></symbol>
+  <symbol id="i-off" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M6 18 18 6"/></symbol>
+  <symbol id="i-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="m6.5 6.5 11 11M17.5 6.5l-11 11"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 5.5 20 18.5H4z"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 18.5 4 5.5h16z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5V5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z"/></symbol>
+  <symbol id="i-sort" viewBox="0 0 24 24"><path d="m8 10 4-4 4 4M8 14l4 4 4-4"/></symbol>
+  <symbol id="i-asc" viewBox="0 0 24 24"><path d="m7 14 5-5 5 5"/></symbol>
+  <symbol id="i-desc" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></symbol>
+  <symbol id="i-table" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M3.5 14.5h17M9.5 9.5v10"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 19.5h16M4.5 15 9 10l4 3 6-7"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 3.5v8M7 6.6a7.5 7.5 0 1 0 10 0"/></symbol>
+  <symbol id="i-offline" viewBox="0 0 24 24"><path d="M3 3l18 18M5 12.5a10 10 0 0 1 3.2-2.2M12 8.5c2.7 0 5.2 1.1 7 3M8.5 16a5 5 0 0 1 5.6-1M12 19.5v.2"/></symbol>
+  <symbol id="i-empty" viewBox="0 0 24 24"><path d="M4 13.5 6.5 5.5h11L20 13.5v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M4 13.5h4.5l1 2h5l1-2H20"/></symbol>
+</svg>
+
+<div class="modebar" id="modebar" data-kind="wait" role="status" aria-label="Natura dei dati">
+  <span class="modebar__tag" id="modebar-tag">In attesa dei dati</span>
+  <span class="modebar__label" id="modebar-label"></span>
+  <span class="modebar__meta" id="modebar-meta"></span>
+</div>
+
+<div class="shell">
+  <aside class="rail">
+    <a class="brand" href="#/panoramica" aria-label="GERVA Capital, vai alla panoramica">
+      <span class="brand__name">GERVA</span><span class="brand__sub">Capital</span>
+    </a>
+    <nav class="nav" id="nav" aria-label="Sezioni"></nav>
+    <div class="rail__foot" id="rail-foot"></div>
+  </aside>
+
+  <header class="topbar">
+    <a class="brand brand--compact" href="#/panoramica" aria-label="GERVA Capital, vai alla panoramica">
+      <span class="brand__name">GERVA</span><span class="brand__sub">Capital</span>
+    </a>
+    <h1 class="topbar__title" id="view-title" tabindex="-1">Panoramica</h1>
+    <div class="topbar__right">
+      <a class="pill" id="risk-pill" href="#/rischio" data-state="unknown" hidden></a>
+      <div class="conn" id="conn" data-state="loading" role="status" aria-live="polite">
+        <span class="conn__dot" aria-hidden="true"></span>
+        <span class="conn__text" id="conn-text">Connessione…</span>
+        <span class="conn__short" id="conn-short" aria-hidden="true"></span>
+      </div>
+      <button class="icon-btn" id="theme-toggle" type="button" aria-label="Cambia tema">
+        <svg class="icon" aria-hidden="true"><use id="theme-toggle-icon" href="#i-sun"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="connbar" id="connbar" role="alert" hidden>
+    <svg class="icon" aria-hidden="true"><use id="connbar-icon" href="#i-warn"/></svg>
+    <strong class="connbar__title" id="connbar-title"></strong>
+    <span class="connbar__text" id="connbar-text"></span>
+  </div>
+
+  <main class="main" id="main" tabindex="-1">
+    <div class="view" id="view"></div>
+  </main>
+</div>
+
+<dialog class="dialog" id="kill-dialog" aria-labelledby="kill-title">
+  <form class="dialog__form" id="kill-form" method="dialog" novalidate autocomplete="off">
+    <div class="dialog__head">
+      <svg class="icon icon--lg" aria-hidden="true"><use href="#i-power"/></svg>
+      <h2 class="dialog__title" id="kill-title">Arresto di emergenza (KILL)</h2>
+    </div>
+    <p class="dialog__text">Stai per creare il file KILL sul server. Al ciclo successivo il motore chiude tutte le posizioni e si ferma.</p>
+    <p class="dialog__text dialog__text--strong">Da questa pagina non si può annullare: per ripartire va tolto il file a mano sul server e dato il comando di ripristino.</p>
+    <label class="field">
+      <span class="field__label">Token di sicurezza</span>
+      <input class="field__input" id="kill-token" type="password" autocomplete="off" spellcheck="false" required>
+      <span class="field__hint">Resta solo in memoria per l'invio: non viene salvato nel browser.</span>
+    </label>
+    <label class="field">
+      <span class="field__label">Motivo (facoltativo)</span>
+      <input class="field__input" id="kill-reason" type="text" maxlength="300" autocomplete="off">
+    </label>
+    <label class="field">
+      <span class="field__label">Per confermare scrivi KILL</span>
+      <input class="field__input field__input--confirm" id="kill-confirm" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" required>
+    </label>
+    <p class="dialog__msg" id="kill-msg" role="alert"></p>
+    <div class="dialog__actions">
+      <button class="btn" id="kill-cancel" type="button">Annulla</button>
+      <button class="btn btn--danger" id="kill-submit" type="submit" disabled>Attiva KILL</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="tooltip" id="tooltip" role="presentation" hidden></div>
+<noscript><p class="noscript">Questa console ha bisogno di JavaScript.</p></noscript>
+</body>
+</html>
