@@ -4,3 +4,4 @@
 300 EQT ok {'ok': 223, 'cache': 0, 'fail': 78}
 400 HBAN ok {'ok': 296, 'cache': 0, 'fail': 105}
 500 LDOS ok {'ok': 371, 'cache': 0, 'fail': 130}
+600 NAVI ok {'ok': 446, 'cache': 0, 'fail': 155}
