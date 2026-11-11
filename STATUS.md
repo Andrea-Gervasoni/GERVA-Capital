@@ -13,6 +13,13 @@
 - `firm/`: 8 difetti critici o alti corretti (KILL su ogni strada, voti che alzano il rischio in attesa di Andrea, battito
   isolato, banco libero, gateway, misure), 20 test in `tests/test_audit_v5.py`.
 
+## Versione 2 (stesso giorno): AI, ensemble, leva del singolo trade
+- `gerva/ai/`: desk a sei ruoli; gli agenti possono solo ridurre o vietare; `python -m gerva ai`. Senza chiave API
+  risponde il simulatore (nessuna riduzione).
+- `gerva/ensemble.py`: conviction a pesi uguali. `gerva/risk/tradeplan.py`: leva del trade separata da quella del conto.
+- Risultati in `research/v5/v2/` e nella sezione 10 del documento. Leva del conto: 2x operativa, 3x tetto (invariata).
+- Da fare: i due libri paper in parallelo (con e senza AI) per misurare il valore degli agenti.
+
 ## Che cosa NON è fatto (dichiarato)
 - Nessun cancello paper -> reale è verde: il paper trading deve ancora cominciare.
 - L'adattatore Alpaca del nuovo motore è collaudato contro un servizio finto, non contro Alpaca.

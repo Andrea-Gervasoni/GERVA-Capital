@@ -24,7 +24,7 @@ from . import indicators as ind
 
 TIERS = ("bassa", "media", "alta")
 # soglie sulla quota di segnali accesi (terzili del periodo di scelta, research/v5/v2/conviction.out)
-THRESHOLDS = {"crypto": (0.30, 0.58), "index": (0.55, 0.78)}
+THRESHOLDS = {"crypto": (0.30, 0.60), "index": (0.55, 0.82)}
 
 
 def crypto_signals(bars: pd.DataFrame, btc_close: pd.Series, funding_daily: pd.Series | None = None) -> pd.DataFrame:

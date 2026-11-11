@@ -11,7 +11,7 @@ Deterministico, senza LLM nel percorso degli ordini, solo paper finché i cancel
 
 ```bash
 python -m venv .venv && .venv/bin/pip install -r requirements.txt
-.venv/bin/python -m pytest                 # 398 test
+.venv/bin/python -m pytest                 # 405 test
 .venv/bin/python -m gerva research         # rifà tutti i backtest -> research/v5/RESULTS.md
 .venv/bin/python -m gerva demo             # fotografia dimostrativa dal backtest (SIMULATO)
 .venv/bin/python -m dashboard.server       # http://127.0.0.1:8787
