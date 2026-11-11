@@ -1,0 +1,2 @@
+carry annuo medio stimato per mercato (%):
+{'ES_etf': -0.1, 'NQ_etf': -1.2, 'YM_etf': 0.3, 'RTY_etf': -0.4, '^N225': 1.4, '^GDAXI': -1.6, '^STOXX50E': 2.1, 'ZT=F': 0.6, 'ZF=F': 1.2, 'ZN=F': 1.7, 'ZB=F': 1.6, '6E=F': -0.3, '6J=F': -1.5, '6B=F': 0.8, '6A=F': 1.9, '6C=F': 0.2, '6S=F': -1.5, 'GC=F': -1.8, 'SI=F': -1.8, 'HG=F': -1.8, 'CL=F': -2.9, 'NG=F': -23.3, 'HO=F': -0.8, 'RB=F': 5.4, 'ZC=F': -4.2, 'ZW=F': -8.8, 'ZS=F': 3.2, 'ZM=F': 5.8, 'ZL=F': -3.6, 'KC=F': -9.2, 'SB=F': -3.1, 'CC=F': 0.9, 'CT=F': -7.8, 'LE=F': 4.2, 'HE=F': -3.9, 'BTC=F': -10.6, 'ETH=F': -11.7}

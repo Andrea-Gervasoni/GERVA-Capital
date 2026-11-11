@@ -64,3 +64,10 @@ v6_g100_ETHUSDT_2024-02-10.parquet ok bv,sv,nb,ns,tlast,thi,tlo,s_bv,s_sv,s_tlas
 v6_g100_BTCUSDT_2024-02-22.parquet ok bv,sv,nb,ns,tlast,thi,tlo,s_bv,s_sv,s_tlast,bid,ask,bq,aq,ofi,nupd
 v6_g100_ETHUSDT_2024-02-22.parquet ok bv,sv,nb,ns,tlast,thi,tlo,s_bv,s_sv,s_tlast,bid,ask,bq,aq,ofi,nupd
 v6_g100_BTCUSDT_2024-04-30.parquet ok bv,sv,nb,ns,tlast,thi,tlo,s_bv,s_sv,s_tlast
+v6_g100_ETHUSDT_2024-04-30.parquet ok bv,sv,nb,ns,tlast,thi,tlo,s_bv,s_sv,s_tlast
+v6_g100_BTCUSDT_2024-08-23.parquet ok bv,sv,nb,ns,tlast,thi,tlo,s_bv,s_sv,s_tlast
+v6_g100_ETHUSDT_2024-08-23.parquet ok bv,sv,nb,ns,tlast,thi,tlo,s_bv,s_sv,s_tlast
+v6_g100_BTCUSDT_2024-09-11.parquet ok bv,sv,nb,ns,tlast,thi,tlo,s_bv,s_sv,s_tlast
+v6_g100_ETHUSDT_2024-09-11.parquet ok bv,sv,nb,ns,tlast,thi,tlo,s_bv,s_sv,s_tlast
+v6_g100_BTCUSDT_2025-01-24.parquet ok bv,sv,nb,ns,tlast,thi,tlo,s_bv,s_sv,s_tlast
+v6_g100_ETHUSDT_2025-01-24.parquet ok bv,sv,nb,ns,tlast,thi,tlo,s_bv,s_sv,s_tlast
