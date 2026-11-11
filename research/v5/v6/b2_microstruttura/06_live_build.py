@@ -25,7 +25,7 @@ def tgrid(n, b, px, q, buy):
     return bv, sv, hi, lo, la
 MAP = {"BTC": ("BTCUSDT", "PF_XBTUSD"), "ETH": ("ETHUSDT", "PF_ETHUSD"), "SOL": ("SOLUSDT", "PF_SOLUSD")}
 raw = {}
-for p in ("hl_bbo", "hl_l2", "hl_tr", "bn_bt", "bn_d5", "bn_tr", "sp_bt", "kr_tk", "kr_tr", "bn_liq"):
+for p in ("hl_bbo", "hl_l2", "hl_l2f", "hl_tr", "bn_bt", "bn_d5", "bn_tr", "sp_bt", "kr_tk", "kr_tr", "bn_liq"):
     raw[p] = list(rd(p)); print(p, len(raw[p]), flush=True)
 t0 = max(min(r[0] for r in raw[p]) for p in ("hl_bbo", "bn_bt", "bn_tr", "kr_tk")) + 5 * 10**9
 t1 = min(max(r[0] for r in raw[p]) for p in ("hl_bbo", "bn_bt", "bn_tr", "kr_tk")) - 10**9
@@ -74,6 +74,17 @@ for coin, (bs, kp) in MAP.items():
     for k, v in zip(cols, last_state(n, b, list(cols.values()))): D["hl_" + k] = v
     D["hl_l2n"] = np.bincount(b, minlength=n)
     lat.append(("hl_l2", coin, np.array([x[0] / 1e6 - x[2] for x in r])))
+    r, b = sel("hl_l2f", coin)
+    if len(r):
+        c2 = {k: [] for k in ("f1", "f2", "f5", "fmp")}
+        for x in r:
+            bp = np.array([[float(l[0]), float(l[1])] for l in x[3]]); ap = np.array([[float(l[0]), float(l[1])] for l in x[4]])
+            for k in (1, 2, 5):
+                sb, sa = bp[:k, 1].sum(), ap[:k, 1].sum(); c2[f"f{k}"].append((sb - sa) / (sb + sa))
+            c2["fmp"].append(((ap[0, 0] * bp[0, 1] + bp[0, 0] * ap[0, 1]) / (bp[0, 1] + ap[0, 1]) / ((ap[0, 0] + bp[0, 0]) / 2) - 1) * 1e4)
+        for k, v in zip(c2, last_state(n, b, list(c2.values()))): D["hl_" + k] = v
+        D["hl_l2fn"] = np.bincount(b, minlength=n)
+        lat.append(("hl_l2f", coin, np.array([x[0] / 1e6 - x[2] for x in r])))
     r, b = sel("hl_tr", coin)
     D["hl_bv"], D["hl_sv"], D["hl_thi"], D["hl_tlo"], D["hl_tlast"] = tgrid(n, b, np.array([float(x[4]) for x in r]), np.array([float(x[5]) for x in r]), np.array([x[3] == "B" for x in r]))
     lat.append(("hl_tr", coin, np.array([x[0] / 1e6 - x[2] for x in r])))
@@ -103,4 +114,18 @@ for coin, (bs, kp) in MAP.items():
 print("\nLATENZA osservata = ora di ricezione locale - timestamp dello exchange (ms). Include lo scarto dell'orologio locale (non sincronizzato via NTP: vedi REPORT).")
 for nm, coin, x in lat:
     if len(x): print(f"{nm:7s} {coin}: n={len(x):7d} p5={np.percentile(x,5):7.0f} mediana={np.median(x):7.0f} p95={np.percentile(x,95):7.0f} p99={np.percentile(x,99):7.0f}")
+# alt: bbo + trades
+ab = list(rd("hl_altbbo")); at = list(rd("hl_alttr"))
+if ab:
+    a0 = min(x[0] for x in ab) + 5 * 10**9; a1 = max(x[0] for x in ab) - 10**9; na = int((a1 - a0) // G)
+    for coin in sorted({x[1] for x in ab}):
+        r = [x for x in ab if x[1] == coin and a0 <= x[0] < a0 + na * G and x[3] and x[5]]; b = np.array([(x[0] - a0) // G for x in r], dtype=np.int64)
+        if len(r) < 50: continue
+        D = {}
+        D["hl_bid"], D["hl_ask"], D["hl_bq"], D["hl_aq"] = last_state(na, b, [[float(x[3]) for x in r], [float(x[5]) for x in r], [float(x[4]) for x in r], [float(x[6]) for x in r]])
+        r = [x for x in at if x[1] == coin and a0 <= x[0] < a0 + na * G]; b = np.array([(x[0] - a0) // G for x in r], dtype=np.int64)
+        if len(r) == 0: continue
+        D["hl_bv"], D["hl_sv"], D["hl_thi"], D["hl_tlo"], D["hl_tlast"] = tgrid(na, b, np.array([float(x[4]) for x in r]), np.array([float(x[5]) for x in r]), np.array([x[3] == "B" for x in r]))
+        pd.DataFrame(D).to_parquet(f"{DC}/v6_livealt_{coin}.parquet", compression="zstd")
+    print("alt: ore %.2f" % (na / 36000), "monete", len({x[1] for x in ab}))
 json.dump({"t0": int(t0), "n": int(n), "liq": raw["bn_liq"]}, open(f"{DC}/v6_livegrid_meta.json", "w"))

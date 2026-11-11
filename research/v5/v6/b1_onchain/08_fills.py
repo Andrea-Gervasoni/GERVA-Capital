@@ -13,7 +13,7 @@ sel.to_parquet('data/fills_sel.parquet')
 START=int(T.timestamp()*1000); END=int(pd.Timestamp('2026-11-11').timestamp()*1000)
 def one(a):
     out=[]; st=START
-    for _ in range(6):
+    for _ in range(40):
         f=post({"type":"userFillsByTime","user":a,"startTime":st,"endTime":END})
         if not f: break
         out+=f

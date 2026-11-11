@@ -1,0 +1,42 @@
+hl_bbo 38987
+hl_l2 632
+hl_l2f 4894
+hl_tr 10337
+bn_bt 53387
+bn_d5 43656
+bn_tr 43087
+sp_bt 31354
+kr_tk 12261
+kr_tr 6407
+bn_liq 27
+inizio 2026-11-11 19:11:28.957301651 fine 2026-11-11 19:37:02.978880383 celle 15340 ore 0.43
+BTC (15340, 48) NaN%: {'hl_bid': 0.0, 'bn_bid': 0.0, 'kr_bid': 0.0, 'krt_bid': 0.0}
+ETH (15340, 48) NaN%: {'hl_bid': 0.0, 'bn_bid': 0.0, 'kr_bid': 0.0, 'krt_bid': 0.0}
+SOL (15340, 48) NaN%: {'hl_bid': 0.0, 'bn_bid': 0.0, 'kr_bid': 0.0, 'krt_bid': 0.0}
+
+LATENZA osservata = ora di ricezione locale - timestamp dello exchange (ms). Include lo scarto dell'orologio locale (non sincronizzato via NTP: vedi REPORT).
+hl_bbo  BTC: n=  12476 p5=    285 mediana=    326 p95=    483 p99=    599
+hl_l2   BTC: n=    188 p5=    334 mediana=    369 p95=    504 p99=    653
+hl_l2f  BTC: n=   1632 p5=    321 mediana=    371 p95=    582 p99=    731
+hl_tr   BTC: n=   5120 p5=    289 mediana=    352 p95=    596 p99=    612
+bn_bt   BTC: n=  18120 p5=     94 mediana=     96 p95=    437 p99=    812
+bn_tr   BTC: n=  20942 p5=     93 mediana=     99 p95=    244 p99=    270
+kr_tk   BTC: n=   4621 p5=     61 mediana=    130 p95=    722 p99=    927
+kr_tr   BTC: n=   3290 p5=     55 mediana=     62 p95=    245 p99=    652
+hl_bbo  ETH: n=  12529 p5=    284 mediana=    327 p95=    488 p99=    599
+hl_l2   ETH: n=    188 p5=    335 mediana=    369 p95=    504 p99=    654
+hl_l2f  ETH: n=   1631 p5=    321 mediana=    371 p95=    582 p99=    731
+hl_tr   ETH: n=   1954 p5=    287 mediana=    355 p95=    515 p99=    633
+bn_bt   ETH: n=  18797 p5=     94 mediana=     96 p95=    277 p99=    509
+bn_tr   ETH: n=  16588 p5=     93 mediana=     99 p95=    244 p99=    264
+kr_tk   ETH: n=   3596 p5=     60 mediana=    103 p95=    489 p99=    734
+kr_tr   ETH: n=   1693 p5=     56 mediana=     66 p95=    255 p99=    615
+hl_bbo  SOL: n=   9863 p5=    285 mediana=    328 p95=    490 p99=    599
+hl_l2   SOL: n=    188 p5=    335 mediana=    369 p95=    504 p99=    654
+hl_l2f  SOL: n=   1631 p5=    321 mediana=    371 p95=    582 p99=    731
+hl_tr   SOL: n=   1589 p5=    289 mediana=    349 p95=    515 p99=    632
+bn_bt   SOL: n=  11117 p5=     94 mediana=     95 p95=    216 p99=    668
+bn_tr   SOL: n=   5415 p5=    107 mediana=    242 p95=    252 p99=    305
+kr_tk   SOL: n=   2981 p5=     66 mediana=    184 p95=    733 p99=    927
+kr_tr   SOL: n=    700 p5=     55 mediana=     63 p95=    188 p99=    575
+alt: ore 0.09 monete 20

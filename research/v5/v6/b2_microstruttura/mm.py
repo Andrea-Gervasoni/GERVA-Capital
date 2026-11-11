@@ -1,15 +1,15 @@
 import numpy as np, numba as nb
 @nb.njit(cache=True)
-def mm_sim(bid, ask, thi, tlo, sig, d_bp, R, L, inv_max, skew_bp, sig_thr, start):
+def mm_sim(bid, ask, thi, tlo, sig, d_bp, R, L, inv_max, skew_bp, sig_thr, start, touch=False):
     """Market maker su griglia 100 ms. Riempimento SOLO se un trade stampa OLTRE il prezzo quotato
     (strettamente attraverso = coda in fondo). Decisione con informazione vecchia di L celle, ordini post-only.
     Ritorna: fills (cella, lato, prezzo), inventario finale, cassa."""
     n = len(bid); fi = np.empty(n, np.int64); fs = np.empty(n, np.int8); fp = np.empty(n, np.float64); nf = 0
     inv = 0; cash = 0.0; lb = 0.0; la = 0.0
     for i in range(start, n - 1):
-        if lb > 0.0 and tlo[i] < lb:
+        if lb > 0.0 and (tlo[i] < lb or (touch and tlo[i] <= lb)):
             inv += 1; cash -= lb; fi[nf] = i; fs[nf] = 1; fp[nf] = lb; nf += 1; lb = 0.0
-        if la > 0.0 and thi[i] > la:
+        if la > 0.0 and (thi[i] > la or (touch and thi[i] >= la)):
             inv -= 1; cash += la; fi[nf] = i; fs[nf] = -1; fp[nf] = la; nf += 1; la = 0.0
         if i % R == 0:
             j = i - L; m = 0.5 * (bid[j] + ask[j])

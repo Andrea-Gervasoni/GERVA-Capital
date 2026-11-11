@@ -1,0 +1,14 @@
+
+=== BTCUSDT: istantanee 984116; fit 2023-24: 517555, verifica 2025-26: 466561; giorni 698
+profondita' mediana entro 1% per lato (M$): 136.6 130.7
+h= 1m: R2 fit +0.00010 verifica -0.00006 | top10%: +0.11 bp (n 64334, t mesi +4.2) | top1%: -0.13 bp (n 13143, t mesi +0.6) | corr ver: imb1=+0.003 imb2=+0.003 imb3=+0.003 imb5=+0.003 imb1_d5m=+0.002 imb5_d1h=+0.004
+h= 5m: R2 fit +0.00030 verifica -0.00019 | top10%: +0.28 bp (n 66957, t mesi +3.5) | top1%: -0.51 bp (n 13213, t mesi +0.2) | corr ver: imb1=+0.006 imb2=+0.005 imb3=+0.007 imb5=+0.006 imb1_d5m=+0.007 imb5_d1h=+0.007
+h=15m: R2 fit +0.00060 verifica -0.00061 | top10%: +0.38 bp (n 67628, t mesi +2.1) | top1%: -1.26 bp (n 12648, t mesi -0.2) | corr ver: imb1=+0.005 imb2=+0.007 imb3=+0.010 imb5=+0.009 imb1_d5m=+0.008 imb5_d1h=+0.006
+h= 1h: R2 fit +0.00173 verifica -0.00219 | top10%: +1.16 bp (n 75838, t mesi +1.9) | top1%: -1.72 bp (n 11463, t mesi +1.8) | corr ver: imb1=+0.006 imb2=+0.013 imb3=+0.017 imb5=+0.019 imb1_d5m=+0.003 imb5_d1h=+0.006
+
+=== ETHUSDT: istantanee 984116; fit 2023-24: 517555, verifica 2025-26: 466561; giorni 698
+profondita' mediana entro 1% per lato (M$): 59.1 57.5
+h= 1m: R2 fit +0.00008 verifica +0.00003 | top10%: +0.13 bp (n 85205, t mesi +3.3) | top1%: +0.08 bp (n 6223, t mesi +0.1) | corr ver: imb1=+0.005 imb2=+0.003 imb3=+0.003 imb5=+0.003 imb1_d5m=+0.004 imb5_d1h=+0.005
+h= 5m: R2 fit +0.00041 verifica -0.00030 | top10%: +0.21 bp (n 64702, t mesi +1.1) | top1%: -1.13 bp (n 7681, t mesi +1.2) | corr ver: imb1=+0.008 imb2=+0.006 imb3=+0.005 imb5=+0.005 imb1_d5m=+0.010 imb5_d1h=+0.004
+h=15m: R2 fit +0.00078 verifica -0.00081 | top10%: -0.07 bp (n 63462, t mesi +0.2) | top1%: -3.96 bp (n 7317, t mesi -0.0) | corr ver: imb1=+0.009 imb2=+0.008 imb3=+0.007 imb5=+0.006 imb1_d5m=+0.006 imb5_d1h=-0.001
+h= 1h: R2 fit +0.00120 verifica -0.00204 | top10%: -1.52 bp (n 64434, t mesi -0.8) | top1%: -9.37 bp (n 7818, t mesi -0.3) | corr ver: imb1=+0.013 imb2=+0.015 imb3=+0.013 imb5=+0.016 imb1_d5m=+0.003 imb5_d1h=-0.009

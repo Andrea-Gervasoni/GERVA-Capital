@@ -5,3 +5,8 @@
 400 HBAN ok {'ok': 296, 'cache': 0, 'fail': 105}
 500 LDOS ok {'ok': 371, 'cache': 0, 'fail': 130}
 600 NAVI ok {'ok': 446, 'cache': 0, 'fail': 155}
+700 PTV fail:https://query2.finance.yahoo.com/v8/finance/chart/PTV?period1=0&period2=4102444800&interval=1d&events=div%2Csplits: HTTP {'ok': 525, 'cache': 0, 'fail': 176}
+800 SW ok {'ok': 594, 'cache': 0, 'fail': 207}
+900 VYLR ok {'ok': 674, 'cache': 0, 'fail': 227}
+FINE {'ok': 722, 'cache': 0, 'fail': 244}
+falliti 244

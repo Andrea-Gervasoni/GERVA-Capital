@@ -1,0 +1,4 @@
+BTCUSDT sel giorni 8 {'acf1': 0.393, 'acf10': 0.213, 'acf100': 0.052, 'acf1000': 0.01, 'dopo5uguali_1s_bp': 0.297, 'tutti_1s_bp': 0.202, 'dopo5uguali_5s_bp': 0.4, 'tutti_5s_bp': 0.256}
+BTCUSDT ver giorni 15 {'acf1': 0.45, 'acf10': 0.41, 'acf100': 0.096, 'acf1000': 0.011, 'dopo5uguali_1s_bp': 0.612, 'tutti_1s_bp': 0.391, 'dopo5uguali_5s_bp': 0.696, 'tutti_5s_bp': 0.447}
+ETHUSDT sel giorni 8 {'acf1': 0.431, 'acf10': 0.169, 'acf100': 0.037, 'acf1000': 0.01, 'dopo5uguali_1s_bp': 0.297, 'tutti_1s_bp': 0.256, 'dopo5uguali_5s_bp': 0.369, 'tutti_5s_bp': 0.3}
+ETHUSDT ver giorni 15 {'acf1': 0.496, 'acf10': 0.347, 'acf100': 0.052, 'acf1000': 0.01, 'dopo5uguali_1s_bp': 0.57, 'tutti_1s_bp': 0.395, 'dopo5uguali_5s_bp': 0.627, 'tutti_5s_bp': 0.438}

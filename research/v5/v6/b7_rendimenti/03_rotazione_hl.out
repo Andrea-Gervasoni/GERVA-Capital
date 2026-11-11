@@ -1,8 +1,8 @@
 parametri congelati: {'k': 30, 'N': 3, 'ent': 0.25, 'ext': 0.0}
-monete con funding scaricato: 336 | dex principale 135 (di cui oggi fuori listino 12 ) | HIP-3 201 | periodo 2023-05-12 2026-11-10
-copertura dex principale: quotati oggi 179 scaricati 123
+monete con funding scaricato: 498 | dex principale 235 (di cui oggi fuori listino 56 ) | HIP-3 263 | periodo 2023-05-12 2026-11-10
+copertura dex principale: quotati oggi 179 scaricati 179
 spot Hyperliquid, primi per volume (M$/g): {'UBTC': 41.2, 'HYPE': 37.0, 'UZEC': 27.3, 'UETH': 13.3, 'XMR1': 6.2, 'KNTQ': 5.4, 'USOL': 3.8, 'ONEAR': 2.2, 'NBT': 1.8, 'UPUMP': 1.5, 'TBC': 1.0, 'NVDAX': 0.9, 'USDT0': 0.9, 'XAUT0': 0.7}
-copribili con spot Kraken (lista di OGGI: lieve look-ahead): 112 su 135 | con spot Hyperliquid (volume>0,3 M$/g): ['BTC', 'ENA', 'ETH', 'HYPE', 'PUMP', 'PURR', 'SOL', 'ZEC']
+copribili con spot Kraken (lista di OGGI: lieve look-ahead): 168 su 235 | con spot Hyperliquid (volume>0,3 M$/g): ['BTC', 'ENA', 'ETH', 'HYPE', 'PUMP', 'PURR', 'SOL', 'ZEC']
 
 === A. per unita' di NOZIONALE (senza leva: 1 di spot + margine a parte), netto costi, 2024-02 -> oggi
 rotazione TUTTE (spot Kraken), N=3                         n  1014 CAGR  18.72% vol  1.17% Sharpe  14.68 maxDD  -0.34% t 24.46
@@ -15,16 +15,20 @@ rotazione solo BTC/ETH/SOL (stesse soglie)                 n  1014 CAGR  10.03% 
 BTC/ETH/SOL sempre dentro (lordo costi d'ingresso)         n  1014 CAGR  13.02% vol  0.93% Sharpe  13.15 maxDD  -0.61% t 21.92
    per anno %: {2024: 22.31, 2025: 8.16, 2026: 3.54, 'ult90g_annuo': np.float64(8.4), 'ult30g_annuo': np.float64(7.49)}
    idem dal 2023-06, per anno %: {2023: 10.36, 2024: 24.84, 2025: 8.16, 2026: 3.54, 'ult90g_annuo': np.float64(8.4), 'ult30g_annuo': np.float64(7.49)}
-rotazione TUTTE, N=10 (variante)                           n  1014 CAGR  13.86% vol  1.29% Sharpe  10.06 maxDD  -0.80% t 16.77
-   per anno %: {2024: 23.5, 2025: 9.11, 2026: 3.48, 'ult90g_annuo': np.float64(7.44), 'ult30g_annuo': np.float64(7.48)}
-rotazione TUTTE, veloce k=7 ent15 ext5 (variante)          n  1014 CAGR  19.55% vol  1.87% Sharpe   9.58 maxDD  -1.40% t 15.97
-   per anno %: {2024: 28.1, 2025: 14.39, 2026: 7.19, 'ult90g_annuo': np.float64(19.93), 'ult30g_annuo': np.float64(13.52)}
+rotazione TUTTE, N=10 (variante)                           n  1014 CAGR  15.23% vol  1.38% Sharpe  10.32 maxDD  -0.95% t 17.20
+   per anno %: {2024: 25.45, 2025: 9.62, 2026: 4.34, 'ult90g_annuo': np.float64(8.83), 'ult30g_annuo': np.float64(8.27)}
+rotazione TUTTE, veloce k=7 ent15 ext5 (variante)          n  1014 CAGR  21.21% vol  1.97% Sharpe   9.76 maxDD  -1.51% t 16.28
+   per anno %: {2024: 30.32, 2025: 16.11, 2026: 7.08, 'ult90g_annuo': np.float64(19.93), 'ult30g_annuo': np.float64(13.52)}
 rotazione TUTTE, liquidita' >20 M$/g (variante)            n  1014 CAGR  15.57% vol  1.18% Sharpe  12.29 maxDD  -0.34% t 20.49
    per anno %: {2024: 22.26, 2025: 14.36, 2026: 3.62, 'ult90g_annuo': np.float64(6.34), 'ult30g_annuo': np.float64(6.43)}
 rotazione con SPOT HYPERLIQUID (10 pb), N=3                n  1014 CAGR  15.36% vol  1.17% Sharpe  12.18 maxDD  -0.67% t 20.30
    per anno %: {2024: 22.26, 2025: 11.69, 2026: 5.76, 'ult90g_annuo': np.float64(8.4), 'ult30g_annuo': np.float64(6.6)} | occupazione 0.9
-lato NEGATIVO: perp lungo + spot corto a prestito (0,02%/4h Kraken) n  1014 CAGR   0.20% vol  0.61% Sharpe   0.33 maxDD  -1.11% t  0.55
-   occupazione 0.06
+lato NEGATIVO: perp lungo + spot corto a prestito (0,02%/4h Kraken) n  1014 CAGR   6.16% vol  2.69% Sharpe   2.23 maxDD  -1.22% t  3.72
+   occupazione 0.1
+rotazione TUTTE senza XMR (Kraken non lo vende nel SEE)    n  1014 CAGR  17.25% vol  1.14% Sharpe  13.91 maxDD  -0.34% t 23.19
+   per anno %: {2024: 22.26, 2025: 14.36, 2026: 7.63, 'ult90g_annuo': np.float64(13.77), 'ult30g_annuo': np.float64(11.16)} | tenute: {'BTC': 874, 'HYPE': 612, 'FARTCOIN': 565, 'ETH': 513, 'SOL': 480, 'VVV': 80}
+   posizioni della rotazione principale (moneta, ingresso, uscita): [('SOL', '2023-11-15', '2025-03-09'), ('ETH', '2023-11-14', '2025-04-10'), ('BTC', '2023-11-14', '2026-04-06'), ('XMR', '2026-05-14', '2026-07-12'), ('HYPE', '2025-03-09', '2026-11-11'), ('FARTCOIN', '2025-04-25', '2026-11-11'), ('XMR', '2026-08-22', '2026-11-11')]
+   funding annuo % ultimi 90 g, prime 12 monete idonee: {'XMR': 37.9, 'USELESS': 20.2, 'PONS': 20.1, 'FARTCOIN': 18.0, 'VVV': 18.0, 'NEAR': 14.8, 'ZRO': 14.7, 'ETHFI': 14.6, 'UNI': 14.4, 'TAO': 14.3, 'XPL': 14.1, 'ZEC': 14.0} | mediana di tutte le idonee: 11.3% | quota con funding >10%: 17%
 controllo di troncamento (diario posizioni chiuse entro 2025-06-30 identico): True 2
 
 === B. leva sulla gamba corta e liquidazioni (massimi giornalieri = massimo dei massimi orari; rimargine a meta' strada)
@@ -76,4 +80,4 @@ xyz:CXMT      2026-07-15   -64.2   -20.5    19.2  47.9    18.0      10
 rotazione HIP-3 xyz (hedge IBKR, 30 pb a/r), N=5           n   361 CAGR  14.41% vol  2.70% Sharpe   5.01 maxDD  -0.68% t  4.98
    per anno %: {2025: 0.06, 2026: 13.29, 'ult90g_annuo': np.float64(23.45), 'ult30g_annuo': np.float64(34.0)} occupazione 0.69 | tenute: {'xyz:SKHX': 169, 'xyz:DRAM': 160, 'xyz:NATGAS': 146, 'xyz:NVDA': 127, 'xyz:NBIS': 122, 'xyz:INTC': 79, 'xyz:SILVER': 75, 'xyz:COPPER': 71, 'xyz:SMSN': 69, 'xyz:CRWV': 53}
 
-varianti provate in questo script: 16
+varianti provate in questo script: 17
