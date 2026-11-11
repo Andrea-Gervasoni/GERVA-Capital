@@ -111,23 +111,27 @@ def test_superior_can_reject_and_committee_can_reject(firm_env, monkeypatch):
 
 
 def test_rule_by_vote_inside_constitution_and_revert(firm_env, monkeypatch, tmp_path):
+    # Aggiornato dopo l'audit del 10/11 (C2): prima il test faceva ALZARE la leva del motore (SCALE_CAP 1.5 -> 1.8) con un solo voto.
+    # Ora il comitato da solo puo' solo abbassarla; alzarla (anche annullando una riduzione) richiede Andrea: tests/test_audit_v5.py.
     org_seed.seed(); registry.sync()
-    gq = tmp_path / "GERVA-Q"; gq.mkdir(); (gq / "config.py").write_text("SCALE_K = 2.5\nSCALE_CAP = 1.5\n")
+    gq = tmp_path / "GERVA-Q"; gq.mkdir(); (gq / "config.py").write_text("SCALE_K = 2.5\nSCALE_CAP = 0.9\n")
     monkeypatch.setenv("GERVA_Q_PATH", str(gq))
-    idea = dict(ho_un_idea=True, tipo="motore", titolo="piu' leva", tesi="vol bassa", evidenze=["vol"], simbolo="", peso_pct=0, orizzonte_giorni=0,
-                stop_pct=0, obiettivo_pct=0, chiave="SCALE_CAP", valore=1.8, probabilita_successo=0.55)
+    idea = dict(ho_un_idea=True, tipo="motore", titolo="meno leva", tesi="vol alta", evidenze=["vol"], simbolo="", peso_pct=0, orizzonte_giorni=0,
+                stop_pct=0, obiettivo_pct=0, chiave="SCALE_CAP", valore=0.8, probabilita_successo=0.55)
     _fake(monkeypatch, idea=idea)
     g = ID.generate("senior_crypto", rows=ROWS); ID.advance()
     out = ID.committee()
-    assert out and out[0]["stato"] == "applicata" and out[0]["nuovo"] == 1.8
-    assert "SCALE_CAP = 1.8" in (gq / "config.py").read_text()
+    assert out and out[0]["stato"] == "applicata" and out[0]["nuovo"] == 0.8
+    assert "SCALE_CAP = 0.8" in (gq / "config.py").read_text()
     assert list((gq / "backups").glob("voto-*/config.py"))                                 # copia di sicurezza
     rid = out[0]["regola"]
-    assert R.apply("motore", "SCALE_CAP", 1.9, "comitato#9")["ok"] is True                 # nessuna pausa: si puo' riportare in consiglio quando si vuole
-    assert "SCALE_CAP = 1.9" in (gq / "config.py").read_text()
+    assert R.apply("motore", "SCALE_CAP", 0.7, "comitato#9")["ok"] is True                 # nessuna pausa: si puo' riportare in consiglio quando si vuole
+    assert "SCALE_CAP = 0.7" in (gq / "config.py").read_text()
     assert R.apply("motore", "SCALE_CAP", 5.0, "x")["ok"] is False                         # fuori limiti
     assert R.apply("regola", "firm.heartbeat_minutes", 1, "x")["ok"] is False              # fuori Costituzione
-    assert R.revert(rid)["ok"] and "SCALE_CAP = 1.8" not in (gq / "config.py").read_text()   # annullabile
+    assert R.apply("motore", "SCALE_CAP", 0.95, "comitato#10")["ok"] is False and "SCALE_CAP = 0.7" in (gq / "config.py").read_text()   # alzare: serve Andrea
+    cap = S.AndreaCapability(S.ensure_token())
+    assert R.revert(rid, cap=cap)["ok"] and "SCALE_CAP = 0.8" not in (gq / "config.py").read_text()   # annullabile (da Andrea: il ripristino rialza la leva)
 
 
 def test_ideas_endpoint_and_heartbeat_job(firm_env, monkeypatch):

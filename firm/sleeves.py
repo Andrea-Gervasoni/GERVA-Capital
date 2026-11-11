@@ -32,7 +32,9 @@ LIVE_GROUP, BT_GROUP = "dal vivo, paper e simulato", "backtest (storia lunga, sc
 
 
 def _days(idx_from, idx_to) -> pd.DatetimeIndex:
-    return pd.bdate_range(idx_from, idx_to)
+    """Calendario a 7 giorni: segnali, banco libero e futures simulato vivono anche di sabato e domenica (le crypto non chiudono).
+    Con i soli giorni di borsa un evento del weekend spariva dalla serie (una perdita di sabato non risultava da nessuna parte)."""
+    return pd.date_range(idx_from, idx_to, freq="D")
 
 
 def _event_series(events: list[tuple[str, float]], base: float) -> pd.Series | None:
@@ -106,17 +108,40 @@ def combined(series: dict[str, pd.Series]) -> dict | None:
 
 
 # ----------------------------------------------------------------------------- le serie
-GLITCH = 0.20          # un fondo che muove piu' del 20% in un giorno e' quasi sempre una lettura sbagliata del conto
+GLITCH = 0.20          # un salto oltre il 20% in un giorno e' una lettura sbagliata SE il conto torna subito dov'era
+REVERT = 3             # entro quante letture il conto deve tornare vicino al valore di prima perche' il salto sia una lettura sbagliata
+EVENT_PERIODS = 365    # le sleeve a eventi usano il calendario a 7 giorni: si annualizzano su 365
 
 
 def engine_series() -> tuple[pd.Series | None, int]:
-    """Rendimenti giornalieri del conto IBKR, senza i giorni anomali (letture sbagliate). Ritorna (serie, quanti giorni scartati)."""
+    """Rendimenti giornalieri del conto IBKR, senza le LETTURE sbagliate. Ritorna (serie, quante variazioni scartate).
+    Una lettura e' sbagliata quando il valore salta di oltre GLITCH e entro REVERT letture torna vicino a quello di prima (valuta o stima
+    errata per un giorno): si toglie quella lettura, non il mercato. Un -25% che RESTA e' una perdita vera e rimane nella serie
+    (prima ogni giorno oltre il 20% spariva, anche se vero). Un salto nell'ultima lettura non e' ancora giudicabile: resta fuori, contato,
+    finche' la lettura dopo non lo conferma o lo smentisce. Limite dichiarato: un vero crollo oltre il 20% recuperato in tre letture
+    verrebbe letto come errore."""
     rows = db.q("SELECT day, nav FROM nav_marks WHERE pod='pod_zero' AND nav>0 ORDER BY day")
     if len(rows) < 2:
         return None, 0
-    r = pd.Series({pd.Timestamp(x["day"]): float(x["nav"]) for x in rows}).sort_index().pct_change().dropna()
-    bad = r.abs() > GLITCH
-    return r[~bad], int(bad.sum())
+    nav = pd.Series({pd.Timestamp(x["day"]): float(x["nav"]) for x in rows}).sort_index()
+    v = nav.values
+    keep = np.ones(len(v), bool)
+    bad, good, i = 0, 0, 1
+    while i < len(v):
+        if abs(v[i] / v[good] - 1) > GLITCH:
+            back = next((j for j in range(i + 1, min(i + 1 + REVERT, len(v))) if abs(v[j] / v[good] - 1) <= GLITCH), None)
+            if back is not None:                           # tornato dov'era: le letture in mezzo erano sbagliate
+                keep[i:back] = False
+                bad += int((np.abs(v[i:back + 1] / v[i - 1:back] - 1) > GLITCH).sum())
+                good, i = back, back + 1
+                continue
+            if i == len(v) - 1:                            # ultima lettura: non ancora giudicabile
+                keep[i] = False
+                bad += 1
+                break
+        good = i
+        i += 1
+    return nav[keep].pct_change().dropna(), bad
 
 
 def signals_series(executed: bool) -> pd.Series | None:
@@ -151,6 +176,9 @@ def backtest_series(name: str) -> pd.Series | None:
     return pd.Series(got["v"], index=pd.to_datetime(got["d"])).sort_index()
 
 
+EVENT_SLEEVES = ("Segnali eseguiti (Alpaca)", "Segnali seguiti, non eseguiti", "Banco libero (Alpaca)", "Futures simulato (leva scelta dagli agenti)")
+
+
 def overview() -> dict:
     eng, scartati = engine_series()
     live = {
@@ -167,7 +195,7 @@ def overview() -> dict:
         series = {k: v[1] for k, v in src.items()}
         rows = []
         for k, (origin, s) in src.items():
-            m = metrics(s)
+            m = metrics(s, EVENT_PERIODS if k in EVENT_SLEEVES else 252)
             m.update(nome=k, origine=origin, breve=SHORT.get(k, k[:12]), scartati=scartati if k.startswith("Motore") else 0)
             rows.append(m)
         cor = correlation(series)

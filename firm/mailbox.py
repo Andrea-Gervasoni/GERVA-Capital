@@ -52,4 +52,11 @@ def decide(mid: int, choice: str, cap) -> dict:
     db.ex("UPDATE mailbox SET status=?, choice=?, decided_ts=? WHERE id=?",
           (status, None if status == "rimandata" else choice, db.now_iso(), mid))
     events.publish("mailbox.decided", "andrea", dict(id=mid, scelta=choice, stato=status))
-    return dict(id=mid, status=status)
+    out = dict(id=mid, status=status)
+    row = db.one("SELECT dedup_key FROM mailbox WHERE id=?", (mid,))
+    if status == "decisa" and row and str(row["dedup_key"] or "").startswith("rule-pending:"):
+        # proposta del comitato che aumenta il rischio (firm/rules.py): la risposta di Andrea la applica o la respinge
+        from . import rules
+        rid = int(row["dedup_key"].split(":", 1)[1])
+        out["regola"] = rules.approve(rid, cap) if choice == rules.APPROVE else rules.reject(rid, cap)
+    return out

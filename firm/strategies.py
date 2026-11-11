@@ -14,7 +14,8 @@ per il voto, non un blocco. Accesa, la strategia gira da sola; spenta, non tocca
                         dell'S&P 500 dalla chiusura di ieri alle 10:00 di New York predice quello dell'ultima mezz'ora. Si entra alle 15:30
                         nella direzione della prima mezz'ora e si esce alla chiusura. Barre a 5 minuti.
 Limiti dichiarati: i paper misurano periodi passati (il momentum intraday e' piu' debole dopo la pubblicazione); costi e spread di Alpaca
-sono stimati; il backtest crypto usa rendimenti giornalieri per il registro delle prove (annualizzati su 252).
+sono stimati; il backtest crypto usa rendimenti giornalieri per il registro delle prove, annualizzati su 365 giorni (le crypto si
+negoziano anche nel weekend: con 252 lo Sharpe usciva x0,83 e gli anni di storia x1,45); SPY intraday resta su 252.
 """
 from __future__ import annotations
 
@@ -27,7 +28,7 @@ import urllib.parse
 import numpy as np
 import pandas as pd
 
-from . import audit, crypto_venue as V, db, events, paths
+from . import audit, crypto_venue as V, db, events, paths, risk
 from . import settings as S
 
 STRATS = {
@@ -175,6 +176,7 @@ def backtest(name: str, data=None, propose: bool = True) -> dict:
     from . import trials
     spec = STRATS[name]
     p = dict(spec["params"])
+    periods = 365 if name == "crypto_tsmom" else 252                 # giorni l'anno della serie: calendario per le crypto, borsa per SPY
     if name == "crypto_tsmom":
         close = data if data is not None else crypto_bars(p["coins"])
         daily = to_daily(bt_crypto_tsmom(close, p))
@@ -185,15 +187,15 @@ def backtest(name: str, data=None, propose: bool = True) -> dict:
         daily = bt_spy_intraday(bars, p)
         daily2 = bt_spy_intraday(bars, dict(p, cost_bps=p["cost_bps"] * 2))
         bench = None
-    st, st2 = stats(daily), stats(daily2)
+    st, st2 = stats(daily, periods), stats(daily2, periods)
     if not st.get("ok"):
         return dict(ok=False, motivo=st.get("motivo"))
     tid = trials.register(spec["autore"], f"algo:{name}", name, p, spec["ipotesi"])
-    d = trials.record_result(tid, daily.values, extra=dict(stats=st))
+    d = trials.record_result(tid, daily.values, extra=dict(stats=st), periods=periods)
     g = trials.gate(tid, cost2x_sharpe=st2.get("sharpe"), lookahead_ok=True)
     res = dict(ok=True, strategia=name, prova=tid, risultati=st, costi_doppi=st2, deflated=dict(dsr=round(d["dsr"], 4), psr=round(d["psr"], 4), prove_totali=d["n_trials"]),
                cancello=dict(passa=bool(g.get("passa")), controlli={k: v for k, v in (g.get("controlli") or {}).items()}),
-               confronto=stats(bench) if bench is not None else None, ts=db.now_iso())
+               confronto=stats(bench, periods) if bench is not None else None, ts=db.now_iso())
     db.runtime_set(f"algo.{name}.backtest", res)
     db.runtime_set(f"algo.{name}.serie", dict(d=[str(i)[:10] for i in daily.index], v=[round(float(x), 6) for x in daily.values]))      # per la pagina Portafoglio di strategie
     audit.log(spec["autore"], "algo.backtest", dict(strategia=name, sharpe=st.get("sharpe"), dsr=res["deflated"]["dsr"]))
@@ -234,6 +236,9 @@ def live_crypto(close: pd.DataFrame | None = None) -> dict:
         if db.runtime_get("algo.crypto_targets"):
             db.runtime_set("algo.crypto_targets", {})                       # spenta: le sue posizioni escono al prossimo ribilanciamento
         return dict(nota="spenta")
+    if risk.kill_active():                                                  # KILL: obiettivi a zero, il ribilanciamento puo' solo vendere
+        db.runtime_set("algo.crypto_targets", {})
+        return dict(nota="KILL attivo: obiettivi azzerati", obiettivi={})
     p = STRATS[name]["params"]
     if close is None:
         close = crypto_bars(p["coins"], days=10)
@@ -258,6 +263,8 @@ def live_spy(now: dt.datetime | None = None) -> dict:
     sym = STRATS[name]["params"]["symbol"]
     from . import blotter
     if ny.strftime("%H:%M") >= "15:30" and ny.strftime("%H:%M") < "15:55" and st.get("day") != today:
+        if risk.kill_active():                                              # KILL: non si entra (l'uscita qui sotto resta permessa)
+            return dict(nota="KILL attivo: nessun ingresso")
         bars = stock_bars(sym, days=5)
         nyb = bars.tz_convert("America/New_York")
         g = nyb[nyb.index.date == ny.date()]

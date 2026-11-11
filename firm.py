@@ -149,7 +149,7 @@ def _research_crypto():
            "erc": "Trend e breakout a contributi di rischio uguali invece di 50/50.",
            "tutto": "Combinazione: verifica che i guadagni si sommino e non si annullino."}
     reg = lambda v: trials.register("senior_crypto", f"crypto4:{v.name}", "crypto4", v.params(), hyp[v.name])
-    dsr = lambda tid, r: trials.record_result(tid, r, fp)["dsr"]
+    dsr = lambda tid, r: trials.record_result(tid, r, fp, periods=C4.TD)["dsr"]      # crypto: 365 giorni l'anno, non 252
     res = C4.bench(dict(close=close), register=reg, dsr_fn=dsr, start_skip=200)
     chosen = next(v for v in C4.VARIANTS if v.name == res.scelta)
     lad = []
@@ -366,10 +366,16 @@ def cmd_idee(a):
 
 
 def cmd_regole(a):
-    """Regole cambiate dal comitato (con vecchio e nuovo valore); --annulla ID ripristina il valore precedente."""
-    from firm import rules
+    """Regole cambiate dal comitato (con vecchio e nuovo valore); --annulla ID ripristina il valore precedente.
+    --approva ID / --respingi ID: risposta di Andrea a una proposta in attesa (un voto che aumenta leva o esposizione)."""
+    from firm import rules, settings
+    cap = settings.AndreaCapability(settings.ensure_token()) if (a.annulla or a.approva or a.respingi) else None   # chi lancia il comando dal Mac e' Andrea
     if a.annulla:
-        print(rules.revert(a.annulla)); return
+        print(rules.revert(a.annulla, cap=cap)); return
+    if a.approva:
+        print(rules.approve(a.approva, cap)); return
+    if a.respingi:
+        print(rules.reject(a.respingi, cap)); return
     for r in rules.history(30):
         print(f"#{r['id']:<3} {r['ts'][:16]} {r['status']:<9} {r['key']:<28} {r['old']} -> {r['new']}  ({r['who']})")
 
@@ -465,9 +471,22 @@ def cmd_heartbeat(_):
 def cmd_run(_):
     from firm import heartbeat, settings
     while True:
-        r = heartbeat.beat()
-        print(time.strftime("%H:%M"), r.get("svegliati"), r.get("note"))
-        time.sleep(60 * float(settings.get("firm.heartbeat_minutes", 15)))
+        # un battito che fallisce non deve fermare il ciclo: il prossimo riparte (rischio e stop dei segnali per primi)
+        try:
+            r = heartbeat.beat()
+            print(time.strftime("%H:%M"), r.get("svegliati"), r.get("note"))
+        except Exception as e:
+            print(time.strftime("%H:%M"), f"battito non riuscito: {type(e).__name__}: {str(e)[:200]}", file=sys.stderr)
+            try:
+                from firm import events
+                events.publish("heartbeat.error", "sistema", dict(passo="battito", errore=f"{type(e).__name__}: {str(e)[:200]}"))
+            except Exception as e2:
+                print(time.strftime("%H:%M"), f"errore non registrato: {e2!r}", file=sys.stderr)
+        try:
+            wait = 60 * float(settings.get("firm.heartbeat_minutes", 15))
+        except Exception:
+            wait = 900.0
+        time.sleep(wait)
 
 
 def cmd_status(_):
@@ -616,6 +635,8 @@ def main():
             sp.add_argument("--dettaglio", type=int, default=0, help="tesi, percorso e voti della riunione di una idea")
         if name == "regole":
             sp.add_argument("--annulla", type=int, default=0, help="ripristina il valore precedente della regola con questo numero")
+            sp.add_argument("--approva", type=int, default=0, help="applica la proposta in attesa con questo numero (aumento del rischio: decide Andrea)")
+            sp.add_argument("--respingi", type=int, default=0, help="respinge la proposta in attesa con questo numero")
         if name == "imposta":
             sp.add_argument("chiave"); sp.add_argument("valore")
         if name == "crypto-venue":

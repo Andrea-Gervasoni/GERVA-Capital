@@ -40,18 +40,34 @@ def register(agent_id: str, strategy_id: str, family: str, params: dict, hypothe
     return tid
 
 
-def record_result(trial_id: str, returns, data_fingerprint: str = "", extra: dict | None = None) -> dict:
+PERIODS = 252                      # periodi l'anno di una prova, se non dichiarati (azioni ed ETF: giorni di borsa)
+
+
+def record_result(trial_id: str, returns, data_fingerprint: str = "", extra: dict | None = None, periods: int = PERIODS) -> dict:
+    """periods: osservazioni l'anno della serie (252 per azioni ed ETF, 365 per le crypto, che si negoziano anche nel weekend).
+    Resta scritto nel risultato della prova: Sharpe annuo e anni di storia si calcolano con il SUO calendario."""
     t = db.one("SELECT * FROM trials WHERE id=?", (trial_id,))
     if not t:
         raise KeyError(trial_id)
     if t["status"] != "registrata":
         raise ValueError("risultato gia' registrato: una nuova variante e' una NUOVA prova")
     m = QS.moments(returns)
+    extra = dict(extra or {})
+    if int(periods) != PERIODS:
+        extra["periodi"] = int(periods)
     db.ex("UPDATE trials SET status='testata', sharpe_daily=?, n_obs=?, skew=?, kurt=?, result=?, "
           "data_fingerprint=? WHERE id=?",
-          (m.sr, m.n, m.skew, m.kurt, db.dumps(extra or {}), data_fingerprint, trial_id))
-    events.publish("trial.tested", t["agent_id"], dict(trial=trial_id, sharpe_annuo=round(m.sr * math.sqrt(252), 3)))
+          (m.sr, m.n, m.skew, m.kurt, db.dumps(extra), data_fingerprint, trial_id))
+    events.publish("trial.tested", t["agent_id"], dict(trial=trial_id, sharpe_annuo=round(m.sr * math.sqrt(int(periods)), 3)))
     return deflated(trial_id)
+
+
+def periods_of(t: dict) -> int:
+    """Periodi l'anno con cui e' stata registrata la prova (252 se non dichiarati)."""
+    try:
+        return int(json.loads(t.get("result") or "{}").get("periodi") or PERIODS)
+    except (TypeError, ValueError):
+        return PERIODS
 
 
 def abandon(trial_id: str, reason: str):
@@ -83,9 +99,10 @@ def deflated(trial_id: str) -> dict:
     m = QS.Moments(sr=t["sharpe_daily"], n=t["n_obs"], skew=t["skew"], kurt=t["kurt"])
     c = counts()
     sr0 = QS.expected_max_sr(c["n_trials"], c["var_sr"])
-    return dict(trial=trial_id, sharpe_annuo=m.sr * math.sqrt(252), psr=QS.psr(m),
-                dsr=QS.dsr(m, c["n_trials"], c["var_sr"]), sr0_annuo=sr0 * math.sqrt(252),
-                min_trl_anni=QS.min_trl(m) / 252, **c)
+    per = periods_of(t)                            # le crypto hanno 365 giorni l'anno: con 252 lo Sharpe usciva x0,83 e gli anni x1,45
+    return dict(trial=trial_id, sharpe_annuo=m.sr * math.sqrt(per), psr=QS.psr(m),
+                dsr=QS.dsr(m, c["n_trials"], c["var_sr"]), sr0_annuo=sr0 * math.sqrt(per),
+                min_trl_anni=QS.min_trl(m) / per, **c)
 
 
 def gate(trial_id: str, pbo: float | None = None, cost2x_sharpe: float | None = None,
@@ -94,7 +111,8 @@ def gate(trial_id: str, pbo: float | None = None, cost2x_sharpe: float | None = 
     Il test anti look-ahead e' sempre obbligatorio (non eseguito = non superato). Con strict=True (chiamata
     da un agente) lo sono anche PBO e Sharpe a costi doppi: omettere un controllo non lo fa passare."""
     d = deflated(trial_id)
-    years = db.one("SELECT n_obs FROM trials WHERE id=?", (trial_id,))["n_obs"] / 252
+    t = db.one("SELECT n_obs, result FROM trials WHERE id=?", (trial_id,))
+    years = t["n_obs"] / periods_of(t)
     checks = {
         "dsr": (d["dsr"] >= float(S.get("gate.dsr_min")), round(d["dsr"], 4)),
         "anni_di_storia": (years >= float(S.get("gate.min_years")), round(years, 2)),

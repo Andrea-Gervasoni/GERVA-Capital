@@ -89,19 +89,25 @@ def set_capital(pid: str, frac: float, reason: str, actor: str = "risk_engine"):
     events.publish("pod.capital", actor, dict(pod=pid, da=round(old, 4), a=round(frac, 4), motivo=reason))
 
 
-def apply_drawdown_rules() -> list[dict]:
-    """Chiamato dal battito ogni giorno, dopo le marcature di NAV."""
+def apply_drawdown_rules(now=None) -> list[dict]:
+    """Chiamato dal battito ogni giorno, dopo le marcature di NAV. `now` serve solo agli orari di mercato della liquidazione (prove)."""
     from . import gateway
     lim = S.risk_limits()["pod"]
     actions = []
     for p in all_pods():
-        if p["id"] == "pod_zero" or p["status"] == "chiuso":
+        if p["id"] == "pod_zero":
+            continue
+        if p["status"] == "chiuso":
+            # un pod chiuso non deve restare con posizioni aperte (uno short lasciato li' perde senza limite): si liquida appena si puo'
+            liq = gateway.liquidate_pod(p["id"], now) if gateway.positions(p["id"]) else []
+            if liq:
+                actions.append(dict(pod=p["id"], azione="liquidazione", ordini=liq))
             continue
         dd = gateway.pod_book(p["id"])["drawdown"]
         if dd <= -lim["dd_close"]:
             set_capital(p["id"], 0.0, f"drawdown {dd:.1%} oltre {lim['dd_close']:.1%}: pod chiuso")
             db.ex("UPDATE pods SET status='chiuso' WHERE id=?", (p["id"],))
-            actions.append(dict(pod=p["id"], azione="chiuso", drawdown=dd))
+            actions.append(dict(pod=p["id"], azione="chiuso", drawdown=dd, liquidazione=gateway.liquidate_pod(p["id"], now)))
             from . import compensation
             compensation.clawback(p["head"], f"pod {p['id']} chiuso per drawdown {dd:.1%}")
         elif dd <= -lim["dd_cut"] and p["status"] == "attivo":

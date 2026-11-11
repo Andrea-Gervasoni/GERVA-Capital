@@ -21,7 +21,7 @@ import time
 
 import numpy as np
 
-from . import audit, charts, compensation, crypto_venue as V, db, events, registry
+from . import audit, charts, compensation, crypto_venue as V, db, events, registry, risk
 from . import settings as S
 
 HOUSE_KINDS = {                      # tipo di regola di casa -> (minimo, massimo) del valore; valore 0 = revoca la regola
@@ -95,7 +95,7 @@ def state() -> dict:
         pos.append(dict(simbolo=str(p["symbol"]).replace("/", "").removesuffix("USD") if p.get("asset_class") == "crypto" else p["symbol"],
                         valore=float(p["market_value"]), pnl=float(p.get("unrealized_pl", 0))))
     last = float(acc.get("last_equity") or eq)
-    return dict(equity=eq, potere_acquisto=float(acc.get("buying_power", 0)), contanti=float(acc.get("cash", 0)), posizioni=pos,
+    return dict(ts=db.now_iso(), equity=eq, potere_acquisto=float(acc.get("buying_power", 0)), contanti=float(acc.get("cash", 0)), posizioni=pos,
                 lordo=sum(abs(x["valore"]) for x in pos), pnl_giorno=eq - last, pnl_giorno_frac=(eq - last) / eq if eq else 0.0)
 
 
@@ -104,24 +104,41 @@ def _trades_last_hour(agent: str) -> int:
     return len(db.q("SELECT id FROM free_trades WHERE agent=? AND ts>=?", (agent, since)))
 
 
+def exposure(st: dict) -> dict[str, float]:
+    """Esposizione per simbolo (valore assoluto in USD) DOPO gli ordini gia' accettati: le posizioni lette dal broker (st) piu' gli ordini
+    del banco libero che la lettura non puo' ancora contenere, cioe' quelli inviati e non riempiti e quelli aperti dopo la lettura.
+    Senza questo, N ordini di uno stesso giro passavano ciascuno contro la stessa fotografia vecchia del conto (20 x 9.000 $ con il tetto al 10%).
+    Un ordine riempito e non ancora registrato dal monitor conta due volte per qualche secondo: l'errore e' dal lato prudente."""
+    out: dict[str, float] = {}
+    for p in st.get("posizioni", []):
+        out[p["simbolo"]] = out.get(p["simbolo"], 0.0) + abs(float(p["valore"]))
+    since = st.get("ts") or "9999"
+    for r in db.q("SELECT symbol, qty, entry_px, notional FROM free_trades WHERE status='inviato' OR (status='aperta' AND ts>=?)", (since,)):
+        v = (r["qty"] * r["entry_px"]) if (r["qty"] and r["entry_px"]) else (r["notional"] or 0.0)
+        out[r["symbol"]] = out.get(r["symbol"], 0.0) + abs(float(v))
+    return out
+
+
 def check_trade(agent: str, t: dict, st: dict) -> tuple[bool, str]:
-    """Applica le regole di casa (all'inizio non ce n'e' nessuna). Nessun'altra regola vive qui."""
+    """Applica le regole di casa (all'inizio non ce n'e' nessuna). Nessun'altra regola vive qui.
+    Leva, concentrazione e numero di posizioni si misurano sull'esposizione CUMULATA dopo il trade (exposure), non sulla sola lettura del conto."""
     r = active_rules()
     eq = max(st["equity"], 1.0)
     n = float(t["importo_usd"])
+    exp = exposure(st) if r else {}
     if "max_trades_per_hour" in r and _trades_last_hour(agent) >= r["max_trades_per_hour"]:
         return False, f"regola di casa: massimo {r['max_trades_per_hour']:.0f} trade all'ora per agente"
-    if "max_leverage" in r and (st["lordo"] + n) / eq > r["max_leverage"]:
+    if "max_leverage" in r and (max(sum(exp.values()), st.get("lordo", 0.0)) + n) / eq > r["max_leverage"]:
         return False, f"regola di casa: leva massima {r['max_leverage']:g}x"
     if "max_position_frac" in r:
-        cur = sum(abs(p["valore"]) for p in st["posizioni"] if p["simbolo"] == t["simbolo"])
+        cur = exp.get(t["simbolo"], 0.0)
         if (cur + n) / eq > r["max_position_frac"]:
             return False, f"regola di casa: massimo {r['max_position_frac'] * 100:g}% del conto per posizione"
     if "max_day_loss_frac" in r and st["pnl_giorno_frac"] <= -r["max_day_loss_frac"]:
         return False, f"regola di casa: perdita di giornata oltre {r['max_day_loss_frac'] * 100:g}%, niente nuovi trade"
     if "min_hold_minutes" in r and 0 < int(t.get("tieni_minuti", 0)) < r["min_hold_minutes"]:
         return False, f"regola di casa: tenere almeno {r['min_hold_minutes']:.0f} minuti"
-    if "max_open_positions" in r and len(st["posizioni"]) >= r["max_open_positions"] and not any(p["simbolo"] == t["simbolo"] for p in st["posizioni"]):
+    if "max_open_positions" in r and len(exp) >= r["max_open_positions"] and t["simbolo"] not in exp:
         return False, f"regola di casa: al massimo {r['max_open_positions']:.0f} posizioni aperte"
     return True, ""
 
@@ -146,11 +163,15 @@ def execute(agent: str, t: dict, st: dict) -> dict:
         return dict(ok=False, motivo="importo non valido")
     if not (usd > 0 and math.isfinite(usd)):
         return dict(ok=False, motivo="importo non valido")
-    t = dict(t, simbolo=sym)
+    side = str(t.get("lato") or "").strip().lower()
+    if side not in ("buy", "sell"):                                   # un lato sconosciuto ("long", "compra", vuoto) NON e' uno short
+        return dict(ok=False, motivo=f"lato non valido ({str(t.get('lato'))[:20]}): buy oppure sell")
+    if risk.kill_active():                                            # KILL: il banco libero non apre niente (il monitor continua a chiudere)
+        return dict(ok=False, motivo="KILL attivo: nessun nuovo trade")
+    t = dict(t, simbolo=sym, lato=side)
     ok, why = check_trade(agent, t, st)
     if not ok:
         return dict(ok=False, motivo=why)
-    side = "buy" if t.get("lato") == "buy" else "sell"
     kind = "limit" if t.get("tipo_ordine") == "limit" and float(t.get("prezzo_limite") or 0) > 0 else "market"
     body = dict(symbol=f"{sym}/USD" if is_crypto else sym, side=side, type=kind, time_in_force="gtc" if is_crypto else "day")
     if kind == "limit":
@@ -305,6 +326,8 @@ def _set_wake(agent: str, minutes: int | None) -> None:
 def cycle(runtime=None, agents: list[str] | None = None) -> dict:
     if not S.get("free.enabled", True) or not V.keys_ok():
         return dict(nota="banco libero spento o chiavi Alpaca mancanti")
+    if risk.kill_active():
+        return dict(nota="KILL attivo: il banco libero non apre trade")
     if runtime is None:
         from llm import runtime
     from . import workflows as W

@@ -39,7 +39,9 @@ def build(nav0: float, weights: dict | None = None, close: pd.DataFrame | None =
     if len(rp) < 252:
         raise ValueError("storia insufficiente per registrare le aspettative")
     par = _params()
-    rp_real = rp - par["haircut"] * rp.mean() - par["costi_annui"] / fundrisk.TD
+    # il taglio toglie una quota del rendimento medio POSITIVO (sopravvivenza, sovradattamento). Con una media storica negativa
+    # `rp - haircut * media` la ALZAVA: il caso "realistico" usciva migliore del "modello". Una media negativa non si sconta.
+    rp_real = rp - par["haircut"] * max(float(rp.mean()), 0.0) - par["costi_annui"] / fundrisk.TD
     kill = float(S.risk_limits()["firm"]["kill_drawdown"])
     mod = fundrisk.monte_carlo(rp, nav0, 1, steps=STEPS, kill_dd=kill)
     rea = fundrisk.monte_carlo(rp_real, nav0, 1, steps=STEPS, kill_dd=kill)

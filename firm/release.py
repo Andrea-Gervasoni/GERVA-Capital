@@ -142,11 +142,12 @@ def export_trials(gerva_q: str | None = None) -> str:
     root = gerva_q or paths.GERVA_Q
     out = os.path.join(root, "challenge", "trials_export.csv")
     os.makedirs(os.path.dirname(out), exist_ok=True)
-    rows = db.q("SELECT id, family, status, sharpe_daily FROM trials WHERE COALESCE(result,'') NOT LIKE '%\"sintetico\": true%'")
+    from . import trials
+    rows = db.q("SELECT id, family, status, sharpe_daily, result FROM trials WHERE COALESCE(result,'') NOT LIKE '%\"sintetico\": true%'")
     with open(out, "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(["id", "famiglia", "stato", "sharpe_annuo"])
         for r in rows:
             w.writerow([r["id"], r["family"], r["status"],
-                        "" if r["sharpe_daily"] is None else round(r["sharpe_daily"] * math.sqrt(252), 4)])
+                        "" if r["sharpe_daily"] is None else round(r["sharpe_daily"] * math.sqrt(trials.periods_of(r)), 4)])   # crypto: 365
     return out

@@ -43,6 +43,10 @@ def firm_env(tmp_path, monkeypatch):
     monkeypatch.setenv("GERVA_SHADOW", "0")              # niente download di dati dal battito nei test
     for k in [k for k in os.environ if k.endswith("_API_KEY")]:
         monkeypatch.delenv(k, raising=False)
+    # le chiavi Alpaca della shell non entrano MAI nei test: dal 10/11 un KILL svuota il conto paper (crypto_venue.flatten),
+    # e un test che fa scattare il KILL non deve poter toccare il conto vero. Chi ne ha bisogno le mette finte con monkeypatch.setenv.
+    for k in ("ALPACA_PAPER_KEY", "ALPACA_PAPER_SECRET", "ALPACA_BASE_URL"):
+        monkeypatch.delenv(k, raising=False)
     db.reset_connection_cache()
     # i test storici descrivono la societa' con i pod accesi; il comportamento a pod spenti ha i suoi test
     db.connect()

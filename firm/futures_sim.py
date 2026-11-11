@@ -8,6 +8,8 @@ long e short). Per misurare COSA SUCCEDE con la leva, ogni segnale analizzato ap
     nessun obbligo di usare il massimo, la scelta e' sua e va motivata; il codice mette solo i tetti fisici;
   * posizione = margine x leva; la perdita non supera mai il margine; liquidazione a circa 1/leva dall'ingresso (meno il margine di mantenimento);
   * stop, obiettivo e liquidazione si controllano sulle candele da 15 minuti (massimi e minimi); se in una candela se ne toccano due, vale il peggiore;
+  * la posizione esiste solo da quando il prezzo d'ingresso viene davvero toccato: prima nessun evento conta, e se non viene mai toccato
+    si chiude a scadenza come "non_entrato" con risultato zero (non e' un'operazione e non entra nelle statistiche per fascia di leva);
   * costi: commissione (taker) all'ingresso e all'uscita; il finanziamento (funding) non e' simulato.
   * i risultati per fascia di leva tornano agli agenti nei dati della scelta successiva: cosi' studiano, non vengono obbligati.
 
@@ -75,7 +77,7 @@ def lev_cap(p: dict) -> float:
 
 def stats_by_leverage() -> list[dict]:
     _ensure()
-    rows = db.q("SELECT lev, esito, pnl_margin, pnl_usd FROM fut_positions WHERE stato='chiusa'")
+    rows = db.q("SELECT lev, esito, pnl_margin, pnl_usd FROM fut_positions WHERE stato='chiusa' AND esito!='non_entrato'")
     out = []
     for lo, hi in BUCKETS:
         r = [x for x in rows if lo <= round(x["lev"]) <= hi]
@@ -135,7 +137,9 @@ def open_position(sid: int, p: dict, analysis: dict, agent: str = "senior_crypto
 
 def _close(row: dict, exit_px: float, esito: str, when: str) -> None:
     fee = float(S.get("futures.taker_fee", 0.0005)) * row["notional_usd"] * 2
-    if esito == "liquidazione":
+    if esito == "non_entrato":                             # l'ingresso non e' mai stato toccato: niente posizione, niente commissioni
+        pnl = 0.0
+    elif esito == "liquidazione":
         pnl = -row["margin_usd"]
     else:
         move = (exit_px / row["entry"] - 1) * (1 if row["side"] == "long" else -1)
@@ -145,18 +149,26 @@ def _close(row: dict, exit_px: float, esito: str, when: str) -> None:
     events.publish("futures.closed", row["agent"] or "senior_crypto", dict(signal=row["signal_id"], moneta=row["coin"], esito=esito, pnl=round(pnl, 2), leva=row["lev"]))
 
 
-def first_event(rows: list, side: str, stop: float, tp: float, liq: float) -> tuple[str, float, int] | None:
-    """Il primo evento sulle candele (massimi e minimi): liquidazione, stop o obiettivo. Se in una candela se ne toccano due, il peggiore."""
+def first_event(rows: list, side: str, stop: float, tp: float, liq: float, entry: float | None = None) -> tuple[str, float, int] | None:
+    """Il primo evento sulle candele (massimi e minimi): liquidazione, stop o obiettivo. Se in una candela se ne toccano due, il peggiore.
+    Con `entry` gli eventi contano solo dopo che il prezzo d'ingresso e' stato toccato (stessa regola di signals.first_touch): nella candela
+    dell'ingresso l'evento avverso conta sempre, l'obiettivo solo se la candela apre dal lato dell'ingresso."""
     long_ = side == "long"
     down_level = max(liq, stop) if long_ else min(liq, stop)                      # il livello avverso piu' vicino all'ingresso
+    entered = entry is None
     for k in rows:
         hi, lo = float(k[2]), float(k[3])
+        first = False
+        if not entered:
+            if not (lo <= entry <= hi):
+                continue
+            entered = first = True
         adverse = lo <= down_level if long_ else hi >= down_level
         good = hi >= tp if long_ else lo <= tp
         if adverse:
             is_liq = (liq >= stop) if long_ else (liq <= stop)
             return ("liquidazione", liq, int(k[0])) if is_liq else ("stop", stop, int(k[0]))
-        if good:
+        if good and (not first or (float(k[1]) <= entry if long_ else float(k[1]) >= entry)):
             return "obiettivo", tp, int(k[0])
     return None
 
@@ -173,12 +185,15 @@ def track() -> int:
         rows = signals._candles(r["coin"], r["ts"])
         if not rows:
             continue
-        ev = first_event(rows, r["side"], r["stop"], r["tp"], r["liq"])
+        ev = first_event(rows, r["side"], r["stop"], r["tp"], r["liq"], r["entry"])
         if ev:
             _close(r, ev[1], ev[0], dt.datetime.fromtimestamp(ev[2] / 1000, dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
             n += 1
         elif dt.datetime.now(dt.timezone.utc) - dt.datetime.fromisoformat(r["ts"].replace("Z", "+00:00")) > dt.timedelta(days=ttl):
-            _close(r, float(rows[-1][4]), "scaduto", db.now_iso())
+            if signals.touched(rows, r["entry"]):
+                _close(r, float(rows[-1][4]), "scaduto", db.now_iso())
+            else:
+                _close(r, r["entry"], "non_entrato", db.now_iso())
             n += 1
     return n
 
@@ -196,7 +211,7 @@ def overview() -> dict:
             r["ora"] = dict(prezzo=px, pnl_usd=round(max(move * r["notional_usd"], -r["margin_usd"]), 2), pnl_margine=round(max(move * r["lev"], -1.0), 4))
             unreal += r["ora"]["pnl_usd"]
     closed = db.q("SELECT * FROM fut_positions WHERE stato='chiusa' ORDER BY id DESC LIMIT 40")
-    allc = db.one("SELECT COUNT(*) n, COALESCE(SUM(CASE WHEN pnl_usd>0 THEN 1 ELSE 0 END),0) w, COALESCE(SUM(CASE WHEN esito='liquidazione' THEN 1 ELSE 0 END),0) l FROM fut_positions WHERE stato='chiusa'")
+    allc = db.one("SELECT COUNT(*) n, COALESCE(SUM(CASE WHEN pnl_usd>0 THEN 1 ELSE 0 END),0) w, COALESCE(SUM(CASE WHEN esito='liquidazione' THEN 1 ELSE 0 END),0) l FROM fut_positions WHERE stato='chiusa' AND esito!='non_entrato'")
     eq = equity()
     return dict(attivo=enabled(), equity_usd=round(eq, 2), equity0_usd=equity0(), pnl_chiuso_usd=round(realized(), 2), pnl_aperto_usd=round(unreal, 2),
                 margine_usato_usd=round(margin_used(), 2), margine_usato_pct=round(margin_used() / eq, 4) if eq else None,

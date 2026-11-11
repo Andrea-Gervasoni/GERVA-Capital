@@ -21,7 +21,7 @@ import ssl
 import urllib.error
 import urllib.request
 
-from . import audit, db, events
+from . import audit, db, events, risk
 from . import settings as S
 
 BASE = "https://paper-api.alpaca.markets"
@@ -230,6 +230,41 @@ def plan(equity: float, have: dict[str, float], tgt: dict[str, float], ok_coins:
     return orders, skipped
 
 
+def flatten(reason: str = "KILL") -> dict:
+    """KILL: annulla TUTTI gli ordini aperti e chiude TUTTE le posizioni del conto paper di Alpaca (modello crypto, segnali, banco libero,
+    strategie in codice: il conto e' uno solo). Si puo' richiamare: a conto vuoto non fa niente. Se il broker non risponde lo dice
+    (ok=False) e il registro del banco libero resta com'e', cosi' stop e tempi continuano a essere seguiti."""
+    if not keys_ok():
+        return dict(ok=False, nota="chiavi Alpaca mancanti: niente da chiudere")
+    out = dict(ok=True, ordini_annullati=0, posizioni_chiuse=0, errori=[])
+    try:
+        r = _req("DELETE", "/v2/orders")
+        out["ordini_annullati"] = len(r) if isinstance(r, list) else 0
+    except Exception as e:
+        out["errori"].append(f"ordini: {str(e)[:120]}")
+    try:
+        r = _req("DELETE", "/v2/positions?cancel_orders=true")
+        out["posizioni_chiuse"] = len(r) if isinstance(r, list) else 0
+    except Exception as e:
+        out["errori"].append(f"posizioni: {str(e)[:120]}")
+    out["ok"] = not out["errori"]
+    if out["ok"]:
+        # il registro non deve restare con posizioni che il broker non ha piu': il monitor le "chiuderebbe" vendendo di nuovo (uno short)
+        why = f"KILL: {reason}"[:200]
+        db.ex("UPDATE free_trades SET status='rifiutato', esito=? WHERE status='inviato'", (why,))
+        db.ex("UPDATE free_trades SET status='chiusa', close_ts=?, esito=? WHERE status='aperta'", (db.now_iso(), why))
+        spy = db.runtime_get("algo.spy.state") or {}
+        if spy.get("open"):
+            db.runtime_set("algo.spy.state", dict(spy, open=False))
+    db.runtime_set("alpaca.flatten", dict(ts=db.now_iso(), motivo=reason, **out))
+    if out["ordini_annullati"] or out["posizioni_chiuse"] or out["errori"]:
+        audit.log("crypto_venue", "alpaca.flatten", dict(out, motivo=reason))
+        events.publish("risk.kill" if out["ok"] else "risk.alert", "crypto_venue",
+                       dict(motivo=f"KILL: conto Alpaca svuotato ({out['ordini_annullati']} ordini annullati, {out['posizioni_chiuse']} posizioni chiuse)") if out["ok"]
+                       else dict(cosa="KILL: il conto Alpaca NON e' stato svuotato del tutto: " + "; ".join(out["errori"]), gravita=5))
+    return out
+
+
 def rebalance(dry: bool = False) -> dict:
     if not configured():
         return dict(ok=False, nota="sede crypto non attiva (crypto.venue = alpaca e chiavi ALPACA_PAPER_KEY/SECRET in .env)")
@@ -245,6 +280,10 @@ def rebalance(dry: bool = False) -> dict:
         for o in orders:                                               # chiudere tutta la posizione toglierebbe anche quella del banco libero
             if fx.get(o["coin"], 0.0) > 0:
                 o["chiudi"] = False
+        if risk.kill_active():                                         # KILL: non si apre e non si aumenta niente; ridurre e chiudere resta permesso
+            if any(o["side"] == "buy" for o in orders):
+                skipped.append("KILL attivo: nessun acquisto (solo vendite)")
+            orders = [o for o in orders if o["side"] == "sell"]
     except Exception as e:                                             # fail-closed: non si opera al buio
         db.runtime_set("alpaca.state", dict(ts=db.now_iso(), errore=str(e)[:200]))
         return dict(ok=False, nota=f"sede crypto non raggiungibile: {str(e)[:120]}")

@@ -7,6 +7,9 @@ Controlli in ordine (il primo che fallisce respinge l'ordine con il motivo):
   KILL · modalita' paper · pod attivo e dell'agente · strumento ammesso · niente short ·
   ordine minimo · fat-finger · prezzo di riferimento · orari · drawdown del pod ·
   lorda del pod · concentrazione · lorda di societa' · quota crypto · costo stimato.
+Concentrazione, lorda e quota crypto si misurano sull'esposizione ASSOLUTA (uno short pesa quanto un long).
+Un ordine di SOLA RIDUZIONE (chiude in tutto o in parte una posizione esistente, senza girarla) toglie rischio: passa anche
+con il pod in drawdown, ridotto o chiuso, e non e' soggetto ai controlli che limitano l'aumento del rischio.
 
 Sub-ledger: il broker vede un conto solo; qui si attribuiscono fill, posizioni e P&L a ogni pod.
 flush() compensa internamente gli ordini opposti di pod diversi (zero commissioni) e manda al
@@ -115,7 +118,7 @@ def pod_book(pid: str) -> dict:
     peak = max(marks + [nav, base])
     allowed = float(p["capital_frac"]) * firm_nav_estimate() if p else 0.0
     gross_eur = sum(abs(v) for v in mv.values())
-    return dict(pod=pid, nav=nav, base=base, pnl=pnl, fees=fees, peak=peak, drawdown=nav / peak - 1,
+    return dict(pod=pid, nav=nav, base=base, pnl=pnl, fees=fees, peak=peak, drawdown=nav / peak - 1 if peak > 0 else 0.0,   # pod senza capitale: nessun drawdown
                 capitale_ammesso=allowed, lorda_eur=gross_eur,
                 lorda=gross_eur / allowed if allowed > 0 else (0.0 if gross_eur == 0 else float("inf")),
                 posizioni={k: dict(qty=q, valore=mv[k]) for k, q in pos.items()})
@@ -175,6 +178,35 @@ def _kind(instrument: str, lim: dict) -> str | None:
     return None
 
 
+def _reduce_only(pod: str, instrument: str, side: str, qty) -> bool:
+    """True se l'ordine riduce soltanto una posizione esistente (eseguita + ordini in coda) senza girarla: long -> SELL, short -> BUY."""
+    try:
+        signed = float(qty) if str(side).upper() == "BUY" else -float(qty)
+        held = positions(pod).get(instrument, 0.0) + pending_qty(pod).get(instrument, 0.0)
+        return float(qty) > 0 and held * signed < 0 and abs(signed) <= abs(held) + 1e-9
+    except (TypeError, ValueError):
+        return False
+
+
+def _in_hours(kind: str, now: dt.datetime, lim: dict) -> bool:
+    h0, h1 = lim["hours_utc"].get(kind, [0, 24])
+    return (h0 <= now.hour < h1) and not (kind != "crypto" and now.weekday() >= 5)
+
+
+def _firm_gross_eur() -> float:
+    """Lorda di societa' in EUR come se gli ordini in coda fossero eseguiti: Pod Zero + somma dei valori ASSOLUTI per pod e strumento."""
+    from . import pod_zero
+    tot = pod_zero.gross_fraction() * pod_zero_nav()
+    for pp in pods.all_pods():
+        if pp["id"] == "pod_zero":
+            continue
+        eff = {k: v["valore"] for k, v in pod_book(pp["id"])["posizioni"].items()}
+        for k, q_ in pending_qty(pp["id"]).items():
+            eff[k] = eff.get(k, 0.0) + q_ * ((quote(k) or {}).get("price") or 0.0)
+        tot += sum(abs(v) for v in eff.values())
+    return tot
+
+
 def _checks(pod: str, agent: str, instrument: str, side: str, qty: float, ref_price: float | None,
             now: dt.datetime) -> tuple[list[str], dict]:
     lim = S.risk_limits()
@@ -187,7 +219,8 @@ def _checks(pod: str, agent: str, instrument: str, side: str, qty: float, ref_pr
     p = pods.get(pod)
     if not p or pod == "pod_zero":
         return ["pod inesistente (il Pod Zero usa live.py)"], ctx
-    if p["status"] not in ("attivo", "ridotto"):
+    reduce_only = _reduce_only(pod, instrument, side, qty)       # coprire o chiudere resta possibile anche a pod chiuso
+    if p["status"] not in ("attivo", "ridotto") and not reduce_only:
         return [f"pod {pod} {p['status']}"], ctx
     if p["head"] != agent and pods.pod_of_agent(agent) != pod:
         return [f"l'agente {agent} non gestisce il pod {pod}"], ctx
@@ -197,9 +230,9 @@ def _checks(pod: str, agent: str, instrument: str, side: str, qty: float, ref_pr
     kind = _kind(instrument, lim)
     if kind is None:
         return [f"strumento sconosciuto: {instrument}"], ctx
-    if kind in lim["instruments"]["forbidden_kinds"] or kind not in lim["instruments"]["allowed_kinds"]:
+    if not reduce_only and (kind in lim["instruments"]["forbidden_kinds"] or kind not in lim["instruments"]["allowed_kinds"]):
         return [f"tipo di strumento non ammesso: {kind}"], ctx
-    if kind == "crypto" and instrument.upper() not in lim["instruments"]["crypto_allowed"]:
+    if not reduce_only and kind == "crypto" and instrument.upper() not in lim["instruments"]["crypto_allowed"]:
         return [f"crypto non negoziabile su IBKR: {instrument}"], ctx
     q = quote(instrument)
     if not q:
@@ -214,14 +247,17 @@ def _checks(pod: str, agent: str, instrument: str, side: str, qty: float, ref_pr
     held = book["posizioni"].get(instrument, {}).get("qty", 0.0) + pend.get(instrument, 0.0)
     if side == "SELL" and not lim["pod"]["allow_short"] and qty > held + 1e-9:
         why.append(f"vendita allo scoperto vietata (in portafoglio {held:g})")
-    if notional < lim["order"]["min_notional_eur"]:
+    if notional < lim["order"]["min_notional_eur"] and not reduce_only:
         why.append(f"ordine sotto il minimo di {lim['order']['min_notional_eur']} EUR")
     firm_nav = firm_nav_estimate()
-    if notional > lim["order"]["max_notional_frac_nav"] * firm_nav:
+    if notional > lim["order"]["max_notional_frac_nav"] * firm_nav and not reduce_only:
         why.append(f"fat-finger: {notional:,.0f} EUR oltre il {lim['order']['max_notional_frac_nav']:.0%} del NAV")
     h0, h1 = lim["hours_utc"].get(kind, [0, 24])
-    if not (h0 <= now.hour < h1) or (kind != "crypto" and now.weekday() >= 5):
+    if not _in_hours(kind, now, lim):
         why.append(f"fuori orario per {kind} ({h0}-{h1} UTC, lun-ven)")
+    if reduce_only:                                              # toglie rischio: nessun controllo che limita l'AUMENTO del rischio
+        est = COST_BY_KIND.get(kind, QC.UCITS_ETF).cost(notional)
+        return why, dict(kind=kind, price=px, notional=notional, est_cost=est, riduzione=True)
     if book["drawdown"] <= -lim["pod"]["dd_close"]:
         why.append(f"drawdown del pod {book['drawdown']:.1%} oltre il limite di chiusura")
     signed = notional if side == "BUY" else -notional
@@ -234,19 +270,19 @@ def _checks(pod: str, agent: str, instrument: str, side: str, qty: float, ref_pr
     cap = book["capitale_ammesso"]
     if cap <= 0 or new_gross > lim["pod"]["max_gross"] * cap + 1e-6:
         why.append(f"lorda del pod {new_gross:,.0f} EUR oltre {lim['pod']['max_gross']:.0%} del capitale {cap:,.0f}")
-    if abs(cur_val + signed) > lim["pod"]["max_position_frac"] * cap + 1e-6 and side == "BUY":
+    # esposizione ASSOLUTA dopo l'ordine: uno short concentrato vale quanto un long concentrato (prima il controllo era solo sugli acquisti)
+    grows = abs(cur_val + signed) > abs(cur_val) + 1e-9
+    if grows and abs(cur_val + signed) > lim["pod"]["max_position_frac"] * cap + 1e-6:
         why.append(f"concentrazione su {instrument} oltre {lim['pod']['max_position_frac']:.0%} del capitale del pod")
-    fb = firm_book()
-    pend_buys = sum(o["qty"] * ((quote(o["instrument"]) or {}).get("price") or 0.0) for o in db.q(
-        f"SELECT instrument, qty FROM gateway_orders WHERE side='BUY' AND status IN {OPEN_STATES}"))
-    if side == "BUY" and (fb["gross"] * firm_nav + pend_buys + notional) > lim["firm"]["max_gross"] * firm_nav + 1e-6:
-        why.append("lorda di societa' oltre il 100% del NAV")
-    if kind == "crypto" and side == "BUY":
-        crypto_eur = sum(v["valore"] for pp in pods.all_pods() if pp["id"] != "pod_zero"
+    delta = abs(cur_val + signed) - abs(cur_val)                 # quanto cresce (o cala) la lorda con questo ordine
+    if delta > 0 and _firm_gross_eur() + delta > lim["firm"]["max_gross"] * firm_nav + 1e-6:
+        why.append(f"lorda di societa' oltre il {lim['firm']['max_gross']:.0%} del NAV")
+    if kind == "crypto" and delta > 0:
+        crypto_eur = sum(abs(v["valore"]) for pp in pods.all_pods() if pp["id"] != "pod_zero"
                          for k, v in pod_book(pp["id"])["posizioni"].items() if _kind(k, lim) == "crypto")
         from . import pod_zero
         crypto_eur += pod_zero.crypto_fraction() * pod_zero_nav()
-        if crypto_eur + notional > lim["firm"]["max_crypto_frac"] * firm_nav:
+        if crypto_eur + delta > lim["firm"]["max_crypto_frac"] * firm_nav:
             why.append("quota crypto di societa' oltre il limite per controparte")
     est = COST_BY_KIND.get(kind, QC.UCITS_ETF).cost(notional)
     if est > 0.01 * notional:
@@ -269,6 +305,27 @@ def submit_order(pod: str, agent: str, instrument: str, side: str, qty: float, r
     events.publish("gateway.accepted", "gateway", dict(id=oid, pod=pod, agente=agent, strumento=instrument,
                                                        lato=side.upper(), qty=qty, controvalore=round(ctx["notional"], 2)))
     return dict(status="accettato", order_id=oid, est_cost=ctx["est_cost"])
+
+
+def liquidate_pod(pid: str, now: dt.datetime | None = None) -> list[dict]:
+    """Pod chiuso: un ordine di sola riduzione per ogni posizione rimasta (long -> SELL, short -> BUY), a nome del capo del pod.
+    Senza prezzo o fuori orario non invia nulla (riprova al battito dopo, senza riempire il registro di ordini respinti)."""
+    now = now or dt.datetime.now(dt.timezone.utc)
+    p = pods.get(pid)
+    if not p or pid == "pod_zero":
+        return []
+    lim = S.risk_limits()
+    pend = pending_qty(pid)
+    out = []
+    for instr, q in positions(pid).items():
+        rest = q + pend.get(instr, 0.0)
+        kind = _kind(instr, lim)
+        if abs(rest) < 1e-12 or kind is None or not quote(instr) or not _in_hours(kind, now, lim):
+            continue
+        r = submit_order(pid, p["head"], instr, "SELL" if rest > 0 else "BUY", abs(rest),
+                         "chiusura del pod: liquidazione della posizione", "subito", now=now)
+        out.append(dict(strumento=instr, lato="SELL" if rest > 0 else "BUY", qty=abs(rest), esito=r["status"], motivi=r.get("reasons")))
+    return out
 
 
 def _reject(pod, agent, instrument, side, qty, price, reason, horizon, why):

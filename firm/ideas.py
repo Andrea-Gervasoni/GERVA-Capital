@@ -253,9 +253,11 @@ def enter(iid: int, meeting_id: int, close=None) -> dict:
         return dict(id=iid, stato=status, regola=res.get("id"), nuovo=res.get("valore"), motivo=res.get("motivo"))
     if i["kind"] in ("regola", "motore"):
         res = rules.apply("motore" if i["kind"] == "motore" else "regola", a["chiave"], a["valore"], f"comitato#{meeting_id}", iid)
-        status = "applicata" if res["ok"] else "non_applicabile"
+        # un voto che aumenta leva o esposizione non entra in vigore da solo: resta in attesa di Andrea (rules.approve / rules.reject)
+        status = "applicata" if res["ok"] else "in_attesa" if res.get("in_attesa") else "non_applicabile"
         db.ex("UPDATE ideas SET status=?, close_ts=?, result=?, history=? WHERE id=?",
-              (status, db.now_iso(), json.dumps(res, ensure_ascii=False), _hist(i, "comitato", status, riunione=meeting_id, esito=res), iid))
+              (status, None if status == "in_attesa" else db.now_iso(), json.dumps(res, ensure_ascii=False),
+               _hist(i, "comitato", "approvata dal comitato, in attesa di Andrea" if status == "in_attesa" else status, riunione=meeting_id, esito=res), iid))
         if res["ok"]:
             _reward_rule(i)
         return dict(id=iid, stato=status, regola=res.get("id"), nuovo=res.get("nuovo"), vecchio=res.get("vecchio"), motivo=res.get("motivo"))
@@ -276,6 +278,18 @@ def enter(iid: int, meeting_id: int, close=None) -> dict:
     except Exception:
         pass
     return dict(id=iid, stato="in_corso", simbolo=a["simbolo"], prezzo=px)
+
+
+def on_rule_decided(iid: int, approved: bool, res: dict) -> None:
+    """Andrea ha risposto a una proposta che aumentava il rischio: l'idea esce dall'attesa (applicata, con il suo riconoscimento, o respinta)."""
+    i = get(iid)
+    if not i or i["status"] != "in_attesa":
+        return
+    status = "applicata" if approved and res.get("ok") else "respinta"
+    db.ex("UPDATE ideas SET status=?, close_ts=?, result=?, history=? WHERE id=?",
+          (status, db.now_iso(), json.dumps(res, ensure_ascii=False), _hist(i, "andrea", status, esito=res), iid))
+    if status == "applicata":
+        _reward_rule(i)
 
 
 def _reward_rule(i: dict) -> None:

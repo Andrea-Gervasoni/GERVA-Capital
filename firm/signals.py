@@ -25,7 +25,7 @@ import re
 
 import pandas as pd
 
-from . import charts, crypto_venue, db, events, futures_sim, scorekeeper as SK
+from . import charts, crypto_venue, db, events, futures_sim, risk, scorekeeper as SK
 from . import settings as S
 
 COINS = ["BTC", "ETH", "SOL", "XRP", "ADA", "DOGE", "LTC", "LINK", "AVAX", "BCH", "SUI"]     # le monete di base (hanno anche i prezzi storici del motore)
@@ -340,6 +340,8 @@ def process(sid: int, close: pd.DataFrame | None = None, execute: bool = True, p
             state, weight, why = _decide(analysis, ctl, veto)
             if state == "accettato" and not crypto_venue.accepting():
                 state, weight, why = "osservato", 0.0, "la sede delle crypto (Alpaca) non e' attiva: si segue e si misura, non si esegue"
+            if state == "accettato" and risk.kill_active():
+                state, weight, why = "osservato", 0.0, "KILL attivo: nessuna nuova posizione, si segue senza eseguire"
             if state == "accettato" and not execute:
                 state, weight, why = "osservato", 0.0, "esecuzione dei segnali di questa fonte spenta (signals.telegram_execute): si segue senza eseguire"
             p_tp = min(max(float(analysis.get("probabilita_tp1", 0.5)), 0.02), 0.98)
@@ -412,16 +414,31 @@ def _candles(coin: str, since_iso: str) -> list | None:
     return rows or None
 
 
-def first_touch(rows: list, long_: bool, sl: float, tp: float) -> tuple[str, int] | None:
+def touched(rows: list, entry: float) -> bool:
+    """Il prezzo d'ingresso e' stato davvero scambiato in almeno una candela (minimo <= ingresso <= massimo)."""
+    return any(float(k[3]) <= entry <= float(k[2]) for k in rows)
+
+
+def first_touch(rows: list, long_: bool, sl: float, tp: float, entry: float | None = None) -> tuple[str, int] | None:
     """Il primo livello toccato, guardando massimi e minimi di ogni candela (non solo la chiusura). Se in una stessa candela si toccano entrambi
-    non si sa quale prima: si assume lo stop (stima prudente)."""
+    non si sa quale prima: si assume lo stop (stima prudente).
+    Con `entry` (l'ingresso scritto nel segnale) stop e obiettivo contano solo DOPO che l'ingresso e' stato toccato: un "long a 100" con il
+    prezzo che parte da 104 e sale a 106 non e' mai entrato, e quel 106 non e' un obiettivo raggiunto. Nella candela in cui l'ingresso viene
+    toccato lo stop conta sempre (prudenza); l'obiettivo solo se la candela apre dal lato dell'ingresso (per arrivare all'obiettivo il
+    prezzo e' passato per forza dall'ingresso)."""
+    entered = entry is None
     for k in rows:
         hi, lo = float(k[2]), float(k[3])
+        first = False
+        if not entered:
+            if not (lo <= entry <= hi):
+                continue
+            entered = first = True
         hit_tp = hi >= tp if long_ else lo <= tp
         hit_sl = lo <= sl if long_ else hi >= sl
         if hit_sl:
             return "stop", int(k[0])
-        if hit_tp:
+        if hit_tp and (not first or (float(k[1]) <= entry if long_ else float(k[1]) >= entry)):
             return "obiettivo", int(k[0])
     return None
 
@@ -462,14 +479,25 @@ def track(close: pd.DataFrame | None = None) -> int:
         e, sl, tp = p["ingresso"], p["stop"], p["obiettivi"][0]
         long_ = p["direzione"] == "long"
         hit = None
+        # Un segnale solo SEGUITO (non eseguito) si misura dall'ingresso scritto: stop e obiettivo contano solo dopo che quel prezzo e' stato
+        # toccato. Un segnale ESEGUITO e' gia' nel conto (comprato a mercato all'accettazione): stop e obiettivo devono chiuderlo comunque.
+        need_entry = r["stato"] != "accettato"
+        entered = not need_entry
         rows = _candles(p["moneta"], r["ts"])
         if rows:                                           # massimi e minimi ogni 15 minuti: un +6% in un'ora si vede anche se poi il prezzo torna indietro
-            ft = first_touch(rows, long_, sl, tp)
+            ft = first_touch(rows, long_, sl, tp, e if need_entry else None)
+            entered = entered or touched(rows, e)
             if ft:
                 when = dt.datetime.fromtimestamp(ft[1] / 1000, dt.timezone.utc)
                 hit = (ft[0], abs(tp - e) / abs(e - sl) if ft[0] == "obiettivo" else -1.0, when)
         else:
+            prev = (json.loads(r["controlli"] or "{}").get("prezzo") or None)      # il prezzo al momento del segnale: da li' parte il percorso
             for d, px in s.items():
+                if not entered:                            # sulle chiusure: l'ingresso e' toccato se sta tra due prezzi consecutivi (tolleranza 0,5%)
+                    lo_, hi_ = (min(prev, px), max(prev, px)) if prev else (px, px)
+                    entered, prev = lo_ * 0.995 <= e <= hi_ * 1.005, px
+                    if not entered:
+                        continue
                 if (long_ and px >= tp) or (not long_ and px <= tp):
                     hit = ("obiettivo", abs(tp - e) / abs(e - sl), d)
                     break
@@ -478,13 +506,17 @@ def track(close: pd.DataFrame | None = None) -> int:
                     break
         if not hit and r["scade"] and dt.date.today().isoformat() > r["scade"]:
             px = float(s.iloc[-1]) if len(s) else e
-            hit = ("scaduto", ((px - e) if long_ else (e - px)) / abs(e - sl), None)
+            # mai entrato: nessun guadagno e nessuna perdita da contare (prima valeva il prezzo finale contro un ingresso mai scambiato)
+            hit = ("scaduto", ((px - e) if long_ else (e - px)) / abs(e - sl), None) if entered else ("non_entrato", 0.0, None)
         if hit:
             closed = hit[2].strftime("%Y-%m-%dT%H:%M:%SZ") if hasattr(hit[2], "strftime") and hasattr(hit[2], "hour") and hit[0] != "scaduto" else db.now_iso()
             db.ex("UPDATE signals SET stato='chiuso', esito=?, r_multiple=?, chiuso_ts=? WHERE id=?", (hit[0], round(hit[1], 3), closed, r["id"]))
             if r["forecast"]:
                 try:
-                    SK.resolve_forecast(r["forecast"], hit[0] == "obiettivo", "sala segnali")
+                    if hit[0] == "non_entrato":                    # mai entrato: la previsione non e' giudicabile, si annulla (come le riunioni senza esito)
+                        db.ex("UPDATE forecasts SET resolved_by='annullata' WHERE id=? AND outcome IS NULL", (r["forecast"],))
+                    else:
+                        SK.resolve_forecast(r["forecast"], hit[0] == "obiettivo", "sala segnali")
                 except Exception:                                  # una previsione gia' risolta non blocca il resto
                     pass
             events.publish("signal.closed", "senior_crypto", dict(id=r["id"], esito=hit[0], r=round(hit[1], 2)))
@@ -499,9 +531,10 @@ def track(close: pd.DataFrame | None = None) -> int:
 
 def stats() -> dict:
     rows = db.q("SELECT stato, esito, r_multiple FROM signals")
-    closed = [r for r in rows if r["stato"] == "chiuso"]
+    closed = [r for r in rows if r["stato"] == "chiuso" and r["esito"] != "non_entrato"]     # un segnale mai entrato non e' un'operazione
     wins = [r for r in closed if r["esito"] == "obiettivo"]
     return dict(totale=len(rows), aperti=sum(1 for r in rows if r["stato"] in OPEN_STATES), chiusi=len(closed), obiettivo=len(wins),
+                non_entrati=sum(1 for r in rows if r["stato"] == "chiuso" and r["esito"] == "non_entrato"),
                 stop=sum(1 for r in closed if r["esito"] == "stop"), scaduti=sum(1 for r in closed if r["esito"] == "scaduto"),
                 tasso_obiettivo=round(len(wins) / len(closed), 3) if closed else None,
                 r_medio=round(sum(r["r_multiple"] or 0 for r in closed) / len(closed), 2) if closed else None,

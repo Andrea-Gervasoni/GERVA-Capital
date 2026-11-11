@@ -30,6 +30,41 @@ def engage_kill(actor: str, reason: str, cap=None):
     with open(paths.KILL_FILE, "w") as f:
         f.write(f"{db.now_iso()} {actor}: {reason}\n")
     events.publish("risk.kill", actor, dict(motivo=reason))
+    on_kill(reason)
+
+
+ENGINE_KILL_MARK = "GERVA-Capital"        # il KILL scritto da qui nella cartella di GERVA-Q si riconosce (e solo quello si toglie al rilascio)
+
+
+def _engine_kill_file() -> str:
+    return os.path.join(paths.GERVA_Q, "KILL")
+
+
+def on_kill(reason: str = "KILL") -> dict:
+    """Un solo stato di KILL per TUTTE le strade che muovono soldi. Ogni strada interroga kill_active() prima di aprire o
+    aumentare una posizione (Gateway dei pod, sede crypto, banco libero, strategie in codice, segnali); qui in piu':
+      * il conto paper di Alpaca si SVUOTA (ordini aperti annullati, posizioni chiuse): crypto_venue.flatten();
+      * GERVA-Q (fuori da questo repository) legge il SUO file KILL: lo si scrive anche li', se la cartella e' scrivibile
+        (live.py e crypto_live.py annullano gli ordini aperti e non ne inviano altri; le posizioni IBKR non si chiudono da qui).
+    Tutto "al meglio": un errore diventa un allarme, non impedisce il KILL. Si puo' richiamare (il battito lo fa finche' il KILL e' attivo)."""
+    out: dict = {}
+    try:
+        if os.path.isdir(paths.GERVA_Q) and not os.path.exists(_engine_kill_file()):
+            with open(_engine_kill_file(), "w") as f:
+                f.write(f"{ENGINE_KILL_MARK} {db.now_iso()}: {reason}\n")
+            out["motore"] = "KILL scritto nella cartella di GERVA-Q"
+    except Exception as e:
+        out["motore"] = f"KILL di GERVA-Q non scritto: {str(e)[:100]}"
+        events.publish("risk.alert", "risk_engine", dict(cosa=f"KILL: il file KILL di GERVA-Q non e' stato scritto ({str(e)[:100]}): "
+                                                               "il motore va fermato a mano", gravita=5))
+    try:
+        from . import crypto_venue
+        if crypto_venue.keys_ok():
+            out["alpaca"] = crypto_venue.flatten(reason)
+    except Exception as e:
+        out["alpaca"] = dict(ok=False, errori=[str(e)[:120]])
+        events.publish("risk.alert", "risk_engine", dict(cosa=f"KILL: chiusura del conto Alpaca non riuscita ({str(e)[:100]})", gravita=5))
+    return out
 
 
 def release_kill(cap):
@@ -37,6 +72,11 @@ def release_kill(cap):
         raise PermissionError("solo Andrea toglie il KILL")
     if os.path.exists(paths.KILL_FILE):
         os.remove(paths.KILL_FILE)
+    try:                                               # il KILL di GERVA-Q si toglie solo se l'avevamo scritto noi
+        if os.path.exists(_engine_kill_file()) and open(_engine_kill_file()).read().startswith(ENGINE_KILL_MARK):
+            os.remove(_engine_kill_file())
+    except Exception as e:
+        events.publish("risk.alert", "risk_engine", dict(cosa=f"il file KILL di GERVA-Q non e' stato tolto ({str(e)[:100]})", gravita=3))
     events.publish("risk.kill_released", "andrea", {})
 
 

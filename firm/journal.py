@@ -103,7 +103,8 @@ def techniques() -> list[dict]:
     for t in db.q("SELECT * FROM trials ORDER BY ts DESC LIMIT 60"):
         if t["agent_id"] == "gervaq_legacy":
             continue
-        sr = round(t["sharpe_daily"] * 252 ** 0.5, 2) if t["sharpe_daily"] is not None else None
+        from . import trials                                   # crypto: 365 periodi l'anno (trials.periods_of), il resto 252
+        sr = round(t["sharpe_daily"] * trials.periods_of(t) ** 0.5, 2) if t["sharpe_daily"] is not None else None
         out.append(dict(stato="provata" if t["status"] == "testata" else t["status"], nome=f"Prova {t['family']} ({t['strategy_id']})", fonte=t["hypothesis"][:200], tipo="prova del registro",
                         nota=f"Sharpe {sr}" if sr is not None else "senza risultato"))
     for i in db.q("SELECT * FROM ideas WHERE kind IN ('regola','motore','regola_casa','riesame') ORDER BY id DESC LIMIT 60"):
