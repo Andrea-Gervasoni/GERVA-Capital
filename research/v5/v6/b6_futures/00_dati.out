@@ -84,3 +84,4 @@ CAD=X      2003-09-17 2026-11-11 n=6022 vol0=6022
 CHF=X      2003-09-17 2026-11-11 n=6020 vol0=6020
 DTB3 ERR DataError('https://fred.stlouisfed.org/graph/fredgraph.csv?id=DTB3: The read operation timed out')
 DGS2 ERR DataError('https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2: The read operation timed out')
+DGS5 ERR DataError('https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS5: The read operation timed out')

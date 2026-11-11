@@ -35,7 +35,7 @@ print('\n--- Deribit futures trimestrali: base annualizzata % (future/indice-1)*
 for cur in ['BTC','ETH']:
     p=D+f'deribit_fut_{cur}.parquet'
     if not os.path.exists(p): print('manca',cur); continue
-    fu=pd.read_parquet(p); idx=pd.read_parquet(D+f'deribit_fund_{cur}-PERPETUAL.parquet').idx.resample('1D').last()
+    fu=pd.read_parquet(p); fu.index=fu.index.normalize(); idx=pd.read_parquet(D+f'deribit_fund_{cur}-PERPETUAL.parquet').idx.resample('1D').last()
     rows={}
     for nm in fu:
         exp=pd.to_datetime(nm.split('-')[1],format='%d%b%y')+pd.Timedelta(hours=8); s=fu[nm].dropna()

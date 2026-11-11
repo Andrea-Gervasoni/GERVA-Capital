@@ -16,14 +16,14 @@ print("colonne disponibili r3:", list(r3.columns))
 print("\n" + HEAD)
 for k, r in K.items(): print(row(k, r), f" t={tstat(r):.1f}")
 print("\n=== leva di crescita massima (sul campione intero, rendimenti giornalieri), rendimento mensile composto, P(drawdown>=50% in 3 anni) ===")
-print(f"{'':42s} {'L*':>5s} {'mese@L*':>8s} {'mese@L*/2':>9s} | P(-50%) base L*  L*/2 | meta' vantaggio: mese@L*/2  P(-50%) L*  L*/2 | corr col fondo giorn./mens. (B, C1, C3)")
+print(f"{'':42s} {'L*':>5s} {'mese@L*':>8s} {'mese@L*/2':>9s} | P(-50%) base L*  L*/2 | meta vantaggio: mese mediano@L*/2  P(-50%) L*  L*/2 | corr col fondo giorn./mens. (B, C1, C3)")
 OUT = {}
 for k, r in K.items():
     r = r.dropna(); L, mL, mH = kelly(r)
     if L == 0: print(f"{k:42s}  nessuna leva positiva: crescita massima a leva zero"); continue
     pb, _ = boot_p50(r, L); pbh, _ = boot_p50(r, L / 2); ph, _ = boot_p50(r, L, 0.5); phh, medh = boot_p50(r, L / 2, 0.5)
     c = corr_fund(r); cs = " ".join(f"{a:+.2f}/{b:+.2f}" for a, b in c.values())
-    print(f"{k:42s} {L:5.2f} {mL:+8.2%} {mH:+9.2%} |      {pb:5.0%}      {pbh:5.0%} |        {medh*21:+8.2%}        {ph:5.0%} {phh:5.0%} | {cs}")
+    print(f"{k:42s} {L:5.2f} {mL:+8.2%} {mH:+9.2%} |      {pb:5.0%}      {pbh:5.0%} |        {medh:+8.2%}        {ph:5.0%} {phh:5.0%} | {cs}")
     OUT[k] = dict(L=L, mL=mL, mH=mH)
 print("\nNota: L* e' misurata a posteriori e include il fatto di aver saputo quale giorno peggiore c'e' nel campione. Per K1 il filtro ha evitato il 5/2/2018 per un giorno:")
 print("con un giorno di ritardo (K1s) quel giorno entra per intero (-96%) e L* crolla. La leva prudente va calcolata su K1s, non su K1.")

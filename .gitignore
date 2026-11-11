@@ -23,3 +23,6 @@ deploy/.wheels/
 # le patch di GERVA-Q contengono righe del suo codice privato: restano solo in locale (DEPLOY.md §3)
 research/releases/*/*.patch
 research/**/_cache/
+research/v5/v6/*/data/
+research/v5/v5/validazione/hl_cache.json
+research/**/base.pkl

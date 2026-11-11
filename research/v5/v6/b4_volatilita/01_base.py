@@ -77,7 +77,7 @@ ix = pd.DataFrame({"VIX": y("^VIX").close, "VIX3M": y("^VIX3M").close, "VIX9D": 
 etn = pd.DataFrame({s: y(s).adj for s in ["VIXY","SVXY","UVXY","VIXM","VXX","VXZ","SPY"]})
 base = dict(S=S, H=H, L=L, O=O, exp=exp, Wst=Wst, Wmt=Wmt, f1=f1, ix=ix, etn=etn,
             fut=pd.DataFrame({"st": rst, "st_hi": rsth, "st_lo": rstl, "st_lvl": lst, "mt": rmt, "mt_hi": rmth, "mt_lo": rmtl, "mt_lvl": lmt}))
-pickle.dump(base, open("base.pkl", "wb"))
+pickle.dump(base, open("/home/user/GERVA-Capital/data_cache/v6b4_base.pkl", "wb"))   # 78 MB: in data_cache, fuori da git
 F = base["fut"]
 print("ST valido dal", F.st.first_valid_index().date(), "al", F.st.last_valid_index().date(), " buchi:", int(F.st.loc[F.st.first_valid_index():].isna().sum()))
 print("MT valido dal", F.mt.first_valid_index().date(), " buchi:", int(F.mt.loc[F.mt.first_valid_index():].isna().sum()))

@@ -1,0 +1,24 @@
+Funding annuo %, per anno solare (short incassa). Profondita' storica pubblica: Kraken Futures 2025-10-30 | OKX 2026-08-10 | Deribit 2019 | Hyperliquid 2023-05
+Traceback (most recent call last):
+  File "/home/user/GERVA-Capital/research/v5/v6/b7_rendimenti/02_sedi.py", line 19, in <module>
+    print(pd.DataFrame(T).T.round(2).to_string())
+          ~~~~~~~~~~~~^^^
+  File "/tmp/gv/lib/python3.13/site-packages/pandas/core/frame.py", line 533, in __init__
+    mgr = dict_to_mgr(data, index, columns, dtype=dtype, copy=copy)
+  File "/tmp/gv/lib/python3.13/site-packages/pandas/core/internals/construction.py", line 463, in dict_to_mgr
+    return arrays_to_mgr(arrays, columns, index, dtype=dtype, consolidate=copy)
+  File "/tmp/gv/lib/python3.13/site-packages/pandas/core/internals/construction.py", line 116, in arrays_to_mgr
+    index = _extract_index(arrays)
+  File "/tmp/gv/lib/python3.13/site-packages/pandas/core/internals/construction.py", line 643, in _extract_index
+    index, _ = union_indexes(indexes)
+               ~~~~~~~~~~~~~^^^^^^^^^
+  File "/tmp/gv/lib/python3.13/site-packages/pandas/core/indexes/api.py", line 286, in union_indexes
+    index = index.sort_values()
+  File "/tmp/gv/lib/python3.13/site-packages/pandas/core/indexes/base.py", line 6248, in sort_values
+    _as = nargsort(
+        items=self, ascending=ascending, na_position=na_position, key=key
+    )
+  File "/tmp/gv/lib/python3.13/site-packages/pandas/core/sorting.py", line 473, in nargsort
+    indexer = non_nan_idx[non_nans.argsort(kind=kind)]
+                          ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+TypeError: '<' not supported between instances of 'str' and 'int'

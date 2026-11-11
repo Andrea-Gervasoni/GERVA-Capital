@@ -3,7 +3,7 @@ import pickle, json, os, warnings
 import numpy as np, pandas as pd
 warnings.filterwarnings("ignore")
 HERE = os.path.dirname(os.path.abspath(__file__))
-B = pickle.load(open(os.path.join(HERE, "base.pkl"), "rb"))
+B = pickle.load(open("/home/user/GERVA-Capital/data_cache/v6b4_base.pkl", "rb"))   # creato da 01_base.py
 F, IX, ETN = B["fut"], B["ix"], B["etn"]
 SEL_END, VER_START = "2022-12-31", "2023-01-01"
 RF = (IX.IRX.ffill() / 100 / 252).reindex(F.index).ffill().fillna(0)
