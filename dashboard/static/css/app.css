@@ -895,3 +895,30 @@ body[data-level="esperto"] .only-semplice { display: none !important; }
   .summary { font-size: var(--fs-body); }
   .hm--matrix tbody th { width: 62px; }
 }
+
+
+/* ==== v3: quarta tornata ============================================================================================ */
+.key--s5, .c-dot--s5 { background: var(--s5); fill: var(--s5); }
+.c-line--s5 { stroke: var(--s5); }
+.callout { margin-bottom: 8px; padding: 10px 12px; border-left: 3px solid var(--warn); border-radius: var(--radius-s); background: var(--warn-soft); line-height: 1.5; max-width: 110ch; }
+.deco { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
+.deco__ai { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); font-size: var(--fs-small); color: var(--text-2); }
+.bars__bar--gross.bars__bar--one { background: var(--bench); }
+.strip { display: inline-flex; align-items: center; gap: 2px; }
+.strip__cell { width: 12px; height: 16px; border-radius: 2px; background: color-mix(in srgb, var(--hm-color, transparent) calc(12% + var(--k, 0) * 70%), var(--surface-2)); }
+.strip__range { margin-left: 6px; font-size: 10px; color: var(--text-3); }
+.table td.is-name { min-width: 220px; max-width: 320px; color: var(--text); }
+.table td.is-narrow { min-width: 120px; max-width: 220px; }
+.table tbody tr.is-no td { color: var(--text-3); }
+.table tbody tr.is-no td:first-child { box-shadow: inset 2px 0 0 var(--crit); }
+.table tbody tr.is-ok td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
+.table tbody tr.is-ok td { background: var(--accent-soft); }
+.rules { display: grid; gap: 12px; margin-top: 12px; padding-left: 18px; list-style: decimal; line-height: 1.5; color: var(--text-2); }
+.rules strong { color: var(--text); }
+.stress-table { margin-top: 14px; }
+.reason--sm { display: none; }
+@media (max-width: 1240px) { .deco { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 640px) { .reason--sm { display: block; } .table td.is-name { min-width: 150px; } }
+
+.table-wrap, .hm-wrap { position: relative; }
+.chip--compact { position: relative; }

@@ -1,7 +1,7 @@
 // Come funziona: il percorso dai dati agli ordini disegnato come diagramma, e le quattro strategie spiegate.
 
 import { h, s, fill } from '../dom.js';
-import { card, empty, explain, simTag } from '../components.js';
+import { card, chip, empty, explain, simTag } from '../components.js';
 import { arr, fmtNum, fmtPct, fmtPctSigned, num, obj, str } from '../format.js';
 import { gloss } from '../glossary.js';
 
@@ -89,7 +89,15 @@ export function mount(root) {
 
   const stratHead = h('div', { class: 'section-head span-12' });
   const stratGrid = h('div', { class: 'strats span-12' });
-  root.append(h('div', { class: 'grid' }, flowCard.el, stratHead, stratGrid));
+  const venueCard = card({
+    title: 'Dove si opera: le sedi', cls: 'span-12', flush: true, sim: 'SIMULATO: ricerca su dati storici',
+    what: 'Le borse e i broker presi in considerazione, con la loro situazione legale per chi risiede in Italia, la leva massima che concedono e il ruolo che hanno nel fondo. Una sede non autorizzata può essere usata solo per una quota che si è disposti a perdere del tutto.',
+    method: 'Ricognizione della quarta tornata di ricerca; le voci «non verificato» vanno confermate prima dell\'uso. Non è un parere legale.',
+  });
+  const venueBody = h('div');
+  venueCard.body.append(venueBody);
+  let venueKey = null;
+  root.append(h('div', { class: 'grid' }, flowCard.el, stratHead, stratGrid, venueCard.el));
 
   function select(id, focus = false) {
     selected = id;
@@ -238,6 +246,21 @@ export function mount(root) {
       drawFlow();
       if (!detail.firstChild) paintDetail();
       fillStrategies();
+      const venues = arr(ctx.quant4 && ctx.quant4.venues);
+      const vk = JSON.stringify(venues);
+      if (vk !== venueKey) {
+        venueKey = vk;
+        venueCard.el.hidden = !venues.length;
+        const role = (r) => { const t = str(r).toLowerCase(); return t.startsWith('esclus') ? { label: str(r), kind: 'muted', icon: 'x' } : t.includes('perdere') || t.startsWith('riserva') || t.startsWith('alternativa') ? { label: str(r), kind: 'warn', icon: 'warn' } : { label: str(r), kind: 'accent', icon: 'check' }; };
+        fill(venueBody, h('div', { class: 'table-wrap' }, h('table', { class: 'table' },
+          h('caption', { class: 'sr-only', text: 'Sedi di negoziazione: stato legale, leva massima, ruolo' }),
+          h('thead', null, h('tr', null, h('th', { scope: 'col', text: 'Sede' }), h('th', { scope: 'col', text: 'Per un residente in Italia' }), h('th', { scope: 'col', text: 'Leva massima' }),
+            h('th', { scope: 'col', class: 'only-esperto', text: 'Commissioni (maker / taker)' }), h('th', { scope: 'col', class: 'only-esperto', text: 'Rischio della sede' }), h('th', { scope: 'col', text: 'Ruolo nel fondo' }))),
+          h('tbody', null, venues.map((v) => h('tr', null,
+            h('td', { class: 'is-strong', text: str(v.venue) || '—' }), h('td', { class: 'is-wrap', text: str(v.legal) || '—' }), h('td', { class: 'is-wrap is-narrow', text: str(v.max_leverage) || '—' }),
+            h('td', { class: 'only-esperto', text: str(v.fees) || '—' }), h('td', { class: 'is-wrap only-esperto', text: str(v.risk) || '—' }),
+            h('td', null, chip(role(v.role)))))))));
+      }
       if (!STEPS.length) fill(flowCard.body, empty('Diagramma non disponibile'));
     },
     summary() {

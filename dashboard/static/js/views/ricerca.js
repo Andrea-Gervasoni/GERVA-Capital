@@ -26,10 +26,108 @@ function legend(items) {
 export function mount(root) {
   let ctx = null;
   let key = null;
-  const ui = { scenario: 'base', fan: '2', fanLog: false, sleeveLog: true, histLog: false };
+  const ui = { scenario: 'base', fan: '2', fanLog: false, sleeveLog: true, histLog: false, fundLog: true, fundScenario: 'base' };
 
   const head = h('div', { class: 'section-head span-12' });
   const missing = h('section', { class: 'card span-12' });
+
+  // ---- quarta tornata: il fondo intero ----
+  const L4 = 'SIMULATO: ricerca su dati storici';
+  const FUND_SCEN = SCENARIOS;
+  const fundLog = toggle({ label: 'Scala logaritmica', text: 'Log', pressed: true, onChange: (on) => { ui.fundLog = on; paintFundCurves(); } });
+  const fundHead = h('div', { class: 'section-head span-12' });
+  const fundCurveCard = card({
+    title: 'Il fondo intero: come sarebbe cresciuto', actions: fundLog.el, cls: 'span-12', sim: L4,
+    what: 'Come sarebbe cresciuto 1 investito in ciascuna versione del fondo: le strategie da sole, con la leva, e con in più il libro dei trade a leva. La versione completa cresce molto di più, ma con cadute più profonde: guarda la tabella qui sotto prima di farti un\'idea.',
+    method: 'Curve settimanali, base 1, al netto dei costi ipotizzati. Scala logaritmica: la stessa distanza verticale è la stessa variazione percentuale.',
+  });
+  const fundLegend = h('div');
+  const fundHost = h('div', { class: 'chart-host' });
+  fundCurveCard.body.append(fundLegend, fundHost);
+  const fundChart = timeChart(fundHost, { label: 'Curve cumulate delle versioni del fondo. Frecce per scorrere.' });
+
+  const recTag = (name) => {
+    const rec = obj(obj(ctx.quant4).recommended);
+    return str(name) === str(rec.prudent) ? h('span', { class: 'tag tag--paper', text: 'prudente' }) : str(name) === str(rec.maximum) ? h('span', { class: 'tag tag--sim', text: 'massimo' }) : null;
+  };
+  const isRec = (name) => { const rec = obj(obj(ctx.quant4).recommended); return str(name) === str(rec.prudent) || str(name) === str(rec.maximum); };
+  const fundStatsCard = card({
+    title: 'I portafogli a confronto', cls: 'span-12', flush: true, sim: L4,
+    what: 'Ogni riga è un modo di comporre il fondo: A e B sono le strategie da sole (con più o meno leva), T il solo libro dei trade, C le combinazioni. Lo Sharpe dice quanto rende ogni unità di rischio; «mese medio» e «mese mediano» sono due cose diverse: il mediano è il mese tipico, quello che sta a metà classifica.',
+    method: 'Statistiche su rendimenti mensili. Sharpe mensile annualizzato; scelta = fino al 2022, verifica = dal 2023. Caduta massima misurata a fine mese.',
+  });
+  const fundStatsTable = dataTable({
+    caption: 'Statistiche dei portafogli', rowClass: (r) => (isRec(r.portafoglio) ? 'is-marked' : null),
+    columns: [
+      { key: 'p', label: 'Portafoglio', sort: (r) => str(r.portafoglio), cell: (r) => h('div', { class: 'cell-id' }, h('span', { class: 'cell-id__main', text: str(r.portafoglio) }), recTag(r.portafoglio)) },
+      { key: 'sh', label: 'Sharpe', num: true, sort: (r) => num(r.sharpe), cell: (r) => (num(r.sharpe) == null ? null : fmtNum(r.sharpe, 2)) },
+      { key: 'shs', label: 'Sharpe scelta', num: true, cls: 'only-esperto', sort: (r) => num(r.sh_scelta), cell: (r) => (num(r.sh_scelta) == null ? null : fmtNum(r.sh_scelta, 2)) },
+      { key: 'shv', label: 'Sharpe verifica', num: true, hide: 'sm', sort: (r) => num(r.sh_verifica), cell: (r) => (num(r.sh_verifica) == null ? null : fmtNum(r.sh_verifica, 2)) },
+      { key: 'cagr', label: 'Rend. annuo', num: true, sort: (r) => num(r.cagr), cell: (r) => signedPct(r.cagr, 1, { arrow: false }) },
+      { key: 'vol', label: 'Volatilità', num: true, cls: 'only-esperto', sort: (r) => num(r.vol), cell: (r) => (num(r.vol) == null ? null : fmtPct(r.vol, 1)) },
+      { key: 'dd', label: 'Caduta massima', num: true, hide: 'sm', sort: (r) => num(r.maxdd_mensile), cell: (r) => (num(r.maxdd_mensile) == null ? null : fmtPct(r.maxdd_mensile, 1)) },
+      { key: 'mm', label: 'Mese medio', num: true, hide: 'sm', sort: (r) => num(r.mese_medio), cell: (r) => signedPct(r.mese_medio, 1, { arrow: false }) },
+      { key: 'md', label: 'Mese mediano', num: true, sort: (r) => num(r.mese_mediano), cell: (r) => h('strong', null, signedPct(r.mese_mediano, 1, { arrow: false })) },
+      { key: 'neg', label: 'Mesi negativi', num: true, cls: 'only-esperto', sort: (r) => num(r.mesi_negativi), cell: (r) => (num(r.mesi_negativi) == null ? null : fmtPct(r.mesi_negativi, 0)) },
+      { key: 'worst', label: 'Mese peggiore', num: true, cls: 'only-esperto', sort: (r) => num(r.mese_peggiore), cell: (r) => (num(r.mese_peggiore) == null ? null : fmtPct(r.mese_peggiore, 1)) },
+      { key: 'ge10', label: 'Mesi ≥ +10%', num: true, cls: 'only-esperto', sort: (r) => num(r.mesi_ge10), cell: (r) => (num(r.mesi_ge10) == null ? null : fmtPct(r.mesi_ge10, 0)) },
+    ],
+  });
+  const fundStatsNote = h('div', { class: 'card__note' });
+  fundStatsCard.body.append(fundStatsTable.el, fundStatsNote);
+
+  const fundScen = segmented({ label: 'Scenario della simulazione del fondo', options: FUND_SCEN, value: 'base', onChange: (v) => { ui.fundScenario = v; paintFundMc(); } });
+  const fundMcCard = card({
+    title: 'Tre anni simulati, per portafoglio', actions: fundScen.el, cls: 'span-12', flush: true, sim: L4,
+    what: 'Per ogni portafoglio, che cosa succede in tre anni simulati migliaia di volte: il rendimento annuo del caso di mezzo, la caduta tipica e la probabilità di perdere almeno metà del conto. Cambia scenario per vedere quanto i numeri dipendono dall\'ipotesi che il passato si ripeta.',
+    method: 'Monte Carlo a blocchi sui rendimenti del portafoglio. p(dimezzato) = quota di percorsi con minimo ≤ 50% del capitale; dd 95° = caduta superata in un caso su venti.',
+  });
+  const fundMcTable = dataTable({
+    caption: 'Esiti simulati a tre anni per portafoglio', emptyTitle: 'Nessuna simulazione per questo scenario', rowClass: (r) => (isRec(r.portafoglio) ? 'is-marked' : null),
+    columns: [
+      { key: 'p', label: 'Portafoglio', sort: (r) => str(r.portafoglio), cell: (r) => h('div', { class: 'cell-id' }, h('span', { class: 'cell-id__main', text: str(r.portafoglio) }), recTag(r.portafoglio)) },
+      { key: 'c50', label: 'Rend. annuo (mediana)', num: true, sort: (r) => num(r.cagr_p50), cell: (r) => signedPct(r.cagr_p50, 1, { arrow: false }) },
+      { key: 'c05', label: '5° pct', num: true, cls: 'only-esperto', sort: (r) => num(r.cagr_p05), cell: (r) => signedPct(r.cagr_p05, 1, { arrow: false }) },
+      { key: 'c95', label: '95° pct', num: true, cls: 'only-esperto', sort: (r) => num(r.cagr_p95), cell: (r) => signedPct(r.cagr_p95, 1, { arrow: false }) },
+      { key: 'dd', label: 'Caduta tipica', num: true, hide: 'sm', sort: (r) => num(r.dd_p50), cell: (r) => (num(r.dd_p50) == null ? null : fmtPct(r.dd_p50, 1)) },
+      { key: 'dd95', label: 'Caduta (95° pct)', num: true, cls: 'only-esperto', sort: (r) => num(r.dd_p95), cell: (r) => (num(r.dd_p95) == null ? null : fmtPct(r.dd_p95, 1)) },
+      { key: 'm30', label: 'Prob. di perdere il 30%', num: true, cls: 'only-esperto', sort: (r) => num(r.p_meno30), cell: (r) => (num(r.p_meno30) == null ? null : fmtPct(r.p_meno30, 1)) },
+      {
+        key: 'half', label: 'Prob. di dimezzare il conto', num: true, cls: 'is-weight', sort: (r) => num(r.p_dimezzato),
+        cell: (r) => { const p = num(r.p_dimezzato); return p == null ? null : h('div', { class: 'weight' }, bullet({ ratio: p, kind: p >= 0.2 ? 'crit' : p >= 0.02 ? 'warn' : 'ok', label: 'Probabilità di dimezzare il conto' }), h('span', { class: 'weight__value', text: fmtPct(p, 1) })); },
+      },
+      { key: 'mese', label: 'Mese medio', num: true, cls: 'only-esperto', sort: (r) => num(r.mese), cell: (r) => signedPct(r.mese, 1, { arrow: false }) },
+    ],
+  });
+  fundMcCard.body.append(fundMcTable.el);
+
+  const decoCard = card({
+    title: 'Da dove viene il rendimento', cls: 'span-12', sim: L4,
+    what: 'Il risultato del fondo si scompone in tre gradini. Mettere insieme strategie diverse migliora il rapporto tra rendimento e rischio (questa è abilità). La leva e il libro dei trade alzano il rendimento, ma perché si rischia di più: lo Sharpe non sale, anzi scende un poco.',
+    method: 'Sharpe medio delle strategie contro Sharpe del portafoglio; rendimento annuo a 1x, a 2x e del fondo completo. Il contributo dell\'AI non è stimabile sui dati storici.',
+  });
+  const candCard = card({
+    title: 'Strategie provate nella quarta tornata', cls: 'span-12', flush: true, sim: L4,
+    what: 'Le nuove idee messe alla prova e il loro esito. «Passa» entra nel fondo, con riserva o di misura; «in osservazione» va seguita ancora; «scartata» non ha superato i controlli; «ipotesi» regge solo a condizioni non verificate. La nota dice il motivo.',
+    method: 'Sharpe annualizzato su tutto lo storico, sul periodo di scelta e su quello di verifica; correlazione con il portafoglio esistente. La striscia mostra lo Sharpe anno per anno: blu positivo, arancio negativo.',
+  });
+  const candTable = dataTable({
+    caption: 'Strategie candidate e verdetto', sort: { key: 'verdict', dir: 1 },
+    columns: [
+      { key: 'name', label: 'Strategia', cls: 'is-wrap is-name', sort: (r) => str(r.name), cell: (r) => h('div', { class: 'cell-id cell-id--stack' }, h('span', { class: 'cell-id__main', text: str(r.name) }), str(r.note).trim() ? h('span', { class: 'cell-id__name show-sm', text: str(r.note) }) : null) },
+      { key: 'verdict', label: 'Verdetto', sort: (r) => verdictOf(r.verdict).rank, cell: (r) => chip(verdictOf(r.verdict)) },
+      { key: 'sh', label: 'Sharpe', num: true, sort: (r) => num(r.sharpe), cell: (r) => (num(r.sharpe) == null ? null : fmtNum(r.sharpe, 2)) },
+      { key: 'shs', label: 'Scelta', num: true, cls: 'only-esperto', sort: (r) => num(r.sharpe_select), cell: (r) => (num(r.sharpe_select) == null ? null : fmtNum(r.sharpe_select, 2)) },
+      { key: 'shv', label: 'Verifica', num: true, hide: 'sm', sort: (r) => num(r.sharpe_verify), cell: (r) => (num(r.sharpe_verify) == null ? null : fmtNum(r.sharpe_verify, 2)) },
+      { key: 'cagr', label: 'Rend. annuo', num: true, cls: 'only-esperto', sort: (r) => num(r.cagr), cell: (r) => signedPct(r.cagr, 0, { arrow: false }) },
+      { key: 'dd', label: 'Caduta massima', num: true, hide: 'md', sort: (r) => num(r.maxdd), cell: (r) => (num(r.maxdd) == null ? null : fmtPct(r.maxdd, 0)) },
+      { key: 'corr', label: 'Corr. col fondo', num: true, hide: 'md', sort: (r) => num(r.corr_portfolio), cell: (r) => (num(r.corr_portfolio) == null ? null : fmtSigned(r.corr_portfolio, 2)) },
+      { key: 'years', label: 'Sharpe per anno', cls: 'only-esperto', cell: (r) => yearStrip(r.by_year) },
+      { key: 'note', label: 'Perché', cls: 'is-wrap', blank: true, hide: 'sm', cell: (r) => str(r.note) },
+    ],
+  });
+  candCard.body.append(candTable.el);
+  const q4cards = [fundCurveCard, fundStatsCard, fundMcCard, decoCard, candCard];
 
   // ---- leva ----
   const scen = segmented({ label: 'Scenario della simulazione', options: SCENARIOS, value: ui.scenario, onChange: (v) => { ui.scenario = v; paintLeverage(); } });
@@ -173,7 +271,7 @@ export function mount(root) {
   });
   const moreCard = card({ title: 'Altre evidenze', cls: 'span-12 only-esperto', sim: true, sub: 'Walk-forward dei parametri del trend e rendimento per quintile di GEX.' });
 
-  const body = h('div', { class: 'grid' }, head, missing, levCard.el, fanCard.el, ruinCard.el, scenCard.el, sigCard.el, sleeveCard.el, corrCard.el,
+  const body = h('div', { class: 'grid' }, head, missing, fundHead, fundCurveCard.el, fundStatsCard.el, fundMcCard.el, decoCard.el, candCard.el, levCard.el, fanCard.el, ruinCard.el, scenCard.el, sigCard.el, sleeveCard.el, corrCard.el,
     wCard.el, rsCard.el, ddCard.el, histCard.el, convCard.el, robCard.el, rejCard.el, moreCard.el);
   root.append(body);
   const cards = [levCard, fanCard, ruinCard, scenCard, sigCard, sleeveCard, corrCard, wCard, rsCard, ddCard, histCard, convCard, robCard, rejCard, moreCard];
@@ -182,6 +280,97 @@ export function mount(root) {
   const q = () => obj(ctx.quant);
   const series = (rows, k) => arr(rows).map((r) => num(r[k]));
   const times = (rows) => arr(rows).map((r) => parseTs(r.t));
+
+  function paintFundCurves() {
+    const curves = obj(obj(ctx.quant4).fund_curves);
+    const names = Object.keys(curves).slice(0, 5);
+    const first = Array.isArray(curves[names[0]]) ? curves[names[0]] : [];
+    const x = first.map((p) => parseTs(Array.isArray(p) ? p[0] : null));
+    const ok = names.length > 0 && x.length >= 2 && x.every((t) => t != null);
+    fundHost.hidden = !ok;
+    if (!ok) { fundChart.update(null); fill(fundLegend, empty('Curve non disponibili')); return; }
+    const data = names.map((n) => { const rows = Array.isArray(curves[n]) ? curves[n] : []; return x.map((_, i) => (Array.isArray(rows[i]) ? num(rows[i][1]) : null)); });
+    const last = x.length - 1;
+    fill(fundLegend, legend(names.map((n, k) => ({ key: `s${k + 1}`, label: n, value: mult(data[k][last], 1) }))));
+    fundChart.update({
+      x, marks: [{ t: SPLIT, label: 'verifica →' }],
+      panels: [{ height: 280, scale: ui.fundLog ? 'log' : 'linear', format: (v, st) => `×${fmtNum(v, stepDigits(st, 1))}`, series: names.map((n, k) => ({ values: data[k], cls: `s${k + 1}`, end: true })) }],
+      tip: (i) => ({ title: `${fmtDate(x[i], true)} · ${x[i] < SPLIT ? 'periodo di scelta' : 'periodo di verifica'}`, rows: names.map((n, k) => ({ key: `s${k + 1}`, label: n, value: mult(data[k][i]) })) }),
+      say: (i) => `${fmtDate(x[i], true)}: ${names.map((n, k) => `${n} ${mult(data[k][i])}`).join(', ')}`,
+    });
+  }
+
+  function paintFundStats() {
+    const rows = arr(obj(ctx.quant4).fund_stats);
+    fundStatsTable.render(rows);
+    const rec = obj(obj(ctx.quant4).recommended);
+    const top = rows.find((r) => str(r.portafoglio) === str(rec.maximum)) || rows.find((r) => str(r.portafoglio) === str(rec.prudent));
+    fill(fundStatsNote, top && num(top.mese_medio) != null && num(top.mese_mediano) != null
+      ? h('p', { class: 'callout' }, h('strong', { text: 'Attenzione alla differenza tra mese medio e mese mediano. ' }),
+        `Nel portafoglio «${str(top.portafoglio)}» il mese medio rende il ${fmtPct(top.mese_medio, 1)}, ma il mese tipico (mediano) solo lo ${fmtPct(top.mese_mediano, 1)}. Vuol dire che la maggior parte del rendimento arriva da pochi mesi molto grandi: in un mese qualunque è normale guadagnare quasi nulla, e bisogna restare investiti per esserci quando arrivano quelli buoni.`)
+      : null,
+    rec.prudent || rec.maximum ? explain(`Le righe evidenziate sono le due composizioni consigliate dalla ricerca: «prudente» (${str(rec.prudent) || '—'}) e «massimo» (${str(rec.maximum) || '—'}), cioè il rischio più alto che la ricerca considera ancora difendibile.`) : null);
+  }
+
+  function paintFundMc() {
+    fundMcTable.render(arr(obj(ctx.quant4).fund_mc).filter((r) => str(r.scenario) === ui.fundScenario));
+    const s = SCENARIOS.find((x) => x.value === ui.fundScenario);
+    fundMcCard.setSub(`Scenario ${s.label.toLowerCase()}: ${s.text}.`);
+  }
+
+  function paintDeco() {
+    const d = obj(obj(ctx.quant4).decomposition);
+    const rec = obj(obj(ctx.quant4).recommended);
+    const full = arr(obj(ctx.quant4).fund_stats).find((r) => str(r.portafoglio) === str(rec.maximum));
+    if (num(d.portfolio_sharpe) == null && num(d.cagr_1x) == null) { fill(decoCard.body, empty('Scomposizione non disponibile')); return; }
+    const sh = [
+      { label: 'Una strategia, in media', value: num(d.avg_sleeve_sharpe), text: fmtNum(d.avg_sleeve_sharpe, 2), note: `punto di partenza${num(d.avg_sleeve_sharpe_verify) == null ? '' : ` (in verifica ${fmtNum(d.avg_sleeve_sharpe_verify, 2)})`}` },
+      { label: 'Il portafoglio', value: num(d.portfolio_sharpe), text: fmtNum(d.portfolio_sharpe, 2), note: `diversificazione: strategie che non si muovono insieme${num(d.portfolio_sharpe_verify) == null ? '' : ` (in verifica ${fmtNum(d.portfolio_sharpe_verify, 2)})`}` },
+      full && num(full.sharpe) != null ? { label: 'Con leva e libro dei trade', value: num(full.sharpe), text: fmtNum(full.sharpe, 2), note: 'più rischio, non più abilità: lo Sharpe non sale', kind: 'gross' } : null,
+    ].filter(Boolean);
+    const cg = [
+      { label: 'Portafoglio a 1x', value: num(d.cagr_1x), text: fmtPct(d.cagr_1x, 1), note: 'senza leva' },
+      { label: 'A 2x', value: num(d.cagr_2x), text: fmtPct(d.cagr_2x, 1), note: 'effetto della leva del conto' },
+      { label: 'Fondo completo', value: num(d.cagr_fund), text: fmtPct(d.cagr_fund, 1), note: 'effetto del libro dei trade a leva' },
+    ].filter((r) => r.value != null);
+    fill(decoCard.body, h('div', { class: 'deco' },
+      h('div', null, h('h3', { class: 'subhead', text: 'Sharpe: rendimento per unità di rischio' }), signedBars(sh, { labelHead: 'Gradino', valueHead: 'Sharpe', noteHead: 'Da dove viene' })),
+      h('div', null, h('h3', { class: 'subhead', text: 'Rendimento annuo simulato' }), signedBars(cg, { labelHead: 'Gradino', valueHead: 'Rend. annuo', noteHead: 'Da dove viene' }))),
+    h('div', { class: 'deco__ai' }, chip({ label: 'Contributo dell\'AI: da misurare in paper', kind: 'muted', icon: 'clock' }),
+      h('span', { text: 'Sui dati storici non si può misurare: vale zero finché il confronto dal vivo tra il libro con l\'AI e quello senza non dice altro.' })));
+  }
+
+  function yearStrip(by) {
+    const entries = Object.entries(obj(by)).filter(([, v]) => num(v) != null).sort((a, b) => Number(a[0]) - Number(b[0]));
+    if (!entries.length) return null;
+    return h('span', { class: 'strip', role: 'img', 'aria-label': `Sharpe per anno: ${entries.map(([y, v]) => `${y} ${fmtSigned(v, 1)}`).join(', ')}` },
+      entries.map(([y, v]) => h('span', { class: `strip__cell ${num(v) > 0 ? 'hm__cell--cool' : 'hm__cell--warm'}`, style: { '--k': Math.min(1, Math.abs(num(v)) / 2).toFixed(2) }, title: `${y}: ${fmtSigned(v, 2)}` })),
+      h('span', { class: 'strip__range num', text: `${entries[0][0].slice(2)}–${entries[entries.length - 1][0].slice(2)}` }));
+  }
+
+  function verdictOf(v) {
+    const t = str(v).toLowerCase();
+    if (t.startsWith('passa')) return { label: t.charAt(0).toUpperCase() + t.slice(1), kind: 'accent', icon: 'check', rank: 0 };
+    if (t.includes('osservazione')) return { label: 'In osservazione', kind: 'warn', icon: 'clock', rank: 1 };
+    if (t.startsWith('ipotesi')) return { label: 'Ipotesi', kind: 'muted', icon: 'info', rank: 2 };
+    if (t.startsWith('scartat')) return { label: 'Scartata', kind: 'muted', icon: 'x', rank: 3 };
+    return { label: str(v) || DASH, kind: 'muted', icon: 'info', rank: 4 };
+  }
+
+  function paintQ4() {
+    const has = !!ctx.quant4;
+    for (const c of q4cards) c.el.hidden = !has;
+    fundHead.hidden = !has;
+    if (!has) return;
+    const n = arr(obj(ctx.quant4).candidates);
+    fill(fundHead, h('h2', { class: 'section-head__title', text: 'Il fondo intero' }), simTag(L4),
+      explain('Questa parte guarda il fondo nel suo insieme, dopo la quarta tornata di ricerca: le strategie, la leva del conto e il libro dei trade a leva messi insieme. Più sotto, le analisi di dettaglio delle tornate precedenti.'),
+      method(`Quarta tornata (research/v5/quant_v4.json): ${fmtNum(obj(ctx.quant4).trials, 0)} prove in registro, ${n.length} strategie candidate.`));
+    paintFundCurves(); paintFundStats(); paintFundMc(); paintDeco();
+    candTable.render(n);
+    const pass = n.filter((c) => verdictOf(c.verdict).rank === 0).length;
+    candCard.setSub(`${n.length} idee provate: ${pass} ${pass === 1 ? 'passa' : 'passano'}, ${n.filter((c) => verdictOf(c.verdict).rank === 3).length} scartate. Clic sull'intestazione per ordinare.`);
+  }
 
   function paintLeverage() {
     const dec = obj(q().leverage_decision);
@@ -273,20 +462,27 @@ export function mount(root) {
   }
 
   function paintSignificance() {
-    const g = obj(q().significance);
+    const g = { ...obj(q().significance) };
+    const d4 = obj(obj(ctx.quant4).deflated_sharpe);
+    const prev = num(d4.old);
+    if (num(d4.new) != null) {                    // la quarta tornata aggiorna il conto delle prove e il Deflated Sharpe
+      g.dsr = num(d4.new);
+      if (num(obj(ctx.quant4).trials) != null) { g.prove = num(obj(ctx.quant4).trials); g.prove_riprodotte = null; }
+    }
+    const thr = num(d4.threshold) ?? 0.95;
     const dsr = num(g.dsr);
     if (num(g.prove) == null && dsr == null) { fill(sigCard.body, empty('Analisi di significatività non disponibile')); return; }
-    const pass = dsr != null && dsr >= 0.95;
+    const pass = dsr != null && dsr >= thr;
     fill(sigCard.body,
       h('div', { class: 'verdict' },
         chip(pass ? { label: 'Supera la soglia', kind: 'ok', icon: 'check' } : { label: 'Non è ancora una prova', kind: 'warn', icon: 'warn' }),
         h('p', { class: 'verdict__text' }, gloss(`Sono state provate ${fmtNum(g.prove, 0)} varianti. Provandone così tante, la migliore avrebbe uno Sharpe di circa ${fmtNum(g.sharpe_atteso_dal_migliore_a_caso, 2)} anche se nessuna funzionasse davvero. Quello ottenuto è ${fmtNum(g.sharpe_tutto, 2)}${pass ? ': abbastanza sopra da reggere a questo esame.' : ': troppo vicino per escludere la fortuna. Il risultato dice che vale la pena verificarlo con il paper trading, non che funzionerà.'}`))),
       h('div', { class: 'tiles__grid tiles__grid--3 sig' },
-        stat({ label: 'Prove contate', value: num(g.prove) == null ? null : fmtNum(g.prove, 0), sub: `${fmtNum(g.prove_riprodotte, 0)} riprodotte + ${fmtNum(g.prove_esplorative, 0)} esplorative`, explain: 'Tutte le varianti provate, comprese quelle scartate. Più sono, più severo deve essere il giudizio.' }),
+        stat({ label: 'Prove contate', value: num(g.prove) == null ? null : fmtNum(g.prove, 0), sub: g.prove_riprodotte == null ? 'tutte le tornate di ricerca' : `${fmtNum(g.prove_riprodotte, 0)} riprodotte + ${fmtNum(g.prove_esplorative, 0)} esplorative`, explain: 'Tutte le varianti provate, comprese quelle scartate. Più sono, più severo deve essere il giudizio.' }),
         stat({ label: 'Sharpe atteso dal migliore a caso', value: num(g.sharpe_atteso_dal_migliore_a_caso) == null ? null : fmtNum(g.sharpe_atteso_dal_migliore_a_caso, 2), sub: `ottenuto ${fmtNum(g.sharpe_tutto, 2)}`, explain: 'Lo Sharpe che avrebbe la migliore di tante prove senza alcun valore. È l\'asticella da superare con margine.' }),
         stat({
           label: 'Deflated Sharpe', value: dsr == null ? null : fmtNum(dsr, 2), cls: 'stat--meter',
-          sub: [bullet({ ratio: dsr == null ? null : dsr / 0.95, kind: pass ? 'ok' : 'warn', label: 'Deflated Sharpe rispetto alla soglia 0,95' }), h('span', { text: 'soglia 0,95' })],
+          sub: [bullet({ ratio: dsr == null ? null : dsr / thr, kind: pass ? 'ok' : 'warn', label: 'Deflated Sharpe rispetto alla soglia' }), h('span', { text: `soglia ${fmtNum(thr, 2)}${prev == null ? '' : ` · prima della quarta tornata ${fmtNum(prev, 2)}`}` })],
           explain: 'La probabilità che il risultato sia vero dopo aver tolto l\'effetto delle tante prove. Serve almeno 0,95.',
         })),
       h('div', { class: 'pairs pairs--row only-esperto sig__more' },
@@ -448,6 +644,7 @@ export function mount(root) {
     const has = !!ctx.quant;
     for (const c of cards) c.el.hidden = !has;
     missing.hidden = has;
+    paintQ4();
     if (!has) {
       fill(head, h('h2', { class: 'section-head__title', text: 'Ricerca sui dati storici' }), simTag(''));
       const st = ctx.quantStatus;
@@ -471,7 +668,7 @@ export function mount(root) {
   return {
     update(next) {
       ctx = next;
-      const k = `${ctx.quantStatus}|${ctx.quant ? str(ctx.quant.generated) + JSON.stringify(ctx.quant).length : ''}`;
+      const k = `${ctx.quantStatus}|${ctx.quant ? str(ctx.quant.generated) + JSON.stringify(ctx.quant).length : ''}|${ctx.quant4Status}|${ctx.quant4 ? str(ctx.quant4.generated) : ''}`;
       if (k === key) return;                      // la ricerca è statica: si ridisegna solo se cambia il file
       key = k;
       paintAll();
