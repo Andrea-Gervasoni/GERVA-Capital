@@ -4,7 +4,7 @@ C='/home/user/GERVA-Capital/data_cache/'; D=C+'v6_b7/'
 pd.set_option('display.width',220)
 def yr(s,per): # s: funding per periodo; ritorna % annuo per anno solare + ultimi 90/30 giorni
     s=s.dropna(); a=s.groupby(s.index.year).mean()*per*100; a['ult90g']=s[s.index>=s.index[-1]-pd.Timedelta(days=90)].mean()*per*100; a['ult30g']=s[s.index>=s.index[-1]-pd.Timedelta(days=30)].mean()*per*100
-    a['%ore>0']=(s>0).mean()*100; return a
+    a['%ore>0']=(s>0).mean()*100; a.index=a.index.map(str); return a
 T={}
 for c in ['BTC','ETH','SOL']:
     T['Binance '+c]=yr(pd.read_parquet(C+f'bn_fund_{c}USDT.parquet').iloc[:,0],3*365)
@@ -43,7 +43,7 @@ for cur in ['BTC','ETH']:
             dte=(exp-t).days
             if 30<=dte<=120 and t in idx.index and idx[t]>0: rows.setdefault(t,[]).append(((v/idx[t]-1)*365/dte,dte))
     b=pd.Series({t:min(v,key=lambda x:x[1])[0] for t,v in rows.items()}).sort_index()
-    a=b.groupby(b.index.year).mean()*100; a['ult90g']=b[b.index>=b.index[-1]-pd.Timedelta(days=90)].mean()*100; a['%giorni>0']=(b>0).mean()*100
+    a=b.groupby(b.index.year).mean()*100; a.index=a.index.map(str); a['ult90g']=b[b.index>=b.index[-1]-pd.Timedelta(days=90)].mean()*100; a['%giorni>0']=(b>0).mean()*100
     print(cur,a.round(2).to_dict()); b.to_frame('basis').to_parquet(D+f'deribit_basis_{cur}.parquet')
 # ---- CME: BTC=F (front month continuo Yahoo) contro spot
 f=pd.read_parquet(C+'v5_b6_yahoo_1d_BTC=F.parquet').close; s=pd.read_parquet(C+'v5_b6_yahoo_1d_BTC-USD.parquet').close
@@ -57,5 +57,5 @@ def dte(t):
         while e.weekday()!=4: e-=pd.Timedelta(days=1)
     return (e-t).days
 x['dte']=[dte(t) for t in x.index]; x=x[x.dte>=7]; x['b']=(x.f/x.s-1)*365/x.dte
-a=x.b.groupby(x.index.year).median()*100; a['ult90g']=x.b[x.index>=x.index[-1]-pd.Timedelta(days=90)].median()*100
+a=x.b.groupby(x.index.year).median()*100; a.index=a.index.map(str); a['ult90g']=x.b[x.index>=x.index[-1]-pd.Timedelta(days=90)].median()*100
 print('\n--- CME BTC front month (Yahoo BTC=F) contro BTC-USD: base annualizzata mediana % (STIMA: chiusure non sincrone 16:00 CT vs 00:00 UTC, rumore alto)'); print(a.round(2).to_dict())

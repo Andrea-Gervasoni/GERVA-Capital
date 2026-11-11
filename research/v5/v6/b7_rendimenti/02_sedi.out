@@ -1,24 +1,64 @@
 Funding annuo %, per anno solare (short incassa). Profondita' storica pubblica: Kraken Futures 2025-10-30 | OKX 2026-08-10 | Deribit 2019 | Hyperliquid 2023-05
-Traceback (most recent call last):
-  File "/home/user/GERVA-Capital/research/v5/v6/b7_rendimenti/02_sedi.py", line 19, in <module>
-    print(pd.DataFrame(T).T.round(2).to_string())
-          ~~~~~~~~~~~~^^^
-  File "/tmp/gv/lib/python3.13/site-packages/pandas/core/frame.py", line 533, in __init__
-    mgr = dict_to_mgr(data, index, columns, dtype=dtype, copy=copy)
-  File "/tmp/gv/lib/python3.13/site-packages/pandas/core/internals/construction.py", line 463, in dict_to_mgr
-    return arrays_to_mgr(arrays, columns, index, dtype=dtype, consolidate=copy)
-  File "/tmp/gv/lib/python3.13/site-packages/pandas/core/internals/construction.py", line 116, in arrays_to_mgr
-    index = _extract_index(arrays)
-  File "/tmp/gv/lib/python3.13/site-packages/pandas/core/internals/construction.py", line 643, in _extract_index
-    index, _ = union_indexes(indexes)
-               ~~~~~~~~~~~~~^^^^^^^^^
-  File "/tmp/gv/lib/python3.13/site-packages/pandas/core/indexes/api.py", line 286, in union_indexes
-    index = index.sort_values()
-  File "/tmp/gv/lib/python3.13/site-packages/pandas/core/indexes/base.py", line 6248, in sort_values
-    _as = nargsort(
-        items=self, ascending=ascending, na_position=na_position, key=key
-    )
-  File "/tmp/gv/lib/python3.13/site-packages/pandas/core/sorting.py", line 473, in nargsort
-    indexer = non_nan_idx[non_nans.argsort(kind=kind)]
-                          ~~~~~~~~~~~~~~~~^^^^^^^^^^^
-TypeError: '<' not supported between instances of 'str' and 'int'
+                   %ore>0   2019   2020   2021   2022   2023   2024   2025  2026  ult30g  ult90g
+Binance BTC         85.96    NaN  17.19  30.61   4.16   7.87  11.92   5.13  3.12    4.72    5.87
+Hyperliquid BTC     87.46    NaN    NaN    NaN    NaN  15.06  24.14  10.63  5.60    9.77    9.21
+Binance ETH         86.15    NaN  27.41  37.54   0.79   8.26  12.96   4.93  2.07    3.21    4.61
+Hyperliquid ETH     86.61    NaN    NaN    NaN    NaN  22.37  22.05   8.53  5.96    6.93    8.68
+Binance SOL         71.44    NaN -12.52  28.59 -35.56   1.30  13.62   0.35 -0.60    4.31    3.97
+Hyperliquid SOL     76.06    NaN    NaN    NaN    NaN  13.04  28.14   5.31  0.79    5.73    7.28
+Deribit BTC         62.55  14.59   9.24  16.51  -2.26   6.88  10.28   5.39  2.38    4.91    4.47
+Deribit ETH         55.94   9.92   6.26  17.30  -6.08   7.91   8.39   0.98  1.52    2.70    3.63
+Deribit SOL         55.19    NaN    NaN    NaN -47.71   3.18  22.99   3.42  3.18    6.73    4.70
+Deribit BTC(usdc)   60.64    NaN    NaN    NaN  -3.79   5.26  10.54   3.74  3.33    9.40    6.28
+Kraken Fut BTC      69.54    NaN    NaN    NaN    NaN    NaN    NaN   5.54  3.39   12.31    8.42
+Kraken Fut ETH      68.93    NaN    NaN    NaN    NaN    NaN    NaN   2.90  3.83    6.67    7.66
+Kraken Fut SOL      52.20    NaN    NaN    NaN    NaN    NaN    NaN   2.36  0.33    4.37    6.22
+OKX BTC             92.14    NaN    NaN    NaN    NaN    NaN    NaN    NaN  6.37    7.54    6.27
+OKX ETH             88.21    NaN    NaN    NaN    NaN    NaN    NaN    NaN  5.05    4.43    4.95
+OKX SOL             71.43    NaN    NaN    NaN    NaN    NaN    NaN    NaN  3.73    5.00    3.73
+
+--- Kraken Futures: 25 perps piu' scambiati, funding annuo % ultimo anno / ultimi 90 g / quota ore positive
+             vol24h_M$  anno  ult90  pos%   n_ore
+PF_XBTUSD        315.0   3.7    8.4  69.5  9050.0
+PF_ETHUSD        104.5   3.7    7.7  68.9  9050.0
+PF_SOLUSD         79.8   0.7    6.2  52.2  9051.0
+PF_HYPEUSD        51.7   6.9   13.0  62.5  9051.0
+PF_ZECUSD         46.4  -5.4    0.9  50.0  9051.0
+PF_NEARUSD        12.0  -1.0    2.9  44.2  9051.0
+PF_XRPUSD         10.9   1.2    7.3  51.3  9051.0
+PF_XAUTUSD         6.3   6.3    9.0  70.0  9051.0
+PF_NVDAXUSD        4.7   8.7   12.5  45.2  6680.0
+PF_ADAUSD          4.1  -2.0    1.2  43.9  9051.0
+PF_PEPEUSD         4.1  -2.1    2.3  45.3  9051.0
+PF_AVAXUSD         4.0  -3.0   -0.6  41.3  9051.0
+PF_TAOUSD          3.8  -2.3   10.2  45.2  9051.0
+PF_XAUUSD          3.7  17.7   16.8  19.5  2358.0
+PF_INJUSD          3.5  -1.5    8.5  51.8  9051.0
+PF_UNIUSD          3.1   0.1   10.6  41.1  9051.0
+PF_LINKUSD         2.3   1.0    3.3  51.3  9051.0
+PF_DOGEUSD         2.2   2.3    4.7  58.7  9051.0
+PF_FETUSD          2.2   5.5   24.0  53.2  9051.0
+PF_XMRUSD          2.1  18.9   33.9  70.5  9051.0
+PF_XLMUSD          2.0  -1.0    4.3  47.2  9051.0
+PF_SPCXXUSD        1.9  23.3   13.6  27.7  3788.0
+PF_PUMPUSD         1.8   1.8   11.3  57.4  9051.0
+PF_SUIUSD          1.8   2.5    5.6  53.8  9051.0
+PF_ARBUSD          1.7  -1.8    1.5  37.7  9051.0
+
+--- OKX: funding annuo % sugli ultimi ~90 giorni (tutta la storia pubblica)
+{'BTC': 6.37, 'ETH': 5.05, 'SOL': 3.73, 'XRP': 5.68, 'DOGE': 6.8, 'HYPE': 5.65, 'ADA': 5.18, 'LINK': 6.13, 'SUI': 5.87, 'AVAX': 4.42, 'BNB': 5.69, 'LTC': 6.31, 'ZEC': 6.85, 'PEPE': 5.1, 'TRX': -18.2, 'NEAR': 6.15, 'AAVE': 3.38, 'UNI': 6.95, 'DOT': 2.06}
+
+--- persistenza: corr(funding medio 30g passati, 30g successivi), campioni non sovrapposti
+  Binance BTC        corr +0.58 (n mesi 84)
+  Deribit BTC        corr +0.40 (n mesi 92)
+  Hyperliquid BTC    corr +0.48 (n mesi 43)
+  Hyperliquid SOL    corr +0.58 (n mesi 43)
+
+--- Deribit futures trimestrali: base annualizzata % (future/indice-1)*365/giorni, contratto con 30-120 g a scadenza; per anno
+BTC {'2019': 5.44, '2020': 7.58, '2021': 14.51, '2022': 0.82, '2023': 5.16, '2024': 12.29, '2025': 6.43, '2026': 3.07, 'ult90g': 5.26, '%giorni>0': 80.54}
+ETH {'2019': 6.29, '2020': 6.85, '2021': 15.17, '2022': -1.02, '2023': 4.26, '2024': 11.63, '2025': 5.67, '2026': 1.6, 'ult90g': 3.5, '%giorni>0': 73.82}
+/home/user/GERVA-Capital/research/v5/v6/b7_rendimenti/02_sedi.py:50: Pandas4Warning: Sorting by default when concatenating all DatetimeIndex is deprecated.  In the future, pandas will respect the default of `sort=False`. Specify `sort=True` or `sort=False` to silence this message. If you see this warnings when not directly calling concat, report a bug to pandas.
+  x=pd.concat([f,s],axis=1,keys=['f','s']).dropna()
+
+--- CME BTC front month (Yahoo BTC=F) contro BTC-USD: base annualizzata mediana % (STIMA: chiusure non sincrone 16:00 CT vs 00:00 UTC, rumore alto)
+{'2017': 86.91, '2018': -18.84, '2019': -11.92, '2020': 7.8, '2021': 3.87, '2022': -4.72, '2023': 6.14, '2024': 9.78, '2025': 4.9, '2026': 6.33, 'ult90g': 4.77}
