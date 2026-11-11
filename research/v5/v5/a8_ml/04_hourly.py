@@ -66,7 +66,7 @@ def walk_h(D, feats, cfg, blocks, ycol):
         p[te], _ = fit_pred(cfg, X[tr], (y[tr] > 0).astype(int), y[tr], X[te])
     return p
 
-def trades_h(D, H, p, k, q, blocks, cm=1.0, delay=0, mult=2.0):
+def trades_h(D, H, p, k, q, blocks, cm=1.0, delay=0, mult=2.0, sides=(1, -1)):
     """Libro eseguibile: per coin, se flat e p >= soglia alta -> long, p <= soglia bassa -> short; si tiene k ore; stop a mult*sigma*sqrt(k)
     sul percorso orario (gap = apertura). Soglie ex-ante: quantili q e 1-q delle previsioni OOS dei blocchi PRECEDENTI."""
     out = []; dts = D['date'].values
@@ -83,7 +83,7 @@ def trades_h(D, H, p, k, q, blocks, cm=1.0, delay=0, mult=2.0):
                 t = pos[i]
                 if t <= nxt or not np.isfinite(pv[i]) or not np.isfinite(sg[i]): continue
                 side = 1 if pv[i] >= hi else (-1 if pv[i] <= lo else 0)
-                if side == 0: continue
+                if side == 0 or side not in sides: continue
                 a = t + 1 + delay; z = a + k
                 if z >= len(op): continue
                 sd = float(np.clip(mult * sg[i] * np.sqrt(k), 0.003, 0.15)); L = levmax(sd); p0 = op[a]; stp = p0 * (1 - side * sd); ex = op[z]; why = 'tempo'; e = z
@@ -130,6 +130,13 @@ if __name__ == '__main__':
             rows.append(dict(q=q_, per='verifica costi x2', **rstats(xv(trades_h(D, H, p, k, q_, list(SELB) + list(VERB), cm=2.0)))))
             rows.append(dict(q=q_, per='verifica ritardo +1 barra', **rstats(xv(trades_h(D, H, p, k, q_, list(SELB) + list(VERB), delay=1)))))
             Tg = T[T.entry >= SPL]; rows.append(dict(q=q_, per='verifica LORDO costi', **rstats(Tg.R + COST / Tg.s)))
+        print(pd.DataFrame(rows).round(3).to_string(index=False))
+        print('-- POST-HOC (deciso dopo aver visto la verifica: vale solo come descrizione): solo LONG, q=0.9 --'); rows = []
+        T = trades_h(D, H, p, k, 0.9, list(SELB) + list(VERB), sides=(1,)); ntr += 1
+        for lab, x in (('scelta', T[T.entry < SPL]), ('verifica', T[T.entry >= SPL])):
+            yrs = (x.entry.max() - x.entry.min()).days / 365.25; s = rstats(x.R); rows.append(dict(per=lab, **s, per_anno=s['n'] / yrs, NxIR2=s['n'] / yrs * s['ir'] ** 2 * np.sign(s['ir'])))
+        rows.append(dict(per='verifica costi x2', **rstats(trades_h(D, H, p, k, 0.9, list(SELB) + list(VERB), cm=2.0, sides=(1,)).loc[lambda x: x.entry >= SPL].R)))
+        rows.append(dict(per='verifica: long a caso stesse ore (deriva)', R=float(np.nanmean((D[f'y{k}'].values - COST)[(D.date >= SPL).values] / np.clip(2 * D['sig'].values * np.sqrt(k), 0.003, 0.15)[(D.date >= SPL).values]))))
         print(pd.DataFrame(rows).round(3).to_string(index=False))
     pd.DataFrame(dict(p4=res[4], p24=res[24], coin=D.coin, date=D.date)).to_parquet(HERE + '/preds_hourly.parquet')
     print(f'\nvarianti provate in questo script: {ntr}  ({time.time()-t0:.0f}s)')
