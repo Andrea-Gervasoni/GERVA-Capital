@@ -11,6 +11,7 @@ Riga di comando del motore GERVA.
     python -m gerva kill "motivo"                    KILL: chiude tutto al prossimo giro e ferma il sistema
     python -m gerva reset-kill --confirm             toglie il KILL (riparte da HALTED)
     python -m gerva check-broker                     prova in sola lettura del collegamento al broker
+    python -m gerva propose scheda.json              il consiglio di ricerca valuta un'ipotesi (backtest, critica, verdetto)
 """
 from __future__ import annotations
 
@@ -30,7 +31,7 @@ def _runner():
     from .live.runner import Runner
     from .ops.journal import Journal
     s, limits, cfg = load()
-    market = Market(Store(os.path.join(ROOT, "data_cache")))
+    market = Market(Store(os.environ.get("GERVA_CACHE") or os.path.join(ROOT, "data_cache")))
     j = Journal(os.path.join(s.home, "journal.sqlite"))
     if s.mode == "alpaca-paper":
         from .execution.alpaca import AlpacaPaper
@@ -62,6 +63,8 @@ def main(argv=None) -> int:
     rk = sub.add_parser("reset-kill")
     rk.add_argument("--confirm", action="store_true")
     sub.add_parser("check-broker")
+    pr = sub.add_parser("propose")
+    pr.add_argument("spec", help="file JSON: family, universe, params, hypothesis, author")
     a = ap.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
     if a.cmd == "research":
@@ -94,6 +97,16 @@ def main(argv=None) -> int:
         j.set("killed.flattened", False)
         print("KILL azzerato: stato HALTED." if ok else "il file KILL e' ancora presente: toglilo a mano prima.")
         return 0 if ok else 1
+    if a.cmd == "propose":
+        from .agents import Council, StrategySpec
+        from .research.run import Lab
+        lab = Lab(ROOT)
+        lab.load_daily()
+        lab.load_crypto()
+        raw = json.load(open(a.spec))
+        out = Council(lab, os.path.join(ROOT, "research", "v5", "trials.jsonl")).review(StrategySpec(**raw))
+        print(json.dumps(out, indent=1, ensure_ascii=False, default=str))
+        return 0 if out["verdetto"]["passa"] else 1
     run = _runner()
     if a.cmd == "cycle":
         print(json.dumps(run.cycle(), indent=1, default=str))

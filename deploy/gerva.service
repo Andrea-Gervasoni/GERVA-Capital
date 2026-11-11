@@ -1,0 +1,32 @@
+# Alternativa a Docker per un VPS o un mini-PC Linux: systemd tiene vivo il supervisore, il supervisore tiene vivo il ciclo.
+#   sudo cp deploy/gerva.service /etc/systemd/system/ && sudo systemctl daemon-reload && sudo systemctl enable --now gerva
+#   journalctl -u gerva -f
+[Unit]
+Description=GERVA core (ciclo live, solo paper)
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=3600
+StartLimitBurst=6
+
+[Service]
+Type=simple
+User=gerva
+WorkingDirectory=/opt/gerva
+EnvironmentFile=-/etc/gerva/gerva.env
+Environment=GERVA_HOME=/var/lib/gerva GERVA_CACHE=/var/cache/gerva
+ExecStart=/opt/gerva/.venv/bin/python -m gerva supervise -- run
+Restart=on-failure
+RestartSec=30
+# il codice 3 e' un KILL voluto: systemd non deve riavviare
+RestartPreventExitStatus=3
+# indurimento
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/gerva /var/cache/gerva
+StateDirectory=gerva
+CacheDirectory=gerva
+
+[Install]
+WantedBy=multi-user.target

@@ -75,7 +75,7 @@ def leverage_sweep(ret: pd.Series, levs, rf_daily: float = 0.0, borrow_spread: f
         debt = max(L - 1.0, 0.0)
         cash = max(1.0 - L, 0.0)
         sim = L * base - debt * (rf_daily + borrow_spread / periods) + cash * rf_daily
-        o = outcomes(sim, ruin_level, periods)
+        o = outcomes(sim, ruin_level, periods, month=max(int(round(periods / 12)), 1))
         o["leva"] = L
         rows.append(o)
     return pd.DataFrame(rows).set_index("leva")

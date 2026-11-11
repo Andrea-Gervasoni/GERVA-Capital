@@ -1,0 +1,61 @@
+# GERVA core sul server: ciclo live (solo PAPER) + dashboard. Si affianca a deploy/docker-compose.yml, non lo sostituisce.
+#   docker compose -f deploy/docker-compose.gerva.yml up -d --build
+#   ssh -N -L 8787:127.0.0.1:8787 gerva        # la dashboard si apre solo dal tunnel
+#
+# Che cosa lo tiene in piedi, a strati:
+#   1. dentro il processo: ogni passo del ciclo fallisce da solo; nessuna eccezione esce da run_forever;
+#   2. il supervisore (python -m gerva supervise): riavvia il ciclo se muore o se smette di battere, al massimo 10 volte l'ora;
+#   3. Docker (restart: unless-stopped): riavvia il supervisore; l'healthcheck segnala un battito piu' vecchio di 30 minuti;
+#   4. la macchina: `systemctl enable docker` (fatto da deploy/server_setup.sh) riavvia tutto dopo un reboot.
+# Uscita con codice 3 = KILL: il supervisore NON riavvia e il contenitore resta fermo finche' non lo decidi tu.
+
+name: gerva-core
+
+x-hardening: &hardening
+  read_only: true
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: ["ALL"]
+  tmpfs: ["/tmp:size=256m,mode=1777"]
+  pids_limit: 256
+  logging: {driver: json-file, options: {max-size: "10m", max-file: "5"}}
+
+x-env: &env
+  TZ: Europe/Rome
+  GERVA_HOME: /data/gerva
+  GERVA_CACHE: /data/cache
+  GERVA_SNAPSHOT: /data/gerva/snapshot.json
+  GERVA_KILL_FILE: /data/gerva/KILL
+
+services:
+  runner:
+    build: {context: .., dockerfile: deploy/Dockerfile}
+    <<: *hardening
+    restart: on-failure:5                 # codice 0 e codice 3 (KILL) non si riavviano da soli
+    entrypoint: ["python", "-m", "gerva"]
+    command: ["supervise", "--", "run"]
+    environment: *env
+    env_file: [{path: ../secrets/gerva.env, required: false}]   # ALPACA_KEY/ALPACA_SECRET, GERVA_TELEGRAM_*: mai in git
+    volumes: ["gervadata:/data"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os,time,sys; sys.exit(0 if time.time()-os.path.getmtime('/data/gerva/heartbeat') < 1800 else 1)"]
+      interval: 5m
+      timeout: 10s
+      retries: 2
+      start_period: 10m
+
+  dashboard:
+    build: {context: .., dockerfile: deploy/Dockerfile}
+    <<: *hardening
+    restart: unless-stopped
+    entrypoint: ["python", "-m", "dashboard.server"]
+    environment:
+      <<: *env
+      GERVA_DASH_HOST: 0.0.0.0            # dentro il contenitore; fuori e' pubblicata solo su 127.0.0.1
+      GERVA_DASH_PORT: "8787"
+    env_file: [{path: ../secrets/gerva-dashboard.env, required: false}]   # GERVA_DASH_TOKEN (per il pulsante KILL)
+    volumes: ["gervadata:/data"]          # legge la fotografia, puo' solo CREARE il file KILL
+    ports: ["127.0.0.1:8787:8787"]
+    depends_on: [runner]
+
+volumes:
+  gervadata: {}
