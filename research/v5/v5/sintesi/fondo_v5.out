@@ -1,0 +1,53 @@
+Dal 2018-04
+                                                                  sharpe  sh_scelta  sh_verifica   cagr  cagr_verifica    vol  maxdd_giornaliero  mese_medio  mese_mediano  mese_peggiore  mesi_ge10  mesi_ge20  mesi_ge30
+portafoglio                                                                                                                                                                                                               
+B. libro giornaliero 1x, cassa remunerata                          1.465      1.682        1.195  0.147          0.145  0.077             -0.088       0.012         0.007         -0.034      0.000      0.000      0.000
+B2. libro giornaliero 2x, debito vero                              1.474      1.687        1.212  0.277          0.254  0.157             -0.179       0.022         0.011         -0.069      0.049      0.000      0.000
+C1. prudente (corretto)                                            1.150      1.352        0.961  0.268          0.269  0.201             -0.165       0.022         0.006         -0.086      0.107      0.019      0.000
+C3. massimo (corretto)                                             1.200      1.369        1.042  0.550          0.537  0.410             -0.310       0.043         0.011         -0.167      0.243      0.107      0.078
+C3 con il motore di rischio di oggi                                1.002      1.347        0.461  0.251          0.117  0.220             -0.193       0.021         0.002         -0.100      0.087      0.039      0.000
+D1. C1 + indici a leva (rischio 1%)                                1.351      1.527        1.156  0.367          0.355  0.232             -0.200       0.028         0.011         -0.082      0.117      0.029      0.000
+D3. C3 + indici a leva (rischio 1%)                                1.318      1.481        1.150  0.670          0.640  0.440             -0.319       0.051         0.021         -0.164      0.262      0.107      0.087
+D3b. C3 + indici a leva (rischio 2%)                               1.389      1.538        1.223  0.788          0.741  0.480             -0.363       0.058         0.019         -0.161      0.282      0.117      0.078
+E3. D3 + short nuove quotazioni 0,5% (NON verificato eseguibile)   1.511      1.634        1.388  0.808          0.837  0.438             -0.295       0.057         0.030         -0.164      0.272      0.107      0.087
+E3b. D3b + short nuove quotazioni 1% (NON verificato eseguibile)   1.685      1.787        1.587  1.089          1.169  0.498             -0.363       0.072         0.042         -0.165      0.350      0.136      0.087
+
+Dal 2020-01 (da quando esiste il flusso delle nuove quotazioni)
+                                                                  sharpe  sh_scelta  sh_verifica   cagr  cagr_verifica    vol  maxdd_giornaliero  mese_medio  mese_mediano  mese_peggiore  mesi_ge10  mesi_ge20  mesi_ge30
+portafoglio                                                                                                                                                                                                               
+B. libro giornaliero 1x, cassa remunerata                          1.591      2.092        1.195  0.165          0.145  0.080             -0.087       0.013         0.010         -0.034      0.000      0.000      0.000
+B2. libro giornaliero 2x, debito vero                              1.601      2.096        1.212  0.317          0.254  0.163             -0.170       0.024         0.017         -0.069      0.061      0.000      0.000
+C1. prudente (corretto)                                            1.199      1.584        0.961  0.291          0.269  0.208             -0.165       0.023         0.007         -0.086      0.110      0.024      0.000
+C3. massimo (corretto)                                             1.249      1.582        1.042  0.603          0.537  0.425             -0.310       0.047         0.014         -0.167      0.268      0.110      0.073
+C3 con il motore di rischio di oggi                                1.062      1.680        0.461  0.261          0.117  0.211             -0.193       0.021         0.003         -0.100      0.085      0.037      0.000
+D1. C1 + indici a leva (rischio 1%)                                1.484      1.950        1.156  0.424          0.355  0.239             -0.175       0.032         0.019         -0.082      0.122      0.037      0.000
+D3. C3 + indici a leva (rischio 1%)                                1.412      1.804        1.150  0.766          0.640  0.454             -0.319       0.056         0.030         -0.164      0.293      0.110      0.085
+D3b. C3 + indici a leva (rischio 2%)                               1.519      1.934        1.223  0.933          0.741  0.495             -0.329       0.065         0.034         -0.161      0.317      0.122      0.073
+E3. D3 + short nuove quotazioni 0,5% (NON verificato eseguibile)   1.653      2.063        1.388  0.952          0.837  0.451             -0.271       0.065         0.042         -0.164      0.305      0.110      0.085
+E3b. D3b + short nuove quotazioni 1% (NON verificato eseguibile)   1.888      2.359        1.587  1.349          1.169  0.513             -0.334       0.083         0.077         -0.165      0.402      0.146      0.085
+
+correlazioni mensili: {'indici/trade crypto': np.float64(0.12), 'indici/libro giornaliero': np.float64(0.39), 'quotazioni/trade crypto': np.float64(-0.17), 'quotazioni/indici': np.float64(0.15)}
+
+Monte Carlo mensile (cadute mensili: quelle giornaliere sono piu profonde di circa un terzo), 3 anni
+                                                                                 mese_composto_p50  cagr_p50  cagr_p05  dd_p50  dd_p95  p_dd50  p_dimezzato
+portafoglio                                                      scenario                                                                                  
+B. libro giornaliero 1x, cassa remunerata                        base                        0.012     0.149     0.066  -0.034  -0.061   0.000        0.000
+                                                                 meta_vantaggio              0.007     0.085     0.005  -0.057  -0.117   0.000        0.000
+B2. libro giornaliero 2x, debito vero                            base                        0.021     0.278     0.102  -0.073  -0.137   0.000        0.000
+                                                                 meta_vantaggio              0.011     0.146    -0.021  -0.129  -0.254   0.000        0.000
+C1. prudente (corretto)                                          base                        0.020     0.274     0.067  -0.092  -0.176   0.000        0.000
+                                                                 meta_vantaggio              0.011     0.136    -0.046  -0.162  -0.299   0.000        0.000
+C3. massimo (corretto)                                           base                        0.038     0.566     0.112  -0.185  -0.336   0.001        0.000
+                                                                 meta_vantaggio              0.018     0.245    -0.128  -0.316  -0.543   0.090        0.038
+C3 con il motore di rischio di oggi                              base                        0.020     0.262     0.036  -0.100  -0.188   0.000        0.000
+                                                                 meta_vantaggio              0.010     0.123    -0.076  -0.179  -0.327   0.000        0.000
+D1. C1 + indici a leva (rischio 1%)                              base                        0.027     0.381     0.127  -0.106  -0.194   0.000        0.000
+                                                                 meta_vantaggio              0.014     0.188    -0.039  -0.178  -0.336   0.001        0.000
+D3. C3 + indici a leva (rischio 1%)                              base                        0.045     0.703     0.187  -0.182  -0.323   0.000        0.001
+                                                                 meta_vantaggio              0.022     0.293    -0.110  -0.325  -0.554   0.096        0.037
+D3b. C3 + indici a leva (rischio 2%)                             base                        0.051     0.812     0.227  -0.210  -0.369   0.003        0.000
+                                                                 meta_vantaggio              0.024     0.322    -0.121  -0.353  -0.592   0.149        0.059
+E3. D3 + short nuove quotazioni 0,5% (NON verificato eseguibile) base                        0.052     0.837     0.263  -0.164  -0.280   0.000        0.000
+                                                                 meta_vantaggio              0.024     0.327    -0.086  -0.316  -0.528   0.075        0.027
+E3b. D3b + short nuove quotazioni 1% (NON verificato eseguibile) base                        0.065     1.130     0.381  -0.206  -0.346   0.002        0.000
+                                                                 meta_vantaggio              0.031     0.437    -0.101  -0.358  -0.602   0.160        0.052
