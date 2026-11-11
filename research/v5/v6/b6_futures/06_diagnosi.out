@@ -1,0 +1,39 @@
+(a) TREND_TUTTI su serie ripulite: {'S_tutto': np.float64(0.47), 'S_2000-09': np.float64(0.65), 'S_2010-19': np.float64(0.36), 'S_2020-26': np.float64(0.4), 'S_selezione': np.float64(0.63), 'S_verifica': np.float64(-0.41)}
+    TREND_TUTTI su serie GREZZE (segnale e P&L contaminati): {'S_tutto': np.float64(0.29), 'S_2000-09': np.float64(0.43), 'S_2010-19': np.float64(0.07), 'S_2020-26': np.float64(0.41), 'S_selezione': np.float64(0.43), 'S_verifica': np.float64(-0.53)}
+    segnale dalle grezze, P&L sulle ripulite: {'S_tutto': np.float64(0.34), 'S_2000-09': np.float64(0.56), 'S_2010-19': np.float64(0.08), 'S_2020-26': np.float64(0.43), 'S_selezione': np.float64(0.48), 'S_verifica': np.float64(-0.46)}
+    differenza media annua grezzo - ripulito per settore (%): {'AGRI': 1.64, 'CRYPTO': 10.24, 'ENERGY': 4.81, 'EQ': 0.0, 'FX': 0.1, 'MEAT': -0.46, 'METAL': 1.81, 'RATE': -1.28, 'SOFT': 4.87}
+
+(b) contributo per settore al P&L del trend (10% vol), anni scelti, in % del capitale
+sotto  AGRI  CRYPTO  ENERGY   EQ   FX  MEAT  METAL  RATE  SOFT
+2008    1.6     0.0     5.8  3.6  2.4  -0.0    2.7   4.1   1.0
+2014    3.5     0.0     3.0 -3.4  6.2   2.5   -0.3  -0.9   1.5
+2020    2.0     7.4     4.2 -0.1  1.7   0.3    5.3  10.3  -0.8
+2022    2.6     0.7     5.3 -2.7  3.5  -0.1   -0.2   9.4  -0.5
+2023   -1.1    -2.1    -2.7 -0.4 -1.1   1.8   -6.0  -0.1   0.9
+2024   -0.4     1.7    -2.8 -0.1  0.2   1.4    1.1  -2.5   2.7
+2025   -1.7     0.1    -4.0  2.8 -2.7   2.0    7.9  -4.2   0.0
+2026   -0.5    -2.3     3.7 -0.5 -2.1   1.3    0.0   0.3  -0.4
+2020, mercati principali (%): {'BTC=F': 7.4, 'ZT=F': 3.2, 'ZF=F': 2.6, 'GC=F': 2.4, 'ZB=F': 2.4, 'HO=F': 2.2}  peggiori: {'^STOXX50E': -0.5, 'LE=F': -0.5, 'YM_etf': -0.5}
+CL 2020-04: contributo 0.0%
+    senza ['CL=F']: Sharpe tutto 0.46, 2020 30.9%, selezione 0.61, verifica -0.36
+    senza ['CL=F', 'NG=F', 'HO=F', 'RB=F']: Sharpe tutto 0.45, 2020 29.8%, selezione 0.58, verifica -0.27
+    senza ['LE=F', 'HE=F']: Sharpe tutto 0.41, 2020 32.4%, selezione 0.58, verifica -0.56
+
+(c) breakout S2 55/20: operazioni estreme
+          entry       exit symbol  side  stop_dist       R            why
+4114 2021-10-06 2022-05-24   ZT=F    -1      0.001  53.957  uscita_canale
+3902 2020-10-22 2021-04-22  BTC=F     1      0.062  44.263  uscita_canale
+4590 2024-01-18 2024-04-30   CC=F     1      0.034  37.834  uscita_canale
+4888 2025-06-05 2026-02-05   SI=F     1      0.035  29.257  uscita_canale
+3878 2020-08-28 2021-05-25   ZC=F     1      0.031  28.743  uscita_canale
+3872 2020-08-17 2021-03-29   ZS=F     1      0.020  25.834  uscita_canale
+2647 2014-07-18 2015-04-29   6E=F    -1      0.007  24.629  uscita_canale
+1896 2010-08-30 2011-01-14   SI=F     1      0.020  24.386  uscita_canale
+R medio 0.125; senza le 10 migliori 0.064; senza le 50 migliori -0.038; mediana -1.005
+
+(d) autocorrelazione giornaliera dei rendimenti (ritardo 1) negli ultimi 15 giorni prima del roll e nel resto
+LE=F vicino alla scadenza 0.110  lontano 0.082
+HE=F vicino alla scadenza 0.211  lontano 0.025
+CL=F vicino alla scadenza 0.005  lontano -0.053
+ZC=F vicino alla scadenza 0.015  lontano 0.021
+ZN=F vicino alla scadenza -0.015  lontano -0.015

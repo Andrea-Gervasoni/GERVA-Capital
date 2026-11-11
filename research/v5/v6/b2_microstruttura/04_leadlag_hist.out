@@ -1,0 +1,54 @@
+
+=== BTCUSDT: correlazione rendimento 1s del leader (ritardato di l) con rendimento 1s successivo del follower (media tra giorni)
+                   0ms   100ms   200ms   500ms      1s      2s      5s
+sel perp->perp  0.0317  0.0461  0.0450  0.0397  0.0227  0.0065 -0.0086
+    perp->spot  0.1533  0.1151  0.0957  0.0622  0.0389  0.0207 -0.0024
+    spot->perp  0.1132  0.0908  0.0751  0.0559  0.0323  0.0092 -0.0060
+ver perp->perp  0.0893  0.0772  0.0701  0.0557  0.0374  0.0174  0.0007
+    perp->spot  0.1884  0.1579  0.1431  0.1131  0.0819  0.0452  0.0155
+    spot->perp  0.1074  0.0872  0.0749  0.0558  0.0317  0.0184  0.0011
+spot->perp: evento |rend 1s del leader| >= 7.2 bp (soglia da selezione). Rendimento del follower nei 5 s dopo la latenza L, firmato (bp):
+              n  mossa_leader  follower_gia_mosso  edge_lordo
+per L                                                        
+sel 1s     2744          9.98                8.40       -0.11
+    200ms  2744          9.98                8.40        0.63
+    500ms  2744          9.98                8.40        0.26
+ver 1s     1730         10.98               10.37        0.46
+    200ms  1730         10.98               10.37        1.37
+    500ms  1730         10.98               10.37        0.89
+perp->spot: evento |rend 1s del leader| >= 7.5 bp (soglia da selezione). Rendimento del follower nei 5 s dopo la latenza L, firmato (bp):
+              n  mossa_leader  follower_gia_mosso  edge_lordo
+per L                                                        
+sel 1s     2975         10.54                7.87       -0.14
+    200ms  2975         10.54                7.87        0.51
+    500ms  2975         10.54                7.87        0.17
+ver 1s     1798         11.58                9.55        0.57
+    200ms  1798         11.58                9.55        1.12
+    500ms  1798         11.58                9.55        0.84
+
+=== ETHUSDT: correlazione rendimento 1s del leader (ritardato di l) con rendimento 1s successivo del follower (media tra giorni)
+                   0ms   100ms   200ms   500ms      1s      2s      5s
+sel perp->perp  0.0277  0.0352  0.0316  0.0275  0.0188  0.0024 -0.0037
+    perp->spot  0.1536  0.1158  0.0960  0.0637  0.0355  0.0141 -0.0023
+    spot->perp  0.1033  0.0810  0.0654  0.0447  0.0264  0.0065 -0.0054
+ver perp->perp  0.0654  0.0584  0.0544  0.0487  0.0291  0.0095  0.0018
+    perp->spot  0.1816  0.1525  0.1365  0.1088  0.0757  0.0363  0.0124
+    spot->perp  0.0911  0.0745  0.0638  0.0472  0.0245  0.0101  0.0035
+spot->perp: evento |rend 1s del leader| >= 7.6 bp (soglia da selezione). Rendimento del follower nei 5 s dopo la latenza L, firmato (bp):
+              n  mossa_leader  follower_gia_mosso  edge_lordo
+per L                                                        
+sel 1s     3458         10.07                8.45        0.06
+    200ms  3458         10.07                8.45        0.72
+    500ms  3458         10.07                8.45        0.31
+ver 1s     2575         11.27               10.51       -0.13
+    200ms  2575         11.27               10.51        0.43
+    500ms  2575         11.27               10.51        0.35
+perp->spot: evento |rend 1s del leader| >= 7.9 bp (soglia da selezione). Rendimento del follower nei 5 s dopo la latenza L, firmato (bp):
+              n  mossa_leader  follower_gia_mosso  edge_lordo
+per L                                                        
+sel 1s     3681         10.67                7.75       -0.25
+    200ms  3681         10.67                7.75        0.37
+    500ms  3681         10.67                7.75        0.08
+ver 1s     2645         11.88                9.88        0.00
+    200ms  2645         11.88                9.88        0.27
+    500ms  2645         11.88                9.88        0.28

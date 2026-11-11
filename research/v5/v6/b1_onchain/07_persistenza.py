@@ -129,3 +129,42 @@ if s_top is not None:
         st(pd.concat(ser),f'primi {k} per Sharpe, media semplice')
     s_top.to_frame('copia_decile_alto').to_parquet('copia_lenti_senza_attriti.parquet')
 print('\nprove contate in questo script:',ntrial)
+
+# === 7. seconda derivazione (regola "troppo bello = errore"): la media semplice di PnL/margine non e' un portafoglio investibile.
+# Qui: ogni conto e' una "manica" comprata a T e tenuta 12 settimane (non ribilanciata, non puo' scendere sotto zero);
+# la leva di copia e' ridotta in modo che la volatilita' di FORMAZIONE della manica sia <= 10% per 14 giorni (mai aumentata);
+# costo di copia stimato = turnover annuo del conto x 6,5 bp per lato (STIMA: il turnover e' quello di tutta la vita del conto).
+print('\n=== 7. copia come portafoglio di maniche comprate e tenute, leva normalizzata, con e senza costi stimati ===')
+def maniche(uni,sel,costi,k=None,q=0.9,tv=0.10):
+    global ntrial; ntrial+=1; out=[]; n_acc=[]
+    for t in TS:
+        s=punteggio(t,'sharpe'); m=universo(uni,t); s=s[m].dropna()
+        if len(s)<50: continue
+        if sel=='top': ix=s.index[s>=s.quantile(q)] if k is None else s.sort_values().index[-k:]
+        elif sel=='resto': ix=s.index[s<s.quantile(q)]
+        else: ix=s.index
+        sig=R.iloc[t-F+1:t+1][ix].std(); sc=np.minimum(1.0,tv/sig)
+        w=R.iloc[t+1:t+7][ix].fillna(0)*sc
+        if costi: w=w-(M.turnover_anno[ix].fillna(0)/26*6.5e-4*sc)
+        v=(1+w).clip(lower=0).cumprod(); v=v.where(v.cummin()>0,0.0)   # manica azzerata resta a zero
+        port=v.mean(axis=1); r=port.pct_change(); r.iloc[0]=port.iloc[0]-1; out.append(r); n_acc.append(len(ix))
+    return pd.concat(out),np.mean(n_acc)
+rows=[]
+for uni in ['PIT_lento','PIT','PIT_veloce','LB_lento','VAULT']:
+    for sel,k in [('top',None),('top',20),('resto',None),('tutti',None)]:
+        for costi in (False,True):
+            x,n=maniche(uni,sel,costi,k); eq=(1+x).cumprod()
+            a=x[:'2025-12-18']; b=x['2025-12-18':]
+            rows.append(dict(universo=uni,gruppo=sel+('' if k is None else str(k)),costi=costi,conti=n,CAGR=eq.iloc[-1]**(26/len(x))-1,vol=x.std()*np.sqrt(26),Sharpe=x.mean()/x.std()*np.sqrt(26),t=x.mean()/x.std()*np.sqrt(len(x)),maxDD=(eq/eq.cummax()-1).min(),
+                             S_2025=a.mean()/a.std()*np.sqrt(26),S_2026=b.mean()/b.std()*np.sqrt(26)))
+            if uni=='PIT_lento' and sel=='top' and k is None and costi: x.to_frame('copia_lenti_netta').to_parquet('copia_lenti_netta.parquet')
+print(pd.DataFrame(rows).to_string())
+# capitale-pesato: PnL in dollari del gruppo / capitale del gruppo a inizio periodo
+print('\n=== 8. pesato per capitale: somma PnL USD del gruppo / somma dei conti a inizio periodo (12 settimane dopo T), conti LENTI ===')
+for uni in ['PIT_lento','PIT']:
+    for t in TS:
+        s=punteggio(t,'sharpe'); m=universo(uni,t); s=s[m].dropna()
+        if len(s)<50: continue
+        top=s.index[s>=s.quantile(.9)]; rest=s.index[s<s.quantile(.9)]; f=lambda ix:(P.ffill().iloc[t+6][ix]-P.iloc[t][ix]).sum()/A.iloc[t][ix].sum()
+        print(uni,G[t].date(),f'top: {f(top):+.3f} (capitale {A.iloc[t][top].sum()/1e6:.0f}M)   resto: {f(rest):+.3f} (capitale {A.iloc[t][rest].sum()/1e6:.0f}M)')
+print('\nprove contate in questo script:',ntrial)

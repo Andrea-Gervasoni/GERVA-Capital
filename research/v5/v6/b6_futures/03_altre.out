@@ -29,28 +29,12 @@ STAGIONALITA' stesso mese ultimi 10 anni XS                                     
 STAGIONALITA' stesso mese ultimi 30 anni TS                                      -0.01       0.50      -0.40       0.15        -0.04        0.12 -0.68  10.38 -58.76    0.28     0.19   27.31  1.50   2.08
 STAGIONALITA' stesso mese ultimi 30 anni XS                                       0.03       0.46      -0.35       0.23        -0.02        0.25 -0.26  10.54 -48.19    0.34     0.26   32.85  1.70   2.44
 varianti contate in questo file: 24
-Traceback (most recent call last):
-  File "pandas/_libs/tslibs/offsets.pyx", line 7998, in pandas._libs.tslibs.offsets.to_offset
-  File "pandas/_libs/tslibs/offsets.pyx", line 7863, in pandas._libs.tslibs.offsets._validate_to_offset_alias
-ValueError: 'M' is no longer supported for offsets. Please use 'ME' instead.
 
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "/home/user/GERVA-Capital/research/v5/v6/b6_futures/03_altre.py", line 104, in <module>
-    c = D[keys].loc[:SEL_END].resample("M").sum().corr(); c.index = c.columns = ["TREND", "CARRY_TS", "CARRY_XS", "IBS", "RP", "STAG"]
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
-  File "/tmp/gv/lib/python3.13/site-packages/pandas/core/generic.py", line 9759, in resample
-    return get_resampler(
-        cast("Series | DataFrame", self),
-    ...<8 lines>...
-        group_keys=group_keys,
-    )
-  File "/tmp/gv/lib/python3.13/site-packages/pandas/core/resample.py", line 2378, in get_resampler
-    tg = TimeGrouper(obj, **kwds)  # type: ignore[arg-type]
-  File "/tmp/gv/lib/python3.13/site-packages/pandas/core/resample.py", line 2464, in __init__
-    freq = to_offset(freq)
-  File "pandas/_libs/tslibs/offsets.pyx", line 7903, in pandas._libs.tslibs.offsets.to_offset
-  File "pandas/_libs/tslibs/offsets.pyx", line 8048, in pandas._libs.tslibs.offsets.to_offset
-  File "pandas/_libs/tslibs/offsets.pyx", line 7809, in pandas._libs.tslibs.offsets.raise_invalid_freq
-ValueError: Invalid frequency: M. Failed to parse with error message: ValueError("'M' is no longer supported for offsets. Please use 'ME' instead.")
+== Correlazione mensile tra famiglie (selezione) ==
+          TREND  CARRY_TS  CARRY_XS   IBS    RP  STAG
+TREND      1.00     -0.08     -0.01 -0.01  0.18  0.03
+CARRY_TS  -0.08      1.00      0.12 -0.00 -0.04 -0.10
+CARRY_XS  -0.01      0.12      1.00  0.09  0.10  0.07
+IBS       -0.01     -0.00      0.09  1.00  0.23 -0.05
+RP         0.18     -0.04      0.10  0.23  1.00  0.17
+STAG       0.03     -0.10      0.07 -0.05  0.17  1.00

@@ -66,3 +66,5 @@ FRED DGS30 ERRORE https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS30: The 
 FRED DGS20 ERRORE https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS20: The read operation tim
 FRED DFF ERRORE https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFF: The read operation timed
 FRED SOFR ERRORE https://fred.stlouisfed.org/graph/fredgraph.csv?id=SOFR: The read operation time
+FRED ECBESTRVOLWGTTRMDMNRT ERRORE https://fred.stlouisfed.org/graph/fredgraph.csv?id=ECBESTRVOLWGTTRMDMNRT: The re
+FRED DGS5 ERRORE https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS5: The read operation time

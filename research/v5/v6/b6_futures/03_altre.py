@@ -101,6 +101,6 @@ print("\n== Sharpe netto per periodo, vol obiettivo 10% =="); print(T.round(2).t
 print("varianti contate in questo file: %d" % len(T))
 D = pd.DataFrame(SER)
 keys = ["TREND_TUTTI", "CARRY_TS_proporzionale(carry/vol, limite 2)", "CARRY_XS_entro_settore", "IBS<0.2 lungo [esec. stessa chiusura, IPOTESI ordine alle 15:50]", "RP solo lungo (pari rischio per settore)", "STAGIONALITA' stesso mese ultimi 10 anni TS"]
-c = D[keys].loc[:SEL_END].resample("M").sum().corr(); c.index = c.columns = ["TREND", "CARRY_TS", "CARRY_XS", "IBS", "RP", "STAG"]
+c = D[keys].loc[:SEL_END].resample("ME").sum().corr(); c.index = c.columns = ["TREND", "CARRY_TS", "CARRY_XS", "IBS", "RP", "STAG"]
 print("\n== Correlazione mensile tra famiglie (selezione) =="); print(c.round(2).to_string())
 D.to_parquet("serie_altre.parquet")

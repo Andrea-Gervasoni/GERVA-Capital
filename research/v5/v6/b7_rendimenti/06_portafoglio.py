@@ -75,6 +75,13 @@ for lab,s in (('serie lunga (nozionale, 2020->)',noz),('solo Hyperliquid 2x (202
 print('\n=== 8. Effetto sul fondo: cassa (circa 47% del libro a 1x) nello stack invece che in T-bill')
 for lab,e in (('eccesso 2026',e2[e2.index.year==2026].mean()*365),('eccesso ultimi 12 mesi',e2.iloc[-365:].mean()*365),('eccesso medio 2024-26',e2.mean()*365)):
     for q in (0.25,0.47): print(f'  {lab:24s} quota del fondo {q:.0%}: +{q*e*100:.2f} punti/anno lordi ; netti di code attese +{q*(e-tail_cost(Lstar))*100:.2f} = +{q*(e-tail_cost(Lstar))*100/12:.3f}%/mese')
+print('\n=== 9. Looping e collaterale in staking (STIMA aritmetica sui livelli di oggi)')
+yn=noz.iloc[-365:].sum(); bor=0.05; hl_all=R.rot_hlspot.iloc[-365:].sum()
+print(f'  base: spot Kraken + short HL 2x, 67% investito: {yn*2/3*100:.2f}%/a sul capitale (ultimi 12 mesi), 33% del capitale su Hyperliquid')
+print(f'  (a) margine preso a prestito su Aave contro lo spot (USDC al {bor:.0%}), 100% investito: {(yn-0.5*bor)*100:.2f}%/a ; guadagno {(yn-0.5*bor-yn*2/3)*100:+.2f} punti, ma aggiunge la liquidazione su Aave se il prezzo SCENDE (profitti dello short su un\'altra sede) e il rischio di contratto')
+print(f'  (b) tutto su Hyperliquid (spot HL come collaterale, portfolio margin), ~95% investito: {hl_all*0.95*100:.2f}%/a con il 100% del capitale sulla sede non regolata: costo atteso delle code {0.05*0.8*100+0.4*0.03*100:.1f}%/a')
+print(f'  (c) stETH/JitoSOL al posto di ETH/SOL nelle gambe lunghe: +2,4% / +4,7% sul nozionale di quelle gambe; la rotazione tiene ETH o SOL per circa un terzo degli slot -> circa +{(2.4*0.17+4.7*0.16):.1f} punti sul nozionale, +{(2.4*0.17+4.7*0.16)*2/3:.1f} sul capitale; rischio aggiunto: scarto stETH/ETH (-6/-9% a giugno 2022, 50 giorni sotto 0,97)')
+print(f'  (d) loop sUSDe/PT contro USDC: rendimento {5.0:.1f}% contro costo del prestito ~{bor*100:.0f}%: margine nullo oggi (nel 2024 era 17% contro 8-10%)')
 # ---- salvataggio
 stk=pd.read_parquet(D+'stk_stETH_Hyperliquid.parquet').r
 out=pd.DataFrame({'carry_rot_nozionale_1x':noz,'carry_rot_capitale_short2x':cap2,'carry_big3_hold_nozionale':R.hold_big3,'carry_rot_spotHL_nozionale':R.rot_hlspot,'steth_short_eth_hl_nozionale_lordo':stk})

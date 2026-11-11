@@ -1,0 +1,22 @@
+turnover annuo (volume/conto medio), quantili: {0.1: 42.0, 0.25: 216.0, 0.5: 1219.0, 0.75: 6727.0, 0.9: 50222.0}
+griglia 2023-06-08 00:30:00 2026-11-05 00:30:00 90 | conti 9690
+in_lb_oggi    5503
+top_liq       1000
+pit2024q4     1157
+vault         1960
+dtype: int64
+src
+stat             4117
+lb               2005
+vaults           1837
+pit               820
+lb,stat           468
+pit,stat          266
+stat,vaults        88
+lb,pit,stat        37
+lb,pit             17
+lb,vaults          16
+pit,vaults         11
+lb,pit,vaults       2
+Name: count, dtype: int64
+conti con dati al 2025-01-02: 4992  con AV>=10k: 1268

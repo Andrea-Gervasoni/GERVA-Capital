@@ -63,7 +63,10 @@ rq,nhq,Lq=run(sorted(kr_ok),P['N'],0.0073,k=7,ent=0.15,ext=0.05); tab(rq,'rotazi
 rl,nhl,Ll=run(sorted(kr_ok),P['N'],0.0073,minliq=20e6); tab(rl,'rotazione TUTTE, liquidita\' >20 M$/g (variante)'); print('   per anno %:',peryear(rl))
 rh,nhh,Lh=run(sorted(hls),min(3,len(hls)),0.0033,minliq=5e6); R['rot_hlspot']=rh; tab(rh,'rotazione con SPOT HYPERLIQUID (10 pb), N=3'); print('   per anno %:',peryear(rh),'| occupazione',round(nhh.mean()/3,2))
 rn,nhn,Ln=run(sorted(kr_ok),P['N'],0.0073,sign=-1,extra=0.0012); tab(rn,'lato NEGATIVO: perp lungo + spot corto a prestito (0,02%/4h Kraken)'); print('   occupazione',round(nhn.mean()/P['N'],2))
-ntr=7
+rx,nhx,Lx=run(sorted(kr_ok-{'XMR'}),P['N'],0.0073); R['rot_senza_xmr']=rx; tab(rx,'rotazione TUTTE senza XMR (Kraken non lo vende nel SEE)'); print('   per anno %:',peryear(rx),'| tenute:',(Lx.assign(d=(Lx['out']-Lx['in']).dt.days).groupby('coin').d.sum().sort_values(ascending=False).head(8)).to_dict())
+print('   posizioni della rotazione principale (moneta, ingresso, uscita):',[(c,str(a.date()),str(b.date())) for c,a,b in Lall.itertuples(index=False)])
+top=F[sorted(kr_ok)].where(liq[sorted(kr_ok)]>5e6).iloc[-90:].mean().sort_values(ascending=False)*36500; print('   funding annuo % ultimi 90 g, prime 12 monete idonee:',top.head(12).round(1).to_dict(),'| mediana di tutte le idonee: %.1f%% | quota con funding >10%%: %.0f%%'%(top.median(),(top>10).mean()*100))
+ntr=8
 # troncamento: il diario fino a t calcolato su dati tagliati a t deve coincidere
 t=pd.Timestamp('2025-06-30'); cols=sorted(kr_ok); e=(liq[cols]>5e6)&F[cols].notna()
 _,_,La=rotate(F[cols][:t],e[:t],P['k'],P['N'],P['ent'],P['ext']); _,_,Lb2=rotate(F[cols],e,P['k'],P['N'],P['ent'],P['ext'])

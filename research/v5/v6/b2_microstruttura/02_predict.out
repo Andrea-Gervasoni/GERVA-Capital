@@ -1,0 +1,158 @@
+
+=== BTCUSDT BOOK+TRADE  selezione<2024-01-01: 8 giorni 686384 oss | verifica: 8 giorni 686384 oss
+spread mediano bp: sel 0.033 ver 0.023
+  corr univariata (verifica) con rendimento a 1s: ofi_1s=+0.121 ofi_5s=+0.075 ofi_30s=+0.025 imb=+0.185 mpd=+0.146 tfi_1s=+0.046 ret_1s=+0.082 tfi_5s=+0.022 ret_5s=+0.052 tfi_30s=+0.005 ret_30s=+0.010
+  beta (bp per 1 sd) a 1s: ofi_1s=+0.057 ofi_5s=-0.002 ofi_30s=-0.014 imb=+0.117 mpd=-0.023 tfi_1s=+0.011 ret_1s=-0.013 tfi_5s=-0.005 ret_5s=+0.005 tfi_30s=-0.005 ret_30s=+0.003
+  corr univariata (verifica) con rendimento a 30s: ofi_1s=+0.035 ofi_5s=+0.018 ofi_30s=+0.003 imb=+0.073 mpd=+0.061 tfi_1s=+0.007 ret_1s=+0.013 tfi_5s=-0.002 ret_5s=-0.008 tfi_30s=-0.002 ret_30s=-0.008
+  beta (bp per 1 sd) a 30s: ofi_1s=+0.042 ofi_5s=-0.046 ofi_30s=+0.015 imb=+0.384 mpd=-0.018 tfi_1s=+0.016 ret_1s=-0.020 tfi_5s=+0.020 ret_5s=+0.024 tfi_30s=+0.055 ret_30s=-0.175
+R2:
+     R2_sel  R2_ver_L0  R2_ver_L200ms  R2_ver_L500ms  R2_ver_L1s
+h                                                               
+1s   0.0487     0.0350         0.0201         0.0097     -0.0009
+5s   0.0357     0.0230         0.0155         0.0093      0.0023
+30s  0.0101     0.0053         0.0035         0.0020      0.0003
+1m   0.0060     0.0017         0.0008         0.0001     -0.0008
+5m   0.0017     0.0005         0.0003         0.0001     -0.0000
+edge lordo bp mid->mid, segnali top10% (soglia da selezione); takerNoFee = attraversando lo spread, prima delle commissioni; t = t-stat tra giorni a L=1s:
+     gross_L0  gross_L200ms  takerNoFee_L200ms  gross_L500ms  gross_L1s      t       n  takerNoFee_L1s
+h                                                                                                     
+1s      0.325         0.228              0.204         0.171      0.111 26.509  108220           0.087
+5s      0.578         0.444              0.420         0.349      0.247 15.125  104785           0.223
+30s     0.638         0.504              0.477         0.413      0.325  7.429   83717           0.297
+1m      0.518         0.403              0.374         0.328      0.253  3.904   86539           0.224
+5m      0.829         0.750              0.721         0.684      0.634  2.551  100053           0.605
+edge lordo bp mid->mid, segnali top1% (soglia da selezione); takerNoFee = attraversando lo spread, prima delle commissioni; t = t-stat tra giorni a L=1s:
+     gross_L0  gross_L200ms  takerNoFee_L200ms  gross_L500ms  gross_L1s      t      n  takerNoFee_L1s
+h                                                                                                    
+1s      0.452         0.304              0.279         0.226      0.142 14.347  15543           0.117
+5s      0.738         0.540              0.515         0.415      0.279  8.102  15637           0.254
+30s     0.624         0.403              0.362         0.322      0.273  1.755  15127           0.230
+1m      0.375         0.187              0.140         0.146      0.138  0.751  15843           0.088
+5m      2.033         1.889              1.841         1.806      1.798  1.670  16170           1.748
+edge lordo bp mid->mid, segnali top0.1% (soglia da selezione); takerNoFee = attraversando lo spread, prima delle commissioni; t = t-stat tra giorni a L=1s:
+     gross_L0  gross_L200ms  takerNoFee_L200ms  gross_L500ms  gross_L1s     t     n  takerNoFee_L1s
+h                                                                                                  
+1s      0.550         0.342              0.316         0.275      0.129 6.096  1798           0.104
+5s      0.793         0.510              0.484         0.368      0.197 2.466  2182           0.171
+30s     0.707         0.380              0.317         0.362      0.331 0.194  2616           0.261
+1m      1.243         0.945              0.872         1.002      1.119 1.445  3002           1.043
+5m      6.685         6.397              6.319         6.232      6.132 1.867  1947           6.052
+MIGLIORE edge lordo a latenza 200ms: 6.40 bp  vs costo taker andata/ritorno 9.0 bp + spread  -> commissione di pareggio per lato = 3.20 bp
+
+=== BTCUSDT SOLO TRADE  selezione<2023-01-01: 16 giorni 1372768 oss | verifica: 28 giorni 2402344 oss
+  corr univariata (verifica) con rendimento a 1s: tfi_1s=+0.053 ret_1s=+0.080 tfi_5s=+0.028 ret_5s=+0.050 tfi_30s=+0.009 ret_30s=+0.014
+  beta (bp per 1 sd) a 1s: tfi_1s=+0.077 ret_1s=+0.006 tfi_5s=-0.001 ret_5s=+0.015 tfi_30s=-0.004 ret_30s=-0.013
+  corr univariata (verifica) con rendimento a 30s: tfi_1s=+0.014 ret_1s=+0.016 tfi_5s=+0.009 ret_5s=+0.004 tfi_30s=+0.003 ret_30s=-0.007
+  beta (bp per 1 sd) a 30s: tfi_1s=+0.076 ret_1s=+0.045 tfi_5s=-0.021 ret_5s=-0.010 tfi_30s=-0.026 ret_30s=-0.242
+R2:
+     R2_sel  R2_ver_L0  R2_ver_L200ms  R2_ver_L500ms  R2_ver_L1s
+h                                                               
+1s   0.0025     0.0029         0.0001        -0.0013     -0.0037
+5s   0.0012     0.0018         0.0009         0.0003     -0.0006
+30s  0.0013    -0.0007        -0.0008        -0.0008     -0.0009
+1m   0.0006    -0.0016        -0.0017        -0.0017     -0.0016
+5m   0.0011    -0.0036        -0.0036        -0.0036     -0.0036
+edge lordo bp mid->mid, segnali top10% (soglia da selezione); takerNoFee = attraversando lo spread, prima delle commissioni; t = t-stat tra giorni a L=1s:
+     gross_L0  gross_L200ms  gross_L500ms  gross_L1s      t       n
+h                                                                  
+1s      0.127         0.089         0.071      0.042 10.199  227769
+5s      0.227         0.179         0.145      0.091  6.239  183624
+30s     0.213         0.197         0.183      0.186  1.736   96425
+1m     -0.074        -0.076        -0.078     -0.075 -1.107  238811
+5m      0.066         0.068         0.067      0.075  0.578  252052
+edge lordo bp mid->mid, segnali top1% (soglia da selezione); takerNoFee = attraversando lo spread, prima delle commissioni; t = t-stat tra giorni a L=1s:
+     gross_L0  gross_L200ms  gross_L500ms  gross_L1s      t      n
+h                                                                 
+1s      0.138         0.094         0.075      0.021  1.719  29898
+5s      0.204         0.159         0.128      0.057  1.955  25400
+30s     1.312         1.265         1.206      1.146  1.355   7415
+1m     -0.168        -0.187        -0.188     -0.188 -0.287  25768
+5m      0.430         0.437         0.439      0.447  1.353  26078
+edge lordo bp mid->mid, segnali top0.1% (soglia da selezione); takerNoFee = attraversando lo spread, prima delle commissioni; t = t-stat tra giorni a L=1s:
+     gross_L0  gross_L200ms  gross_L500ms  gross_L1s      t     n
+h                                                                
+1s     -0.002        -0.025         0.089     -0.015  0.387   829
+5s      0.297         0.181         0.257      0.092  0.759  1015
+30s     4.514         4.557         4.348      3.540  2.470   738
+1m     -0.410        -0.421        -0.415     -0.548 -0.494  1400
+5m      3.074         3.083         3.165      3.129  1.804  1758
+MIGLIORE edge lordo a latenza 200ms: 4.56 bp  vs costo taker andata/ritorno 9.0 bp + spread  -> commissione di pareggio per lato = 2.28 bp
+
+=== ETHUSDT BOOK+TRADE  selezione<2024-01-01: 8 giorni 686384 oss | verifica: 8 giorni 686384 oss
+spread mediano bp: sel 0.053 ver 0.042
+  corr univariata (verifica) con rendimento a 1s: ofi_1s=+0.128 ofi_5s=+0.072 ofi_30s=+0.026 imb=+0.206 mpd=+0.194 tfi_1s=+0.042 ret_1s=+0.079 tfi_5s=+0.019 ret_5s=+0.045 tfi_30s=+0.007 ret_30s=+0.014
+  beta (bp per 1 sd) a 1s: ofi_1s=+0.071 ofi_5s=-0.001 ofi_30s=-0.015 imb=+0.133 mpd=-0.019 tfi_1s=+0.017 ret_1s=-0.036 tfi_5s=-0.006 ret_5s=-0.000 tfi_30s=-0.009 ret_30s=+0.013
+  corr univariata (verifica) con rendimento a 30s: ofi_1s=+0.034 ofi_5s=+0.021 ofi_30s=+0.004 imb=+0.071 mpd=+0.068 tfi_1s=+0.009 ret_1s=+0.015 tfi_5s=+0.003 ret_5s=+0.001 tfi_30s=+0.003 ret_30s=-0.001
+  beta (bp per 1 sd) a 30s: ofi_1s=+0.043 ofi_5s=+0.011 ofi_30s=-0.027 imb=+0.499 mpd=-0.179 tfi_1s=+0.011 ret_1s=-0.014 tfi_5s=-0.047 ret_5s=+0.033 tfi_30s=-0.015 ret_30s=+0.029
+R2:
+     R2_sel  R2_ver_L0  R2_ver_L200ms  R2_ver_L500ms  R2_ver_L1s
+h                                                               
+1s   0.0433     0.0419         0.0225         0.0086     -0.0048
+5s   0.0290     0.0227         0.0140         0.0072      0.0001
+30s  0.0085     0.0045         0.0024         0.0007     -0.0012
+1m   0.0047     0.0022         0.0011         0.0003     -0.0007
+5m   0.0011    -0.0001        -0.0003        -0.0005     -0.0007
+edge lordo bp mid->mid, segnali top10% (soglia da selezione); takerNoFee = attraversando lo spread, prima delle commissioni; t = t-stat tra giorni a L=1s:
+     gross_L0  gross_L200ms  takerNoFee_L200ms  gross_L500ms  gross_L1s      t       n  takerNoFee_L1s
+h                                                                                                     
+1s      0.379         0.254              0.211         0.174      0.102 11.465  100848           0.059
+5s      0.611         0.447              0.404         0.331      0.222 10.441   96296           0.179
+30s     0.596         0.448              0.406         0.338      0.221  5.191  132229           0.179
+1m      0.703         0.546              0.504         0.430      0.310  4.302  112067           0.268
+5m      1.150         1.032              0.986         0.938      0.867  4.502   97442           0.821
+edge lordo bp mid->mid, segnali top1% (soglia da selezione); takerNoFee = attraversando lo spread, prima delle commissioni; t = t-stat tra giorni a L=1s:
+     gross_L0  gross_L200ms  takerNoFee_L200ms  gross_L500ms  gross_L1s     t      n  takerNoFee_L1s
+h                                                                                                   
+1s      0.480         0.302              0.259         0.189      0.086 4.297  12829           0.043
+5s      0.707         0.483              0.438         0.340      0.198 7.594  12770           0.154
+30s     0.617         0.376              0.333         0.228      0.078 1.523  21666           0.035
+1m      0.720         0.475              0.432         0.334      0.193 1.938  18652           0.149
+5m      2.682         2.474              2.413         2.354      2.293 3.293  16324           2.232
+edge lordo bp mid->mid, segnali top0.1% (soglia da selezione); takerNoFee = attraversando lo spread, prima delle commissioni; t = t-stat tra giorni a L=1s:
+     gross_L0  gross_L200ms  takerNoFee_L200ms  gross_L500ms  gross_L1s     t     n  takerNoFee_L1s
+h                                                                                                  
+1s      0.542         0.311              0.263         0.170      0.054 1.827  1345           0.006
+5s      0.858         0.615              0.567         0.445      0.278 2.623  1447           0.230
+30s     0.807         0.517              0.469         0.347      0.185 1.193  4112           0.138
+1m      1.056         0.762              0.715         0.607      0.432 0.663  2872           0.384
+5m      7.025         6.717              6.629         6.595      6.535 3.025  2453           6.450
+MIGLIORE edge lordo a latenza 200ms: 6.72 bp  vs costo taker andata/ritorno 9.0 bp + spread  -> commissione di pareggio per lato = 3.36 bp
+
+=== ETHUSDT SOLO TRADE  selezione<2023-01-01: 16 giorni 1372768 oss | verifica: 29 giorni 2488142 oss
+  corr univariata (verifica) con rendimento a 1s: tfi_1s=+0.039 ret_1s=+0.062 tfi_5s=+0.019 ret_5s=+0.035 tfi_30s=+0.007 ret_30s=+0.015
+  beta (bp per 1 sd) a 1s: tfi_1s=+0.078 ret_1s=+0.006 tfi_5s=+0.001 ret_5s=+0.003 tfi_30s=-0.001 ret_30s=-0.010
+  corr univariata (verifica) con rendimento a 30s: tfi_1s=+0.011 ret_1s=+0.016 tfi_5s=+0.006 ret_5s=+0.010 tfi_30s=+0.002 ret_30s=+0.004
+  beta (bp per 1 sd) a 30s: tfi_1s=+0.087 ret_1s=+0.020 tfi_5s=+0.006 ret_5s=-0.034 tfi_30s=+0.066 ret_30s=-0.183
+R2:
+     R2_sel  R2_ver_L0  R2_ver_L200ms  R2_ver_L500ms  R2_ver_L1s
+h                                                               
+1s   0.0018     0.0011        -0.0006        -0.0013     -0.0028
+5s   0.0006     0.0005        -0.0000        -0.0002     -0.0007
+30s  0.0004    -0.0004        -0.0005        -0.0005     -0.0005
+1m   0.0001    -0.0001        -0.0001        -0.0001     -0.0002
+5m   0.0003    -0.0007        -0.0007        -0.0007     -0.0007
+edge lordo bp mid->mid, segnali top10% (soglia da selezione); takerNoFee = attraversando lo spread, prima delle commissioni; t = t-stat tra giorni a L=1s:
+     gross_L0  gross_L200ms  gross_L500ms  gross_L1s     t       n
+h                                                                 
+1s      0.106         0.072         0.061      0.033 9.128  229002
+5s      0.170         0.126         0.106      0.066 5.576  194408
+30s     0.059         0.036         0.025      0.020 1.249  126104
+1m      0.117         0.091         0.081      0.060 1.556  189062
+5m      0.185         0.185         0.180      0.187 0.925  209165
+edge lordo bp mid->mid, segnali top1% (soglia da selezione); takerNoFee = attraversando lo spread, prima delle commissioni; t = t-stat tra giorni a L=1s:
+     gross_L0  gross_L200ms  gross_L500ms  gross_L1s      t      n
+h                                                                 
+1s      0.122         0.078         0.077      0.016  0.897  27159
+5s      0.141         0.086         0.078      0.022  0.683  28213
+30s     0.481         0.440         0.421      0.366  2.066  11913
+1m      0.011        -0.032        -0.041     -0.089 -1.160  28483
+5m     -0.100        -0.095        -0.098     -0.083 -0.384  25228
+edge lordo bp mid->mid, segnali top0.1% (soglia da selezione); takerNoFee = attraversando lo spread, prima delle commissioni; t = t-stat tra giorni a L=1s:
+     gross_L0  gross_L200ms  gross_L500ms  gross_L1s      t     n
+h                                                                
+1s      0.149         0.136         0.197      0.041 -0.005  1230
+5s      0.124         0.056         0.019     -0.101 -1.046  1681
+30s     1.771         1.740         1.925      1.724  2.743  1153
+1m     -0.456        -0.516        -0.535     -0.594 -2.519  3231
+5m     -0.690        -0.689        -0.659     -0.670  0.539  2447
+MIGLIORE edge lordo a latenza 200ms: 1.74 bp  vs costo taker andata/ritorno 9.0 bp + spread  -> commissione di pareggio per lato = 0.87 bp
