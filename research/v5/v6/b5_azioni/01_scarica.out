@@ -1,3 +1,4 @@
 0 A ok {'ok': 1, 'cache': 0, 'fail': 0}
 100 BBBY ok {'ok': 78, 'cache': 0, 'fail': 23}
 200 COST ok {'ok': 151, 'cache': 0, 'fail': 50}
+300 EQT ok {'ok': 223, 'cache': 0, 'fail': 78}

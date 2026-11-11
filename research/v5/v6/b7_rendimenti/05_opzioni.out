@@ -1,0 +1,15 @@
+P&L della sola opzione venduta, in % del sottostante; per=cicli/anno. beta = sensibilita' al sottostante nel ciclo
+BTC call  7g delta 0.10: pieno   -6.2%/a Sh -0.47 | scelta  +12.4%/a Sh +1.51 | verifica  -14.7%/a Sh -1.01 | premio lordo  17.8%/a | peggior ciclo -14.2% | maxDD somma -57.9% | beta -0.14 | t -1.12
+BTC put   7g delta 0.10: pieno   -2.5%/a Sh -0.16 | scelta   -4.6%/a Sh -0.23 | verifica   -1.5%/a Sh -0.12 | premio lordo  19.1%/a | peggior ciclo -21.4% | maxDD somma -33.0% | beta +0.15 | t -0.39
+BTC call  7g delta 0.25: pieno   +3.2%/a Sh +0.15 | scelta  +42.4%/a Sh +2.32 | verifica  -14.8%/a Sh -0.68 | premio lordo  55.9%/a | peggior ciclo -17.7% | maxDD somma -75.2% | beta -0.27 | t +0.35
+     per anno %: {2021: 27.7, 2022: 47.1, 2023: -49.4, 2024: -19.5, 2025: 11.3, 2026: 0.5}
+BTC put   7g delta 0.25: pieno  +10.8%/a Sh +0.51 | scelta  +17.7%/a Sh +0.62 | verifica   +7.7%/a Sh +0.44 | premio lordo  60.7%/a | peggior ciclo -25.5% | maxDD somma -40.6% | beta +0.27 | t +1.20
+     per anno %: {2021: 25.4, 2022: 5.8, 2023: 23.6, 2024: 26.7, 2025: -7.3, 2026: -13.5}
+BTC call 30g delta 0.10: pieno  -13.3%/a Sh -0.62 | scelta   -2.9%/a Sh -0.22 | verifica  -18.0%/a Sh -0.74 | premio lordo   8.5%/a | peggior ciclo -34.4% | maxDD somma -80.2% | beta -0.23 | t -1.47
+BTC put  30g delta 0.10: pieno   -0.2%/a Sh -0.02 | scelta   +2.3%/a Sh +0.21 | verifica   -1.3%/a Sh -0.15 | premio lordo   9.9%/a | peggior ciclo -14.2% | maxDD somma -20.5% | beta +0.07 | t -0.05
+BTC call 30g delta 0.25: pieno  -16.7%/a Sh -0.52 | scelta   +1.5%/a Sh +0.05 | verifica  -24.8%/a Sh -0.77 | premio lordo  26.5%/a | peggior ciclo -41.0% | maxDD somma -116.9% | beta -0.42 | t -1.22
+BTC put  30g delta 0.25: pieno   +4.8%/a Sh +0.27 | scelta   +2.9%/a Sh +0.12 | verifica   +5.7%/a Sh +0.38 | premio lordo  31.7%/a | peggior ciclo -19.7% | maxDD somma -34.8% | beta +0.17 | t +0.64
+ETH call  7g delta 0.10: pieno   -9.5%/a Sh -0.60 | scelta   +4.6%/a Sh +0.32 | verifica  -16.0%/a Sh -0.97 | premio lordo  21.8%/a | peggior ciclo -17.1% | maxDD somma -69.2% | beta -0.13 | t -1.43
+ETH put   7g delta 0.10: pieno   -8.3%/a Sh -0.41 | scelta   -6.7%/a Sh -0.25 | verifica   -9.1%/a Sh -0.54 | premio lordo  23.7%/a | peggior ciclo -27.2% | maxDD somma -73.2% | beta +0.16 | t -0.98
+ETH call  7g delta 0.25: pieno   -6.7%/a Sh -0.25 | scelta  +10.2%/a Sh +0.34 | verifica  -14.5%/a Sh -0.56 | premio lordo  68.2%/a | peggior ciclo -21.5% | maxDD somma -82.7% | beta -0.27 | t -0.58
+ETH put   7g delta 0.25: pieno   +5.8%/a Sh +0.20 | scelta  +22.5%/a Sh +0.63 | verifica   -1.8%/a Sh -0.08 | premio lordo  75.5%/a | peggior ciclo -32.1% | maxDD somma -61.3% | beta +0.27 | t +0.49
