@@ -26,9 +26,9 @@ Versione 5.0, 11 novembre 2026. Autore: sessione di lavoro con Claude, su incari
 5. **Il portafoglio delle quattro, SIMULATO, senza leva:** 13,8% l'anno con volatilità 9,0%, Sharpe 1,18, caduta massima −9,4%. Nel periodo di verifica lo Sharpe scende a 0,86.
 6. **Non è una prova.** Il Deflated Sharpe, che tiene conto delle 110 prove, è 0,51 contro una soglia di 0,95. Evidenza promettente, non conclusiva: decide il paper trading.
 7. **La leva scelta è 2x al massimo**, con volatilità obiettivo 15%. Nel caso realistico (metà del rendimento del backtest) a 2x il CAGR mediano è il 10% e la probabilità di dimezzare il capitale in tre anni è sotto lo 0,1%; a 6x è il 31%; a 12x il 76% (sezione 4.3).
-8. **Per avere in media il 20% al mese servirebbe una leva vicina a 30x.** Già a 15x, dove il mese medio simulato è il 10%, la probabilità di dimezzare il capitale in tre anni è tra il 62% e l'87% secondo lo scenario. Non è un percorso: è una roulette con le commissioni.
+8. **Per avere in media il 20% al mese servirebbe una leva vicina a 30x** (mia estrapolazione dalla tabella). Già a 15x, dove il mese medio simulato è il 10%, la probabilità di dimezzare il capitale in tre anni è tra il 62% e l'87% secondo lo scenario. Non è un percorso: è una roulette con le commissioni.
 9. **Il codice esistente proteggeva la strada sbagliata.** I controlli migliori erano sui pod, che sono spenti; i percorsi che scambiavano davvero avevano i controlli più deboli, e un voto di tre agenti poteva portare la leva a 3x (sezione 1).
-10. **Ho riscritto il nucleo** in un pacchetto nuovo, `gerva/`: stesse funzioni per backtest e live, rischio in tempo reale con KILL a ritenuta, ordini che non si possono duplicare, supervisore, con 50 test nuovi sul motore e 20 di regressione sul codice esistente.
+10. **Ho riscritto il nucleo** in un pacchetto nuovo, `gerva/`: stesse funzioni per backtest e live, rischio in tempo reale con KILL a ritenuta, ordini che non si possono duplicare, supervisore. Test: 51 nuovi sul motore, 39 sulla dashboard, 20 di regressione sul codice esistente; 398 in tutto, verdi.
 11. **La forma giusta oggi è la persona fisica**, con conto proprio; nessuna società sotto i 300–500 mila euro. Gestire denaro di amici con un compenso è attività riservata: reclusione da uno a otto anni (sezione 7).
 12. **Il traguardo onesto:** 10–20% l'anno con cadute entro il 20%, dimostrato prima in paper per 90 giorni e poi con un quarto del capitale. È ciò che rende un fondo credibile; il capitale di terzi, più avanti, si ottiene con un registro verificabile, non con una promessa.
 
@@ -720,7 +720,62 @@ Anche pubblicare segnali ha regole: generici e rivolti al pubblico sono "raccoma
 
 ## 8. Sito e dashboard
 
-<!-- DASHBOARD -->
+### 8.1 Che cosa c'è
+
+Una console nuova, in [`dashboard/`](../dashboard/), separata dal vecchio portale: 3.000 righe di HTML, CSS e JavaScript scritti a mano, senza librerie esterne, senza CDN e senza passo di compilazione. Sette pagine:
+
+| Pagina | Che cosa mostra |
+|---|---|
+| **Panoramica** | Patrimonio, P&L di oggi, del mese, dell'anno e dall'avvio; caduta dal massimo; curva del patrimonio contro il riferimento con intervalli 1M / 3M / 1A / Tutto, scala logaritmica e striscia della caduta; stato del rischio; avvisi; strategie in sintesi |
+| **Performance** | CAGR, volatilità, Sharpe, Sortino, Calmar, PSR, mese migliore e peggiore; tabella dei rendimenti mensili anno per anno; volatilità e Sharpe mobili |
+| **Esposizione** | Lorda, netta e leva contro il limite; per classe di attivo e per sede; tabella delle posizioni ordinabile, con barre di peso |
+| **Rischio** | Stato del motore e motivo; ogni limite con valore, soglia e barra di utilizzo; scala degli scalini di caduta; VaR ed expected shortfall; volatilità realizzata contro obiettivo; **arresto di emergenza** |
+| **Strategie** | Per ciascuna: stato, quota, esposizione, P&L, Sharpe dal vivo contro backtest, andamento, età dell'ultimo segnale |
+| **Ordini** | Ultimi ordini con stato e motivo dei rifiuti |
+| **Sistema** | Età del battito, salute dei componenti, tempo di attività, riavvii, errori; i cancelli paper → reale con l'avanzamento |
+
+![Panoramica, tema scuro, costruita dal backtest reale](img/dashboard-panoramica.png)
+
+![Performance, tema chiaro: rendimenti mensili simulati](img/dashboard-performance.png)
+
+![Rischio: limiti, scalini di caduta e arresto di emergenza (dati di esempio)](img/dashboard-rischio.png)
+
+(Su telefono: [`img/dashboard-telefono.png`](img/dashboard-telefono.png).)
+
+### 8.2 Le decisioni di progetto
+
+| Decisione | Scelta | Motivazione | Alternativa scartata |
+|---|---|---|---|
+| Che cosa si vede per primo | Una fascia in alto, sempre visibile, con la modalità e l'etichetta dei dati: a righe ambra per SIMULATO e DEMO, blu per PAPER, invertita per REALE | Un numero simulato non deve mai poter essere scambiato per uno vero, nemmeno in uno screenshot | Un'etichetta piccola in un angolo |
+| Colore | Superfici piatte grafite con filetti, un solo accento blu; verde e rosso soltanto sul P&L con segno, sempre accompagnati da segno e freccia | Leggibile anche da chi non distingue il rosso dal verde; l'attenzione va dove c'è un problema | Sfumature e colori accesi da "piattaforma crypto" |
+| Numeri | Cifre tabulari ovunque | Le colonne si confrontano a colpo d'occhio | Il carattere del testo, che ha cifre di larghezza variabile |
+| Dati vecchi | Se la fotografia supera `stale_after_s`, o il server non risponde, compaiono un banner e i numeri attenuati | Il guasto più pericoloso di una dashboard è mostrare numeri fermi come se fossero vivi | Continuare a mostrare l'ultimo valore |
+| Grafici | Scritti a mano in SVG: linea con mirino, area della caduta, tabella mensile a colori, barre, mini-grafici | Nessuna dipendenza da scaricare o aggiornare; 3.000 punti ridisegnati in 2–9 millisecondi | Una libreria di grafici da CDN |
+| Poteri della pagina | Sola lettura su un file; l'unica azione è creare il file KILL | Una falla nella pagina non può inviare ordini né cambiare limiti | Una pagina che scrive nel database del ciclo |
+| Temi e schermi | Scuro e chiaro, con scelta ricordata; da 1440 a 380 pixel senza scorrimento orizzontale; navigabile da tastiera; movimento ridotto rispettato | Si usa anche dal telefono, anche di notte | Solo desktop |
+
+### 8.3 Sicurezza
+
+- Il server (`dashboard/server.py`) ascolta su `127.0.0.1`: dall'esterno ci si arriva solo con un tunnel SSH (`ssh -N -L 8787:127.0.0.1:8787 server`).
+- Rifiuta le richieste con un `Host` diverso da quelli ammessi (difesa dal *DNS rebinding*) e controlla l'origine delle richieste di scrittura.
+- Intestazioni di sicurezza su ogni risposta: nessuno script o stile in linea, nessun contenuto esterno, nessun incorporamento in altre pagine.
+- **KILL**: serve scrivere la parola KILL e un token (`GERVA_DASH_TOKEN`, confrontato a tempo costante, tenuto solo in memoria dalla pagina). Senza token configurato il comando è spento. La pagina può creare il file, mai toglierlo: per quello servono il terminale e `python -m gerva reset-kill --confirm`.
+- Se il file della fotografia esiste ma è illeggibile, il server risponde con un errore: non mostra mai i dati di esempio al posto di quelli veri.
+
+### 8.4 Come si avvia
+
+```bash
+python -m gerva demo                 # facoltativo: fotografia costruita dal backtest, marcata SIMULATO
+python -m dashboard.server           # http://127.0.0.1:8787
+```
+
+Senza alcuna fotografia la pagina mostra un esempio scritto a mano, marcato "DEMO: dati di esempio" (i suoi limiti sono illustrativi e non coincidono con quelli di `config/gerva.yaml`). Con il ciclo attivo (`python -m gerva run`) mostra il conto paper e si aggiorna ogni 5 secondi. Variabili d'ambiente, API e contratto dei dati sono in [`dashboard/README.md`](../dashboard/README.md).
+
+### 8.5 Che cosa è stato verificato, e che cosa no
+
+Verificato in Chromium: tutte e sette le pagine nei due temi a 1440 e 390 pixel, sia con l'esempio sia con la fotografia del backtest reale, senza errori in console né violazioni delle regole di sicurezza; fotografie vuote, con tutti i campi nulli o malformate (compare "—", nessuna eccezione); stati "dati vecchi" e "non in linea"; il KILL da capo a fondo (token sbagliato rifiutato, token giusto crea il file); 39 test automatici sul server (`tests/test_dashboard.py`). **Non verificato:** Safari e Firefox.
+
+**È un sito pubblico?** No, ed è una scelta: è una console privata. Una pagina pubblica con il nome "GERVA Capital" e dei rendimenti è comunicazione finanziaria, e va valutata con un legale prima di esistere (sezione 7.4).
 
 ---
 

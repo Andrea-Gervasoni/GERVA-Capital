@@ -69,8 +69,10 @@ function initTheme() {
 // ---- navigazione -----------------------------------------------------------------------------------------------------
 
 function routeNow() {
-  const m = /^#\/?([a-z-]+)/.exec(window.location.hash || '');
-  return ROUTES.find((r) => r.id === (m && m[1])) || ROUTES[0];
+  const m = /^#\/([a-z-]+)/.exec(window.location.hash || '');
+  const found = ROUTES.find((r) => r.id === (m && m[1]));
+  // un'ancora qualsiasi (es. #main) non è una sezione: si resta dove si è
+  return found || (mounted && !m ? mounted.route : ROUTES[0]);
 }
 
 function buildNav() {
@@ -101,7 +103,7 @@ function setFlag(id, kind, text) {
   if (!a) return;
   a.flagEl.hidden = !kind;
   a.flagEl.className = `nav__flag ${kind ? `nav__flag--${kind}` : ''}`.trim();
-  fill(a.flagEl, kind ? h('span', { class: 'sr-only', text }) : null);
+  fill(a.flagEl, kind ? h('span', { class: 'sr-only', text: `, ${text}` }) : null);
 }
 
 function syncFlags(snap) {
@@ -267,6 +269,11 @@ function syncView({ force = false, focus = false } = {}) {
 
 buildNav();
 initTheme();
+document.querySelector('.skip-link').addEventListener('click', (event) => {
+  event.preventDefault();                     // niente cambio di hash: le sezioni vivono lì
+  el.main.focus();
+  el.main.scrollIntoView({ block: 'start' });
+});
 initKill({
   done: () => {
     store.refreshHealth();

@@ -3,7 +3,7 @@
 import { h, icon, fill } from '../dom.js';
 import { chip, empty, signedPct, stat } from '../components.js';
 import { dumbbell, sparkline } from '../charts.js';
-import { DASH, arr, fmtAge, fmtNum, fmtPct, fmtStamp, num, obj, parseTs, str } from '../format.js';
+import { DASH, arr, fmtAge, fmtNum, fmtPct, fmtStamp, list, num, obj, parseTs, str } from '../format.js';
 import { strategyStatus } from '../model.js';
 
 export function mount(root) {
@@ -36,7 +36,7 @@ export function mount(root) {
           h('span', { class: 'bars__track', 'aria-hidden': 'true' }, share(alloc, 'gross'), share(expo, 'net'))),
         h('div', { class: 'strat__spark' },
           sparkline(st.spark, { width: 190, height: 52, label: `Andamento recente di ${str(st.id)}` }),
-          h('span', { class: 'strat__spark-label', text: arr(st.spark).length || Array.isArray(st.spark) ? `ultime ${Array.isArray(st.spark) ? st.spark.length : 0} osservazioni` : '' }))),
+          h('span', { class: 'strat__spark-label', text: list(st.spark).length >= 2 ? `ultime ${list(st.spark).length} osservazioni` : '' }))),
       h('div', { class: 'strat__stats' },
         stat({ label: 'Oggi', value: signedPct(st.pnl_day_pct) }),
         stat({ label: 'Mese', value: signedPct(st.pnl_mtd_pct) }),
