@@ -75,7 +75,7 @@ La versione precedente (ramo principale del repository, fino alla v3.9) era una 
 | **Ruolo dell'AI** | Agenti con accesso diretto al broker nel "banco libero"; segnali Telegram eseguibili | Agenti che possono solo frenare, con fonti verificate dal codice |
 | **Dove gira** | Un Mac tenuto sveglio | Un server, con supervisore e riavvio automatico |
 | **Interfaccia** | Ufficio in pixel art | Console con P&L, rischio, strategie, ricerca, AI, in due livelli di lettura |
-| **Test** | 290 | 406, di cui 20 riproducono i difetti trovati nell'audit |
+| **Test** | 290 | 418, di cui 20 riproducono i difetti trovati nell'audit |
 
 In una riga: la versione precedente era costruita per sembrare una società; questa è costruita per non perdere denaro per un errore, e per dire la verità sui propri numeri. Il rendimento simulato è più alto, ma la differenza che conta è un'altra: ogni numero qui si può rifare con un comando (`python -m gerva research`) e ogni limite è scritto in un posto solo.
 

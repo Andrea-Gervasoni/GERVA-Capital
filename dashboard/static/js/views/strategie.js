@@ -1,7 +1,7 @@
 // Strategie: una scheda per strategia con stato, allocazione, risultato, Sharpe reale contro backtest e ultimo segnale.
 
 import { h, icon, fill } from '../dom.js';
-import { chip, empty, signedPct, stat } from '../components.js';
+import { chip, empty, explain, method, signedPct, stat } from '../components.js';
 import { dumbbell, sparkline } from '../charts.js';
 import { DASH, arr, fmtAge, fmtNum, fmtPct, fmtStamp, list, num, obj, parseTs, str } from '../format.js';
 import { strategyStatus } from '../model.js';
@@ -9,7 +9,10 @@ import { strategyStatus } from '../model.js';
 export function mount(root) {
   const band = h('section', { class: 'card tiles span-12', 'aria-label': 'Riepilogo delle strategie' });
   const cards = h('div', { class: 'strats span-12' });
-  root.append(h('div', { class: 'grid' }, band, cards));
+  const legendBox = h('div', { class: 'section-head span-12' },
+    explain('In ogni scheda: «Allocazione» è la quota di patrimonio assegnata alla strategia, «Esposizione» quanta ne sta usando adesso. «Oggi», «Mese» e «Dall\'avvio» sono i suoi guadagni o perdite. «Drawdown massimo» è la sua caduta peggiore. Lo Sharpe confronta il rendimento con il rischio: il cerchio vuoto è quello atteso dal backtest, quello pieno è quello reale, se c\'è abbastanza storia.'),
+    method('Sharpe reale mostrato solo con almeno 60 giorni di storico dal vivo; le curve sono il rendimento cumulato recente della strategia sul proprio capitale.'));
+  root.append(h('div', { class: 'grid' }, band, legendBox, cards));
 
   function strategyCard(st, { now, maxShare, shMin, shMax }) {
     const info = strategyStatus(st.status);
@@ -66,10 +69,10 @@ export function mount(root) {
         return v.length ? v.reduce((a, b) => a + b, 0) : null;
       };
       fill(band, h('div', { class: 'tiles__grid tiles__grid--4' },
-        stat({ label: 'Strategie attive', value: list.length ? `${active} di ${list.length}` : null }),
-        stat({ label: 'Allocazione totale', value: sumOf('allocation') == null ? null : fmtPct(sumOf('allocation'), 1), sub: 'quota del patrimonio assegnata' }),
-        stat({ label: 'Esposizione totale', value: sumOf('exposure') == null ? null : fmtPct(sumOf('exposure'), 1), sub: 'posizioni aperte dalle strategie' }),
-        stat({ label: 'Risultato del fondo oggi', value: signedPct(nav.pnl_day_pct) })));
+        stat({ label: 'Strategie attive', value: list.length ? `${active} di ${list.length}` : null, explain: 'Quante strategie stanno lavorando. Una strategia in pausa non apre nuove posizioni.' }),
+        stat({ label: 'Allocazione totale', value: sumOf('allocation') == null ? null : fmtPct(sumOf('allocation'), 1), sub: 'quota del patrimonio assegnata', explain: 'La somma delle quote assegnate: di solito 100%.' }),
+        stat({ label: 'Esposizione totale', value: sumOf('exposure') == null ? null : fmtPct(sumOf('exposure'), 1), sub: 'posizioni aperte dalle strategie', explain: 'Quanto è davvero investito adesso. Sopra il 100% si usa la leva.' }),
+        stat({ label: 'Risultato del fondo oggi', value: signedPct(nav.pnl_day_pct), explain: 'Guadagno o perdita di oggi di tutto il conto.' })));
       if (!list.length) {
         fill(cards, h('section', { class: 'card' }, empty('Nessuna strategia nello snapshot', 'Il motore non ha ancora pubblicato le strategie.')));
         return;
@@ -83,6 +86,15 @@ export function mount(root) {
         shMax: Math.max(1.5, ...sharpes) * 1.05,
       };
       fill(cards, list.map((s) => strategyCard(s, scale)));
+    },
+    summary(c) {
+      const all = arr(c.snap.strategies);
+      if (!all.length) return 'Lo snapshot non elenca strategie.';
+      const act = all.filter((s) => str(s.status).toLowerCase() === 'active').length;
+      const day = all.filter((s) => num(s.pnl_day_pct) != null).sort((a, b) => num(b.pnl_day_pct) - num(a.pnl_day_pct));
+      const best = day[0];
+      const worst = day[day.length - 1];
+      return `${act} ${act === 1 ? 'strategia' : 'strategie'} su ${all.length} ${act === 1 ? 'è attiva' : 'sono attive'}${best && worst && best !== worst ? `; oggi la migliore è ${str(best.id)} (${fmtPct(best.pnl_day_pct, 2, { signed: true })}) e la più debole ${str(worst.id)} (${fmtPct(worst.pnl_day_pct, 2, { signed: true })})` : ''}.`;
     },
   };
 }

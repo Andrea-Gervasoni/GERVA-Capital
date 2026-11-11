@@ -217,10 +217,10 @@ export function monthlyGrid(snap) {
 // ---- etichette di stato -------------------------------------------------------------------------------------------
 
 export const RISK_STATES = {
-  NORMAL: { label: 'Normale', kind: 'ok', icon: 'check-circle', text: 'Esposizione piena, tutti i controlli attivi.' },
-  REDUCED: { label: 'Ridotto', kind: 'warn', icon: 'warn', text: 'Esposizione ridotta dal motore di rischio.' },
-  HALTED: { label: 'Sospeso', kind: 'serious', icon: 'pause', text: 'Esposizione al minimo, nessun aumento consentito.' },
-  KILLED: { label: 'KILL', kind: 'crit', icon: 'power', text: 'Tutto chiuso e bloccato: serve un intervento manuale.' },
+  NORMAL: { label: 'Normale', kind: 'ok', icon: 'check-circle', light: 'Semaforo verde', text: 'Esposizione piena, tutti i controlli attivi.' },
+  REDUCED: { label: 'Ridotto', kind: 'warn', icon: 'warn', light: 'Semaforo giallo', text: 'Esposizione ridotta dal motore di rischio.' },
+  HALTED: { label: 'Sospeso', kind: 'serious', icon: 'pause', light: 'Semaforo arancione', text: 'Esposizione al minimo, nessun aumento consentito.' },
+  KILLED: { label: 'KILL', kind: 'crit', icon: 'power', light: 'Semaforo rosso', text: 'Tutto chiuso e bloccato: serve un intervento manuale.' },
 };
 
 export function riskState(risk) {

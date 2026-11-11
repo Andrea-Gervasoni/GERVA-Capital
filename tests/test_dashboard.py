@@ -26,6 +26,7 @@ def env(tmp_path, monkeypatch):
     monkeypatch.setenv("GERVA_KILL_FILE", str(tmp_path / "stato" / "KILL"))
     monkeypatch.delenv("GERVA_DASH_TOKEN", raising=False)
     monkeypatch.delenv("GERVA_DASH_ALLOWED_HOSTS", raising=False)
+    monkeypatch.setenv("GERVA_QUANT", str(tmp_path / "quant.json"))
     return tmp_path
 
 
@@ -109,6 +110,85 @@ def test_endpoint_inesistente(client):
     assert r.status_code == 404 and r.json()["ok"] is False
     assert client.get("/api/v1/kill").status_code == 404      # il KILL risponde solo alla POST
     assert client.delete("/api/v1/kill").status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# Ricerca (quant.json): statica, simulata
+# ---------------------------------------------------------------------------
+def test_quant_assente_da_404_json(client, env):
+    r = client.get("/api/v1/quant")
+    assert r.status_code == 404
+    assert r.json() == {"ok": False, "error": "ricerca non disponibile"}
+    assert str(env) not in r.text
+    assert r.headers["content-security-policy"].startswith("default-src 'self'")
+    assert r.headers["cache-control"] == "no-store"
+
+
+def test_quant_dal_file_con_nan_ripuliti(client, env):
+    _write(env / "quant.json", '{"label": "SIMULATO: ricerca su dati storici", "portfolio": {"tutto": {"sharpe": 1.18, "max_dd": NaN}}, '
+                               '"leverage_mc": [{"schema": "fissa 30x", "maxdd_p50": -Infinity}]}')
+    r = client.get("/api/v1/quant")
+    assert r.status_code == 200
+    q = r.json()
+    assert q["label"].startswith("SIMULATO")
+    assert q["portfolio"]["tutto"] == {"sharpe": 1.18, "max_dd": None}
+    assert q["leverage_mc"][0]["maxdd_p50"] is None
+    assert r.headers["x-content-type-options"] == "nosniff" and r.headers["cache-control"] == "no-store"
+    assert int(r.headers["x-gerva-quant-age"]) >= 0
+
+
+@pytest.mark.parametrize("contenuto", ['{"label": "SIM', "[1, 2]", ""])
+def test_quant_illeggibile_da_503(client, env, contenuto):
+    _write(env / "quant.json", contenuto)
+    r = client.get("/api/v1/quant")
+    assert r.status_code == 503 and r.json()["ok"] is False
+    assert str(env) not in r.text
+
+
+def test_quant_troppo_grande_rifiutato(client, env, monkeypatch):
+    _write(env / "quant.json", {"label": "x" * 4000})
+    monkeypatch.setattr(server, "MAX_SNAPSHOT_BYTES", 1000)
+    assert client.get("/api/v1/quant").status_code == 503
+
+
+def test_quant_host_estraneo_rifiutato_e_percorso_predefinito(client, env, monkeypatch):
+    _write(env / "quant.json", {"label": "SIMULATO"})
+    assert client.get("/api/v1/quant", headers={"Host": "esempio.invalid"}).status_code == 400
+    assert client.post("/api/v1/quant").status_code == 404          # sola lettura
+    monkeypatch.delenv("GERVA_QUANT")
+    assert server.quant_path() == Path(server.ROOT) / "research" / "v5" / "quant.json"
+
+
+def test_quant_vero_se_presente_ha_la_forma_attesa():
+    path = Path(server.ROOT) / "research" / "v5" / "quant.json"
+    if not path.is_file():
+        pytest.skip("research/v5/quant.json non generato")
+    q = json.loads(path.read_text(encoding="utf-8"))
+    assert "SIMULATO" in q["label"]
+    for key in ("sleeves", "portfolio", "correlation", "weights", "sleeve_curves", "rolling_sharpe", "drawdown", "return_hist",
+                "leverage_mc", "leverage_fan", "leverage_decision", "conviction", "robustness", "significance", "scenarios", "rejected"):
+        assert key in q, key
+    assert {r["scenario"] for r in q["leverage_mc"]} >= {"base", "pessimista", "stress"}
+    assert set(q["leverage_fan"]["levels"]) >= {"1", "2", "3"}
+
+
+def test_esempio_ha_il_blocco_ai():
+    ai = json.loads(server.SAMPLE.read_text(encoding="utf-8"))["ai"]
+    assert ai["regime"]["stato"] in ("calmo", "normale", "teso", "crisi")
+    assert all(0 <= s["mult"] <= 1 and s["motivo"] and s["fonti"] for s in ai["overlay"]["strategie"])
+    assert all(c["livello"] in ("bassa", "media", "alta") and 0 <= c["score"] <= 1 for c in ai["conviction"])
+
+
+def test_glossario_e_pagine_nuove_presenti():
+    js = (STATIC / "js" / "glossary.js").read_text(encoding="utf-8")
+    for term in ("Sharpe", "CAGR", "Drawdown", "Leva del conto", "Leva del trade", "Volatilità", "VaR", "PSR", "Deflated Sharpe",
+                 "Conviction", "Overlay AI", "KILL", "Periodo di scelta e di verifica", "Punto base"):
+        assert f"term: '{term}'" in js, term
+    main = (STATIC / "js" / "main.js").read_text(encoding="utf-8")
+    for route in ("come-funziona", "ricerca", "'ai'"):
+        assert route in main
+    for view in ("comefunziona.js", "ricerca.js", "ai.js"):
+        assert (STATIC / "js" / "views" / view).is_file()
 
 
 # ---------------------------------------------------------------------------

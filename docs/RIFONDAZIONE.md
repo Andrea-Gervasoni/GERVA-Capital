@@ -745,7 +745,7 @@ Anche pubblicare segnali ha regole: generici e rivolti al pubblico sono "raccoma
 
 ### 8.1 Che cosa c'è
 
-Una console nuova, in [`dashboard/`](../dashboard/), separata dal vecchio portale: 3.000 righe di HTML, CSS e JavaScript scritti a mano, senza librerie esterne, senza CDN e senza passo di compilazione. Sette pagine:
+Una console nuova, in [`dashboard/`](../dashboard/), separata dal vecchio portale: 3.000 righe di HTML, CSS e JavaScript scritti a mano, senza librerie esterne, senza CDN e senza passo di compilazione. Sette pagine nella prima versione, dieci nella seconda:
 
 | Pagina | Che cosa mostra |
 |---|---|
@@ -764,6 +764,26 @@ Una console nuova, in [`dashboard/`](../dashboard/), separata dal vecchio portal
 ![Rischio: limiti, scalini di caduta e arresto di emergenza (dati di esempio)](img/dashboard-rischio.png)
 
 (Su telefono: [`img/dashboard-telefono.png`](img/dashboard-telefono.png).)
+
+#### Versione 2 dell'interfaccia: due livelli di lettura e tre pagine nuove
+
+- **Interruttore Semplice / Esperto** in alto. In Semplice ogni pagina apre con una frase generata dai dati ("Oggi il fondo vale…"), ogni cifra ha una riga di spiegazione e ogni scheda un "Che cosa significa?". In Esperto compaiono colonne aggiuntive, errori standard, note di metodo e grafici in più. Il passaggio non ricarica nulla.
+- **Glossario** laterale con 14 voci; i termini sottolineati nel testo lo aprono sulla voce giusta.
+- **Come funziona**: lo schema degli otto passaggi, dai dati agli ordini, cliccabile; le quattro strategie con che cosa fanno, perché dovrebbero funzionare, che cosa le mette in crisi, e i numeri di scelta e verifica.
+- **Ricerca**: tabella della leva con probabilità di rovina, ventaglio del patrimonio a tre anni, rischio di dimezzamento per leva, scenari, Deflated Sharpe, curve delle strategie, correlazioni, quote nel tempo, Sharpe mobile, caduta, distribuzione dei rendimenti, conviction, prove di robustezza, idee scartate. Ogni scheda porta l'etichetta SIMULATO. I dati vengono da `research/v5/quant.json` tramite `GET /api/v1/quant`.
+- **AI**: regime di mercato, conviction del giorno con le soglie, riduzioni in vigore con motivo, fonti e scadenza.
+- **Rischio**: esempio svolto della differenza tra leva del conto e leva del singolo trade, con i tetti di legge.
+- Il conto si aggiorna ogni 5 secondi, la ricerca ogni 10 minuti; ogni pagina mostra l'età di entrambe le fonti.
+
+![Panoramica in modalità Semplice (dati di esempio)](img/dashboard-v2-semplice-panoramica.png)
+
+![Come funziona](img/dashboard-v2-comefunziona.png)
+
+![AI: regime, conviction e riduzioni in vigore (dati di esempio)](img/dashboard-v2-ai.png)
+
+(Pagina Ricerca completa: [`img/dashboard-v2-ricerca.png`](img/dashboard-v2-ricerca.png).)
+
+**Limiti dichiarati della versione 2:** i cancelli del livello AI compaiono solo quando la fotografia li contiene, e quella reale non li contiene ancora; le soglie di regime e conviction nel glossario sono copiate dal codice, non lette dai dati; la verifica nel browser è stata fatta su dati di esempio e su una fotografia paper, non su un conto in funzione da giorni.
 
 ### 8.2 Le decisioni di progetto
 

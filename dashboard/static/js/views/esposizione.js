@@ -11,9 +11,9 @@ export function mount(root) {
   let barsKey = null;
 
   const band = h('section', { class: 'card tiles span-12', 'aria-label': 'Esposizione complessiva' });
-  const classCard = card({ title: 'Per classe di attivo', sub: 'In percentuale del patrimonio', cls: 'span-6' });
-  const venueCard = card({ title: 'Per venue', sub: 'In percentuale del patrimonio', cls: 'span-6' });
-  const posCard = card({ title: 'Posizioni', cls: 'span-12', flush: true });
+  const classCard = card({ title: 'Per classe di attivo', sub: 'In percentuale del patrimonio', cls: 'span-6', what: 'In che tipo di strumenti è investito il conto. La barra grigia («lordo») somma tutte le posizioni; quella blu («netto») sottrae le posizioni al ribasso da quelle al rialzo.', method: 'Lordo = Σ |peso|, netto = Σ peso, in frazione del patrimonio.' });
+  const venueCard = card({ title: 'Per venue', sub: 'In percentuale del patrimonio', cls: 'span-6', what: 'Presso quale broker o borsa («venue») si trovano le posizioni. Serve a non concentrare troppo denaro in un solo posto.' });
+  const posCard = card({ title: 'Posizioni', cls: 'span-12', flush: true, what: 'Tutto ciò che il conto possiede in questo momento. «Peso» è la quota del patrimonio in quello strumento; «P&L oggi» è il guadagno o la perdita di oggi, «P&L aperto» quello da quando la posizione è stata aperta. «Corto» indica una posizione che guadagna se il prezzo scende.' });
 
   const weightOf = (r) => {
     const w = num(r.weight);
@@ -73,16 +73,17 @@ export function mount(root) {
     const amount = (f) => (f == null || eq == null ? null : fmtMoney(f * eq, ccy, { digits: 0 }));
     const cash = num(nav.cash);
     fill(band, h('div', { class: 'tiles__grid tiles__grid--4' },
-      stat({ label: 'Esposizione lorda', value: gross == null ? null : fmtPct(gross, 1), sub: amount(gross), hint: 'Somma dei valori assoluti delle posizioni' }),
-      stat({ label: 'Esposizione netta', value: net == null ? null : (net < 0 ? fmtPctSigned(net, 1) : fmtPct(net, 1)), sub: amount(net), hint: 'Posizioni lunghe meno posizioni corte' }),
+      stat({ label: 'Esposizione lorda', value: gross == null ? null : fmtPct(gross, 1), sub: amount(gross), hint: 'Somma dei valori assoluti delle posizioni', explain: 'Quanto è investito in tutto, rispetto al patrimonio. Sopra il 100% si sta usando la leva.' }),
+      stat({ label: 'Esposizione netta', value: net == null ? null : (net < 0 ? fmtPctSigned(net, 1) : fmtPct(net, 1)), sub: amount(net), hint: 'Posizioni lunghe meno posizioni corte', explain: 'Posizioni al rialzo meno posizioni al ribasso: quanto il conto è esposto alla direzione del mercato.' }),
       stat({
         label: 'Leva', value: lev == null ? null : `${fmtNum(lev, 2)}x`, cls: 'stat--meter',
         sub: maxLev == null ? null : [
           bullet({ ratio: use, kind: use != null && use >= 1 ? 'crit' : use != null && use >= 0.8 ? 'warn' : 'ok', label: 'Leva rispetto al limite', text: `${fmtPct(use, 0)} del limite` }),
           h('span', { text: `limite ${fmtNum(maxLev, 2)}x${use == null ? '' : ` · ${fmtPct(use, 0)} usato`}` }),
         ],
+        explain: 'La leva del conto: esposizione totale divisa per il patrimonio. La barra mostra quanto è vicina al limite.',
       }),
-      stat({ label: 'Liquidità', value: cash == null ? null : fmtMoney(cash, ccy, { digits: 0 }), sub: cash != null && eq ? `${fmtPct(cash / eq, 1)} del patrimonio` : null })));
+      stat({ label: 'Liquidità', value: cash == null ? null : fmtMoney(cash, ccy, { digits: 0 }), sub: cash != null && eq ? `${fmtPct(cash / eq, 1)} del patrimonio` : null, explain: 'Denaro non investito, pronto per nuove operazioni o per coprire i margini.' })));
   }
 
   function fillBars() {
@@ -132,6 +133,16 @@ export function mount(root) {
       fillBand();
       fillBars();
       fillPositions();
+    },
+    summary(c) {
+      const e = obj(c.snap.exposure);
+      const div = exposureDivisor(c.snap);
+      const gross = num(e.gross) == null ? null : num(e.gross) / div;
+      const n = arr(c.snap.positions).length;
+      if (gross == null) return 'Lo snapshot non riporta l\'esposizione del conto.';
+      const lev = num(e.leverage);
+      const max = num(e.max_leverage);
+      return `Il fondo è investito per il ${fmtPct(gross, 0)} del patrimonio${lev != null && max != null ? ` (leva ${fmtNum(lev, 2)}x su un massimo di ${fmtNum(max, 0)}x)` : ''}${n ? `, in ${n} ${n === 1 ? 'posizione' : 'posizioni'}` : ', senza posizioni elencate in questo snapshot'}.`;
     },
   };
 }

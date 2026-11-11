@@ -11,17 +11,17 @@ export function mount(root) {
   let heatKey = null;
 
   const tiles = h('section', { class: 'card tiles span-12', 'aria-label': 'Metriche di performance' });
-  const heatCard = card({ title: 'Rendimenti mensili', sub: 'In percentuale. Il totale è il rendimento composto dell\'anno.', cls: 'span-12' });
+  const heatCard = card({ title: 'Rendimenti mensili', sub: 'In percentuale. Il totale è il rendimento composto dell\'anno.', cls: 'span-12', what: 'Ogni casella è il risultato di un mese: verde se ha guadagnato, rosso se ha perso, più intenso quanto più grande è il numero. L\'ultima colonna è il risultato dell\'intero anno.', method: 'Rendimenti mensili composti dai rendimenti giornalieri; intensità del colore proporzionale al valore assoluto, saturata al 92° percentile.' });
   const heatHost = h('div', { class: 'heat-host' });
   heatCard.body.append(heatHost);
 
-  const volCard = card({ title: 'Volatilità mobile', cls: 'span-6' });
+  const volCard = card({ title: 'Volatilità mobile', cls: 'span-6', what: 'Quanto ha oscillato il conto negli ultimi tre mesi, ricalcolato ogni giorno. La linea tratteggiata è l\'obiettivo che il fondo si è dato: sopra, il conto si sta muovendo più del previsto.', method: 'Deviazione standard dei rendimenti giornalieri sulla finestra, annualizzata con i giorni per anno dedotti dalle date.' });
   const volHost = h('div', { class: 'chart-host' });
   const volEmpty = h('div');
   volCard.body.append(volHost, volEmpty);
   const volChart = timeChart(volHost, { label: 'Volatilità annualizzata su finestra mobile. Frecce sinistra e destra per scorrere i giorni.' });
 
-  const shCard = card({ title: 'Sharpe mobile', cls: 'span-6' });
+  const shCard = card({ title: 'Sharpe mobile', cls: 'span-6', what: 'Lo Sharpe calcolato solo sugli ultimi sei mesi. Sopra la linea dello zero il semestre è stato positivo. È normale che salga e scenda molto: su periodi brevi è una misura rumorosa.', method: 'Media / deviazione standard dei rendimenti giornalieri sulla finestra, annualizzata; tasso senza rischio non sottratto.' });
   const shHost = h('div', { class: 'chart-host' });
   const shEmpty = h('div');
   shCard.body.append(shHost, shEmpty);
@@ -33,16 +33,18 @@ export function mount(root) {
     const p = obj(ctx.snap.performance);
     const nav = obj(ctx.snap.nav);
     const ratio = (v) => (num(v) == null ? null : fmtNum(v, 2));
+    const years = num(p.days) ? num(p.days) / 365 : null;
+    const se = num(p.sharpe) != null && years ? Math.sqrt((1 + num(p.sharpe) ** 2 / 2) / years) : null;
     fill(tiles,
       h('div', { class: 'tiles__grid' },
-        stat({ label: 'Rendimento annuo (CAGR)', value: signedPct(p.cagr, 2, { arrow: false }), sub: 'composto, al netto dei costi' }),
-        stat({ label: 'Volatilità', value: num(p.vol) == null ? null : fmtPct(p.vol, 1), sub: 'annualizzata' }),
-        stat({ label: 'Sharpe', value: ratio(p.sharpe), sub: 'rendimento per unità di rischio' }),
-        stat({ label: 'Sortino', value: ratio(p.sortino), sub: 'conta solo il rischio al ribasso' }),
-        stat({ label: 'Calmar', value: ratio(p.calmar), sub: 'CAGR / drawdown massimo' }),
-        stat({ label: 'PSR', value: num(p.psr) == null ? null : fmtPct(p.psr, 1), sub: 'probabilità che lo Sharpe vero sia > 0' }),
-        stat({ label: 'Mese migliore', value: signedPct(p.best_month, 2, { arrow: false }) }),
-        stat({ label: 'Mese peggiore', value: signedPct(p.worst_month, 2, { arrow: false }) })),
+        stat({ label: 'Rendimento annuo (CAGR)', value: signedPct(p.cagr, 2, { arrow: false }), sub: 'composto, al netto dei costi', explain: 'Di quanto è cresciuto il conto in media ogni anno. Più alto è meglio.' }),
+        stat({ label: 'Volatilità', value: num(p.vol) == null ? null : fmtPct(p.vol, 1), sub: 'annualizzata', explain: 'Quanto oscilla il valore del conto in un anno. Più bassa vuol dire un percorso più tranquillo.' }),
+        stat({ label: 'Sharpe', value: ratio(p.sharpe), sub: se == null ? 'rendimento per unità di rischio' : [h('span', { class: 'only-semplice', text: 'rendimento per unità di rischio' }), h('span', { class: 'only-esperto num', text: `± ${fmtNum(se, 2)} errore standard` })], explain: 'Quanto rende ogni unità di rischio. Intorno a 1 è buono; sotto 0,5 è debole.' }),
+        stat({ label: 'Sortino', value: ratio(p.sortino), sub: 'conta solo il rischio al ribasso', explain: 'Come lo Sharpe, ma considera «rischio» solo le oscillazioni in perdita. Più alto è meglio.' }),
+        stat({ label: 'Calmar', value: ratio(p.calmar), sub: 'CAGR / drawdown massimo', explain: 'Rendimento annuo diviso per la caduta peggiore. Sopra 1: in un anno medio si recupera la caduta peggiore.' }),
+        stat({ label: 'PSR', value: num(p.psr) == null ? null : fmtPct(p.psr, 1), sub: 'probabilità che lo Sharpe vero sia > 0', explain: 'Quanto è probabile che il risultato non sia solo fortuna. Sopra il 95% è un buon segno.' }),
+        stat({ label: 'Mese migliore', value: signedPct(p.best_month, 2, { arrow: false }), explain: 'Il mese più favorevole della storia del conto.' }),
+        stat({ label: 'Mese peggiore', value: signedPct(p.worst_month, 2, { arrow: false }), explain: 'Il mese più difficile: dà un\'idea di che cosa può succedere in un mese storto.' })),
       h('div', { class: 'tiles__foot pairs pairs--row' },
         pair('Giorni positivi', num(p.hit_rate_days) == null ? null : fmtPct(p.hit_rate_days, 1)),
         pair('Giorni di storico', num(p.days) == null ? null : fmtNum(p.days, 0)),
@@ -109,6 +111,13 @@ export function mount(root) {
       fillTiles();
       fillHeat();
       fillRolling();
+    },
+    summary(c) {
+      const p = obj(c.snap.performance);
+      if (num(p.cagr) == null) return 'Lo storico è ancora troppo corto per calcolare le metriche di performance.';
+      const sh = num(p.sharpe);
+      const word = sh == null ? '' : sh < 0 ? 'negativo' : sh < 0.5 ? 'debole' : sh < 1 ? 'discreto' : sh < 2 ? 'buono' : 'molto alto';
+      return `In ${fmtNum(p.days, 0)} giorni il fondo ha reso in media il ${fmtPct(p.cagr, 1)} l'anno, con oscillazioni del ${fmtPct(p.vol, 0)} l'anno${sh == null ? '' : `; il rapporto tra rendimento e rischio (Sharpe ${fmtNum(sh, 2)}) è ${word}`}.`;
     },
   };
 }

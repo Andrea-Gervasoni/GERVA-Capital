@@ -57,6 +57,7 @@
   --pos: #61d19a;             /* P&L positivo (testo e celle) */
   --neg: #f05f5a;             /* P&L negativo */
   --bench: #666e7a;           /* serie di confronto, de-enfatizzata */
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;   /* serie categoriche, ordine fisso (validato) */
   --warn: #fab219;            /* stato: attenzione (riempimento) */
   --warn-ink: #fab219;
   --warn-soft: rgba(250, 178, 25, 0.12);
@@ -93,6 +94,7 @@
   --pos: #117555;
   --neg: #c9212e;
   --bench: #8b929c;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
   --warn: #fab219;
   --warn-ink: #855600;
   --warn-soft: rgba(250, 178, 25, 0.16);

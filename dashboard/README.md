@@ -23,11 +23,37 @@ python -c "from gerva.live import snapshot as s; s.write('var/gerva/snapshot.jso
 
 Test: `python -m pytest tests/test_dashboard.py -q`
 
+## Due livelli di lettura
+
+In alto c'è un interruttore **Semplice / Esperto** (ricordato nel browser, parte da Semplice).
+
+- **Semplice**: una riga «In una frase» in cima a ogni pagina, generata dai dati; sotto ogni cifra una spiegazione
+  in italiano corrente; «Che cosa significa?» accanto al titolo di ogni grafico; gli stati detti come un semaforo.
+- **Esperto**: le spiegazioni spariscono e compaiono colonne in più, errori standard, note di metodo e grafici
+  aggiuntivi (rendimenti giornalieri e mensili, schemi di leva a livelli, walk-forward, quintili di GEX).
+
+Il **Glossario** (pulsante in alto) si apre anche toccando un termine sottolineato a puntini.
+
+## Pagine
+
+Panoramica, Performance, Esposizione, Rischio, Strategie, Ordini, Sistema, e in più:
+
+- **AI** — regime di mercato, conviction di oggi con le soglie, overlay in vigore (moltiplicatori, motivi, fonti,
+  scadenza). Legge il blocco `ai` dello snapshot; se manca lo dice.
+- **Ricerca** — tutto ciò che viene da `research/v5/quant.json`: tabella della leva nei tre scenari, ventaglio a tre
+  anni, rischio di rovina per leva, scenari, correlazioni, curve delle strategie con il confine scelta/verifica,
+  quote nel tempo, Sharpe mobile, drawdown, istogramma, conviction, robustezza, significatività, idee scartate.
+  Ogni scheda porta l'etichetta **SIMULATO: ricerca su dati storici**.
+- **Come funziona** — il percorso dai dati al broker come diagramma cliccabile, e le quattro strategie spiegate.
+
+In fondo a Rischio c'è l'esempio «leva del trade e leva del conto» con i tetti di legge.
+
 ## Variabili d'ambiente
 
 | Variabile | Predefinito | A che cosa serve |
 |---|---|---|
 | `GERVA_SNAPSHOT` | `var/gerva/snapshot.json` | Lo snapshot da servire. Se il file non esiste si serve l'esempio DEMO; se esiste ma è illeggibile la risposta è 503 (mai l'esempio al posto di dati veri). |
+| `GERVA_QUANT` | `research/v5/quant.json` | I risultati della ricerca (statici, simulati). Se manca, `/api/v1/quant` risponde 404 e le pagine lo dicono. |
 | `GERVA_KILL_FILE` | `var/gerva/KILL` | Il file che il comando KILL crea. |
 | `GERVA_DASH_TOKEN` | *(non impostato)* | Token richiesto dal KILL. Senza, il KILL è spento (503). |
 | `GERVA_DASH_HOST` | `127.0.0.1` | Indirizzo di ascolto. |
@@ -43,6 +69,7 @@ I percorsi predefiniti sono relativi alla radice del repository; quelli passati 
 |---|---|---|
 | GET | `/api/v1/snapshot` | Lo snapshot così com'è (NaN e infinito diventano `null`). Header `X-Gerva-Snapshot-Source: file` oppure `demo`. |
 | GET | `/api/v1/health` | `{"ok": true, "snapshot_age_s": …, "snapshot_source": …, "kill_enabled": …, "kill_active": …}` |
+| GET | `/api/v1/quant` | Il file della ricerca così com'è (NaN → `null`); 404 se manca, 503 se illeggibile. Header `X-Gerva-Quant-Age`. |
 | POST | `/api/v1/kill` | Crea il file KILL. Vedi sotto. |
 
 Ogni risposta porta le intestazioni di sicurezza (CSP `default-src 'self'` senza script né stili inline,
@@ -71,7 +98,12 @@ orders          [{t, symbol, side, qty, price, status, strategy, venue, reason}]
 system          heartbeat_age_s, uptime_s, restarts_24h, errors_24h, components[{name, status, latency_ms, last_ok, detail}]
 alerts          [{t, level, msg}]
 gates           [{name, value, target, unit, ok}]
+ai              overlay{valido, nota, globale, motivo_globale, scade, strategie[{id, mult, motivo, fonti[]}]},
+                regime{stato (calmo | normale | teso | crisi), punteggio, scala_esposizione}, conviction[{asset, score, livello}]
 ```
+
+Lo snapshot si legge ogni 5 secondi, la ricerca al caricamento e poi ogni 10 minuti; sotto il titolo di ogni pagina
+c'è l'età di entrambe le fonti. I grafici si aggiornano sul posto: intervallo scelto e mirino restano dove sono.
 
 Come la pagina legge i punti che il contratto lascia aperti:
 
@@ -119,7 +151,8 @@ static/js/main.js         instradamento per hash (#/panoramica, #/rischio…), t
 static/js/store.js        interrogazione ogni 5 s, dati fermi / offline
 static/js/model.js        lettura tollerante dello snapshot (funzioni pure)
 static/js/charts.js       grafici SVG: linee con mirino, drawdown, heatmap, barre, sparkline, barre di limite
-static/js/views/          una sezione per file
+static/js/glossary.js     definizioni e termini cliccabili
+static/js/views/          una sezione per file (dieci)
 static/sample_snapshot.json   esempio DEMO, coerente al centesimo (lo verifica il test)
 ```
 

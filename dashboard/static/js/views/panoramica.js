@@ -1,9 +1,9 @@
 // Panoramica: prima il patrimonio e il risultato di giornata, poi lo stato del rischio, poi l'andamento.
 
 import { h, icon, fill, loadPref, savePref } from '../dom.js';
-import { card, chip, dataTable, empty, more, pair, segmented, signedMoney, signedPct, stat, toggle } from '../components.js';
-import { bullet, sparkline, timeChart } from '../charts.js';
-import { DASH, arr, fmtAge, fmtAxisAmount, fmtDate, fmtDayTime, fmtMoney, fmtMonthLong, fmtPct, fmtPctSigned, fmtYear, num, obj, parseTs, stepDigits, str } from '../format.js';
+import { card, chip, dataTable, empty, explain, more, pair, segmented, signedMoney, signedPct, stat, toggle } from '../components.js';
+import { bullet, columns, sparkline, timeChart } from '../charts.js';
+import { DASH, arr, fmtAge, fmtAxisAmount, fmtDate, fmtDayTime, fmtMoney, fmtMonthLong, fmtNum, fmtPct, fmtPctSigned, fmtYear, num, obj, parseTs, stepDigits, str } from '../format.js';
 import { RANGES, alertLevel, curveOf, isBacktest, limitStatus, modeKind, modeShort, rangeStart, rebaseBench, riskState, strategyStatus, utilization } from '../model.js';
 
 const TABLE_ROWS = 366;
@@ -25,7 +25,11 @@ export function mount(root) {
   });
   const logBtn = toggle({ label: 'Scala logaritmica', text: 'Log', onChange: (on) => { ui.log = on ? 'on' : 'off'; drawChart(); } });
   const tableBtn = toggle({ label: 'Mostra i dati in tabella', iconName: 'table', onChange: (on) => { ui.table = on; drawChart(); } });
-  const chartCard = card({ title: 'Andamento del patrimonio', actions: [range.el, logBtn.el, tableBtn.el], cls: 'chart-card order-1' });
+  const chartCard = card({
+    title: 'Andamento del patrimonio', actions: [range.el, logBtn.el, tableBtn.el], cls: 'chart-card order-1',
+    what: 'La linea blu è il valore del conto giorno per giorno; quella grigia è il benchmark, cioè che cosa avrebbe fatto la stessa somma in un investimento di confronto. Sotto, in rosso, il drawdown: quanto il conto è sceso dal suo massimo. Passa il dito o il mouse sul grafico per leggere i valori di un giorno.',
+    method: 'Benchmark riportato al valore del fondo nel primo giorno dell\'intervallo (un solo asse). Drawdown calcolato sul massimo della curva disponibile. Scala logaritmica automatica se il rapporto massimo/minimo supera 3.',
+  });
   const legend = h('div', { class: 'legend' });
   const chartHost = h('div', { class: 'chart-host' });
   const tableHost = h('div', { class: 'chart-table' });
@@ -46,12 +50,18 @@ export function mount(root) {
   tableHost.append(curveTable.el);
 
   // ---- rischio e avvisi ----
-  const riskCard = card({ title: 'Rischio', actions: more('#/rischio', 'Dettaglio'), cls: 'risk-card' });
+  const riskCard = card({ title: 'Rischio', actions: more('#/rischio', 'Dettaglio'), cls: 'risk-card', what: 'Lo stato del motore di rischio e i limiti più vicini alla loro soglia. Ogni barra mostra quanta parte del limite è già usata: sotto l\'80% è tranquillo, tra 80% e 100% è da tenere d\'occhio, oltre il 100% il limite è superato e il motore interviene.' });
   const alertsCard = card({ title: 'Avvisi recenti', actions: more('#/sistema', 'Registro'), cls: 'alerts-card' });
   const side = h('div', { class: 'span-4 stack order-2' }, riskCard.el, alertsCard.el);
 
   // ---- strategie ----
-  const stratCard = card({ title: 'Strategie', actions: more('#/strategie', 'Schede complete'), cls: 'order-3', flush: true });
+  const stratCard = card({ title: 'Strategie', actions: more('#/strategie', 'Schede complete'), cls: 'order-3', flush: true, what: 'Le quattro strategie del fondo. «Allocazione» è la quota di patrimonio assegnata a ciascuna; «Oggi» e «Mese» sono il suo guadagno o la sua perdita nel periodo; la linea a destra è l\'andamento recente.' });
+  const miniCard = card({ title: 'Ultimi 30 giorni e ultimi 12 mesi', cls: 'order-3 only-esperto', method: 'Rendimenti giornalieri ricavati dalla curva del patrimonio; rendimenti mensili dallo snapshot. Nessun dato intraday: lo snapshot non lo contiene.' });
+  const miniDays = h('div', { class: 'mini-chart' });
+  const miniMonths = h('div', { class: 'mini-chart' });
+  const miniStats = h('div', { class: 'pairs pairs--row' });
+  miniCard.body.append(h('div', { class: 'mini-charts' }, h('div', null, h('h3', { class: 'subhead', text: 'Rendimento giornaliero' }), miniDays), h('div', null, h('h3', { class: 'subhead', text: 'Rendimento mensile' }), miniMonths)), miniStats);
+  let miniKey = null;
   const stratTable = dataTable({
     caption: 'Strategie: stato, allocazione e risultato',
     sort: { key: 'alloc', dir: -1 },
@@ -67,7 +77,7 @@ export function mount(root) {
   });
   stratCard.body.append(stratTable.el);
 
-  root.append(h('div', { class: 'grid' }, hero, h('div', { class: 'col span-8' }, chartCard.el, stratCard.el), side));
+  root.append(h('div', { class: 'grid' }, hero, h('div', { class: 'col span-8' }, chartCard.el, stratCard.el, miniCard.el), side));
 
   // ---------------------------------------------------------------------------------------------------------------
 
@@ -88,19 +98,22 @@ export function mount(root) {
         h('div', { class: 'hero__day' },
           signedMoney(nav.pnl_day, ccy, { cls: 'hero__day-amount' }),
           signedPct(nav.pnl_day_pct, 2, { arrow: false, cls: 'hero__day-pct' }),
-          h('span', { class: 'hero__day-label', text: isBacktest(meta) ? 'ultimo giorno' : 'oggi' }))),
+          h('span', { class: 'hero__day-label', text: isBacktest(meta) ? 'ultimo giorno' : 'oggi' })),
+        explain('Il valore di tutto il conto: liquidità più posizioni. Sotto, quanto ha guadagnato o perso oggi.', 'hero__explain')),
       h('div', { class: 'hero__stats' },
-        stat({ label: 'Da inizio mese', value: signedPct(nav.pnl_mtd_pct), sub: lastDay == null ? 'MTD' : fmtMonthLong(lastDay, true) }),
-        stat({ label: 'Da inizio anno', value: signedPct(nav.pnl_ytd_pct), sub: lastDay == null ? 'YTD' : `anno ${fmtYear(lastDay, true)}` }),
-        stat({ label: "Dall'avvio", value: signedPct(nav.pnl_total_pct), sub: num(nav.start_equity) == null ? null : `da ${fmtMoney(nav.start_equity, ccy, { digits: 0 })}` }),
+        stat({ label: 'Da inizio mese', value: signedPct(nav.pnl_mtd_pct), sub: lastDay == null ? 'MTD' : fmtMonthLong(lastDay, true), explain: 'Guadagno o perdita dal primo giorno del mese.' }),
+        stat({ label: 'Da inizio anno', value: signedPct(nav.pnl_ytd_pct), sub: lastDay == null ? 'YTD' : `anno ${fmtYear(lastDay, true)}`, explain: 'Guadagno o perdita dal primo gennaio.' }),
+        stat({ label: "Dall'avvio", value: signedPct(nav.pnl_total_pct), sub: num(nav.start_equity) == null ? null : `da ${fmtMoney(nav.start_equity, ccy, { digits: 0 })}`, explain: 'Risultato complessivo da quando il conto è partito.' }),
         stat({
           label: 'Drawdown dal massimo', value: fmtPct(nav.drawdown_pct, 2),
           sub: num(nav.high_water) == null ? null : `massimo ${fmtMoney(nav.high_water, ccy, { digits: 0 })}`,
           hint: 'Distanza del patrimonio dal suo massimo storico (high-water mark)',
+          explain: 'Quanto siamo sotto il punto più alto mai raggiunto: il drawdown. Zero è il meglio; se scende troppo il motore riduce il rischio.',
         }),
         stat({
           label: 'Liquidità', value: fmtMoney(cash, ccy, { digits: 0 }),
           sub: cash != null && eq ? `${fmtPct(cash / eq, 1)} del patrimonio` : null,
+          explain: 'Denaro non investito. Con la leva può essere vicino a zero: è normale.',
         })));
   }
 
@@ -199,7 +212,8 @@ export function mount(root) {
     fill(riskCard.body,
       h('div', { class: 'riskbox' },
         h('span', { class: `pill pill--lg pill--${st.kind}` }, icon(st.icon), h('span', { text: st.label })),
-        h('p', { class: 'riskbox__reason', text: str(risk.state_reason) || st.text || 'Stato del rischio non presente nello snapshot.' })),
+        h('p', { class: 'riskbox__reason', text: str(risk.state_reason) || st.text || 'Stato del rischio non presente nello snapshot.' }),
+        st.light ? explain(`${st.light}: ${st.text.charAt(0).toLowerCase()}${st.text.slice(1)}`) : null),
       limits.length
         ? h('div', { class: 'meters' },
           h('div', { class: 'meters__head', text: 'Limiti più vicini alla soglia' }),
@@ -213,7 +227,33 @@ export function mount(root) {
         : null,
       h('div', { class: 'pairs' },
         pair('VaR 95% a 1 giorno', varPct == null ? null : fmtPct(Math.abs(varPct), 2)),
-        pair('Volatilità 30g / obiettivo', num(risk.vol_realized_30d) == null && num(risk.vol_target) == null ? null : `${fmtPct(risk.vol_realized_30d, 1)} / ${fmtPct(risk.vol_target, 1)}`)));
+        pair('Volatilità 30g / obiettivo', num(risk.vol_realized_30d) == null && num(risk.vol_target) == null ? null : `${fmtPct(risk.vol_realized_30d, 1)} / ${fmtPct(risk.vol_target, 1)}`)),
+      explain('VaR: la perdita di giornata che si supera solo un giorno su venti. Volatilità: quanto oscilla il conto, confrontata con l\'obiettivo che il fondo si è dato.'));
+  }
+
+  function fillMini() {
+    const c = curveOf(ctx.snap);
+    const months = arr(ctx.snap.monthly_returns).filter((m) => num(m.ret) != null).slice(-12);
+    const key = `${c.t.length}|${c.equity[c.equity.length - 1]}|${months.length}|${months.length ? months[months.length - 1].ret : ''}`;
+    if (key === miniKey) return;
+    miniKey = key;
+    const n = c.t.length;
+    const k = Math.min(30, n - 1);
+    const days = [];
+    const dayLabels = [];
+    for (let i = n - k; i < n && i > 0; i++) {
+      days.push(c.equity[i - 1] > 0 ? c.equity[i] / c.equity[i - 1] - 1 : null);
+      dayLabels.push(fmtDate(c.t[i], true));
+    }
+    if (!columns(miniDays, days, { labels: dayLabels, label: 'Rendimenti giornalieri degli ultimi 30 giorni' })) fill(miniDays, h('p', { class: 'muted', text: 'Servono almeno tre giorni di storico.' }));
+    if (!columns(miniMonths, months.map((m) => num(m.ret)), { labels: months.map((m) => str(m.ym)), label: 'Rendimenti degli ultimi 12 mesi' })) fill(miniMonths, h('p', { class: 'muted', text: 'Servono almeno due mesi chiusi.' }));
+    const valid = days.filter((v) => v != null);
+    const mean = valid.length ? valid.reduce((a, b) => a + b, 0) / valid.length : null;
+    const sd = valid.length > 2 ? Math.sqrt(valid.reduce((a, b) => a + (b - mean) ** 2, 0) / (valid.length - 1)) : null;
+    fill(miniStats,
+      pair('Giorno migliore', valid.length ? fmtPctSigned(Math.max(...valid), 2) : null), pair('Giorno peggiore', valid.length ? fmtPctSigned(Math.min(...valid), 2) : null),
+      pair('Giorni positivi', valid.length ? `${valid.filter((v) => v > 0).length} su ${valid.length}` : null),
+      pair('Dev. standard giornaliera', sd == null ? null : `${fmtPct(sd, 2)} (± ${fmtNum(sd / Math.sqrt(2 * (valid.length - 1)) * 100, 2)} pt)`));
   }
 
   function fillAlerts() {
@@ -243,6 +283,22 @@ export function mount(root) {
       fillRisk();
       fillAlerts();
       stratTable.render(arr(ctx.snap.strategies));
+      fillMini();
+    },
+    summary(c) {
+      const nav = obj(c.snap.nav);
+      const risk = obj(c.snap.risk);
+      const st = riskState(risk);
+      const eq = num(nav.equity);
+      if (eq == null) return 'Lo snapshot non riporta il valore del conto.';
+      const day = num(nav.pnl_day);
+      const word = isBacktest(c.snap.meta) ? "Nell'ultimo giorno simulato" : 'Oggi';
+      const moved = day == null ? '' : day > 0 ? `, ha guadagnato ${fmtMoney(day, c.ccy, { digits: 0 })}` : day < 0 ? `, ha perso ${fmtMoney(Math.abs(day), c.ccy, { digits: 0 })}` : ', è fermo rispetto a ieri';
+      const statuses = arr(risk.limits).map((l) => str(l.status).toLowerCase());
+      const riskLine = st.code && st.code !== 'NORMAL' ? `il motore di rischio è nello stato «${st.label}»`
+        : statuses.includes('breach') ? 'ha superato almeno un limite di rischio'
+          : statuses.includes('warn') ? 'è vicino a un limite di rischio ma dentro il consentito' : 'sta rischiando meno del consentito';
+      return `${word} il fondo vale ${fmtMoney(eq, c.ccy, { digits: 0 })}${moved}; ${riskLine}.`;
     },
   };
 }

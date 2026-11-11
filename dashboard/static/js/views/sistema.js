@@ -11,7 +11,7 @@ export function mount(root) {
 
   const band = h('section', { class: 'card tiles span-12', 'aria-label': 'Stato del ciclo' });
 
-  const compCard = card({ title: 'Componenti', cls: 'order-1', flush: true });
+  const compCard = card({ title: 'Componenti', cls: 'order-1', flush: true, what: 'I pezzi di cui è fatto il sistema (dati, esecuzione, archivio…) e se stanno funzionando. «Latenza» è il tempo di risposta; «Ultimo OK» dice da quanto tempo quel pezzo ha risposto correttamente l\'ultima volta.' });
   const compTable = dataTable({
     caption: 'Salute dei componenti',
     emptyTitle: 'Nessun componente nello snapshot',
@@ -27,9 +27,9 @@ export function mount(root) {
   });
   compCard.body.append(compTable.el);
 
-  const gateCard = card({ title: 'Dal paper al reale', cls: 'span-5 order-2' });
+  const gateCard = card({ title: 'Dal paper al reale', cls: 'span-5 order-2', what: 'Il fondo passa al denaro vero solo quando tutti questi requisiti sono soddisfatti. Li verifica il codice sui dati del conto di prova: non sono opinioni. Uno solo non soddisfatto e si resta in paper.', method: 'Cancelli numerici valutati a ogni ciclo (gerva/live/gates.py). «Da calcolare» = il confronto richiede la replica del backtest.' });
 
-  const logCard = card({ title: 'Registro degli avvisi', cls: 'order-3', flush: true });
+  const logCard = card({ title: 'Registro degli avvisi', cls: 'order-3', flush: true, what: 'Tutto ciò che il motore ha segnalato, dal più recente. «Info» è solo una notizia, «Attenzione» merita uno sguardo, «Critico» richiede di capire che cosa è successo.' });
   const logTable = dataTable({
     caption: 'Avvisi del motore, dal più recente',
     sort: { key: 't', dir: -1 },
@@ -62,13 +62,15 @@ export function mount(root) {
         label: 'Battito del ciclo', value: hb == null ? null : fmtAgo(hb),
         sub: hb == null ? 'non riportato' : chip(late ? { label: 'In ritardo', kind: 'warn', icon: 'warn' } : { label: 'Regolare', kind: 'ok', icon: 'check' }),
         hint: 'Tempo trascorso dall\'ultimo giro completo del motore',
+        explain: 'Da quanto tempo il motore ha completato l\'ultimo giro. Se cresce troppo, il motore si è fermato.',
       }),
-      stat({ label: 'In funzione da', value: num(sys.uptime_s) == null ? null : fmtDuration(sys.uptime_s), sub: num(sys.uptime_s) == null ? 'non riportato' : 'dall\'ultimo avvio' }),
-      stat({ label: 'Riavvii nelle 24 ore', value: count(sys.restarts_24h), cls: num(sys.restarts_24h) > 0 ? 'stat--warn' : '' }),
-      stat({ label: 'Errori e avvisi nelle 24 ore', value: count(sys.errors_24h), cls: num(sys.errors_24h) > 0 ? 'stat--warn' : '' }),
+      stat({ label: 'In funzione da', value: num(sys.uptime_s) == null ? null : fmtDuration(sys.uptime_s), sub: num(sys.uptime_s) == null ? 'non riportato' : 'dall\'ultimo avvio', explain: 'Da quanto il motore gira senza interruzioni.' }),
+      stat({ label: 'Riavvii nelle 24 ore', value: count(sys.restarts_24h), cls: num(sys.restarts_24h) > 0 ? 'stat--warn' : '', explain: 'Quante volte è ripartito oggi. Zero è il normale.' }),
+      stat({ label: 'Errori e avvisi nelle 24 ore', value: count(sys.errors_24h), cls: num(sys.errors_24h) > 0 ? 'stat--warn' : '', explain: 'Segnalazioni di oggi: i dettagli sono nel registro in fondo.' }),
       stat({
         label: 'Ultimo snapshot', value: asOf == null ? null : fmtDayTime(asOf),
         sub: source === 'demo' ? 'esempio dimostrativo del server' : source === 'file' ? 'file scritto dal motore' : null,
+        explain: 'Quando il motore ha scritto i dati che stai leggendo.',
       })));
   }
 
@@ -115,6 +117,16 @@ export function mount(root) {
       });
       fillGates();
       logTable.render(arr(ctx.snap.alerts));
+    },
+    summary(c) {
+      const sys = obj(c.snap.system);
+      const comps = arr(sys.components).map((x) => str(x.status).toLowerCase());
+      const bad = comps.filter((x) => x && x !== 'ok').length;
+      const gates = arr(c.snap.gates);
+      const done = gates.filter((g) => g.ok === true).length;
+      const hb = num(sys.heartbeat_age_s);
+      const first = hb == null ? 'Il battito del ciclo non è riportato in questo snapshot' : hb > staleLimit(c.snap.meta) ? `Il ciclo è in ritardo: ultimo giro ${fmtAgo(hb)}` : `Il ciclo gira regolarmente (ultimo giro ${fmtAgo(hb)})`;
+      return `${first}${comps.length ? `; ${bad ? `${bad} ${bad === 1 ? 'componente ha' : 'componenti hanno'} un problema` : 'tutti i componenti rispondono'}` : ''}${gates.length ? `; ${done} requisiti su ${gates.length} soddisfatti per passare al denaro reale` : ''}.`;
     },
   };
 }

@@ -1,10 +1,12 @@
 // Avvio della console: instradamento per hash, tema, fascia della modalità, stato della connessione, sezioni.
 
 import { createStore } from './store.js';
-import { h, icon, fill, savePref } from './dom.js';
+import { h, icon, fill, loadPref, savePref } from './dom.js';
+import { segmented } from './components.js';
+import { glossaryList } from './glossary.js';
 import { hideTip } from './charts.js';
 import { initKill, lastKill } from './kill.js';
-import { arr, fmtAgo, fmtDateTime, fmtDuration, obj, parseTs, str } from './format.js';
+import { arr, fmtAgo, fmtDate, fmtDateTime, fmtDuration, obj, parseTs, str } from './format.js';
 import { isBacktest, modeKind, modeTag, riskState } from './model.js';
 import * as panoramica from './views/panoramica.js';
 import * as performance from './views/performance.js';
@@ -13,6 +15,9 @@ import * as rischio from './views/rischio.js';
 import * as strategie from './views/strategie.js';
 import * as ordini from './views/ordini.js';
 import * as sistema from './views/sistema.js';
+import * as comefunziona from './views/comefunziona.js';
+import * as ricerca from './views/ricerca.js';
+import * as ai from './views/ai.js';
 
 const ROUTES = [
   { id: 'panoramica', label: 'Panoramica', icon: 'overview', view: panoramica },
@@ -22,6 +27,9 @@ const ROUTES = [
   { id: 'strategie', label: 'Strategie', icon: 'strategies', view: strategie },
   { id: 'ordini', label: 'Ordini', icon: 'orders', view: ordini },
   { id: 'sistema', label: 'Sistema', icon: 'system', view: sistema },
+  { id: 'ai', label: 'AI', icon: 'ai', view: ai, group: true },
+  { id: 'ricerca', label: 'Ricerca', icon: 'research', view: ricerca },
+  { id: 'come-funziona', label: 'Come funziona', icon: 'flow', view: comefunziona },
 ];
 const VIEW_REFRESH_MS = 30000;        // anche a dati invariati le età ("3 min fa") vanno aggiornate
 
@@ -33,7 +41,10 @@ const el = {
   pill: $('risk-pill'), conn: $('conn'), connText: $('conn-text'), connShort: $('conn-short'),
   connbar: $('connbar'), connbarIcon: $('connbar-icon'), connbarTitle: $('connbar-title'), connbarText: $('connbar-text'),
   themeBtn: $('theme-toggle'), themeIcon: $('theme-toggle-icon'),
+  summary: $('summary'), sources: $('sources'), levelHost: $('level-switch'),
+  glossary: $('glossary'), glossaryBody: $('glossary-body'), glossaryBtn: $('glossary-btn'), glossaryClose: $('glossary-close'),
 };
+let level = loadPref('level', 'semplice') === 'esperto' ? 'esperto' : 'semplice';
 
 let mounted = null;          // { route, handle }
 let lastViewUpdate = 0;
@@ -79,7 +90,7 @@ function buildNav() {
   for (const r of ROUTES) {
     const flag = h('span', { class: 'nav__flag' });
     flag.hidden = true;
-    const a = h('a', { class: 'nav__link', href: `#/${r.id}` }, icon(r.icon), h('span', { class: 'nav__label', text: r.label }), flag);
+    const a = h('a', { class: `nav__link ${r.group ? 'nav__link--group' : ''}`.trim(), href: `#/${r.id}` }, icon(r.icon), h('span', { class: 'nav__label', text: r.label }), flag);
     a.flagEl = flag;
     links.set(r.id, a);
     el.nav.append(a);
@@ -193,10 +204,83 @@ function syncChrome() {
   }
 
   if (snap) {
+    syncSources();
     const lines = [str(meta.version) ? `Motore v${str(meta.version)}` : null, `Valuta base ${str(meta.base_ccy) || 'EUR'}`, 'Aggiornamento ogni 5 s'].filter(Boolean).join('\n');
     setText(el.foot, lines);
     syncFlags(snap);
   }
+}
+
+// ---- fonti dei dati: quanto è fresco ciò che si legge ---------------------------------------------------------------
+
+function syncSources() {
+  const st = store.state;
+  const age = store.ageSeconds();
+  const parts = [`Conto: ${st.status === 'offline' ? 'non raggiungibile' : age == null ? 'orario assente' : `aggiornato ${fmtAgo(age)}`}`];
+  const since = store.secondsSinceQuant();
+  const gen = parseTs(obj(st.quant).generated);
+  if (st.quantStatus === 'ok') parts.push(`Ricerca: letta ${fmtAgo(since)}${gen == null ? '' : `, generata il ${fmtDate(gen)}`}`);
+  else parts.push(`Ricerca: ${st.quantStatus === 'loading' ? 'in caricamento' : 'non disponibile'}`);
+  setText(el.sources, parts.join('  ·  '));
+}
+
+// ---- livello di lettura e glossario ------------------------------------------------------------------------------------
+
+function initLevel() {
+  document.body.dataset.level = level;
+  const seg = segmented({
+    label: 'Livello di lettura',
+    options: [{ value: 'semplice', label: 'Semplice' }, { value: 'esperto', label: 'Esperto' }],
+    value: level,
+    onChange: (v) => {
+      level = v;
+      document.body.dataset.level = v;
+      savePref('level', v);
+      syncView({ force: true });
+    },
+  });
+  el.levelHost.append(seg.el);
+}
+
+function openGlossary(id) {
+  if (!el.glossary.open) {
+    if (typeof el.glossary.showModal === 'function') el.glossary.showModal();
+    else el.glossary.setAttribute('open', '');
+  }
+  for (const n of el.glossaryBody.querySelectorAll('.is-target')) n.classList.remove('is-target');
+  const item = id ? document.getElementById(`gl-${id}`) : null;
+  if (item) {
+    item.classList.add('is-target');
+    item.scrollIntoView({ block: 'start' });
+    item.focus({ preventScroll: true });
+  } else {
+    el.glossaryBody.scrollTop = 0;
+  }
+}
+
+function initGlossary() {
+  el.glossaryBody.append(glossaryList());
+  el.glossaryBtn.addEventListener('click', () => openGlossary(null));
+  el.glossaryClose.addEventListener('click', () => el.glossary.close());
+  el.glossary.addEventListener('click', (e) => { if (e.target === el.glossary) el.glossary.close(); });   // clic sullo sfondo
+  document.addEventListener('click', (e) => {
+    const t = e.target instanceof Element ? e.target.closest('.term') : null;
+    if (t) {
+      e.preventDefault();
+      openGlossary(t.getAttribute('data-term'));
+      return;
+    }
+    // i riquadri «Che cosa significa?» si chiudono toccando altrove
+    for (const d of document.querySelectorAll('details.what[open]')) if (!(e.target instanceof Node) || !d.contains(e.target)) d.removeAttribute('open');
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    for (const d of document.querySelectorAll('details.what[open]')) {
+      d.removeAttribute('open');
+      const sm = d.querySelector('summary');
+      if (sm && d.contains(document.activeElement)) sm.focus();
+    }
+  });
 }
 
 // ---- sezione corrente ------------------------------------------------------------------------------------------------
@@ -204,6 +288,7 @@ function syncChrome() {
 function placeholder() {
   const st = store.state;
   mounted = null;
+  el.summary.hidden = true;
   if (st.status === 'offline') {
     fill(el.view, h('div', { class: 'placeholder placeholder--offline', role: 'alert' },
       icon('offline', 'icon--xl'),
@@ -217,7 +302,7 @@ function placeholder() {
 
 function context() {
   const st = store.state;
-  return { snap: st.snap, health: st.health, status: st.status, now: store.serverNow(), ccy: str(obj(st.snap.meta).base_ccy) || 'EUR' };
+  return { snap: st.snap, health: st.health, status: st.status, now: store.serverNow(), ccy: str(obj(st.snap.meta).base_ccy) || 'EUR', quant: st.quant, quantStatus: st.quantStatus, level };
 }
 
 const api = {
@@ -252,7 +337,11 @@ function syncView({ force = false, focus = false } = {}) {
     hideTip();
     try {
       if (!mounted.handle) throw new Error('sezione non disponibile');
-      mounted.handle.update(context());
+      const c = context();
+      mounted.handle.update(c);
+      const line = typeof mounted.handle.summary === 'function' ? mounted.handle.summary(c) : '';
+      el.summary.hidden = !line;
+      fill(el.summary, line ? h('span', { class: 'summary__tag', text: 'In una frase' }) : null, line || null);
     } catch (err) {
       console.error(err);
       mounted = null;
@@ -269,6 +358,8 @@ function syncView({ force = false, focus = false } = {}) {
 
 buildNav();
 initTheme();
+initLevel();
+initGlossary();
 document.querySelector('.skip-link').addEventListener('click', (event) => {
   event.preventDefault();                     // niente cambio di hash: le sezioni vivono lì
   el.main.focus();

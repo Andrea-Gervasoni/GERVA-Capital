@@ -18,7 +18,7 @@ export function mount(root) {
   let filter = 'all';
 
   const seg = segmented({ label: 'Filtra per stato', options: FILTERS, value: filter, onChange: (v) => { filter = v; paint(); } });
-  const box = card({ title: 'Ordini recenti', actions: seg.el, cls: 'span-12', flush: true });
+  const box = card({ title: 'Ordini recenti', actions: seg.el, cls: 'span-12', flush: true, what: 'Gli ultimi ordini mandati al broker. «Eseguito» è andato a buon fine; «In attesa» non è ancora stato eseguito; «Rifiutato» è stato fermato dal controllo di rischio o dal broker, con il motivo; «Annullato» è stato ritirato. Il controvalore è quantità per prezzo.', method: 'Ultimi 50 ordini del registro; il prezzo è quello di esecuzione se c\'è, altrimenti il prezzo di riferimento.' });
   const notional = (r) => (num(r.qty) == null || num(r.price) == null ? null : Math.abs(num(r.qty) * num(r.price)));
   const table = dataTable({
     caption: 'Ordini recenti',
@@ -69,6 +69,13 @@ export function mount(root) {
     update(next) {
       ctx = next;
       paint();
+    },
+    summary(c) {
+      const all = arr(c.snap.orders);
+      if (!all.length) return 'In questo snapshot non ci sono ordini.';
+      const count = (f) => all.filter((r) => f.match(str(r.status).toLowerCase())).length;
+      const rej = count(FILTERS[3]);
+      return `Nello snapshot ci sono ${all.length} ordini: ${count(FILTERS[1])} eseguiti, ${count(FILTERS[2])} in attesa${rej ? `, ${rej} ${rej === 1 ? 'rifiutato' : 'rifiutati'} (il motivo è indicato nella riga)` : ', nessuno rifiutato'}.`;
     },
   };
 }

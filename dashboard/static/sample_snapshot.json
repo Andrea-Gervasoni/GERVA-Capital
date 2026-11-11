@@ -543,5 +543,24 @@
    {"name": "Scostamento paper vs backtest (massimo)", "value": 0.021, "target": 0.05, "unit": "%", "ok": true},
    {"name": "Drawdown massimo in paper (limite)", "value": 0.031, "target": 0.1, "unit": "%", "ok": true},
    {"name": "Riconciliazioni con il broker riuscite", "value": 12, "target": 12, "unit": "giorni", "ok": true}
- ]
+ ],
+ "ai": {
+  "overlay": {
+   "valido": true,
+   "nota": "",
+   "globale": 1.0,
+   "motivo_globale": "",
+   "scade": "2026-11-11T02:45:00Z",
+   "strategie": [
+     {"id": "CR-XSMOM", "mult": 0.5, "motivo": "Rischio evento: decisione sui tassi domani; il momentum sulle monete minori è il più sensibile.", "fonti": ["macro:fomc-2026-11", "news:4821"]}
+   ]
+  },
+  "regime": {"stato": "teso", "punteggio": 2.0, "scala_esposizione": false},
+  "conviction": [
+    {"asset": "BTC", "score": 0.72, "livello": "alta"},
+    {"asset": "ETH", "score": 0.45, "livello": "media"},
+    {"asset": "SPY", "score": 0.64, "livello": "media"},
+    {"asset": "QQQ", "score": 0.4, "livello": "bassa"}
+  ]
+ }
 }

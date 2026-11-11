@@ -359,7 +359,7 @@ export function timeChart(host, { label = 'Grafico' } = {}) {
       if (mk.t == null || mk.t < t0 || mk.t > t1) continue;
       const x = Math.round(xOf(mk.t)) + 0.5;
       svg.append(s('line', { class: 'c-mark', x1: x, x2: x, y1: panels[0].y0, y2: bottom }));
-      if (mk.label) refLabels.push({ x: x + 5, y: panels[0].y0 + 11, text: mk.label, end: x > right - 120 ? x - 5 : null });
+      if (mk.label) refLabels.push({ x: x + 5, y: panels[0].y0 + 11 + (mk.row || 0) * 15, text: mk.label, end: x > right - 120 ? x - 5 : null });
     }
     for (const tk of (spec.xTicks || timeTicks(t0, t1, Math.floor(plotW / 60)))) {
       const x = xOf(tk.t);
@@ -855,4 +855,48 @@ export function histogram(host, data, { log = false, label = 'Distribuzione', xF
   draw(host.clientWidth);
   onResize(host, (w) => draw(w));
   return { mean, sd, total };
+}
+
+// ---- colonne compatte con segno (ultimi giorni, ultimi mesi) ---------------------------------------------------------------
+
+/** values: frazioni con segno; labels: testo per il tooltip di ogni colonna. Verde sopra lo zero, rosso sotto. */
+export function columns(host, values, { labels = [], height = 96, label = 'Colonne', fmt = (v) => fmtPctSigned(v, 2) } = {}) {
+  const vals = list(values).map(num);
+  if (vals.filter((v) => v != null).length < 2) return false;
+  const svg = s('svg', { class: 'chart chart--static', role: 'img', 'aria-label': label });
+  host.replaceChildren(svg);
+  let last = 0;
+  function draw(width) {
+    const w = Math.floor(width);
+    if (w < 60 || w === last) return;
+    last = w;
+    svg.replaceChildren();
+    const hi = Math.max(0, ...vals.map((v) => v ?? 0));
+    const lo = Math.min(0, ...vals.map((v) => v ?? 0));
+    const span = hi - lo || 1;
+    const right = w - 44;
+    const yOf = (v) => 4 + ((hi - v) / span) * (height - 8);
+    svg.setAttribute('viewBox', `0 0 ${w} ${height}`);
+    svg.setAttribute('width', w);
+    svg.setAttribute('height', height);
+    const bw = right / vals.length;
+    for (const v of [hi, lo]) {
+      if (v === 0) continue;
+      const y = Math.round(yOf(v)) + 0.5;
+      svg.append(s('line', { class: 'c-grid', x1: 0, x2: right, y1: y, y2: y }), s('text', { class: 'c-tick', x: right + 6, y: y + 3.5 }, fmtPctSigned(v, 1)));
+    }
+    const y0 = Math.round(yOf(0)) + 0.5;
+    vals.forEach((v, i) => {
+      if (v == null) return;
+      const y = yOf(Math.max(v, 0));
+      const hgt = Math.max(1, Math.abs(yOf(v) - yOf(0)));
+      const rect = s('rect', { class: `c-col ${v < 0 ? 'c-col--down' : 'c-col--up'}`, x: (i * bw + 1).toFixed(1), y: y.toFixed(1), width: Math.max(1, bw - 2).toFixed(1), height: hgt.toFixed(1), rx: Math.min(2, bw / 4) });
+      bindTip(rect, () => ({ title: labels[i] || '', rows: [{ label: 'Rendimento', value: fmt(v), cls: v > 0 ? 'pos' : v < 0 ? 'neg' : '' }] }));
+      svg.append(rect);
+    });
+    svg.append(s('line', { class: 'c-axis', x1: 0, x2: right, y1: y0, y2: y0 }));
+  }
+  draw(host.clientWidth);
+  onResize(host, (w) => draw(w));
+  return true;
 }
