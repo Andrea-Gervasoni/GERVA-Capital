@@ -11,7 +11,7 @@ START, SPLIT, END = '2005-01-03', '2022-12-31', '2026-10-30'
 USD_PER_EUR = 1.15
 
 def load():
-    pk = D + 'panel.pkl'
+    pk = D + 'data/panel.pkl'
     if os.path.exists(pk): return pd.read_pickle(pk)
     tick = open(D + 'tickers_all.txt').read().split()
     raw = {}
@@ -35,6 +35,13 @@ def load():
     r = P['ac'].pct_change(fill_method=None)
     P['ret'] = r.where(r.abs() < 1.5)                       # close-close totale
     P['dv'] = (c * P['volume'])
+    # prezzo REALE storico: la chiusura Yahoo e' rettificata per gli split successivi -> si moltiplica per i rapporti futuri
+    f = pd.DataFrame(1.0, index=cal, columns=c.columns)
+    for s_ in c.columns:
+        if st.has(f'v6_b5_splits_{s_}'):
+            for d_, q in st.get(f'v6_b5_splits_{s_}').itertuples(index=False):
+                if q > 0 and q != 1.0 and pd.Timestamp(d_) > cal[0]: f.loc[cal < pd.Timestamp(d_), s_] *= q
+    P['px'] = c * f
     mem = pd.read_csv(D + 'membership.csv', parse_dates=['start', 'end'])
     M = pd.DataFrame(False, index=cal, columns=c.columns)
     for t, s, e in zip(mem.ticker, mem.start, mem.end):
@@ -47,9 +54,9 @@ def load():
     P['sector'] = sectors(P)
     P['rf'] = (P['close']['^IRX'].ffill() / 100 / 252) if '^IRX' in P['close'] else pd.Series(0.0, index=cal)
     for f in list(P):
-        if isinstance(P[f], pd.DataFrame) and f != 'close': P[f] = P[f].drop(columns=['SPY', 'QQQ', '^IRX'], errors='ignore')
+        if isinstance(P[f], pd.DataFrame) and f not in ('close', 'px'): P[f] = P[f].drop(columns=['SPY', 'QQQ', '^IRX'], errors='ignore')
     P['spy_ret'] = a['SPY'].pct_change()
-    P['close'] = P['close'].drop(columns=['SPY', 'QQQ', '^IRX'], errors='ignore')
+    P['close'] = P['close'].drop(columns=['SPY', 'QQQ', '^IRX'], errors='ignore'); P['px'] = P['px'].drop(columns=['SPY', 'QQQ', '^IRX'], errors='ignore')
     pd.to_pickle(P, pk)
     return P
 
@@ -79,7 +86,7 @@ def cost_parts(P):
     dv = P['dv'].rolling(20, min_periods=5).median().shift(1)
     rk = dv.where(P['member'] | P['today']).rank(axis=1, pct=True)
     hs = pd.DataFrame(np.select([rk.values > 2 / 3, rk.values > 1 / 3], [2.0, 3.5], 5.0), index=dv.index, columns=dv.columns) * 1e-4
-    psh = (0.0065 / P['close'].shift(1)).clip(upper=0.01).fillna(1e-4)
+    psh = (0.0065 / P['px'].shift(1)).clip(upper=0.01).fillna(1e-4)
     P['hs'], P['psh'] = hs, psh
     return hs, psh
 

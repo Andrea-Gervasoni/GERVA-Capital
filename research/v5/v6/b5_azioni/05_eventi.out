@@ -1,0 +1,73 @@
+eventi (3 sigma, volume 2x, gap 2%): su 4718 (216/anno), giu 5184 (238/anno)
+eventi per mese di calendario: {1: 919, 2: 1169, 3: 572, 4: 918, 5: 798, 6: 381, 7: 1187, 8: 845, 9: 402, 10: 1334, 11: 1057, 12: 320}
+================ studio di evento: rendimento medio al netto del mercato EW (apertura t+1 -> chiusura t+h), in %
+SU 2005-2010 h=1: +0.06% (t 0.0) | h=5: -0.16% (t -0.5) | h=20: +0.01% (t -0.1) | h=60: -0.00% (t -0.9)  n=980
+SU 2011-2016 h=1: +0.13% (t 1.7) | h=5: +0.25% (t 2.0) | h=20: +0.17% (t 0.6) | h=60: +0.02% (t 0.3)  n=1114
+SU 2017-2022 h=1: +0.17% (t 0.4) | h=5: -0.10% (t -0.4) | h=20: -0.05% (t -1.4) | h=60: -0.33% (t -2.0)  n=1331
+SU 2023-2026 h=1: -0.32% (t -2.6) | h=5: -0.32% (t -1.3) | h=20: +0.17% (t 1.0) | h=60: +0.32% (t 0.9)  n=1232
+GIU 2005-2010 h=1: -0.24% (t -1.2) | h=5: +0.03% (t -0.0) | h=20: +0.39% (t 1.0) | h=60: +1.42% (t 1.9)  n=850
+GIU 2011-2016 h=1: +0.03% (t 0.6) | h=5: -0.01% (t -0.6) | h=20: +0.31% (t 0.8) | h=60: +0.76% (t 0.8)  n=1171
+GIU 2017-2022 h=1: -0.20% (t -1.3) | h=5: -0.52% (t -0.9) | h=20: -0.18% (t 1.2) | h=60: +0.97% (t 0.9)  n=1646
+GIU 2023-2026 h=1: -0.08% (t -1.9) | h=5: -0.26% (t -2.1) | h=20: -0.43% (t -1.9) | h=60: -0.69% (t -1.8)  n=1437
+================ portafogli a slot (peso 1/K per evento, lordo mai oltre 100% per gamba)
+                           label    sh  sh_sel  sh_ver  cagr  cagr_sel  cagr_ver   mdd     t  vol  tov_yr  gross_sh  cost%yr
+           PEADproxy z3 v2 H5 LO  0.26    0.24    0.32   1.7       1.5       2.4 -22.6  1.21  7.4   20.91      0.40      1.0
+PEADproxy z3 v2 H5 LO-EW(attivo) -0.68   -0.65   -0.93 -12.6     -12.7     -12.1 -95.5 -3.18 17.6     NaN       NaN      NaN
+           PEADproxy z3 v2 H5 LS -0.03    0.01   -0.17  -0.9      -0.5      -2.9 -45.2 -0.14 10.9   44.04      0.19      2.2
+           PEADproxy z3 v2 H5 SO -0.19   -0.15   -0.38  -2.9      -2.3      -5.5 -53.2 -0.90 11.7   23.14     -0.07      1.2
+    PEADproxy z3 v2 H5 LS 10kEUR -0.28   -0.18   -0.68  -3.6      -2.5      -8.8 -60.5 -1.31 10.9   44.04      0.19      5.0
+  PEADproxy z3 v2 H5 LS costi x2 -0.23   -0.19   -0.41  -3.1      -2.6      -5.6 -54.3 -1.09 10.9   44.04      0.19      4.5
+ PEADproxy z3 v2 H5 LS ritardo+1 -0.22   -0.14   -0.57  -2.7      -1.8      -6.7 -56.2 -1.02 10.1   43.98      0.02      2.2
+       PEADproxy z3 v2 H5 LS MOC -0.01    0.03   -0.21  -0.8      -0.3      -3.1 -34.4 -0.07 11.2   44.07      0.20      2.2
+                            label    sh  sh_sel  sh_ver  cagr  cagr_sel  cagr_ver   mdd     t  vol  tov_yr  gross_sh  cost%yr
+           PEADproxy z3 v2 H20 LO  0.48    0.45    0.66   6.6       6.3       8.2 -37.3  2.24 16.1   20.94      0.54      1.0
+PEADproxy z3 v2 H20 LO-EW(attivo) -0.51   -0.50   -0.61  -6.7      -6.8      -6.3 -82.8 -2.38 12.1     NaN       NaN      NaN
+           PEADproxy z3 v2 H20 LS -0.17   -0.24    0.12  -2.8      -3.5       0.7 -59.4 -0.81 12.1   43.15      0.06      2.2
+           PEADproxy z3 v2 H20 SO -0.52   -0.54   -0.45 -11.0     -11.6      -8.3 -92.4 -2.44 18.9   22.32     -0.43      1.1
+    PEADproxy z3 v2 H20 LS 10kEUR -1.34   -1.13   -2.27 -15.7     -13.4     -25.7 -97.6 -6.27 12.2   43.15      0.06     16.4
+  PEADproxy z3 v2 H20 LS costi x2 -0.35   -0.41   -0.08  -4.9      -5.5      -1.8 -72.3 -1.65 12.1   43.15      0.06      4.3
+ PEADproxy z3 v2 H20 LS ritardo+1 -0.23   -0.31    0.09  -3.3      -4.0       0.4 -60.7 -1.09 11.4   43.12      0.01      2.2
+       PEADproxy z3 v2 H20 LS MOC -0.21   -0.28    0.14  -3.2      -4.1       1.0 -59.6 -0.98 12.0   43.18      0.02      2.2
+                            label    sh  sh_sel  sh_ver  cagr  cagr_sel  cagr_ver    mdd      t  vol  tov_yr  gross_sh  cost%yr
+           PEADproxy z3 v2 H60 LO  0.68    0.65    0.99  14.0      13.6      15.8  -53.8   3.18 23.1   13.39      0.71      0.7
+PEADproxy z3 v2 H60 LO-EW(attivo)  0.24    0.24    0.23   1.6       1.7       1.1  -19.8   1.11  7.9     NaN       NaN      NaN
+           PEADproxy z3 v2 H60 LS -0.21   -0.29    0.22  -2.4      -3.2       1.4  -64.9  -1.00  9.3   26.40      0.04      1.4
+           PEADproxy z3 v2 H60 SO -0.77   -0.77   -0.86 -18.6     -19.4     -14.7  -99.0  -3.60 23.1   13.25     -0.70      0.7
+    PEADproxy z3 v2 H60 LS 10kEUR -4.92   -4.13   -9.51 -38.0     -33.7     -55.1 -100.0 -22.98  9.6   26.40      0.04     46.8
+  PEADproxy z3 v2 H60 LS costi x2 -0.36   -0.44    0.08  -3.7      -4.6       0.3  -71.3  -1.70  9.3   26.40      0.04      2.8
+ PEADproxy z3 v2 H60 LS ritardo+1 -0.45   -0.56    0.18  -4.4      -5.5       1.1  -75.3  -2.09  9.1   26.38     -0.19      1.4
+       PEADproxy z3 v2 H60 LS MOC -0.32   -0.40    0.15  -3.2      -4.1       0.9  -68.8  -1.47  9.1   26.41     -0.06      1.4
+                           label    sh  sh_sel  sh_ver  cagr  cagr_sel  cagr_ver   mdd     t  vol  tov_yr  gross_sh  cost%yr
+           PEADproxy z4 v3 H5 LO  0.29    0.36   -0.06   1.2       1.5      -0.3 -12.6  1.33  4.3    9.97      0.40      0.5
+PEADproxy z4 v3 H5 LO-EW(attivo) -0.67   -0.61   -1.12 -13.4     -13.2     -14.7 -96.2 -3.13 18.9     NaN       NaN      NaN
+           PEADproxy z4 v3 H5 LS  0.06    0.15   -0.45   0.2       1.0      -3.4 -31.4  0.30  8.6   23.38      0.22      1.2
+                            label    sh  sh_sel  sh_ver  cagr  cagr_sel  cagr_ver   mdd     t  vol  tov_yr  gross_sh  cost%yr
+           PEADproxy z4 v3 H20 LO  0.54    0.51    0.70   5.0       4.7       6.5 -33.1  2.52 10.0   10.16      0.59      0.5
+PEADproxy z4 v3 H20 LO-EW(attivo) -0.54   -0.52   -0.71  -9.3      -9.5      -8.3 -90.6 -2.50 15.9     NaN       NaN      NaN
+           PEADproxy z4 v3 H20 LS  0.10    0.10    0.12   0.5       0.5       0.7 -44.8  0.49 12.0   24.19      0.24      1.2
+                            label    sh  sh_sel  sh_ver  cagr  cagr_sel  cagr_ver   mdd     t  vol  tov_yr  gross_sh  cost%yr
+           PEADproxy z4 v3 H60 LO  0.72    0.67    1.03  12.8      11.7      18.1 -45.4  3.38 19.2   10.77      0.75      0.5
+PEADproxy z4 v3 H60 LO-EW(attivo)  0.00   -0.06    0.40  -0.5      -1.3       3.1 -46.9  0.01 10.4     NaN       NaN      NaN
+           PEADproxy z4 v3 H60 LS -0.03   -0.10    0.39  -1.1      -2.1       3.9 -50.4 -0.12 12.6   22.81      0.14      1.2
+                            label    sh  sh_sel  sh_ver  cagr  cagr_sel  cagr_ver   mdd     t  vol  tov_yr  gross_sh  cost%yr
+           gap GIU comprato H5 LO -0.03   -0.06    0.10  -1.0      -1.4       0.5 -52.5 -0.15 11.7   23.14      0.07      1.2
+gap GIU comprato H5 LO-EW(attivo) -0.84   -0.81   -1.15 -14.5     -14.8     -13.2 -97.3 -3.93 16.9     NaN       NaN      NaN
+                             label    sh  sh_sel  sh_ver  cagr  cagr_sel  cagr_ver   mdd     t  vol  tov_yr  gross_sh  cost%yr
+           gap GIU comprato H20 LO  0.37    0.39    0.23   5.3       5.9       2.5 -47.5  1.71 18.9   22.32      0.43      1.1
+gap GIU comprato H20 LO-EW(attivo) -0.57   -0.48   -1.31  -7.4      -6.7     -10.7 -85.9 -2.68 12.2     NaN       NaN      NaN
+================ breakout: nuova chiusura massima a 252 giorni (non massimo nei 20 giorni prima), con/senza volume
+tutti eventi/anno 655 h=5: +0.01% (t -0.7) | h=20: +0.03% (t -1.4) | h=60: -0.02% (t -1.0)
+                             label    sh  sh_sel  sh_ver  cagr  cagr_sel  cagr_ver   mdd     t  vol  tov_yr  gross_sh  cost%yr
+           breakout52 tutti H20 LO  0.57    0.51    0.91   7.5       6.6      12.0 -33.2  2.68 14.5   37.05      0.69      1.6
+breakout52 tutti H20 LO-EW(attivo) -0.45   -0.47   -0.31  -6.2      -6.9      -2.8 -81.9 -2.08 12.6     NaN       NaN      NaN
+                             label    sh  sh_sel  sh_ver  cagr  cagr_sel  cagr_ver   mdd     t  vol  tov_yr  gross_sh  cost%yr
+           breakout52 tutti H60 LO  0.70    0.65    1.01  10.9      10.3      13.8 -42.4  3.26 16.9   10.57      0.73      0.5
+breakout52 tutti H60 LO-EW(attivo) -0.24   -0.26   -0.16  -2.4      -2.7      -1.1 -60.3 -1.14  8.5     NaN       NaN      NaN
+volume>1.5x eventi/anno 177 h=5: +0.02% (t 1.8) | h=20: +0.12% (t 0.7) | h=60: +0.16% (t 1.2)
+                                   label    sh  sh_sel  sh_ver  cagr  cagr_sel  cagr_ver   mdd     t  vol  tov_yr  gross_sh  cost%yr
+           breakout52 volume>1.5x H20 LO  0.61    0.56    0.82   6.1       5.6       8.9 -19.8  2.84 10.8   18.59      0.68      0.8
+breakout52 volume>1.5x H20 LO-EW(attivo) -0.48   -0.48   -0.48  -8.2      -8.6      -6.1 -88.9 -2.22 15.4     NaN       NaN      NaN
+                                   label    sh  sh_sel  sh_ver  cagr  cagr_sel  cagr_ver   mdd     t  vol  tov_yr  gross_sh  cost%yr
+           breakout52 volume>1.5x H60 LO  0.76    0.72    1.00  12.0      11.4      15.0 -34.0  3.56 16.7   12.54       0.8      0.6
+breakout52 volume>1.5x H60 LO-EW(attivo) -0.11   -0.14    0.05  -1.6      -2.0       0.1 -58.3 -0.53 10.1     NaN       NaN      NaN
+varianti provate: 12

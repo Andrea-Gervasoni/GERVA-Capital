@@ -53,5 +53,5 @@ for nm, K, H in [('rev1', 20, 1), ('rev5', 20, 5), ('ibs', 20, 1)]:
         for leg, W in (('LO', Wl), ('SO', -Ws), ('LS', Wl - Ws)):
             x = run_weights(P, W); rows.append(stats(x['net'], f'{nm} {leg} {lab_}')); rows.append(stats(x['net'].loc['2018':], f'{nm} {leg} {lab_} dal 2018'))
     print(fmt(rows))
-pd.to_pickle({k: {n: x['net'] for n, x in v.items()} for k, v in res.items()}, D + 'res_reversal.pkl')
+pd.to_pickle({k: {n: x['net'] for n, x in v.items()} for k, v in res.items()}, D + 'data/res_reversal.pkl')
 print('varianti provate:', len(TRIALS)); json.dump(TRIALS, open(D + 'trials_03.json', 'w'))

@@ -59,5 +59,5 @@ for nm in ['lowvol', 'lowbeta']:
         x = run_weights(P, Wl, lev=L); rows.append(stats(x['net'], f'{nm} LO leva {L}', x['tov']))
 x = P['spy_ret'].loc[START:END]; rows.append(stats(x, 'SPY 1x (riferimento, close-close)')); rows.append(stats(ew, 'EW membri PIT (lordo)'))
 print(fmt(rows))
-pd.to_pickle({k: {n: x['net'] for n, x in v.items()} for k, v in res.items()}, D + 'res_lenti.pkl')
+pd.to_pickle({k: {n: x['net'] for n, x in v.items()} for k, v in res.items()}, D + 'data/res_lenti.pkl')
 print('varianti provate:', len(TRIALS) + 6); json.dump(TRIALS + ['lev'] * 6, open(D + 'trials_04.json', 'w'))

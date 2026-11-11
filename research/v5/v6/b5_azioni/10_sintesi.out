@@ -1,0 +1,58 @@
+                                              label   sh  sh_sel  sh_ver  cagr  cagr_sel  cagr_ver   mdd    t  vol
+       NOTTE K5 LB252 p>30 (asta, conto grande, 1x) 1.29    1.42    1.04  30.3      29.7      33.1 -34.2 6.03 22.5
+                 placebo: 5 piu' volatili, di notte 0.56    0.50    0.78  11.5       9.4      21.6 -54.2 2.60 25.3
+              placebo: 5 a caso (stabili), di notte 0.21    0.08    0.86   1.9       0.3      10.2 -44.1 1.00 12.8
+    placebo: 5 con momentum 12m piu' alto, di notte 1.21    1.26    1.23  25.9      22.8      41.7 -33.5 5.63 21.0
+variante: 5 con intraday medio piu' BASSO, di notte 0.38    0.54   -0.41   5.9       9.6      -9.8 -62.6 1.77 21.1
+   NOTTE coperta con SPY/MES di notte (beta mobile) 0.60    0.84    0.08   8.0       9.9      -0.9 -48.3 2.80 14.5
+                             SPY solo notte (lordo) 0.75    0.67    1.27   8.2       7.4      12.0 -29.4 3.52 11.3
+          NOTTE dal 2018 (copertura universo >=85%) 0.93    0.84    1.04  24.8      18.8      33.1 -34.2 2.77 27.9
+beta medio verso SPY notte: 1.53
+================ conto piccolo e leva (azioni a margine <=2x; CFD su azioni <=5x: IPOTESI che MOC/MOO siano disponibili sui CFD)
+                           label   sh  sh_sel  sh_ver  cagr  cagr_sel  cagr_ver   mdd    t   vol  mese_comp%  mese_mediano%  mesi<0  P(-50%)3a  P(-50%)3a_meta_edge
+               10k EUR azioni 1x 1.12    1.25    0.86  25.4      25.4      25.2 -41.0 5.23  22.5        1.90           1.99    0.29     0.0030               0.0165
+             10k EUR azioni 1.5x 1.13    1.27    0.84  38.3      39.3      33.8 -55.5 5.29  33.7        2.74           2.95    0.30     0.0505               0.1540
+               10k EUR azioni 2x 1.13    1.27    0.84  50.2      52.6      39.2 -67.5 5.29  44.9        3.45           3.87    0.31     0.2220               0.4110
+                  10k EUR CFD 3x 0.93    1.08    0.60  48.8      58.5      10.4 -90.5 4.36  67.4        3.37           4.34    0.34     0.7310               0.8525
+                  10k EUR CFD 5x 1.04    1.20    0.69  65.8      95.5     -23.8 -99.0 4.86 112.3        4.30           7.61    0.34     0.9740               0.9930
+10k EUR azioni 2x, +1bp per lato 0.91    1.02    0.68  35.8      38.0      25.8 -74.8 4.24  44.9        2.58           3.02    0.34     0.2835               0.4720
+     10k EUR azioni 2x, costi x2 0.90    0.99    0.72  35.3      36.7      28.7 -74.2 4.20  44.9        2.55           3.06    0.33     0.2845               0.4740
+          10k EUR azioni 2x, K10 0.96    1.06    0.77  35.2      36.0      31.6 -63.4 4.48  39.8        2.55           3.21    0.32     0.1875               0.3325
+================ leva che massimizza la crescita geometrica (conto 10k EUR, azioni fino a 2x poi CFD), griglia 0.5..8
+  leva 0.5: crescita log  0.08/anno ->   0.7%/mese composto, max drawdown   -29%, peggior notte  -6.1%
+  leva 1.0: crescita log  0.23/anno ->   1.9%/mese composto, max drawdown   -41%, peggior notte -12.1%
+  leva 1.5: crescita log  0.32/anno ->   2.7%/mese composto, max drawdown   -55%, peggior notte -18.1%
+  leva 2.0: crescita log  0.41/anno ->   3.4%/mese composto, max drawdown   -67%, peggior notte -24.1%
+  leva 2.5: crescita log  0.33/anno ->   2.8%/mese composto, max drawdown   -86%, peggior notte -30.2%
+  leva 3.0: crescita log  0.40/anno ->   3.4%/mese composto, max drawdown   -91%, peggior notte -36.2%
+  leva 3.5: crescita log  0.45/anno ->   3.8%/mese composto, max drawdown   -94%, peggior notte -42.3%
+  leva 4.0: crescita log  0.48/anno ->   4.1%/mese composto, max drawdown   -96%, peggior notte -48.3%
+  leva 4.5: crescita log  0.50/anno ->   4.3%/mese composto, max drawdown   -98%, peggior notte -54.3%
+  leva 5.0: crescita log  0.51/anno ->   4.3%/mese composto, max drawdown   -99%, peggior notte -60.4%
+  leva 5.5: crescita log  0.49/anno ->   4.2%/mese composto, max drawdown  -100%, peggior notte -66.4%
+  leva 6.0: crescita log  0.45/anno ->   3.9%/mese composto, max drawdown  -100%, peggior notte -72.4%
+  leva 6.5: crescita log  0.40/anno ->   3.4%/mese composto, max drawdown  -100%, peggior notte -78.5%
+  leva 7.0: crescita log  0.32/anno ->   2.7%/mese composto, max drawdown  -100%, peggior notte -84.5%
+  leva 7.5: crescita log  0.21/anno ->   1.7%/mese composto, max drawdown  -100%, peggior notte -90.5%
+  leva 8.0: crescita log  0.05/anno ->   0.4%/mese composto, max drawdown  -100%, peggior notte -96.6%
+leva ottima (in campione, tutto il periodo): 5.0x -> 4.3%/mese; meta' leva 2.5x:
+  leva 5.0: edge x1.0: P(-50% in 3 anni) = 0.97, mese composto mediano bootstrap 4.3%
+  leva 5.0: edge x0.5: P(-50% in 3 anni) = 0.99, mese composto mediano bootstrap -0.6%
+  leva 2.5: edge x1.0: P(-50% in 3 anni) = 0.57, mese composto mediano bootstrap 2.7%
+  leva 2.5: edge x0.5: P(-50% in 3 anni) = 0.73, mese composto mediano bootstrap 0.7%
+  alla leva ottima: selezione 5.7%/mese, verifica -2.2%/mese
+================ correlazione col fondo esistente (giornaliera, mensile) dal 2018-04
+NOTTE 1x: {'B_cassa_in_tbill': (np.float64(0.26), np.float64(0.26)), 'C1_mtm_limiti': (np.float64(0.17), np.float64(0.23)), 'C3_mtm_limiti_debito_reale': (np.float64(0.17), np.float64(0.22))}
+NOTTE coperta: {'B_cassa_in_tbill': (np.float64(0.09), np.float64(0.18)), 'C1_mtm_limiti': (np.float64(0.08), np.float64(0.13)), 'C3_mtm_limiti_debito_reale': (np.float64(0.08), np.float64(0.13))}
+  B_cassa_in_tbill: Sharpe fondo 1.84, NOTTE 0.92, 50/50 1.29
+  C1_mtm_limiti: Sharpe fondo 1.43, NOTTE 0.92, 50/50 1.43
+  C3_mtm_limiti_debito_reale: Sharpe fondo 1.43, NOTTE 0.92, 50/50 1.57
+================ conto minimo: ordini/anno e commissione minima (0.35 $/ordine) su 10k EUR; soglia = conto oltre il quale il minimo non morde
+prezzo mediano reale 2023-26: 124 $ -> il minimo di 0.35 $ smette di mordere per ordini >= 6669 $ (54 azioni)
+                       strategia  ordini_anno  comm_10k_pct_anno  comm_conto_grande_pct  lordo_pct_anno  conto_minimo_usd
+inversione 5g K20 LS (tenuta 5g)        17285               53.7                   4.68            15.3           1334000
+    momentum 12-1 K20 LS mensile          294                1.0                   0.39            -0.8            267000
+        bassa vol K20 LO mensile           55                0.2                   0.03            10.2            133000
+  NOTTE K5 (10 ordini al giorno)         2520                7.9                   4.07            33.1             33000
+returns.parquet: (7971, 7) ['notte_K5_asta_conto_grande', 'notte_K5_asta_10kEUR_1x', 'notte_K10_asta_10kEUR_1x', 'notte_K5_coperta_SPY', 'rev5_K20_H5_LS', 'mom12_1_K20_LS', 'lowvol_K20_LO']
+VARIANTI TOTALI B5: 188

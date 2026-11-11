@@ -1,0 +1,32 @@
+--- 5 coppie per settore (media 55 coppie), apertura a 2.0 sigma; esposizione lorda media per gamba 0.59
+                       label    sh  sh_sel  sh_ver  cagr  cagr_sel  cagr_ver   mdd     t  vol  tov_yr  gross_sh  cost%yr
+           coppie n5 k2.0 LO  0.70    0.68    0.87   7.9       8.0       7.1 -32.2  3.25 11.9    5.19      0.72      0.2
+coppie n5 k2.0 LO-EW(attivo) -0.58   -0.53   -0.93  -5.9      -5.5      -7.6 -76.4 -2.73  9.6     NaN       NaN      NaN
+           coppie n5 k2.0 LS  0.36    0.40    0.13   1.3       1.5       0.4  -7.8  1.68  3.8   10.47      0.64      0.5
+           coppie n5 k2.0 SO -0.65   -0.62   -0.86  -7.2      -7.3      -6.9 -81.6 -3.04 10.6    5.27     -0.57      0.2
+    coppie n5 k2.0 LS 10kEUR -0.05    0.01   -0.38  -0.3      -0.0      -1.3 -17.9 -0.24  3.8   10.47      0.64      2.0
+  coppie n5 k2.0 LS costi x2  0.24    0.28   -0.01   0.8       1.0      -0.1 -10.2  1.11  3.8   10.47      0.64      0.9
+ coppie n5 k2.0 LS ritardo+1  0.28    0.31    0.12   1.0       1.1       0.3 -10.3  1.30  3.7   10.46      0.56      0.5
+       coppie n5 k2.0 LS MOC  0.42    0.47    0.12   1.5       1.7       0.3  -7.3  1.95  3.7   10.53      0.70      0.5
+--- 2 coppie per settore (media 22 coppie), apertura a 2.0 sigma; esposizione lorda media per gamba 0.62
+                       label    sh  sh_sel  sh_ver  cagr  cagr_sel  cagr_ver   mdd     t  vol  tov_yr  gross_sh  cost%yr
+           coppie n2 k2.0 LO  0.68    0.65    1.03   8.5       8.4       8.7 -34.5  3.18 13.2    5.48      0.70      0.2
+coppie n2 k2.0 LO-EW(attivo) -0.52   -0.48   -0.68  -5.2      -5.0      -6.2 -72.7 -2.41  9.5     NaN       NaN      NaN
+           coppie n2 k2.0 LS  0.42    0.44    0.28   1.8       2.0       1.1 -14.6  1.94  4.6   10.95      0.66      0.5
+--- 5 coppie per settore (media 55 coppie), apertura a 1.5 sigma; esposizione lorda media per gamba 0.66
+                       label    sh  sh_sel  sh_ver  cagr  cagr_sel  cagr_ver   mdd     t  vol  tov_yr  gross_sh  cost%yr
+           coppie n5 k1.5 LO  0.71    0.69    0.91   8.7       8.8       8.4 -34.8  3.34 12.8    6.53      0.74      0.3
+coppie n5 k1.5 LO-EW(attivo) -0.55   -0.49   -0.87  -5.0      -4.7      -6.4 -70.7 -2.56  8.6     NaN       NaN      NaN
+           coppie n5 k1.5 LS  0.36    0.39    0.22   1.4       1.5       0.7  -7.8  1.68  3.9   13.14      0.67      0.6
+--- 5 coppie per settore (media 55 coppie), apertura a 2.5 sigma; esposizione lorda media per gamba 0.51
+                       label    sh  sh_sel  sh_ver  cagr  cagr_sel  cagr_ver   mdd     t  vol  tov_yr  gross_sh  cost%yr
+           coppie n5 k2.5 LO  0.69    0.68    0.83   7.2       7.4       6.3 -31.4  3.24 10.9    4.20      0.71      0.2
+coppie n5 k2.5 LO-EW(attivo) -0.59   -0.53   -0.97  -6.6      -6.3      -8.3 -80.5 -2.78 10.6     NaN       NaN      NaN
+           coppie n5 k2.5 LS  0.38    0.42    0.16   1.3       1.5       0.4  -8.5  1.76  3.6    8.48      0.63      0.4
+--- 10 coppie per settore (media 110 coppie), apertura a 2.0 sigma; esposizione lorda media per gamba 0.54
+                        label    sh  sh_sel  sh_ver  cagr  cagr_sel  cagr_ver   mdd     t  vol  tov_yr  gross_sh  cost%yr
+           coppie n10 k2.0 LO  0.64    0.62    0.83   6.9       7.0       6.5 -33.2  3.00 11.4    4.86      0.66      0.2
+coppie n10 k2.0 LO-EW(attivo) -0.66   -0.61   -0.99  -6.8      -6.5      -8.2 -80.6 -3.10  9.9     NaN       NaN      NaN
+           coppie n10 k2.0 LS  0.18    0.17    0.27   0.6       0.6       0.8 -15.8  0.86  3.8    9.77      0.44      0.4
+per periodo (lordo / netto): 2005-09:   4.1% /   3.0% | 2010-14:   1.1% /   0.1% | 2015-19:   1.3% /   0.3% | 2020-22:   4.7% /   3.6% | 2023-26:   1.5% /   0.4%
+varianti provate: 5
