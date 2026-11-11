@@ -26,3 +26,4 @@ research/**/_cache/
 research/v5/v6/*/data/
 research/v5/v5/validazione/hl_cache.json
 research/**/base.pkl
+research/**/*.pkl

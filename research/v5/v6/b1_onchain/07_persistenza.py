@@ -168,3 +168,6 @@ for uni in ['PIT_lento','PIT']:
         top=s.index[s>=s.quantile(.9)]; rest=s.index[s<s.quantile(.9)]; f=lambda ix:(P.ffill().iloc[t+6][ix]-P.iloc[t][ix]).sum()/A.iloc[t][ix].sum()
         print(uni,G[t].date(),f'top: {f(top):+.3f} (capitale {A.iloc[t][top].sum()/1e6:.0f}M)   resto: {f(rest):+.3f} (capitale {A.iloc[t][rest].sum()/1e6:.0f}M)')
 print('\nprove contate in questo script:',ntrial)
+# controllo di troncamento: il punteggio a T ricalcolato sul pannello tagliato a T deve essere identico
+s_full=punteggio(T0,'sharpe'); A_,P_,R_=A,P,R; A=A.iloc[:T0+1]; P=P.iloc[:T0+1]; dp=P.diff(); flow=A.diff()-dp; base=np.maximum(A.shift()+0.5*flow,0.5*A.shift()); R=(dp/base).where(base>=5000).clip(lower=-1.0,upper=3.0)
+s_cut=punteggio(T0,'sharpe'); print('controllo di troncamento (punteggio a T su dati tagliati a T): identico =',bool(((s_full-s_cut).abs().fillna(0)<1e-12).all() and (s_full.isna()==s_cut.isna()).all()))

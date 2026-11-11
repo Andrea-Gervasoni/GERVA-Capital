@@ -67,4 +67,11 @@ sul capitale, short a 2x (67% investito) verifica          n  1410 CAGR   8.34% 
   eccesso medio 2024-26    quota del fondo 25%: +1.61 punti/anno lordi ; netti di code attese +0.96 = +0.080%/mese
   eccesso medio 2024-26    quota del fondo 47%: +3.03 punti/anno lordi ; netti di code attese +1.80 = +0.150%/mese
 
+=== 9. Looping e collaterale in staking (STIMA aritmetica sui livelli di oggi)
+  base: spot Kraken + short HL 2x, 67% investito: 8.43%/a sul capitale (ultimi 12 mesi), 33% del capitale su Hyperliquid
+  (a) margine preso a prestito su Aave contro lo spot (USDC al 5%), 100% investito: 10.15%/a ; guadagno +1.72 punti, ma aggiunge la liquidazione su Aave se il prezzo SCENDE (profitti dello short su un'altra sede) e il rischio di contratto
+  (b) tutto su Hyperliquid (spot HL come collaterale, portfolio margin), ~95% investito: 6.76%/a con il 100% del capitale sulla sede non regolata: costo atteso delle code 5.2%/a
+  (c) stETH/JitoSOL al posto di ETH/SOL nelle gambe lunghe: +2,4% / +4,7% sul nozionale di quelle gambe; la rotazione tiene ETH o SOL per circa un terzo degli slot -> circa +1.2 punti sul nozionale, +0.8 sul capitale; rischio aggiunto: scarto stETH/ETH (-6/-9% a giugno 2022, 50 giorni sotto 0,97)
+  (d) loop sUSDe/PT contro USDC: rendimento 5.0% contro costo del prestito ~5%: margine nullo oggi (nel 2024 era 17% contro 8-10%)
+
 salvato returns.parquet (2508, 6) {'carry_rot_nozionale_1x': 2507, 'carry_rot_capitale_short2x': 2507, 'carry_big3_hold_nozionale': 1014, 'carry_rot_spotHL_nozionale': 1014, 'steth_short_eth_hl_nozionale_lordo': 1280, 'carry_hip3_nozionale': 361}

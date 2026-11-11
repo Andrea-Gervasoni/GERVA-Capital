@@ -1,9 +1,11 @@
 """Converte la registrazione live (data_cache/v6_live/*.jsonl.gz) in griglie a 100 ms per moneta, indicizzate sull'ORA DI RICEZIONE
-LOCALE (quello che un trader su questa macchina vede davvero). Salva data_cache/v6_livegrid_{coin}.parquet e le statistiche di latenza."""
-import glob, gzip, json, sys, numpy as np, pandas as pd
+LOCALE (quello che un trader su questa macchina vede davvero). Salva data_cache/v6_livegrid_{SEG}_{coin}.parquet e le statistiche di latenza."""
+import glob, gzip, json, sys, os, numpy as np, pandas as pd
+SEG, TMIN, TMAX = sys.argv[1], sys.argv[2], sys.argv[3]     # es: A 20261111_190000 20261111_200000
 DC = "/home/user/GERVA-Capital/data_cache"; LV = DC + "/v6_live"; G = 100_000_000
 def rd(prefix):
-    for f in sorted(glob.glob(f"{LV}/{prefix}_*.jsonl.gz")):
+    for f in sorted(glob.glob(f"{LV}/{prefix}_2*.jsonl.gz")):
+        if not (TMIN <= os.path.basename(f)[len(prefix) + 1:len(prefix) + 16] < TMAX): continue
         try:
             with gzip.open(f, "rt") as fh:
                 for line in fh:
@@ -109,7 +111,7 @@ for coin, (bs, kp) in MAP.items():
     kb = kraken_book(kp)
     for j, k in enumerate(("kr_bid", "kr_ask", "kr_bq", "kr_aq", "kr_d5b", "kr_d5a")): D[k] = kb[:, j]
     df = pd.DataFrame(D); df.attrs = {}
-    df.to_parquet(f"{DC}/v6_livegrid_{coin}.parquet", compression="zstd")
+    df.to_parquet(f"{DC}/v6_livegrid_{SEG}_{coin}.parquet", compression="zstd")
     print(coin, df.shape, "NaN%:", (df[["hl_bid", "bn_bid", "kr_bid", "krt_bid"]].isna().mean() * 100).round(2).to_dict(), flush=True)
 print("\nLATENZA osservata = ora di ricezione locale - timestamp dello exchange (ms). Include lo scarto dell'orologio locale (non sincronizzato via NTP: vedi REPORT).")
 for nm, coin, x in lat:
@@ -126,6 +128,6 @@ if ab:
         r = [x for x in at if x[1] == coin and a0 <= x[0] < a0 + na * G]; b = np.array([(x[0] - a0) // G for x in r], dtype=np.int64)
         if len(r) == 0: continue
         D["hl_bv"], D["hl_sv"], D["hl_thi"], D["hl_tlo"], D["hl_tlast"] = tgrid(na, b, np.array([float(x[4]) for x in r]), np.array([float(x[5]) for x in r]), np.array([x[3] == "B" for x in r]))
-        pd.DataFrame(D).to_parquet(f"{DC}/v6_livealt_{coin}.parquet", compression="zstd")
+        pd.DataFrame(D).to_parquet(f"{DC}/v6_livealt_{SEG}_{coin}.parquet", compression="zstd")
     print("alt: ore %.2f" % (na / 36000), "monete", len({x[1] for x in ab}))
-json.dump({"t0": int(t0), "n": int(n), "liq": raw["bn_liq"]}, open(f"{DC}/v6_livegrid_meta.json", "w"))
+json.dump({"t0": int(t0), "n": int(n), "liq": raw["bn_liq"]}, open(f"{DC}/v6_livegrid_{SEG}_meta.json", "w"))

@@ -47,8 +47,7 @@ def load():
     P['sector'] = sectors(P)
     P['rf'] = (P['close']['^IRX'].ffill() / 100 / 252) if '^IRX' in P['close'] else pd.Series(0.0, index=cal)
     for f in list(P):
-        if isinstance(P[f], pd.DataFrame): P[f] = P[f].drop(columns=[x for x in ('SPY', 'QQQ', '^IRX') if x in P[f].columns]) if f not in ('close',) else P[f]
-    P['spy'] = P['close']['SPY'] * 0 + a['SPY']; P['spy_o'] = (P['open'] if 'SPY' in P['open'] else raw['SPY'][['open']].rename(columns={'open': 'SPY'}))
+        if isinstance(P[f], pd.DataFrame) and f != 'close': P[f] = P[f].drop(columns=['SPY', 'QQQ', '^IRX'], errors='ignore')
     P['spy_ret'] = a['SPY'].pct_change()
     P['close'] = P['close'].drop(columns=['SPY', 'QQQ', '^IRX'], errors='ignore')
     pd.to_pickle(P, pk)
@@ -72,46 +71,78 @@ def sectors(P):
     return pd.Series(out)
 
 # ---------------------------------------------------------------- costi
-def cost_side_bp(P, account_usd=None, n_pos=20, lev=1.0):
-    """costo per lato in frazione, per (data, titolo): mezzo spread + commissione IBKR tiered.
-    Mezzo spread: 2 bp (terzile piu' liquido per controvalore), 3.5 bp, 5 bp. Commissione: 0.0035 $/azione + ~0.003 $/azione di
-    fee di borsa/regolatorie (taker), minimo 0.35 $ per ordine, massimo 1% del controvalore.
-    account_usd=None -> conto grande (il minimo non morde)."""
+def cost_parts(P):
+    """Mezzo spread per lato: 2 bp (terzile piu' liquido per controvalore a 20 giorni), 3.5 bp, 5 bp.
+    Commissione IBKR tiered USA: 0.0035 $/azione + ~0.003 $/azione di fee di borsa/regolatorie (ordine che toglie liquidita'),
+    MINIMO 0.35 $ per ordine, massimo 1% del controvalore. Ritorna (mezzo_spread, commissione_per_azione_in_frazione)."""
+    if 'hs' in P: return P['hs'], P['psh']
     dv = P['dv'].rolling(20, min_periods=5).median().shift(1)
     rk = dv.where(P['member'] | P['today']).rank(axis=1, pct=True)
     hs = pd.DataFrame(np.select([rk.values > 2 / 3, rk.values > 1 / 3], [2.0, 3.5], 5.0), index=dv.index, columns=dv.columns) * 1e-4
-    px = P['close'].shift(1)
-    per_share = 0.0065 / px
-    if account_usd is None:
-        com = per_share
-    else:
-        V = account_usd * lev / n_pos
-        com = np.maximum(per_share, 0.35 / V)
-    return hs + com.clip(upper=0.01), hs, com
+    psh = (0.0065 / P['close'].shift(1)).clip(upper=0.01).fillna(1e-4)
+    P['hs'], P['psh'] = hs, psh
+    return hs, psh
 
-def run_weights(P, W, cost, exec_='open', delay=0, borrow=0.01, fin_spread=0.015, cost_mult=1.0):
-    """W[t]: pesi decisi alla chiusura di t (dati fino a t). exec_='open': si entra all'apertura di t+1+delay e si tiene
-    da apertura ad apertura. exec_='close': si esegue alla chiusura stessa di t (MOC, ottimistico) e si tiene close-close.
-    Ritorna serie giornaliera netta (non a leva oltre quella implicita nei pesi), lordo, turnover."""
-    W = W.fillna(0.0)
+def run_weights(P, W, exec_='open', delay=0, borrow=0.01, fin_spread=0.015, cost_mult=1.0, account=None, lev=1.0):
+    """W[t]: pesi decisi alla chiusura di t (solo dati fino a t). exec_='open': si esegue all'apertura di t+1+delay e si tiene
+    da apertura ad apertura. exec_='close': si esegue alla chiusura stessa di t (MOC: ottimistico, il segnale usa quella chiusura).
+    account (in $): se dato, ogni ordine paga almeno 0.35 $ -> 0.35/account di capitale per ordine (lev scala il nozionale).
+    Finanziamento: debito oltre il capitale a T-bill+1.5%; prestito titoli sugli short `borrow`/anno; la cassa non rende nulla."""
+    hs, psh = cost_parts(P)
+    W = W.fillna(0.0) * lev
     if exec_ == 'open':
-        ao = P['ao']
-        r = (ao.shift(-1) / ao - 1)                     # r[t] = open t -> open t+1
-        r = r.where(r.abs() < 1.5)
-        # titolo che sparisce (delisting): usa close-close dell'ultimo giorno
-        Wd = W.shift(1 + delay)                         # peso in essere dall'apertura di t
+        ao = P['ao']; r = (ao.shift(-1) / ao - 1); Wd = W.shift(1 + delay)
+        # ultimo giorno di vita del titolo: nessuna apertura successiva -> si esce alla chiusura
+        r = r.where(r.notna(), P['ac'] / ao - 1)
     else:
         r = P['ret'].shift(-1); Wd = W.shift(delay)
+    r = r.where(r.abs() < 1.5).fillna(0.0)
     Wd = Wd.fillna(0.0)
-    gross = (Wd * r.fillna(0.0)).sum(axis=1)
-    tov = (Wd - Wd.shift(1).fillna(0.0)).abs()
-    c = (tov * cost.reindex_like(tov).fillna(cost.stack().median())).sum(axis=1) * cost_mult
+    gross = (Wd * r).sum(axis=1)
+    dW = (Wd - Wd.shift(1).fillna(0.0)).abs()
+    com = dW * psh
+    if account is not None: com = np.maximum(com, 0.35 / account).where(dW > 1e-9, 0.0)
+    c = ((dW * hs).sum(axis=1) + com.sum(axis=1)) * cost_mult
     short = (-Wd.clip(upper=0)).sum(axis=1); long = Wd.clip(lower=0).sum(axis=1)
     fin = (long - 1).clip(lower=0) * (P['rf'] + fin_spread / 252) + short * borrow / 252
-    net = gross - c - fin
-    idx = net.index
-    if exec_ == 'open': net.index = gross.index = idx  # rendimento attribuito al giorno t (da open t a open t+1)
-    return pd.DataFrame({'net': net, 'gross': gross, 'cost': c, 'fin': fin, 'tov': tov.sum(axis=1), 'long': long, 'short': short}).loc[START:END]
+    return pd.DataFrame({'net': gross - c - fin, 'gross': gross, 'cost': c, 'com': com.sum(axis=1) * cost_mult, 'fin': fin,
+                         'tov': dW.sum(axis=1), 'long': long, 'short': short, 'n_ord': (dW > 1e-9).sum(axis=1)}).loc[START:END]
+
+def topk(score, U, K, largest=True):
+    """maschera dei K titoli con punteggio piu' alto (o basso) per riga, solo dentro l'universo U"""
+    s = score.where(U)
+    rk = s.rank(axis=1, ascending=not largest, method='first')
+    return (rk <= K)
+
+def sector_demean(x, P, U):
+    x = x.where(U); out = x.copy()
+    for s in P['sector'].unique():
+        cols = P['sector'].index[P['sector'] == s].intersection(x.columns)
+        out[cols] = x[cols].sub(x[cols].mean(axis=1), axis=0)
+    return out
+
+TRIALS = []
+def evaluate(P, name, Wl, Ws=None, full=True, K=None):
+    """stampa: LO, SO, LS per conto grande; LS e LO per conto da 10k EUR; costi x2; ritardo; MOC. Conta le varianti."""
+    rows = []; out = {}
+    def add(lab_, W, **kw):
+        x = run_weights(P, W, **kw); d = stats(x['net'], lab_, x['tov']); d['gross_sh'] = round(stats(x['gross'])['sh'], 2)
+        d['cost%yr'] = round(x['cost'].mean() * 25200, 1); rows.append(d); out[lab_] = x; return x
+    ew = P['member'].div(P['member'].sum(axis=1), axis=0)
+    bench = run_weights(P, ew)['gross']
+    lo = add(name + ' LO', Wl)
+    act = lo['net'] - bench; d = stats(act, name + ' LO-EW(attivo)'); rows.append(d)
+    if Ws is not None:
+        add(name + ' LS', Wl - Ws)
+        if full: add(name + ' SO', -Ws)
+    if full:
+        Wb = Wl - Ws if Ws is not None else Wl; tag = ' LS' if Ws is not None else ' LO'
+        add(name + tag + ' 10kEUR', Wb, account=10000 * USD_PER_EUR)
+        add(name + tag + ' costi x2', Wb, cost_mult=2.0)
+        add(name + tag + ' ritardo+1', Wb, delay=1)
+        add(name + tag + ' MOC', Wb, exec_='close')
+    TRIALS.append(name)
+    print(fmt(rows)); return out
 
 # ---------------------------------------------------------------- statistiche
 def stats(r, label='', tov=None):

@@ -1,0 +1,79 @@
+BTC conti con fill sulla moneta: top 24 bottom 24 | conti coperti in media per ora: top 10.0 bottom 13.4
+ETH conti con fill sulla moneta: top 26 bottom 23 | conti coperti in media per ora: top 8.9 bottom 12.3
+SOL conti con fill sulla moneta: top 18 bottom 18 | conti coperti in media per ora: top 6.4 bottom 9.9
+   coin        segnale     tipo  ore  ritardo    n     IC   t_IC  Sharpe_netto      t
+0   BTC     top-bottom  livello    4        1  981 -0.023 -0.727        -2.267 -1.517
+1   BTC     top-bottom  livello    4        2  981 -0.023 -0.731        -2.244 -1.502
+2   BTC     top-bottom  livello   24        1  163 -0.058 -0.744        -2.003 -1.338
+3   BTC     top-bottom  livello   24        2  163 -0.070 -0.893        -2.071 -1.383
+4   BTC     top-bottom    z 14g    4        1  897  0.010  0.308        -1.102 -0.705
+5   BTC     top-bottom    z 14g    4        2  897  0.017  0.510        -0.971 -0.621
+6   BTC     top-bottom    z 14g   24        1  149 -0.016 -0.191        -0.037 -0.024
+7   BTC     top-bottom    z 14g   24        2  149  0.007  0.091         0.287  0.183
+8   BTC       solo top  livello    4        1  981  0.025  0.775        -0.330 -0.221
+9   BTC       solo top  livello    4        2  981  0.018  0.566        -0.297 -0.199
+10  BTC       solo top  livello   24        1  163  0.074  0.945        -0.344 -0.230
+11  BTC       solo top  livello   24        2  163  0.049  0.628        -0.382 -0.256
+12  BTC       solo top    z 14g    4        1  897  0.049  1.464         1.486  0.951
+13  BTC       solo top    z 14g    4        2  897  0.031  0.932         1.252  0.801
+14  BTC       solo top    z 14g   24        1  149  0.029  0.351         1.131  0.722
+15  BTC       solo top    z 14g   24        2  149  0.033  0.402         1.197  0.765
+16  BTC  contro bottom  livello    4        1  983 -0.038 -1.185        -0.686 -0.460
+17  BTC  contro bottom  livello    4        2  982 -0.038 -1.183        -0.868 -0.581
+18  BTC  contro bottom  livello   24        1  163 -0.087 -1.108        -1.585 -1.059
+19  BTC  contro bottom  livello   24        2  163 -0.086 -1.102        -1.847 -1.234
+20  BTC  contro bottom    z 14g    4        1  899  0.006  0.166        -0.679 -0.435
+21  BTC  contro bottom    z 14g    4        2  899  0.008  0.241        -0.223 -0.143
+22  BTC  contro bottom    z 14g   24        1  149 -0.006 -0.078        -0.324 -0.207
+23  BTC  contro bottom    z 14g   24        2  149  0.011  0.133         0.023  0.014
+24  ETH     top-bottom  livello    4        1  980  0.006  0.175        -1.737 -1.162
+25  ETH     top-bottom  livello    4        2  980  0.012  0.363        -1.840 -1.230
+26  ETH     top-bottom  livello   24        1  163 -0.019 -0.239        -2.000 -1.336
+27  ETH     top-bottom  livello   24        2  163  0.023  0.294        -1.913 -1.278
+28  ETH     top-bottom    z 14g    4        1  896  0.013  0.392        -1.505 -0.962
+29  ETH     top-bottom    z 14g    4        2  896  0.031  0.937        -1.298 -0.830
+30  ETH     top-bottom    z 14g   24        1  149 -0.040 -0.492        -1.433 -0.916
+31  ETH     top-bottom    z 14g   24        2  149 -0.021 -0.261        -1.619 -1.034
+32  ETH       solo top  livello    4        1  981  0.024  0.741        -0.859 -0.574
+33  ETH       solo top  livello    4        2  981  0.031  0.974        -0.871 -0.583
+34  ETH       solo top  livello   24        1  163 -0.024 -0.303        -0.798 -0.533
+35  ETH       solo top  livello   24        2  163  0.011  0.138        -0.854 -0.571
+36  ETH       solo top    z 14g    4        1  897  0.066  1.981        -0.119 -0.076
+37  ETH       solo top    z 14g    4        2  897  0.052  1.554        -0.517 -0.331
+38  ETH       solo top    z 14g   24        1  149  0.049  0.601        -0.592 -0.378
+39  ETH       solo top    z 14g   24        2  149  0.055  0.673        -0.552 -0.353
+40  ETH  contro bottom  livello    4        1  980 -0.014 -0.444        -1.623 -1.085
+41  ETH  contro bottom  livello    4        2  980 -0.016 -0.502        -1.219 -0.815
+42  ETH  contro bottom  livello   24        1  163 -0.064 -0.814        -2.399 -1.602
+43  ETH  contro bottom  livello   24        2  163 -0.044 -0.559        -2.426 -1.621
+44  ETH  contro bottom    z 14g    4        1  896 -0.052 -1.567        -2.477 -1.584
+45  ETH  contro bottom    z 14g    4        2  896 -0.038 -1.146        -2.051 -1.312
+46  ETH  contro bottom    z 14g   24        1  149 -0.144 -1.756        -1.620 -1.035
+47  ETH  contro bottom    z 14g   24        2  149 -0.145 -1.772        -1.934 -1.235
+48  SOL     top-bottom  livello    4        1  980  0.035  1.101        -0.031 -0.021
+49  SOL     top-bottom  livello    4        2  980  0.042  1.329        -0.093 -0.062
+50  SOL     top-bottom  livello   24        1  163  0.078  0.995         0.275  0.184
+51  SOL     top-bottom  livello   24        2  163  0.060  0.771         0.180  0.120
+52  SOL     top-bottom    z 14g    4        1  896  0.068  2.035         1.880  1.202
+53  SOL     top-bottom    z 14g    4        2  896  0.085  2.533         1.761  1.126
+54  SOL     top-bottom    z 14g   24        1  149  0.195  2.382         1.055  0.674
+55  SOL     top-bottom    z 14g   24        2  149  0.194  2.366         1.517  0.969
+56  SOL       solo top  livello    4        1  981  0.114  3.585         2.289  1.531
+57  SOL       solo top  livello    4        2  981  0.085  2.663         2.535  1.696
+58  SOL       solo top  livello   24        1  163  0.217  2.775         1.790  1.196
+59  SOL       solo top  livello   24        2  163  0.193  2.466         1.590  1.062
+60  SOL       solo top    z 14g    4        1  897  0.074  2.206         1.337  0.855
+61  SOL       solo top    z 14g    4        2  897  0.068  2.034         1.193  0.763
+62  SOL       solo top    z 14g   24        1  149  0.171  2.093         0.825  0.527
+63  SOL       solo top    z 14g   24        2  149  0.156  1.905         0.784  0.501
+64  SOL  contro bottom  livello    4        1  980 -0.049 -1.521        -2.084 -1.394
+65  SOL  contro bottom  livello    4        2  980 -0.056 -1.739        -2.163 -1.446
+66  SOL  contro bottom  livello   24        1  163 -0.089 -1.134        -1.367 -0.913
+67  SOL  contro bottom  livello   24        2  163 -0.088 -1.128        -1.499 -1.001
+68  SOL  contro bottom    z 14g    4        1  896 -0.009 -0.261        -1.713 -1.095
+69  SOL  contro bottom    z 14g    4        2  896 -0.009 -0.265        -1.679 -1.073
+70  SOL  contro bottom    z 14g   24        1  149 -0.010 -0.118        -0.035 -0.022
+71  SOL  contro bottom    z 14g   24        2  149  0.025  0.305         0.206  0.131
+
+prove: 72 | |t| > 2: 0 (attese per caso ~4) | t medio -0.36 | Sharpe netto medio -0.54, massimo 2.53, minimo -2.48
+periodo: 2026-05-21 -> 2026-10-31 (5,3 mesi, UNA sola coorte): nessuna divisione selezione/verifica possibile.

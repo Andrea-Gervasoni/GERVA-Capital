@@ -196,3 +196,4 @@ PIT 2026-05-21 top: +0.084 (capitale 164M)   resto: +0.047 (capitale 902M)
 PIT 2026-08-13 top: +0.014 (capitale 185M)   resto: -0.053 (capitale 474M)
 
 prove contate in questo script: 166
+controllo di troncamento (punteggio a T su dati tagliati a T): identico = True

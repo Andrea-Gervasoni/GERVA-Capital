@@ -1,0 +1,236 @@
+segmenti ['A']: 0.65 ore di registrazione (BTC/ETH/SOL)
+
+=== A) SPREAD E PROFONDITA' (mediane; bp e migliaia di $)
+coin                  BTC       ETH      SOL
+HL_spread_bp        0.135     0.481    0.118
+HL_spread_media     0.155     0.499    0.155
+HL_L1_k           422.025   258.292   35.853
+HL_entro5bp_k    4450.174  3198.111  391.710
+BN_spread_bp        0.013     0.048    1.181
+BN_L1_k           319.566   123.799  118.155
+KR_spread_bp        0.135     0.482    1.182
+KR_spread_media     0.176     0.496    1.420
+HL_vol_M_ora       66.981    21.194    4.038
+BN_vol_M_ora      370.918   201.448   38.884
+KR_vol_M_ora       16.110    14.350    7.737
+
+=== B) LEAD-LAG Binance perp -> Hyperliquid e -> Kraken Futures
+
+BTC: corr( rend. 1s Binance fino a t , rend. 1s della sede da t+l a t+l+1s )  [l<0: finestre sovrapposte]
+      -1s  -500ms      0  200ms  500ms     1s     2s     5s
+HL  0.313   0.668  0.778  0.695  0.538  0.265  0.088 -0.043
+KR  0.817   0.576  0.265  0.206  0.156  0.094  0.021  0.015
+BTC: evento = mid Binance mosso >= X bp in 500 ms. 'gia' = quanto la sede si e' gia' mossa; gross = mid->mid dopo latenza L; taker_no_fee = attraversando lo spread (commissioni: HL 9 bp a/r, Kraken ~10 bp a/r)
+                 n  lead   gia  gross  taker_no_fee     t
+v  X h   L                                               
+HL 2 30s 0      36  2.48 -0.22   3.09          2.90  2.77
+         1s     36  2.48 -0.22   1.30          0.95  1.29
+         200ms  36  2.48 -0.22   3.05          2.81  2.77
+         500ms  36  2.48 -0.22   2.83          2.52  2.57
+     5s  0      36  2.48 -0.22   3.66          3.42  5.42
+         1s     36  2.48 -0.22   1.63          1.25  2.77
+         200ms  36  2.48 -0.22   3.67          3.41  5.30
+         500ms  36  2.48 -0.22   3.42          3.11  4.97
+   4 30s 0       4  5.21  0.24  13.86         13.73  3.36
+         1s      4  5.21  0.24   9.05          7.47  1.98
+         200ms   4  5.21  0.24  13.86         13.73  3.36
+         500ms   4  5.21  0.24  13.46         13.26  3.45
+     5s  0       4  5.21  0.24  12.60         12.45  4.67
+         1s      4  5.21  0.24   5.84          4.14  2.38
+         200ms   4  5.21  0.24  12.62         12.48  4.65
+         500ms   4  5.21  0.24  11.44         11.24  3.78
+KR 2 30s 0      36  2.48  1.48   1.66          1.16  1.57
+         1s     36  2.48  1.48   0.62          0.35  0.71
+         200ms  36  2.48  1.48   1.06          0.65  1.09
+         500ms  36  2.48  1.48   0.62          0.34  0.69
+     5s  0      36  2.48  1.48   1.76          1.25  2.78
+         1s     36  2.48  1.48   0.61          0.32  1.51
+         200ms  36  2.48  1.48   1.17          0.73  2.14
+         500ms  36  2.48  1.48   0.71          0.44  1.57
+   4 30s 0       4  5.21  2.49  11.45         10.81  3.05
+         1s      4  5.21  2.49   6.04          5.32  2.09
+         200ms   4  5.21  2.49   9.29          7.71  2.44
+         500ms   4  5.21  2.49   7.22          6.66  1.98
+     5s  0       4  5.21  2.49   8.20          7.54  3.31
+         1s      4  5.21  2.49   2.09          1.41  1.64
+         200ms   4  5.21  2.49   5.89          4.31  2.75
+         500ms   4  5.21  2.49   3.42          3.00  1.78
+
+ETH: corr( rend. 1s Binance fino a t , rend. 1s della sede da t+l a t+l+1s )  [l<0: finestre sovrapposte]
+      -1s  -500ms      0  200ms  500ms     1s     2s     5s
+HL  0.277   0.657  0.715  0.608  0.413  0.188  0.082 -0.012
+KR  0.851   0.576  0.176  0.109  0.063  0.044  0.042  0.007
+ETH: evento = mid Binance mosso >= X bp in 500 ms. 'gia' = quanto la sede si e' gia' mossa; gross = mid->mid dopo latenza L; taker_no_fee = attraversando lo spread (commissioni: HL 9 bp a/r, Kraken ~10 bp a/r)
+                 n  lead   gia  gross  taker_no_fee     t
+v  X h   L                                               
+HL 2 30s 0      60  2.48 -0.04   3.20          2.68  4.39
+         1s     60  2.48 -0.04   0.84          0.27  1.19
+         200ms  60  2.48 -0.04   3.16          2.63  4.32
+         500ms  60  2.48 -0.04   2.74          2.18  3.86
+     5s  0      60  2.48 -0.04   2.89          2.34  6.42
+         1s     60  2.48 -0.04   0.73          0.15  1.79
+         200ms  60  2.48 -0.04   2.86          2.36  6.20
+         500ms  60  2.48 -0.04   2.55          1.98  5.73
+   4 30s 0       9  5.11  0.13   7.92          7.38  3.10
+         1s      9  5.11  0.13   3.82          3.15  1.69
+         200ms   9  5.11  0.13   7.70          7.22  3.35
+         500ms   9  5.11  0.13   7.49          6.79  3.16
+     5s  0       9  5.11  0.13   6.31          5.78  2.90
+         1s      9  5.11  0.13   1.10          0.43  0.62
+         200ms   9  5.11  0.13   5.78          5.24  2.83
+         500ms   9  5.11  0.13   5.43          4.71  2.59
+KR 2 30s 0      60  2.48  1.89   1.21          0.52  1.69
+         1s     60  2.48  1.89   0.16         -0.38  0.23
+         200ms  60  2.48  1.89   0.63          0.00  0.87
+         500ms  60  2.48  1.89   0.23         -0.38  0.33
+     5s  0      60  2.48  1.89   1.04          0.39  2.33
+         1s     60  2.48  1.89   0.13         -0.42  0.39
+         200ms  60  2.48  1.89   0.48         -0.12  1.12
+         500ms  60  2.48  1.89   0.11         -0.46  0.30
+   4 30s 0       9  5.11  2.49   5.35          4.49  1.92
+         1s      9  5.11  2.49   2.70          1.76  1.45
+         200ms   9  5.11  2.49   4.04          2.89  1.46
+         500ms   9  5.11  2.49   3.69          2.57  1.38
+     5s  0       9  5.11  2.49   2.73          1.88  1.16
+         1s      9  5.11  2.49  -0.11         -1.01 -0.09
+         200ms   9  5.11  2.49   1.18          0.00  0.55
+         500ms   9  5.11  2.49   0.35         -0.69  0.18
+
+SOL: corr( rend. 1s Binance fino a t , rend. 1s della sede da t+l a t+l+1s )  [l<0: finestre sovrapposte]
+      -1s  -500ms      0  200ms  500ms     1s     2s     5s
+HL  0.346   0.684  0.708  0.601  0.417  0.211  0.081 -0.021
+KR  0.766   0.486  0.163  0.114  0.082  0.051  0.008 -0.001
+SOL: evento = mid Binance mosso >= X bp in 500 ms. 'gia' = quanto la sede si e' gia' mossa; gross = mid->mid dopo latenza L; taker_no_fee = attraversando lo spread (commissioni: HL 9 bp a/r, Kraken ~10 bp a/r)
+                  n  lead   gia  gross  taker_no_fee      t
+v  X h   L                                                 
+HL 2 30s 0      106  2.43  0.12   2.82          2.64   5.18
+         1s     106  2.43  0.12   0.63          0.35   1.18
+         200ms  106  2.43  0.12   2.70          2.47   5.00
+         500ms  106  2.43  0.12   2.21          1.94   4.10
+     5s  0      106  2.43  0.12   2.92          2.72   9.94
+         1s     106  2.43  0.12   0.80          0.53   3.07
+         200ms  106  2.43  0.12   2.86          2.63  10.11
+         500ms  106  2.43  0.12   2.38          2.10   8.16
+   4 30s 0       11  5.15 -0.41   5.29          4.89   1.86
+         1s      11  5.15 -0.41   2.02          1.55   0.90
+         200ms   11  5.15 -0.41   5.14          4.76   1.78
+         500ms   11  5.15 -0.41   4.26          3.59   1.61
+     5s  0       11  5.15 -0.41   5.85          5.35   3.04
+         1s      11  5.15 -0.41   1.91          1.36   1.31
+         200ms   11  5.15 -0.41   5.68          5.25   2.84
+         500ms   11  5.15 -0.41   4.50          3.67   2.36
+KR 2 30s 0      106  2.43  1.77   0.81         -0.91   1.46
+         1s     106  2.43  1.77   0.15         -1.49   0.29
+         200ms  106  2.43  1.77   0.26         -1.37   0.50
+         500ms  106  2.43  1.77   0.18         -1.42   0.34
+     5s  0      106  2.43  1.77   1.04         -0.65   3.33
+         1s     106  2.43  1.77   0.40         -1.23   1.82
+         200ms  106  2.43  1.77   0.56         -1.06   1.94
+         500ms  106  2.43  1.77   0.40         -1.18   1.53
+   4 30s 0       11  5.15  2.52   2.42          0.65   0.93
+         1s      11  5.15  2.52   1.02         -0.86   0.60
+         200ms   11  5.15  2.52   1.66         -0.21   0.67
+         500ms   11  5.15  2.52   1.24         -0.64   0.55
+     5s  0       11  5.15  2.52   1.88         -0.10   1.04
+         1s      11  5.15  2.52  -0.05         -2.04  -0.06
+         200ms   11  5.15  2.52   0.91         -1.18   0.60
+         500ms   11  5.15  2.52   0.38         -1.61   0.32
+
+=== C) PREVEDIBILITA' del mid Hyperliquid (campioni ogni 1 s; fit prima meta', verifica seconda meta')
+
+BTC: 1404 campioni (702 fit, 702 verifica)
+  h= 1s R2 fit +0.7088 | R2 ver L0 +0.4906 R2 ver L200ms +0.4260 R2 ver L500ms +0.1121 R2 ver L1s -0.2001 | top10% L200ms: lordo +1.28 bp, taker senza comm. +0.81 (n 27) | top10% L1s: lordo +0.50 bp, taker senza comm. +0.18 (n 27)
+  h= 5s R2 fit +0.2822 | R2 ver L0 +0.1328 R2 ver L200ms +0.0769 R2 ver L500ms -0.0079 R2 ver L1s -0.1076 | top10% L200ms: lordo +2.13 bp, taker senza comm. +1.74 (n 21) | top10% L1s: lordo +0.78 bp, taker senza comm. +0.50 (n 21)
+      corr univariata in verifica (5s): hl_imbL1=+0.354 hl_imb2=+0.319 hl_imb5=+0.328 hl_imb10=+0.217 hl_imb20=+0.162 hl_micro=+0.278 hl_tfi5s=-0.027 hl_ret1s=+0.119 hl_ret5s=+0.067 gap_bn_hl=+0.497 bn_ret1s=+0.417 bn_ret5s=+0.255 bn_imb5=+0.330 bn_tfi5s=+0.225
+  h=30s R2 fit +0.1366 | R2 ver L0 -0.1592 R2 ver L200ms -0.1698 R2 ver L500ms -0.1815 R2 ver L1s -0.1968 | top10% L200ms: lordo +0.96 bp, taker senza comm. +0.76 (n 78) | top10% L1s: lordo +0.63 bp, taker senza comm. +0.46 (n 78)
+  h= 1m R2 fit +0.1402 | R2 ver L0 -0.3072 R2 ver L200ms -0.3149 R2 ver L500ms -0.3223 R2 ver L1s -0.3312 | top10% L200ms: lordo +0.20 bp, taker senza comm. +0.01 (n 99) | top10% L1s: lordo +0.06 bp, taker senza comm. -0.10 (n 99)
+  h= 5m R2 fit +0.1468 | R2 ver L0 -2.4761 R2 ver L200ms -2.4845 R2 ver L500ms -2.5038 R2 ver L1s -2.5210 | top10% L200ms: lordo -0.76 bp, taker senza comm. -0.92 (n 181) | top10% L1s: lordo -0.95 bp, taker senza comm. -1.11 (n 181)
+
+ETH: 1404 campioni (702 fit, 702 verifica)
+  h= 1s R2 fit +0.6175 | R2 ver L0 +0.4237 R2 ver L200ms +0.3262 R2 ver L500ms +0.1000 R2 ver L1s -0.3283 | top10% L200ms: lordo +1.05 bp, taker senza comm. +0.48 (n 42) | top10% L1s: lordo +0.16 bp, taker senza comm. -0.34 (n 42)
+  h= 5s R2 fit +0.1773 | R2 ver L0 +0.1454 R2 ver L200ms +0.1075 R2 ver L500ms +0.0445 R2 ver L1s -0.0717 | top10% L200ms: lordo +1.55 bp, taker senza comm. +1.00 (n 37) | top10% L1s: lordo +0.37 bp, taker senza comm. -0.13 (n 37)
+      corr univariata in verifica (5s): hl_imbL1=+0.271 hl_imb2=+0.244 hl_imb5=+0.229 hl_imb10=+0.088 hl_imb20=+0.077 hl_micro=+0.244 hl_tfi5s=+0.059 hl_ret1s=+0.070 hl_ret5s=+0.100 gap_bn_hl=+0.406 bn_ret1s=+0.346 bn_ret5s=+0.255 bn_imb5=+0.327 bn_tfi5s=+0.009
+  h=30s R2 fit +0.1488 | R2 ver L0 -0.1145 R2 ver L200ms -0.1188 R2 ver L500ms -0.1297 R2 ver L1s -0.1461 | top10% L200ms: lordo +0.80 bp, taker senza comm. +0.30 (n 61) | top10% L1s: lordo +0.37 bp, taker senza comm. -0.12 (n 61)
+  h= 1m R2 fit +0.0731 | R2 ver L0 -0.0244 R2 ver L200ms -0.0290 R2 ver L500ms -0.0347 R2 ver L1s -0.0371 | top10% L200ms: lordo +3.29 bp, taker senza comm. +2.76 (n 73) | top10% L1s: lordo +3.18 bp, taker senza comm. +2.68 (n 73)
+  h= 5m R2 fit +0.1600 | R2 ver L0 -1.3797 R2 ver L200ms -1.3834 R2 ver L500ms -1.3962 R2 ver L1s -1.4030 | top10% L200ms: lordo +4.67 bp, taker senza comm. +4.17 (n 73) | top10% L1s: lordo +4.49 bp, taker senza comm. +4.00 (n 73)
+
+SOL: 1404 campioni (702 fit, 702 verifica)
+  h= 1s R2 fit +0.6383 | R2 ver L0 +0.5475 R2 ver L200ms +0.3549 R2 ver L500ms +0.0782 R2 ver L1s -0.2005 | top10% L200ms: lordo +1.50 bp, taker senza comm. +1.12 (n 41) | top10% L1s: lordo +0.33 bp, taker senza comm. +0.09 (n 41)
+  h= 5s R2 fit +0.2242 | R2 ver L0 +0.1387 R2 ver L200ms +0.0637 R2 ver L500ms -0.0090 R2 ver L1s -0.1136 | top10% L200ms: lordo +1.41 bp, taker senza comm. +1.19 (n 40) | top10% L1s: lordo +0.14 bp, taker senza comm. -0.05 (n 40)
+      corr univariata in verifica (5s): hl_imbL1=+0.379 hl_imb2=+0.350 hl_imb5=+0.349 hl_imb10=+0.122 hl_imb20=+0.137 hl_micro=+0.229 hl_tfi5s=-0.040 hl_ret1s=+0.070 hl_ret5s=+0.031 gap_bn_hl=+0.303 bn_ret1s=+0.344 bn_ret5s=+0.157 bn_imb5=+0.279 bn_tfi5s=+0.096
+  h=30s R2 fit +0.0759 | R2 ver L0 +0.0516 R2 ver L200ms +0.0437 R2 ver L500ms +0.0376 R2 ver L1s +0.0281 | top10% L200ms: lordo +3.16 bp, taker senza comm. +2.95 (n 43) | top10% L1s: lordo +2.64 bp, taker senza comm. +2.47 (n 43)
+  h= 1m R2 fit +0.0959 | R2 ver L0 -0.2355 R2 ver L200ms -0.2364 R2 ver L500ms -0.2433 R2 ver L1s -0.2416 | top10% L200ms: lordo -1.43 bp, taker senza comm. -1.58 (n 78) | top10% L1s: lordo -1.50 bp, taker senza comm. -1.63 (n 78)
+  h= 5m R2 fit +0.4594 | R2 ver L0 -1.0161 R2 ver L200ms -1.0195 R2 ver L500ms -1.0281 R2 ver L1s -1.0373 | top10% L200ms: lordo -1.42 bp, taker senza comm. -1.68 (n 14) | top10% L1s: lordo -2.10 bp, taker senza comm. -2.28 (n 14)
+
+=== D) MARKET MAKING su Hyperliquid, fill conservativo (trade oltre la quota) e limite superiore 'al tocco'. Commissione maker 1.5 bp.
+coin  d_bp   lat  fill  spread_bp  fills_ora  capt  mo1s  mo60s  lordo_bp  netto_1_5
+ BTC   0.0 500ms oltre       0.13     326.86 -0.20 -1.23  -1.17     -0.78      -2.28
+ BTC   0.0 500ms tocco       0.13    2397.96  0.05 -0.10  -0.18     -0.14      -1.64
+ BTC   0.0    1s oltre       0.13     281.04 -0.20 -1.24  -1.37     -1.18      -2.68
+ BTC   0.0    1s tocco       0.13    2158.17  0.05 -0.09  -0.14     -0.13      -1.63
+ BTC   2.0 500ms oltre       0.13      73.31  0.50 -1.43  -1.11     -1.37      -2.87
+ BTC   2.0 500ms tocco       0.13      73.31  0.50 -1.43  -1.11     -1.37      -2.87
+ BTC   2.0    1s oltre       0.13      87.06  0.30 -1.47  -0.70     -1.25      -2.75
+ BTC   2.0    1s tocco       0.13      87.06  0.30 -1.47  -0.70     -1.25      -2.75
+ BTC   5.0 500ms oltre       0.13      13.75  0.88 -4.08  -6.82     -1.90      -3.40
+ BTC   5.0 500ms tocco       0.13      13.75  0.88 -4.08  -6.82     -1.90      -3.40
+ BTC   5.0    1s oltre       0.13      18.33  0.61 -2.91  -3.18     -1.22      -2.72
+ BTC   5.0    1s tocco       0.13      18.33  0.61 -2.91  -3.18     -1.22      -2.72
+ ETH   0.0 500ms oltre       0.48     142.04 -0.52 -1.51  -1.17     -2.08      -3.58
+ ETH   0.0 500ms tocco       0.48    1202.04  0.19 -0.07  -0.16     -0.22      -1.72
+ ETH   0.0    1s oltre       0.48     129.83 -0.52 -1.46  -1.47     -2.26      -3.76
+ ETH   0.0    1s tocco       0.48    1058.46  0.19 -0.07  -0.22     -0.28      -1.78
+ ETH   2.0 500ms oltre       0.48      76.37  0.04 -1.29  -1.27     -1.49      -2.99
+ ETH   2.0 500ms tocco       0.48      76.37  0.04 -1.29  -1.27     -1.49      -2.99
+ ETH   2.0    1s oltre       0.48     103.86  0.02 -0.98  -0.37     -0.50      -2.00
+ ETH   2.0    1s tocco       0.48     103.86  0.02 -0.98  -0.37     -0.50      -2.00
+ ETH   5.0 500ms oltre       0.48      15.27  0.87 -2.74  -6.01     -0.31      -1.81
+ ETH   5.0 500ms tocco       0.48      15.27  0.87 -2.74  -6.01     -0.31      -1.81
+ ETH   5.0    1s oltre       0.48      18.33  0.65 -2.61  -5.54     -1.81      -3.31
+ ETH   5.0    1s tocco       0.48      18.33  0.65 -2.61  -5.54     -1.81      -3.31
+ SOL   0.0 500ms oltre       0.12     274.93 -0.43 -1.60  -0.97     -0.52      -2.02
+ SOL   0.0 500ms tocco       0.12    1119.56 -0.01 -0.43  -0.58     -0.42      -1.92
+ SOL   0.0    1s oltre       0.12     230.63 -0.42 -1.59  -1.53     -1.05      -2.55
+ SOL   0.0    1s tocco       0.12     942.38 -0.01 -0.43  -0.45     -0.46      -1.96
+ SOL   2.0 500ms oltre       0.12      97.75  0.08 -1.39  -1.06     -1.61      -3.11
+ SOL   2.0 500ms tocco       0.12      97.75  0.08 -1.39  -1.06     -1.61      -3.11
+ SOL   2.0    1s oltre       0.12      97.75  0.13 -1.34  -0.16     -0.74      -2.24
+ SOL   2.0    1s tocco       0.12      97.75  0.13 -1.34  -0.16     -0.74      -2.24
+ SOL   5.0 500ms oltre       0.12      15.27  1.55 -1.81  -4.58     -0.77      -2.27
+ SOL   5.0 500ms tocco       0.12      15.27  1.55 -1.81  -4.58     -0.77      -2.27
+ SOL   5.0    1s oltre       0.12      15.27  1.02 -1.57  -2.79     -2.42      -3.92
+ SOL   5.0    1s tocco       0.12      15.27  1.02 -1.57  -2.79     -2.42      -3.92
+
+20 perps meno liquidi (quota al miglior bid/ask, latenza 500 ms):
+         spread_bp       fills_ora           capt       mo60s       netto_1_5      
+fill         oltre tocco     oltre    tocco oltre tocco oltre tocco     oltre tocco
+coin                                                                               
+AERO          7.22  7.22     74.50   132.81  3.04  3.03  0.17  0.28     -1.54  5.81
+CRV           2.89  2.89    158.72   372.50  0.19  0.90 -0.69  0.23      0.34 -0.88
+ETHFI         7.54  7.54    126.33   262.37  0.84  1.76 -0.02  0.15      1.60  1.72
+FARTCOIN      5.18  5.18     25.91   113.37 -0.11  1.28 -3.08 -2.92     -7.43 -2.61
+GRAM          4.13  4.13     80.98   142.52  0.40  1.11 -3.76 -0.44     -1.17  0.19
+HYPE          0.14  0.14    459.96   981.46 -0.48 -0.10 -1.60 -0.66     -2.56 -2.18
+INJ           3.94  3.94     38.87   106.89  0.17  0.52  0.18 -1.44     -0.32 -2.36
+JUP           6.53  6.53     25.91   132.81  2.09  2.35 -2.34 -1.59      3.59  3.48
+LIT           1.81  1.81    168.44   343.35 -0.01  0.26 -2.19 -3.64      1.42 -3.25
+NEAR          0.27  0.27    181.39   340.11 -0.63 -0.32 -2.26 -2.83      0.75 -3.72
+PUMP          2.83  2.83    132.81   553.90 -0.17  1.07  3.17 -0.27     -1.33 -2.07
+TAO           2.26  2.26     42.11   152.24 -0.35  0.66 -1.63 -0.09     -1.27 -0.45
+TRUMP         1.75  1.75     25.91   123.09 -0.93  0.25 -8.39 -2.83     -8.40 -1.36
+VVV           5.46  5.46    223.50   378.98  0.30  1.30 -2.73 -1.09     -4.12 -2.39
+XMR           0.17  0.17     93.94   524.74 -0.39  0.12 -4.72 -1.34     -7.93 -2.79
+XPL           2.27  2.27    100.41   210.55  0.17  0.37  1.08  0.74      4.28  1.44
+XRP           0.95  0.95     61.54   372.50 -0.40  0.33 -1.42 -0.25      0.57 -1.25
+ZEC           0.10  0.10    589.53   942.59 -0.60 -0.35 -2.68 -1.41     -3.10 -2.81
+ZRO           3.73  3.73    106.89   265.61  0.82  0.96 -1.09 -0.23     -8.55 -1.83
+kPEPE         2.08  2.08    411.37  1289.18 -0.71  0.72 -4.00  0.84     -3.01 -0.98
+  alt, fill oltre, d=0.0: media semplice netto -1.91 bp/$, pesata per fill -2.07, monete positive 7/20, fill/ora totali 3129
+  alt, fill oltre, d=2.0: media semplice netto -1.26 bp/$, pesata per fill -1.73, monete positive 7/20, fill/ora totali 2569
+  alt, fill oltre, d=5.0: media semplice netto -0.95 bp/$, pesata per fill -0.82, monete positive 10/20, fill/ora totali 1095
+  alt, fill tocco, d=0.0: media semplice netto -0.91 bp/$, pesata per fill -1.55, monete positive 5/20, fill/ora totali 7742
+  alt, fill tocco, d=2.0: media semplice netto -1.04 bp/$, pesata per fill -1.20, monete positive 7/20, fill/ora totali 3534
+  alt, fill tocco, d=5.0: media semplice netto -0.82 bp/$, pesata per fill -0.41, monete positive 10/20, fill/ora totali 1156
+
+=== E) LIQUIDAZIONI Binance (forceOrder) durante la registrazione
+A eventi: 40 nozionale totale $: 324456 massimo $: 149395
