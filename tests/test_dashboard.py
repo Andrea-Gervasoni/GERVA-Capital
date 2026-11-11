@@ -27,6 +27,7 @@ def env(tmp_path, monkeypatch):
     monkeypatch.delenv("GERVA_DASH_TOKEN", raising=False)
     monkeypatch.delenv("GERVA_DASH_ALLOWED_HOSTS", raising=False)
     monkeypatch.setenv("GERVA_QUANT", str(tmp_path / "quant.json"))
+    monkeypatch.setenv("GERVA_QUANT4", str(tmp_path / "quant_v4.json"))
     return tmp_path
 
 
@@ -170,6 +171,75 @@ def test_quant_vero_se_presente_ha_la_forma_attesa():
         assert key in q, key
     assert {r["scenario"] for r in q["leverage_mc"]} >= {"base", "pessimista", "stress"}
     assert set(q["leverage_fan"]["levels"]) >= {"1", "2", "3"}
+
+
+# ---- quarta tornata (quant_v4.json): stesse regole di /quant ----
+def test_quant4_assente_da_404_json(client, env):
+    _write(env / "quant.json", {"label": "SIMULATO"})                 # i due file sono indipendenti
+    r = client.get("/api/v1/quant4")
+    assert r.status_code == 404 and r.json() == {"ok": False, "error": "ricerca non disponibile"}
+    assert r.headers["cache-control"] == "no-store" and "default-src 'self'" in r.headers["content-security-policy"]
+    assert client.get("/api/v1/quant").status_code == 200
+
+
+def test_quant4_dal_file_con_nan_ripuliti(client, env):
+    _write(env / "quant_v4.json", '{"simulated": true, "trials": 812, "deflated_sharpe": {"old": 0.2, "new": 0.38, "threshold": 0.95}, '
+                                  '"stop_table": [{"label": "1.7%", "leverage": 30.0, "mean_R_verify": NaN}], "decomposition": {"ai_contribution": null}}')
+    r = client.get("/api/v1/quant4")
+    assert r.status_code == 200
+    q = r.json()
+    assert q["trials"] == 812 and q["stop_table"][0]["mean_R_verify"] is None and q["decomposition"]["ai_contribution"] is None
+    assert int(r.headers["x-gerva-quant-age"]) >= 0 and r.headers["x-content-type-options"] == "nosniff"
+    assert client.get("/api/v1/quant").status_code == 404                # e non si confondono
+
+
+@pytest.mark.parametrize("contenuto", ['{"trials": 8', "[]", ""])
+def test_quant4_illeggibile_o_troppo_grande_da_503(client, env, monkeypatch, contenuto):
+    _write(env / "quant_v4.json", contenuto)
+    r = client.get("/api/v1/quant4")
+    assert r.status_code == 503 and r.json()["ok"] is False and str(env) not in r.text
+    _write(env / "quant_v4.json", {"x": "y" * 4000})
+    monkeypatch.setattr(server, "MAX_SNAPSHOT_BYTES", 1000)
+    assert client.get("/api/v1/quant4").status_code == 503
+
+
+def test_quant4_host_metodo_e_percorso_predefinito(client, env, monkeypatch):
+    _write(env / "quant_v4.json", {"simulated": True})
+    assert client.get("/api/v1/quant4", headers={"Host": "esempio.invalid"}).status_code == 400
+    assert client.post("/api/v1/quant4").status_code == 404
+    monkeypatch.delenv("GERVA_QUANT4")
+    assert server.quant4_path() == Path(server.ROOT) / "research" / "v5" / "quant_v4.json"
+
+
+def test_quant4_vero_se_presente_ha_la_forma_attesa():
+    path = Path(server.ROOT) / "research" / "v5" / "quant_v4.json"
+    if not path.is_file():
+        pytest.skip("research/v5/quant_v4.json non generato")
+    q = json.loads(path.read_text(encoding="utf-8"))
+    for key in ("stop_table", "tier_mc", "stress", "fund_stats", "fund_mc", "fund_curves", "recommended", "candidates",
+                "decomposition", "venues", "trials", "deflated_sharpe"):
+        assert key in q, key
+    assert {r["scenario"] for r in q["tier_mc"]} >= {"base", "pessimista", "verifica", "stress"}
+    names = {r["portafoglio"] for r in q["fund_stats"]}
+    assert q["recommended"]["prudent"] in names and q["recommended"]["maximum"] in names
+    assert q["decomposition"]["ai_contribution"] is None              # mai un numero: si misura in paper
+    # la regola «sostenuta» della pagina (leva ≤ 30x e R in verifica > 0,15) individua 1,0 x ATR e 1,7%
+    ok = sorted(r["label"] for r in q["stop_table"] if r["leverage"] <= 30.5 and r["mean_R_verify"] > 0.15)
+    assert ok == ["1.0 x ATR", "1.7%"]
+    assert all(r["leverage"] > 30.5 or r["mean_R_verify"] <= 0.2 for r in q["stop_table"])
+
+
+def test_pagina_leva_e_termini_della_quarta_tornata():
+    js = (STATIC / "js" / "glossary.js").read_text(encoding="utf-8")
+    for term in ("Margine isolato", "R", "Rischio per trade", "Distanza dalla liquidazione", "Carry e funding"):
+        assert f"term: '{term}'" in js, term
+    assert (STATIC / "js" / "views" / "leva.js").is_file()
+    main = (STATIC / "js" / "main.js").read_text(encoding="utf-8")
+    assert "leva-trade" in main and "quant4" in main
+    leva = (STATIC / "js" / "views" / "leva.js").read_text(encoding="utf-8")
+    assert "lev > 30.5" in leva and "rv > 0.15" in leva
+    ricerca = (STATIC / "js" / "views" / "ricerca.js").read_text(encoding="utf-8")
+    assert "da misurare in paper" in ricerca and "ai_contribution" not in ricerca      # il contributo dell'AI non è mai un numero
 
 
 def test_esempio_ha_il_blocco_ai():

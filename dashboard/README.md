@@ -46,6 +46,13 @@ Panoramica, Performance, Esposizione, Rischio, Strategie, Ordini, Sistema, e in 
   Ogni scheda porta l'etichetta **SIMULATO: ricerca su dati storici**.
 - **Come funziona** — il percorso dai dati al broker come diagramma cliccabile, e le quattro strategie spiegate.
 
+- **Leva per trade** — da `research/v5/quant_v4.json`: stop, leva e R medio per operazione (righe «sostenuta» fino a 30x,
+  «non sostenuta» a 50x), schemi di rischio per trade nei quattro scenari, e che cosa succede se lo stop non viene eseguito.
+
+Con `quant_v4.json` la pagina Ricerca si apre con «Il fondo intero» (curve, portafogli A…C6 con mese medio e mediano,
+Monte Carlo, scomposizione del rendimento, strategie provate) e Come funziona mostra la tabella delle sedi.
+Il contributo dell'AI non è mai mostrato come numero: «da misurare in paper».
+
 In fondo a Rischio c'è l'esempio «leva del trade e leva del conto» con i tetti di legge.
 
 ## Variabili d'ambiente
@@ -54,6 +61,7 @@ In fondo a Rischio c'è l'esempio «leva del trade e leva del conto» con i tett
 |---|---|---|
 | `GERVA_SNAPSHOT` | `var/gerva/snapshot.json` | Lo snapshot da servire. Se il file non esiste si serve l'esempio DEMO; se esiste ma è illeggibile la risposta è 503 (mai l'esempio al posto di dati veri). |
 | `GERVA_QUANT` | `research/v5/quant.json` | I risultati della ricerca (statici, simulati). Se manca, `/api/v1/quant` risponde 404 e le pagine lo dicono. |
+| `GERVA_QUANT4` | `research/v5/quant_v4.json` | La quarta tornata di ricerca. Stesse regole di `GERVA_QUANT`, endpoint `/api/v1/quant4`. |
 | `GERVA_KILL_FILE` | `var/gerva/KILL` | Il file che il comando KILL crea. |
 | `GERVA_DASH_TOKEN` | *(non impostato)* | Token richiesto dal KILL. Senza, il KILL è spento (503). |
 | `GERVA_DASH_HOST` | `127.0.0.1` | Indirizzo di ascolto. |
@@ -70,6 +78,7 @@ I percorsi predefiniti sono relativi alla radice del repository; quelli passati 
 | GET | `/api/v1/snapshot` | Lo snapshot così com'è (NaN e infinito diventano `null`). Header `X-Gerva-Snapshot-Source: file` oppure `demo`. |
 | GET | `/api/v1/health` | `{"ok": true, "snapshot_age_s": …, "snapshot_source": …, "kill_enabled": …, "kill_active": …}` |
 | GET | `/api/v1/quant` | Il file della ricerca così com'è (NaN → `null`); 404 se manca, 503 se illeggibile. Header `X-Gerva-Quant-Age`. |
+| GET | `/api/v1/quant4` | Come `/quant`, per `quant_v4.json`. |
 | POST | `/api/v1/kill` | Crea il file KILL. Vedi sotto. |
 
 Ogni risposta porta le intestazioni di sicurezza (CSP `default-src 'self'` senza script né stili inline,
@@ -152,7 +161,7 @@ static/js/store.js        interrogazione ogni 5 s, dati fermi / offline
 static/js/model.js        lettura tollerante dello snapshot (funzioni pure)
 static/js/charts.js       grafici SVG: linee con mirino, drawdown, heatmap, barre, sparkline, barre di limite
 static/js/glossary.js     definizioni e termini cliccabili
-static/js/views/          una sezione per file (dieci)
+static/js/views/          una sezione per file (undici)
 static/sample_snapshot.json   esempio DEMO, coerente al centesimo (lo verifica il test)
 ```
 
