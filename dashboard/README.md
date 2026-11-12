@@ -286,3 +286,27 @@ Per ridisegnare i grafici si cambiano i token, non il codice. `grafici.html` li 
 | Legame tra grafici | `linkCharts([grafici…], { window }) → scioglie` | Mirino alla stessa data su tutti; con `window: true` anche zoom e scorrimento. |
 | Tabella alternativa | `tableFallback({ summary, caption, head, rows, max }) → { el, refresh }` | `<details>` chiuso, righe costruite solo all'apertura; è ciò che aggiunge `table: true`. |
 | Indicatori | `sma, ema, bollinger, vwapMonth, donchian, atrPct, rsi` | Conviction e GQ non si calcolano nel browser: arrivano dal server. |
+
+## Livello Terminale e rifiniture (giro 3, blocco E)
+
+- **Schermata d'apertura del Terminale** (`static/js/views/terminale.js`, griglia `.tgrid` in `css/glass.css`): al livello Terminale lo spazio
+  Oggi mostra dieci riquadri su 12 colonne e a 1440 × 900 la pagina non scorre (gli elenchi scorrono dentro): `1` fascia dei numeri ·
+  `2` grafico a candele con indicatori e righello del trade · `3` patrimonio contro benchmark con la caduta · `4` freni · `5` posizioni ·
+  `6` libro dei trade · `7` strategie · `8` attribuzione · `9` ordini · `0` avvisi. Sotto i 1180 px (o i 720 di altezza) i riquadri si
+  impilano nell'ordine di lettura; sotto gli 860 px in una colonna. In `main.js` la tabella degli spazi cambia in un punto solo
+  (`terminal: terminale` sulla scheda di Oggi).
+- **Tastiera del Terminale**: `Tab` / `Maiusc Tab` e le frecce spostano il fuoco da un riquadro all'altro (per geometria) · `1…9`, `0`
+  saltano al riquadro · `j` `k` muovono la riga del riquadro attivo · `Invio` apre lo strumento nel grafico (o entra nel grafico, o apre
+  lo spazio del riquadro) · `o` lo apre in Mercati · `Esc` torna al riquadro. Scegliere uno strumento in Posizioni, Libro dei trade o
+  Ordini muove il grafico e segna gli altri elenchi. Nessuna richiesta diversa da GET.
+- **Provenienza sulla curva**: tratteggiata fino all'«avvio del paper» (linea verticale con etichetta), piena dopo; Mese / Anno /
+  Dall'avvio dichiarano quando contengono giorni simulati. In esempio la provenienza resta detta dall'etichetta ESEMPIO.
+- **Grafici**: cartellini di vetro del righello in una colonna a destra dell'asse (nome e prezzo, distanza in % e ATR; «Ultima» pieno),
+  etichette dell'asse nascoste vicino a un cartellino; intervallo «Trade» e `[` `]` in Mercati; `0` ripristina, `Maiusc ← →` dieci barre.
+  `timeChart.setWindow(t0, t1, { animate })` fa scorrere il dominio (`--chart-range`); `waterfall.update` interpola le barre
+  (`--chart-morph`, i numeri restano fermi); `growOnce(host, el)` fa crescere barre e celle solo al primo ingresso. Tutto spento con
+  «riduci movimento».
+- **Scala dei freni e righello**: etichette disposte su righe senza sovrapporsi né troncarsi; l'azione di ogni soglia sta sulla tacca
+  solo se entra per intero, altrimenti nell'elenco sotto la scala (sempre al telefono).
+- **Fonte più vecchia**: la fascia considera il libro dei trade e l'ultima barra degli strumenti seguiti (`derive.oldestSource`,
+  `derive.watchedSymbols`). Test: `python -m pytest tests/test_dashboard_terminale.py -q`.

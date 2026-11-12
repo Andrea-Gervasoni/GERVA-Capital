@@ -831,3 +831,5 @@ body[data-term] .summary { margin: 0; padding: 0 6px; font-size: var(--fs-small)
 .tlist .trow[aria-selected="true"].is-linked { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 60%, transparent), inset 3px 0 0 var(--accent); }
 .tchip--ai { color: var(--text); } .tp__n { color: var(--text-2); } .tgrid__hint { color: var(--text-2); } .tgrid__more { color: var(--text); text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 3px; }
 :root[data-theme="light"] #summary-btn { color: #0b4f9e; } :root[data-theme="light"] #alerts-n { background: #b3261e; color: #ffffff; }
+.tgrid__hint { background: color-mix(in srgb, var(--bg) 62%, transparent); border-radius: var(--radius-pill); padding: 2px 12px; }
+:root[data-theme="light"] #summary-btn { color: #083b7a; } :root[data-theme="light"] #alerts-btn b, :root[data-theme="light"] #alerts-btn .num { background: #b3261e; color: #ffffff; }
