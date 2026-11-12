@@ -461,6 +461,24 @@ def test_tradebook_demo_file_e_assente(client, env):
     assert r.status_code == 404 and r.json()["error"] == "libro dei trade non disponibile"
 
 
+def test_tradebook_chiusura_per_arresto_di_emergenza_passa_intatta(client, env):
+    """Il KILL chiude i trade a leva aperti con motivo «arresto di emergenza»: libro e storico lo riportano senza toccarlo."""
+    home = env / "casa"
+    (home / "learn").mkdir(parents=True)
+    closed = [dict(symbol="BTC", opened="2026-11-10", closed="2026-11-12", entry=74120.0, exit=73010.5, leverage=11.2, tier="confermato", pnl=-48.07, R=-0.52,
+                   why="arresto di emergenza"),
+              dict(symbol="ETH", opened="2026-11-01", closed="2026-11-04", entry=2412.0, exit=2501.0, leverage=11.0, tier="eccezionale", pnl=40.6, R=1.3, why="tempo")]
+    _write(home / "tradebook.json", dict(asof="2026-11-12", equity=2951.93, start_equity=3000.0, open={}, closed=closed,
+                                         log=[dict(day="2026-11-12", event="arresto di emergenza: chiusi 1 trade")], shadow=[]))
+    r = client.get("/api/v1/tradebook")
+    assert r.status_code == 200 and "example" not in r.json()
+    assert r.json()["closed"] == closed and r.json()["open"] == {} and r.json()["log"][0]["event"].startswith("arresto di emergenza")
+    (home / "learn" / "trades.jsonl").write_text(json.dumps(dict(strategy_id="TRADE-11X", symbol="BTC", entry_time="2026-11-10", exit_time="2026-11-12", leverage=11.2,
+                                                                 R=-0.52, exit_reason="arresto di emergenza", source="paper"), ensure_ascii=False) + "\n", encoding="utf-8")
+    rows = client.get("/api/v1/trades/history").json()["rows"]
+    assert [(x["source"], x["exit_reason"], x["R"]) for x in rows] == [("paper", "arresto di emergenza", -0.52)]
+
+
 def test_storico_dei_trade_sim_e_paper_marcati(client, env):
     import pandas as pd
 
@@ -723,6 +741,24 @@ def test_moduli_importati_esistono():
 # ---------------------------------------------------------------------------
 # L'esempio: completo e coerente
 # ---------------------------------------------------------------------------
+def test_esempio_usa_le_soglie_di_rischio_della_configurazione():
+    """La fotografia di esempio mostra gli stessi limiti di config/gerva.yaml (scalini, perdite a 24 ore e 7 giorni, sede crypto)."""
+    yaml = pytest.importorskip("yaml")
+    cfg = Path(server.ROOT) / "config" / "gerva.yaml"
+    if not cfg.is_file():
+        pytest.skip("configurazione non presente")
+    lim = yaml.safe_load(cfg.read_text(encoding="utf-8"))["limits"]
+    risk = json.loads(server.SAMPLE.read_text(encoding="utf-8"))["risk"]
+    assert [s["level"] for s in risk["dd_ladder"]] == [-lim["dd_reduce"], -lim["dd_halt"], -lim["dd_kill"]]
+    by_name = {row["name"]: row for row in risk["limits"]}
+    assert by_name["Caduta dal massimo"]["limit"] == -lim["dd_kill"]
+    assert by_name["Perdita a 24 ore"]["limit"] == -lim["daily_loss"] and by_name["Perdita a 7 giorni"]["limit"] == -lim["weekly_loss"]
+    assert by_name["Esposizione sulla sede crypto"]["limit"] == lim["max_venue"]["crypto"] and by_name["Leva lorda"]["limit"] == lim["max_leverage"]
+    assert by_name["Peso massimo di uno strumento"]["limit"] == lim["max_weight"] and risk["vol_target"] == lim["vol_target"]
+    assert by_name["Esposizione sulla sede crypto"]["value"] < lim["max_venue"]["crypto"]            # l'esempio non mostra un limite violato
+    assert all(row["status"] in ("ok", "warn") for row in risk["limits"])
+
+
 def test_esempio_completo_e_coerente():
     s = json.loads(server.SAMPLE.read_text(encoding="utf-8"))
     assert SNAPSHOT_KEYS <= set(s)

@@ -240,7 +240,7 @@ export const pathOf = (seg) => 'M' + seg.map((p) => `${p[0].toFixed(1)},${p[1].t
  *   xTicks: [{ t, label }],                    tacche dell'asse x, se non sono date
  *   tip: (i) => ({ title, rows }),             contenuto del tooltip per il punto i
  *   say: (i) => testo,                         stessa cosa in una frase, per i lettori di schermo
- *   xFormat: (t) => testo,                     etichetta della x nella tabella alternativa (di norma la data)
+ *   xFormat: (t) => testo, xHead: testo,       etichetta e intestazione della x nella tabella alternativa (di norma la data)
  * })
  *
  * Opzioni: label (nome accessibile); zoom: true abilita rotella = zoom, trascinamento = scorrimento, doppio clic = tutto,
@@ -261,7 +261,7 @@ export function timeChart(host, { label = 'Grafico', zoom = false, table = false
   const winSubs = new Set();
   const fallback = table ? tableFallback({
     caption: label,
-    head: () => (full ? ['Data', ...full.panels.flatMap((p) => p.series.map((sr) => sr.name || p.title || sr.cls || 'Valore'))] : []),
+    head: () => (full ? [full.xHead || 'Data', ...full.panels.flatMap((p) => p.series.map((sr) => sr.name || p.title || sr.cls || 'Valore'))] : []),
     rows: () => (full ? full.x.map((t, i) => [full.xFormat ? full.xFormat(t) : fmtDate(t, true),
       ...full.panels.flatMap((p) => p.series.map((sr) => (sr.values[i] == null ? null : p.format ? p.format(sr.values[i], null) : fmtNum(sr.values[i], 2))))]) : []),
   }) : null;

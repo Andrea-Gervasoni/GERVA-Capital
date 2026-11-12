@@ -189,7 +189,7 @@ async function main() {
     let acc = 0;
     const xs = Array.from({ length: n }, (_, i) => i + 1);
     fanChart(fan.host, { label: 'Ventaglio della somma degli esiti', table: true }).update({
-      x: xs, xFormat: (t) => `trade n. ${fmtNum(t, 0)}`, xTicks: [1, 20, 40, 60, 80, 100, 120].filter((t) => t <= n).map((t) => ({ t, label: String(t) })),
+      x: xs, xHead: 'Trade', xFormat: (t) => `trade n. ${fmtNum(t, 0)}`, xTicks: [1, 20, 40, 60, 80, 100, 120].filter((t) => t <= n).map((t) => ({ t, label: String(t) })),
       bands: [{ lo: q(0.05), hi: q(0.95), name: '5°–95° percentile' }, { lo: q(0.25), hi: q(0.75), name: '25°–75° percentile' }], median: q(0.5),
       lines: [{ values: R.slice(0, n).map((v) => (acc += v)), cls: 's2', name: 'Sequenza storica' }], format: (v) => `${fmtSigned(v, 0)}R`, refs: [{ value: 0, label: 'pari' }],
     });

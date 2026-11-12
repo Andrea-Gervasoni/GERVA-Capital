@@ -6,17 +6,19 @@
 <title>GERVA Capital · Wireframe di architettura e interazione</title>
 <style>
 /* Wireframe in scala: ogni tavola è disegnata alla misura vera (1440 × 900 oppure 390 × 844) e rimpicciolita solo se la
-   finestra è più stretta. Nessuno stile finale: i materiali veri sono in tokens.glass.css (designer visivo); qui i nomi
-   --wf-* ne riprendono il ruolo (--glass-1 pannello, --glass-2 fascia e binario, --glass-3 fogli). Numeri di esempio. */
+   finestra è più stretta. Nessuno stile finale. Valori copiati dal tema chiaro di tokens.glass.css (designer visivo):
+   --wf-glass-1 = --glass-panel-tint, -2 = --glass-chrome-tint (fascia e binario), -3 = --glass-sheet-tint (fogli);
+   misure: --rail-w 236, --topbar-h 60, --radius-l 22, --radius-xl 30, --gap-grid ≈ 20 e --page-gutter ≈ 29 a 1440.
+   Numeri di esempio. */
 :root{
-  --ink:#16202b; --ink2:#4a5866; --ink3:#7d8a97; --line:rgba(22,32,43,.13); --line2:rgba(22,32,43,.28);
-  --wf-glass-1:rgba(255,255,255,.58); --wf-glass-2:rgba(255,255,255,.72); --wf-glass-3:rgba(255,255,255,.9);
-  --ok:#0b6b5d; --warn:#9a5200; --bad:#a8231c; --acc:#2450b8;
-  --ok-bg:rgba(11,107,93,.12); --warn-bg:rgba(154,82,0,.13); --bad-bg:rgba(168,35,28,.12); --acc-bg:rgba(36,80,184,.10);
-  --r-panel:20px; --r-chip:999px;
+  --ink:#0d1117; --ink2:#3b434f; --ink3:#596270; --line:rgba(22,32,43,.13); --line2:rgba(22,32,43,.28);
+  --wf-glass-1:rgba(255,255,255,.56); --wf-glass-2:rgba(250,251,254,.68); --wf-glass-3:rgba(255,255,255,.88);
+  --ok:#0a6648; --warn:#7a5000; --bad:#ad1d1d; --acc:#1757b0;
+  --ok-bg:rgba(23,153,107,.12); --warn-bg:rgba(242,168,10,.17); --bad-bg:rgba(210,51,47,.09); --acc-bg:rgba(42,120,214,.11);
+  --r-panel:22px; --r-chip:999px;
 }
 *{box-sizing:border-box}
-body{margin:0;font:13px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--ink);background:#e6eaf0}
+body{margin:0;font:13px/1.45 -apple-system,BlinkMacSystemFont,"Inter",system-ui,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--ink);background:#e4e8ef}
 .doc{max-width:1440px;margin:0 auto;display:flex;flex-direction:column}
 .intro{padding:40px 32px 8px}
 .intro h1{font-size:28px;letter-spacing:-.01em;margin:0 0 8px}
@@ -32,8 +34,8 @@ section.wf{margin-top:40px}
 .stage.phones{display:flex;gap:40px;justify-content:center;flex-wrap:wrap;padding:0 0 8px}
 .fit{position:relative}
 .board{position:relative;width:1440px;transform-origin:0 0;overflow:hidden;
-  background:radial-gradient(900px 500px at 12% -10%,#cfe0f7 0,transparent 60%),radial-gradient(800px 600px at 95% 15%,#d9efe6 0,transparent 60%),radial-gradient(900px 700px at 60% 110%,#ece2f5 0,transparent 60%),#eef1f5}
-.board.ph{width:390px;border-radius:0}
+  background:radial-gradient(900px 500px at 12% -10%,#cfe0f7 0,transparent 60%),radial-gradient(800px 600px at 95% 15%,#d9efe6 0,transparent 60%),radial-gradient(900px 700px at 60% 110%,#ece2f5 0,transparent 60%),#eef1f6}
+.board.tel{width:390px;border-radius:0}
 .fold{position:absolute;left:0;right:0;border-top:2px dashed var(--bad);z-index:30;pointer-events:none}
 .fold span{position:absolute;right:8px;top:-22px;font-size:11px;color:var(--bad);background:#fff;padding:1px 8px;border-radius:9px;border:1px solid var(--bad)}
 /* materiali */
@@ -41,10 +43,12 @@ section.wf{margin-top:40px}
 .g2{background:var(--wf-glass-2);border:1px solid rgba(255,255,255,.9);box-shadow:0 0 0 1px var(--line),0 10px 30px rgba(22,32,43,.08);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
 .g3{background:var(--wf-glass-3);border:1px solid #fff;box-shadow:0 0 0 1px var(--line2),0 30px 80px rgba(22,32,43,.28)}
 /* fascia di stato */
-.band{position:absolute;left:12px;right:12px;top:12px;height:52px;border-radius:26px;display:flex;align-items:center;padding:0 8px 0 20px;z-index:10;white-space:nowrap}
-.band.rel{position:relative;left:auto;right:auto;top:auto;margin:0 12px}
+.band{position:absolute;left:270px;right:29px;top:14px;height:60px;border-radius:30px;display:flex;align-items:center;padding:0 12px 0 8px;z-index:10;white-space:nowrap}
+.band.rel{position:relative;left:auto;right:auto;top:auto;margin:0 29px 0 270px}
+.board[data-rail=mini] .band{left:90px;right:12px}
 .brand{font-weight:700;letter-spacing:.18em;font-size:13px;margin-right:16px}
-.seg{display:flex;align-items:center;gap:8px;padding:0 16px;height:28px;border-left:1px solid var(--line)}
+.seg{display:flex;align-items:center;gap:8px;padding:0 14px;height:28px;border-left:1px solid var(--line)}
+.seg:first-child{border-left:0}
 .seg .lbl{color:var(--ink3);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
 .state{display:inline-flex;align-items:center;gap:6px;font-weight:700;letter-spacing:.04em;padding:3px 10px;border-radius:var(--r-chip);background:var(--ok-bg);color:var(--ok)}
 .state::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
@@ -60,12 +64,12 @@ section.wf{margin-top:40px}
 .cnt{display:inline-flex;min-width:20px;height:20px;border-radius:10px;align-items:center;justify-content:center;background:var(--warn-bg);color:var(--warn);font-weight:700;font-size:11px;padding:0 6px}
 /* provenienza: la forma del bordo cambia, non solo il colore */
 .tag{display:inline-flex;align-items:center;height:18px;padding:0 7px;border-radius:5px;font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--ink);border:1.5px solid var(--ink2);vertical-align:middle;white-space:nowrap}
-.tag.sim{border-style:dashed} .tag.es{border-style:dotted;color:var(--ink2)} .tag.reale{background:var(--ink);color:#fff;border-color:var(--ink)} .tag.paper{border-style:solid}
+.tag.sim{border-style:dashed;color:#4f3cc0;border-color:rgba(98,80,214,.7);background:rgba(98,80,214,.09)} .tag.es{border-style:dotted;color:var(--ink2);background:repeating-linear-gradient(135deg,rgba(15,23,42,.07) 0 4px,transparent 4px 8px)} .tag.reale{background:var(--ink);color:#fff;border-color:var(--ink)} .tag.paper{border-style:solid;color:#1757b0;border-color:rgba(42,120,214,.6);background:rgba(42,120,214,.10)}
 .tag.lg{height:24px;font-size:11px;padding:0 10px;border-radius:7px}
 /* binario */
-.rail{position:absolute;left:12px;top:76px;bottom:12px;width:200px;border-radius:24px;padding:16px 12px;display:flex;flex-direction:column;gap:2px;z-index:9}
+.rail{position:absolute;left:14px;top:14px;bottom:14px;width:236px;border-radius:30px;padding:20px 12px 14px;display:flex;flex-direction:column;gap:2px;z-index:9}
 .rail .grp{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);padding:12px 12px 4px}
-.rail a{display:flex;align-items:center;gap:12px;height:40px;padding:0 12px;border-radius:12px;color:var(--ink2);font-size:14px;white-space:nowrap}
+.rail a{display:flex;align-items:center;gap:12px;height:38px;padding:0 12px;border-radius:12px;color:var(--ink2);font-size:14px;white-space:nowrap}
 .rail a i{width:18px;height:18px;border:1.5px solid currentColor;border-radius:6px;flex:none}
 .rail a kbd{margin-left:auto}
 .rail a.on{background:rgba(255,255,255,.9);color:var(--ink);font-weight:600;box-shadow:0 0 0 1px var(--line),0 4px 12px rgba(22,32,43,.08)}
@@ -74,13 +78,20 @@ section.wf{margin-top:40px}
 .rail .lev a{height:30px;font-size:13px}
 .rail .lev a i{border-radius:50%;width:12px;height:12px}
 .rail .lev a.on i{background:var(--ink);border-color:var(--ink)}
-.rail.mini{width:56px;padding:16px 8px}
+.rail.mini{width:64px;padding:20px 10px 14px}
+.rail .brand{padding:2px 12px 10px;font-size:17px;letter-spacing:.2em;margin:0}
+.rail .brand small{font-size:10px;font-weight:500;letter-spacing:.16em;color:var(--ink3);margin-left:6px}
+.rail.mini .brand{padding:2px 0 10px;text-align:center;font-size:15px;letter-spacing:0}
+.rail.mini .brand small,.rail.mini .foot{display:none}
+.rail .foot{margin-top:8px;padding:10px 12px;border-radius:14px;background:rgba(15,23,42,.04);font-size:12px;color:var(--ink2);display:grid;gap:3px}
+.rail .foot div{display:flex;justify-content:space-between}
+.rail .foot b{color:var(--ink);font-variant-numeric:tabular-nums}
 .rail.mini a{padding:0;justify-content:center} .rail.mini a span,.rail.mini .grp,.rail.mini kbd{display:none}
 .rail.mini .grp{display:block;height:1px;padding:0;margin:8px 8px;background:var(--line);font-size:0}
 kbd{font:600 10px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--ink2);border:1px solid var(--line2);border-bottom-width:2px;border-radius:5px;padding:3px 5px;background:rgba(255,255,255,.7);white-space:nowrap}
 /* contenuto */
-.main{position:absolute;left:244px;right:32px;top:88px}
-.main.t{left:80px;right:12px;top:76px;bottom:12px}
+.main{position:absolute;left:270px;right:29px;top:94px}
+.main.t{left:90px;right:12px;top:86px;bottom:12px}
 .pagehd{display:flex;align-items:flex-end;gap:16px}
 .pagehd h3{font-size:30px;line-height:36px;margin:0;letter-spacing:-.02em}
 .frase{font-size:15px;line-height:22px;color:var(--ink);margin:6px 0 0;max-width:980px}
@@ -88,10 +99,10 @@ kbd{font:600 10px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:v
 .chips{display:flex;gap:6px;align-items:center}
 .chip{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:12px;border:1px solid var(--line2);font-size:12px;color:var(--ink2);white-space:nowrap;background:rgba(255,255,255,.4)}
 .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
-.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:24px}
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:20px}
 .grid.e{gap:20px} .grid.t{gap:12px}
 .c2{grid-column:span 2}.c3{grid-column:span 3}.c4{grid-column:span 4}.c5{grid-column:span 5}.c6{grid-column:span 6}.c7{grid-column:span 7}.c8{grid-column:span 8}.c9{grid-column:span 9}.c12{grid-column:span 12}
-.p{border-radius:var(--r-panel);padding:24px;position:relative;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.p{border-radius:var(--r-panel);padding:24px 26px;position:relative;overflow:hidden;display:flex;flex-direction:column;min-width:0}
 .grid.e .p{padding:20px} .grid.t .p{padding:14px 16px 16px;border-radius:16px}
 .ph{display:flex;align-items:center;gap:8px;min-height:22px;white-space:nowrap}
 .pt{font-size:15px;font-weight:600;margin:0}
@@ -118,7 +129,7 @@ kbd{font:600 10px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:v
 .bul i.w{background:var(--warn)}
 .bul b{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink)}
 .bul b.h{background:var(--bad)}
-.wf-row{display:grid;grid-template-columns:104px 1fr 92px;gap:10px;align-items:center;height:24px;font-variant-numeric:tabular-nums}
+.wf-row{display:grid;grid-template-columns:104px 1fr 92px;gap:10px;align-items:center;height:23px;white-space:nowrap;font-variant-numeric:tabular-nums}
 .grid.t .wf-row{height:21px;font-size:12px;grid-template-columns:96px 1fr 120px}
 .wf-row .tr{position:relative;height:12px;border-left:0}
 .wf-row .tr::before{content:"";position:absolute;left:30%;top:-6px;bottom:-6px;width:1px;background:var(--line2)}
@@ -156,7 +167,7 @@ th:first-child,td:first-child{text-align:left;padding-left:0} th:last-child,td:l
 tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--acc);padding-left:8px}
 .grid.t td{padding:5px 6px;font-size:12px} .grid.t th{padding:3px 6px}
 .list{display:flex;flex-direction:column}
-.li{display:grid;grid-template-columns:44px 64px 1fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);align-items:baseline}
+.li{display:grid;grid-template-columns:40px 62px 1fr;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);align-items:baseline}
 .li:last-child{border-bottom:0}
 .grid.t .li{padding:5px 0;font-size:12px}
 .sev{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
@@ -176,14 +187,14 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
 .pal .ft{display:flex;gap:16px;align-items:center;height:40px;padding:0 20px;border-top:1px solid var(--line);color:var(--ink2);font-size:12px}
 .ghost{border-radius:var(--r-panel);opacity:.55}
 /* telefono */
-.ph .pband{position:absolute;left:8px;right:8px;top:8px;border-radius:22px;padding:8px 8px 8px 12px;z-index:10}
-.ph .pmain{position:absolute;left:16px;right:16px;top:100px}
-.ph .p{padding:16px;border-radius:18px;margin-bottom:16px}
-.ph .tabbar{position:absolute;left:8px;right:8px;bottom:8px;height:64px;border-radius:24px;display:flex;align-items:center;justify-content:space-around;z-index:10}
-.ph .tabbar a{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;color:var(--ink2);min-width:56px}
-.ph .tabbar a i{width:22px;height:22px;border:1.5px solid currentColor;border-radius:7px}
-.ph .tabbar a.on{color:var(--ink);font-weight:700} .ph .tabbar a.on i{background:var(--ink)}
-.ph .big{font-size:40px}
+.tel .pband{position:absolute;left:8px;right:8px;top:8px;border-radius:22px;padding:8px 8px 8px 12px;z-index:10}
+.tel .pmain{position:absolute;left:16px;right:16px;top:100px}
+.tel .p{padding:16px;border-radius:18px;margin-bottom:16px}
+.tel .tabbar{position:absolute;left:8px;right:8px;bottom:8px;height:64px;border-radius:24px;display:flex;align-items:center;justify-content:space-around;z-index:10}
+.tel .tabbar a{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;color:var(--ink2);min-width:56px}
+.tel .tabbar a i{width:22px;height:22px;border:1.5px solid currentColor;border-radius:7px}
+.tel .tabbar a.on{color:var(--ink);font-weight:700} .ph .tabbar a.on i{background:var(--ink)}
+.tel .big{font-size:40px}
 /* foglio KILL */
 .sheet{border-radius:24px;padding:24px;width:520px}
 .field{height:40px;border-radius:10px;border:1px solid var(--line2);background:#fff;display:flex;align-items:center;padding:0 12px;color:var(--ink3);margin:4px 0 12px}
@@ -278,12 +289,12 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
   <h2>1 · Oggi <small>livello Semplice · 1440 × 900 · la pagina scorre, fascia e binario restano</small></h2>
   <ul>
     <li><b>Cinque secondi:</b> la fascia dice se qualcosa è rotto o frenato (G2), la frase lo ripete a parole, il primo riquadro dice se si guadagna (G1), il secondo quanto manca al freno (G4).</li>
-    <li><b>Aria:</b> 5 riquadri prima della piega (uno grande + quattro), margine 32, distanza 24, interno 24. Sotto la piega si vedono i titoli della terza riga: invitano a scorrere.</li>
+    <li><b>Aria:</b> 5 riquadri prima della piega (uno grande + quattro), margine 29, distanza 20, interno 26. Sotto la piega si vedono i titoli della terza riga: invitano a scorrere.</li>
     <li><b>Ogni riquadro:</b> un titolo, una frase, un numero protagonista, un solo grafico. «?» apre «Che cosa significa?». La provenienza sta nel titolo e dentro il grafico.</li>
   </ul>
 </div>
 <div class="stage"><div class="fit">
-<div class="board" style="height:1112px" data-shell data-active="oggi" data-level="semplice">
+<div class="board" style="height:1084px" data-shell data-active="oggi" data-level="semplice">
   <div class="fold" style="top:900px"><span>piega · 900 px</span></div>
   <div class="main">
     <div style="height:88px">
@@ -292,20 +303,20 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
     </div>
     <div class="grid">
       <!-- patrimonio -->
-      <div class="p g1 c8" style="height:304px">
+      <div class="p g1 c8" style="height:312px">
         <div class="ph"><h4 class="pt">Patrimonio</h4><span class="tag paper">PAPER</span><span class="help">?</span><span class="q">G1</span></div>
         <p class="say">Il conto vale tanto; oggi ha guadagnato, ed è una giornata normale.</p>
         <div class="row grow" style="gap:24px;align-items:stretch;margin-top:12px">
-          <div class="col" style="width:330px;justify-content:space-between">
+          <div class="col" style="width:312px;justify-content:space-between">
             <div>
               <div class="big">12.610,08 €</div>
               <div class="sm mut n" style="margin-top:8px">libro giornaliero 9.457,56 € + libro dei trade 3.152,52 €</div>
               <div class="row" style="margin-top:14px;gap:10px"><span class="h4 pos">▲ +42,40 €</span><span class="h4 pos">+0,34%</span><span class="chip">0,4 σ · giornata normale</span></div>
             </div>
             <div class="row" style="gap:0;border-top:1px solid var(--line);padding-top:10px">
-              <div class="col grow"><span class="xs dim">Mese</span><span class="h4 pos">+1,98%</span><span class="xs mut">atteso a oggi +0,6% <span class="tag sim">SIM</span></span></div>
+              <div class="col grow"><span class="xs dim">Mese</span><span class="h4 pos">+1,98%</span><span class="xs mut">atteso +0,6% <span class="tag sim">SIM</span></span></div>
               <div class="col grow"><span class="xs dim">Anno</span><span class="h4 pos">+5,08%</span><span class="xs mut">2026</span></div>
-              <div class="col grow"><span class="xs dim">Dall'avvio</span><span class="h4 pos">+5,08%</span><span class="xs mut">da 12.000 €, 20 ott</span></div>
+              <div class="col grow"><span class="xs dim">Dall'avvio</span><span class="h4 pos">+5,08%</span><span class="xs mut">dal 20 ott</span></div>
             </div>
           </div>
           <div class="col grow">
@@ -316,7 +327,7 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
         </div>
       </div>
       <!-- freni -->
-      <div class="p g1 c4" style="height:304px">
+      <div class="p g1 c4" style="height:312px">
         <div class="ph"><h4 class="pt">Quanto manca ai freni</h4><span class="help">?</span><span class="q">G4 · R2</span></div>
         <p class="say">Siamo a 18,8 punti dal livello in cui il motore dimezza da solo le posizioni.</p>
         <div class="row" style="margin-top:12px;align-items:baseline;gap:10px"><span class="mid">18,8 punti</span><span class="mut sm n">= 2.400 € · scatta a 10.210 €</span></div>
@@ -335,9 +346,9 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
         </div>
       </div>
       <!-- perché -->
-      <div class="p g1 c4" style="height:272px">
+      <div class="p g1 c4" style="height:284px">
         <div class="ph"><h4 class="pt">Da dove viene il risultato</h4><span class="tag paper">PAPER</span><span class="help">?</span><span class="q">G3</span></div>
-        <p class="say">Oggi ha guadagnato soprattutto il trend sulle crypto; ha perso la regola sugli indici.</p>
+        <p class="say">Oggi ha guadagnato soprattutto il trend sulle crypto.</p>
         <div class="chips" style="margin:10px 0 8px"><span class="chip on">Oggi</span><span class="chip">Mese</span><span class="chip">Dall'avvio</span></div>
         <div class="wf-row"><span>Trend crypto</span><div class="tr"><i style="left:30%;width:34%"></i></div><span class="v pos">+21,10 €</span></div>
         <div class="wf-row"><span>Libro dei trade</span><div class="tr"><i style="left:30%;width:24%"></i></div><span class="v pos">+14,60 €</span></div>
@@ -347,18 +358,18 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
         <div class="wf-row dim" style="border-top:1px solid var(--line);margin-top:2px"><span>Non attribuito</span><div class="tr"></div><span class="v">0,00 €</span></div>
       </div>
       <!-- cambiato -->
-      <div class="p g1 c4" style="height:272px">
+      <div class="p g1 c4" style="height:284px">
         <div class="ph"><h4 class="pt">Che cosa è cambiato da ieri</h4><span class="help">?</span><span class="q">G7</span></div>
-        <p class="say">Dalle 22:00 di ieri il sistema ha fatto queste tre cose.</p>
+        <p class="say">Dalle 22:00 di ieri il sistema ha fatto tre cose.</p>
         <div class="list" style="margin-top:6px">
-          <div class="li"><span class="n mut">09:15</span><span class="sev wr">Freno AI</span><span>Momentum crypto a metà: decisione sui tassi domani.</span></div>
-          <div class="li"><span class="n mut">02:00</span><span class="sev">Trade</span><span>BTC: stop alzato a 71.990 (era 71.303).</span></div>
+          <div class="li"><span class="n mut">09:15</span><span class="sev wr">Freno AI</span><span>Momentum crypto a metà: tassi domani.</span></div>
+          <div class="li"><span class="n mut">02:00</span><span class="sev">Trade</span><span>BTC: stop alzato a 71.990.</span></div>
           <div class="li"><span class="n mut">22:00</span><span class="sev dim">Ordini</span><span>3 ribilanciamenti eseguiti, 1.240 €.</span></div>
         </div>
         <div class="sm mut" style="margin-top:auto">Altri 2 nel registro →</div>
       </div>
       <!-- trade -->
-      <div class="p g1 c4" style="height:272px">
+      <div class="p g1 c4" style="height:284px">
         <div class="ph"><h4 class="pt">Trade a leva aperti</h4><span class="tag paper">PAPER</span><span class="help">?</span><span class="q">G8 · R3</span></div>
         <p class="say">C'è una scommessa aperta su Bitcoin: al massimo può perdere 286,60 €.</p>
         <div class="row" style="margin-top:10px;align-items:baseline"><span class="mid pos">+1,23 R</span><span class="sm mut">BTC al rialzo · leva 11,2x · giorno 5 di 7</span></div>
@@ -404,8 +415,8 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
 <div class="cap">
   <h2>2 · Oggi <small>livello Terminale · 1440 × 900 · nulla scorre: le nove domande del gestore in uno schermo</small></h2>
   <ul>
-    <li><b>Stessi riquadri, stessi materiali:</b> il binario si stringe a 56 px, margine 12, distanza 12, interno 16. Spariscono le frasi, restano titolo, provenienza e «?» (tasto <kbd>i</kbd>).</li>
-    <li><b>10 riquadri</b> (massimo al livello Terminale a 1440; 12 da 1920). Griglia a 12 colonne, tre righe 252 / 252 / 240.</li>
+    <li><b>Stessi riquadri, stessi materiali:</b> il binario si stringe a 64 px, margine 12, distanza 12, interno 16. Spariscono le frasi, restano titolo, provenienza e «?» (tasto <kbd>i</kbd>).</li>
+    <li><b>10 riquadri</b> (massimo al livello Terminale a 1440; 12 da 1920). Griglia a 12 colonne, tre righe 248 / 248 / 236.</li>
     <li><b>Tastiera:</b> <kbd>Tab</kbd> passa da un riquadro all'altro in ordine di lettura, <kbd>j</kbd>/<kbd>k</kbd> scorrono le righe del riquadro attivo, <kbd>Invio</kbd> lo apre nel suo spazio.</li>
   </ul>
 </div>
@@ -413,7 +424,7 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
 <div class="board" style="height:900px" data-shell data-active="oggi" data-level="terminale" data-rail="mini">
   <div class="main t">
     <div class="grid t">
-      <div class="p g1 c5" style="height:252px">
+      <div class="p g1 c5" style="height:248px">
         <div class="ph"><h4 class="pt">Patrimonio</h4><span class="tag paper">PAPER</span><span class="help">?</span><span class="q">G1 · R1</span></div>
         <div class="row" style="align-items:stretch;gap:16px;margin-top:8px" >
           <div class="col" style="width:206px">
@@ -426,14 +437,14 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
               <div class="kv sm"><span class="mut">Dall'avvio</span><span class="pos">+5,08%</span></div>
             </div>
           </div>
-          <div class="col grow" style="height:192px">
+          <div class="col grow" style="height:182px">
             <div class="row between"><span class="xs mut">patrimonio · caduta · nastro degli stati</span><div class="chips"><span class="chip">1S</span><span class="chip">1M</span><span class="chip on">Avvio</span></div></div>
             <div class="plot grow" style="margin-top:6px"><span class="tag paper wm">PAPER</span><svg class="sk"><use href="#sk-eq"/></svg></div>
             <div style="height:6px;border-radius:3px;margin-top:4px;background:linear-gradient(90deg,var(--ok) 0 100%);opacity:.5"></div>
           </div>
         </div>
       </div>
-      <div class="p g1 c4" style="height:252px">
+      <div class="p g1 c4" style="height:248px">
         <div class="ph"><h4 class="pt">Attribuzione</h4><span class="tag paper">PAPER</span><div class="chips" style="margin-left:6px"><span class="chip on">Oggi</span><span class="chip">Mese</span><span class="chip">Avvio</span></div><span class="q">G3</span></div>
         <div style="margin-top:8px">
         <div class="wf-row"><span>CR-TREND</span><div class="tr"><i style="left:30%;width:34%"></i></div><span class="v pos">+21,10 € · +16,7 pb</span></div>
@@ -445,7 +456,7 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
         </div>
         <div class="row sm" style="margin-top:auto;border-top:1px solid var(--line);padding-top:8px;gap:16px"><span><span class="dim">Migliori</span> BTC +18,20 · GLD +6,10 · ETH +4,90</span><span><span class="dim">Peggiori</span> QQQ −5,40 · SPY −2,90</span></div>
       </div>
-      <div class="p g1 c3" style="height:252px">
+      <div class="p g1 c3" style="height:248px">
         <div class="ph"><h4 class="pt">Freni</h4><span class="help">?</span><span class="q">G4 · R2 · R3</span></div>
         <div class="row" style="align-items:baseline;gap:8px;margin-top:6px"><span class="h4">18,8 punti</span><span class="xs mut n">2.400 € · 19 giornate di ES</span></div>
         <div class="freni" style="height:66px">
@@ -459,19 +470,19 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
         <div class="sm" style="margin-top:auto;border-top:1px solid var(--line);padding-top:8px"><span class="mut">Peggior caso di oggi</span> −7,1% <span class="wr">→ scatta −4% in 24 ore</span> <span class="tag sim">SIM</span></div>
       </div>
 
-      <div class="p g1 c5" style="height:252px">
-        <div class="ph"><h4 class="pt">Trade a leva aperti</h4><span class="tag paper">PAPER</span><span class="mut xs">1 di 4 · rischio 1,0 / 6% · margini 9,1 / 15% del registro · controvalore 1,02 / 1,5x</span><span class="q">G8 · B2</span></div>
-        <table style="margin-top:6px"><tr><th>Trade</th><th>Livello</th><th>Entrata</th><th>Stop</th><th>Liquid.</th><th>Dallo stop</th><th>R</th><th>MAE / MFE</th><th>Giorno</th><th>Margine</th></tr>
-        <tr class="sel"><td><b>BTC</b> ▲</td><td>confermato</td><td>74.120</td><td>71.990</td><td>67.870</td><td>7,2% · 2,3 ATR</td><td class="pos"><b>+1,23</b></td><td>−0,31 / +1,66</td><td>5 / 7</td><td>286,60 €</td></tr></table>
+      <div class="p g1 c5" style="height:248px">
+        <div class="ph"><h4 class="pt">Trade a leva aperti</h4><span class="tag paper">PAPER</span><span class="mut xs">1 di 4 · rischio 1,0 / 6% · margini 9,1 / 15%</span><span class="q">G8 · B2</span></div>
+        <table style="margin-top:6px"><tr><th>Trade</th><th>Entrata</th><th>Stop</th><th>Dallo stop</th><th>R</th><th>MAE / MFE</th><th>Giorno</th><th>Margine</th></tr>
+        <tr class="sel"><td><b>BTC</b> ▲ conf.</td><td>74.120</td><td>71.990</td><td>7,2% · 2,3 ATR</td><td class="pos"><b>+1,23</b></td><td>−0,31 / +1,66</td><td>5 / 7</td><td>286,60 €</td></tr></table>
         <div class="ruler" style="margin-top:14px">
           <div class="trk"></div><div class="zone r1" style="left:38%;width:17%"></div><div class="zone gain" style="left:55%;width:31%"></div>
           <div class="m liq" style="left:4%"><em>67.870</em><span>liquidazione</span></div><div class="m" style="left:31%;background:none;border-left:2px dashed var(--ink2)"><span>stop iniziale</span></div>
           <div class="m" style="left:38%"><em>−1 R</em><span>stop</span></div><div class="m" style="left:55%"><em>0 R</em><span>entrata</span></div><div class="m" style="left:72%;background:var(--line2)"><em>+1 R</em></div>
           <div class="m px" style="left:86%;background:var(--ok)"><em style="bottom:16px">77.582</em><span style="top:16px">chiusura 31 ott</span></div><div class="m" style="left:93%;background:var(--line2)"><span>massimo</span></div>
         </div>
-        <div class="xs mut" style="margin-top:auto">Esce se: stop, conviction bassa, giorno 7. Prezzi all'ultima barra giornaliera chiusa: non esiste l'intraday.</div>
+        <div class="xs mut" style="margin-top:auto">Esce se: stop, conviction bassa, giorno 7. Prezzi all'ultima barra chiusa.</div>
       </div>
-      <div class="p g1 c4" style="height:252px">
+      <div class="p g1 c4" style="height:248px">
         <div class="ph"><h4 class="pt">Che cosa è cambiato</h4><span class="mut xs">dalle 22:00 di ieri</span><span class="q">G7</span></div>
         <div class="list" style="margin-top:4px">
           <div class="li"><span class="n mut">09:15</span><span class="sev wr">Freno AI</span><span>CR-XSMOM × 0,5 · tassi domani · scade 02:45</span></div>
@@ -482,9 +493,9 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
           <div class="li"><span class="n mut">22:00</span><span class="sev dim">Posizioni</span><span>GLD +1,4 punti · TLT −1,1 punti</span></div>
         </div>
       </div>
-      <div class="p g1 c3" style="height:252px">
+      <div class="p g1 c3" style="height:248px">
         <div class="ph"><h4 class="pt">Atteso contro reale</h4><span class="help">?</span><span class="q">G5 · E1</span></div>
-        <div class="plot" style="height:112px;margin-top:8px"><span class="tag sim wm">SIM fascia 5–95 · PAPER linea</span><svg class="sk"><use href="#sk-fan"/></svg></div>
+        <div class="plot" style="height:104px;margin-top:8px"><span class="tag sim wm">SIM fascia 5–95 · PAPER linea</span><svg class="sk"><use href="#sk-fan"/></svg></div>
         <div style="margin-top:auto">
           <div class="kv sm"><span class="mut">Percentile oggi</span><span>62°</span></div>
           <div class="kv sm"><span class="mut">Dalla mediana</span><span>+0,8 punti <span class="dim">(cancello ± 3)</span></span></div>
@@ -492,7 +503,7 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
         </div>
       </div>
 
-      <div class="p g1 c3" style="height:240px">
+      <div class="p g1 c3" style="height:236px">
         <div class="ph"><h4 class="pt">Contro l'originale</h4><span class="tag paper">PAPER</span><span class="q">G6</span></div>
         <div class="plot" style="height:96px;margin-top:8px"><span class="xs wm mut">distacco a pari volatilità · ± 1,3 e.s.</span><svg class="sk"><use href="#sk-funnel"/></svg><span class="ax" style="left:23%;bottom:2px">90</span><span class="ax" style="left:48%;bottom:2px">180</span><span class="ax" style="right:4px;bottom:2px">365 g</span></div>
         <div style="margin-top:auto">
@@ -501,7 +512,7 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
           <div class="kv sm"><span class="mut">Esito</span><span><b>IN CORSO</b></span></div>
         </div>
       </div>
-      <div class="p g1 c3" style="height:240px">
+      <div class="p g1 c3" style="height:236px">
         <div class="ph"><h4 class="pt">Contro i mercati</h4><span class="tag paper">PAPER</span><span class="q">G6</span></div>
         <table style="margin-top:6px"><tr><th>24 giorni comuni · EUR</th><th>Rend.</th><th>Caduta</th><th>Beta</th></tr>
           <tr><td><b>Nuovo fondo</b></td><td class="pos">+5,08%</td><td>−3,1%</td><td>—</td></tr>
@@ -510,7 +521,7 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
           <tr><td>Bitcoin</td><td class="neg">−4,12%</td><td>−11,8%</td><td>0,22</td></tr></table>
         <div class="xs mut" style="margin-top:auto">Sharpe e volatilità annua: non prima di 60 giorni.</div>
       </div>
-      <div class="p g1 c3" style="height:240px">
+      <div class="p g1 c3" style="height:236px">
         <div class="ph"><h4 class="pt">Prossima chiusura</h4><span class="q">G8</span></div>
         <div class="row" style="align-items:baseline;margin-top:6px"><span class="h4">7 h 09 min</span><span class="xs mut">alle 22:00 ora italiana</span></div>
         <div style="margin-top:8px">
@@ -520,7 +531,7 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
         </div>
         <div class="xs" style="margin-top:auto;border-top:1px solid var(--line);padding-top:8px"><b>Oggi non si apre nulla:</b> conviction media su ETH e SOL.</div>
       </div>
-      <div class="p g1 c3" style="height:240px">
+      <div class="p g1 c3" style="height:236px">
         <div class="ph"><h4 class="pt">Sistema e cancelli</h4><span class="q">G2 · G9 · R6 · R7</span></div>
         <div class="row" style="flex-wrap:wrap;gap:6px;margin-top:8px">
           <span class="chip">● Ciclo</span><span class="chip">● Rischio</span><span class="chip">● Ordini</span><span class="chip">● Dati azioni</span><span class="chip" style="border-color:var(--warn);color:var(--warn)">◆ Dati crypto · lento</span><span class="chip">● AI</span><span class="chip">● Passi giornalieri</span><span class="chip">● Confronto</span>
@@ -543,12 +554,12 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
   <h2>3 · Mercati <small>livello Esperto · 1440 × 900 · elenco, grafico e libro dei trade sono collegati</small></h2>
   <ul>
     <li><b>Un solo oggetto selezionato:</b> la riga scelta nell'elenco (o nel libro) guida il grafico; <kbd>j</kbd>/<kbd>k</kbd> cambiano strumento, <kbd>[</kbd>/<kbd>]</kbd> trade, <kbd>1</kbd>…<kbd>5</kbd> intervallo.</li>
-    <li><b>Il grafico tiene il posto:</b> 9 colonne su 12, riquadri impilati con un solo asse del tempo e un solo mirino. La riga di lettura in alto non si muove e non si anima mai.</li>
+    <li><b>Il grafico tiene il posto:</b> 8 colonne su 12, riquadri impilati con un solo asse del tempo e un solo mirino. La riga di lettura in alto non si muove e non si anima mai.</li>
     <li><b>Onestà:</b> «ultima barra chiusa» è scritta nell'intestazione; l'indicatore GQ porta «in ombra: non decide»; i livelli del trade sono nel grafico e ripetuti in tabella.</li>
   </ul>
 </div>
 <div class="stage"><div class="fit">
-<div class="board" style="height:1010px" data-shell data-active="mercati" data-level="esperto">
+<div class="board" style="height:986px" data-shell data-active="mercati" data-level="esperto">
   <div class="fold" style="top:900px"><span>piega · 900 px</span></div>
   <div class="main">
     <div class="row" style="height:56px;align-items:center">
@@ -558,26 +569,24 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
       <span class="sp"></span><span class="chip">Mercato: teso <span class="dim">&nbsp;(si mostra, non scala)</span></span>
     </div>
     <div class="grid e">
-      <div class="p g1 c3" style="height:536px">
+      <div class="p g1 c4" style="height:530px">
         <div class="ph"><h4 class="pt">Elenco</h4><span class="tag paper">PAPER</span><span class="q">B4</span></div>
-        <div class="chips" style="margin:8px 0;flex-wrap:wrap"><span class="chip on">Più vicino a un'azione</span><span class="chip">Con trade</span><span class="chip">In portafoglio</span></div>
-        <table><tr><th>Strumento</th><th>Giorno</th><th>Conv.</th><th>Trade</th></tr>
-          <tr class="sel"><td><b>BTC</b><br><span class="xs dim">77.582 · 3 h</span></td><td class="pos">+0,3%<br><span class="xs dim">0,1 ATR</span></td><td>media<br><span class="xs dim">0,55</span></td><td class="pos">+1,23 R</td></tr>
-          <tr><td><b>ETH</b><br><span class="xs dim">2.301 · 3 h</span></td><td class="neg">−0,8%<br><span class="xs dim">0,2 ATR</span></td><td>media<br><span class="xs dim">0,36</span></td><td class="dim">—</td></tr>
-          <tr><td><b>SOL</b><br><span class="xs dim">146,3 · 3 h</span></td><td class="pos">+1,1%<br><span class="xs dim">0,2 ATR</span></td><td>media<br><span class="xs dim">0,45</span></td><td class="dim">—</td></tr>
-          <tr><td><b>SPY</b><br><span class="xs dim">926,2 · 17 h</span></td><td class="pos">+0,2%<br><span class="xs dim">0,2 ATR</span></td><td class="dim">n.c.</td><td class="dim">—</td></tr>
-          <tr><td><b>QQQ</b><br><span class="xs dim">612,4 · 17 h</span></td><td class="neg">−0,4%<br><span class="xs dim">0,3 ATR</span></td><td class="dim">n.c.</td><td class="dim">—</td></tr>
-          <tr><td><b>GLD</b><br><span class="xs dim">318,9 · 17 h</span></td><td class="pos">+0,6%<br><span class="xs dim">0,5 ATR</span></td><td class="dim">n.c.</td><td class="dim">—</td></tr>
-          <tr><td><b>TLT</b><br><span class="xs dim">88,1 · 17 h</span></td><td class="neg">−0,1%<br><span class="xs dim">0,1 ATR</span></td><td class="dim">n.c.</td><td class="dim">—</td></tr>
+        <div class="chips" style="margin:10px 0 6px"><span class="chip on">Più vicino a un'azione</span><span class="chip">Con trade</span><span class="chip">In portafoglio</span></div>
+        <table><tr><th>Strumento</th><th>Chiusura</th><th>Giorno</th><th>Conviction</th><th>Trade</th></tr>
+          <tr class="sel"><td><b>BTC</b><br><span class="xs dim">crypto · 3 h</span></td><td>77.582</td><td class="pos">+0,3%<br><span class="xs dim">0,1 ATR</span></td><td>media<br><span class="xs dim">0,55</span></td><td class="pos">+1,23 R</td></tr>
+          <tr><td><b>ETH</b><br><span class="xs dim">crypto · 3 h</span></td><td>2.301</td><td class="neg">−0,8%<br><span class="xs dim">0,2 ATR</span></td><td>media<br><span class="xs dim">0,36</span></td><td class="dim">—</td></tr>
+          <tr><td><b>SOL</b><br><span class="xs dim">crypto · 3 h</span></td><td>146,3</td><td class="pos">+1,1%<br><span class="xs dim">0,2 ATR</span></td><td>media<br><span class="xs dim">0,45</span></td><td class="dim">—</td></tr>
+          <tr><td><b>SPY</b><br><span class="xs dim">azioni · 17 h</span></td><td>926,2</td><td class="pos">+0,2%<br><span class="xs dim">0,2 ATR</span></td><td class="dim">non calc.</td><td class="dim">—</td></tr>
+          <tr><td><b>QQQ</b><br><span class="xs dim">azioni · 17 h</span></td><td>612,4</td><td class="neg">−0,4%<br><span class="xs dim">0,3 ATR</span></td><td class="dim">non calc.</td><td class="dim">—</td></tr>
+          <tr><td><b>GLD</b><br><span class="xs dim">oro · 17 h</span></td><td>318,9</td><td class="pos">+0,6%<br><span class="xs dim">0,5 ATR</span></td><td class="dim">non calc.</td><td class="dim">—</td></tr>
         </table>
-        <div class="xs mut" style="margin-top:auto">Altri 34 strumenti · <kbd>/</kbd> per cercarne uno. Terminale aggiunge: 7 giorni, ATR%, GQ, VWAP, peso.</div>
+        <div class="xs mut" style="margin-top:auto">Altri 35 strumenti · <kbd>/</kbd> per cercarne uno · <kbd>j</kbd> <kbd>k</kbd> per scorrere. Terminale aggiunge: 7 giorni, ATR%, GQ, VWAP, peso.</div>
       </div>
-      <div class="p g1 c9" style="height:536px">
+      <div class="p g1 c8" style="height:530px">
         <div class="ph"><h4 class="pt">BTC · giornaliero</h4><span class="tag paper">PAPER trade</span>
-          <div class="chips" style="margin-left:8px"><span class="chip">1M</span><span class="chip on">3M</span><span class="chip">6M</span><span class="chip">1A</span><span class="chip">Tutto</span><span class="chip">Trade</span></div>
-          <div class="chips" style="margin-left:8px"><span class="chip">Lineare</span><span class="chip on">VWAP mese</span><span class="chip on">Medie 50 · 200</span><span class="chip">± 1 ATR</span></div>
-          <div class="chips" style="margin-left:8px"><span class="chip">Confronta <kbd>c</kbd></span><span class="chip">Misura <kbd>m</kbd></span></div><span class="q">B1</span></div>
-        <div class="sm n" style="margin-top:8px;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden"><b>31 ott</b> · A 77.369 · M 77.796 · m 77.114 · C 77.582 · +0,3% · vol 6.288 · conviction 0,55 · GQ −1,33 · ATR 3,1% · VWAP +0,8 ATR · <span class="pos"><b>+1,23 R</b></span> · stop a 2,3 ATR · liquidazione a 4,0 ATR</div>
+          <div class="chips" style="margin-left:8px"><span class="chip">1M</span><span class="chip on">3M</span><span class="chip">6M</span><span class="chip">1A</span><span class="chip">Tutto</span><span class="chip">Trade</span></div><span class="q">B1</span></div>
+        <div class="row" style="margin-top:8px;gap:6px"><div class="chips"><span class="chip">Lineare</span><span class="chip on">VWAP mese</span><span class="chip on">Medie 50 · 200</span><span class="chip">± 1 ATR</span></div><span class="sp"></span><div class="chips"><span class="chip">Confronta <kbd style="margin-left:6px">c</kbd></span><span class="chip">Misura <kbd style="margin-left:6px">m</kbd></span></div></div>
+        <div class="sm n" style="margin-top:8px;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden"><b>31 ott</b> · A 77.369 · M 77.796 · m 77.114 · C 77.582 · +0,3% · conviction 0,55 · GQ −1,33 · ATR 3,1% · <span class="pos"><b>+1,23 R</b></span> · stop a 2,3 ATR</div>
         <div class="plot grow" style="margin-top:8px"><svg class="sk"><use href="#sk-candles"/></svg>
           <div style="position:absolute;left:62%;right:44px;top:27%;border-top:2px solid var(--ink)"></div><span class="ax" style="left:62%;top:calc(27% - 15px);color:var(--ink)">▲ ingresso 74.120</span>
           <div style="position:absolute;left:62%;right:44px;top:27%;height:11%;background:var(--warn-bg)"></div><span class="ax" style="left:70%;top:31%">1 R</span>
@@ -592,7 +601,7 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
         <div class="plot" style="height:50px;margin-top:4px"><span class="ax" style="left:8px;top:2px">Indicatore Gervasoni (GQ) · in ombra: non decide · soglie −0,50 · 0,53 · 1,42</span><svg class="sk"><use href="#sk-line"/></svg></div>
         <div class="plot" style="height:36px;margin-top:4px"><span class="ax" style="left:8px;top:2px">ATR% 14 giorni → leva che ne discende: 11,2x</span><svg class="sk"><use href="#sk-line"/></svg></div>
       </div>
-      <div class="p g1 c12" style="height:250px">
+      <div class="p g1 c12" style="height:246px">
         <div class="ph"><h4 class="pt">Libro dei trade</h4><span class="tag paper">PAPER</span><div class="chips" style="margin-left:8px"><span class="chip on">Aperti 1</span><span class="chip">Chiusi 5</span><span class="chip">Decisioni</span></div>
           <span class="mut sm" style="margin-left:8px">Ultima barra elaborata 31 ott · percentuali sul registro dei trade (3.152,52 €)</span><span class="q">B2</span></div>
         <div class="row" style="gap:28px;margin-top:12px">
@@ -602,9 +611,10 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
           <div class="col grow"><div class="row between sm"><span class="mut">Controvalore</span><span class="n wr">1,02 / 1,5x</span></div><div class="bul" style="margin-top:6px"><i class="w" style="width:68%"></i><b style="left:100%"></b></div></div>
           <div class="col grow"><div class="row between sm"><span class="mut">Giornata del libro</span><span class="n">+0,5% · stop a −3% e −5%</span></div><div class="bul" style="margin-top:6px"><i style="width:0"></i><b style="left:60%"></b><b class="h" style="left:100%"></b></div></div>
         </div>
-        <table style="margin-top:14px"><tr><th>Trade</th><th>Livello</th><th>Ingresso</th><th>Stop (iniziale)</th><th>Dallo stop</th><th>Dalla liquidazione</th><th>Leva</th><th>Margine = perdita massima</th><th>Rischio residuo</th><th>R</th><th>MAE / MFE</th><th>Giorno</th><th>Funding</th><th>Esce se</th></tr>
-          <tr class="sel"><td><b>BTC</b> ▲ rialzo</td><td>confermato</td><td>74.120</td><td>71.990 (71.303)</td><td>7,2% · 2,3 ATR</td><td>12,5% · 4,0 ATR</td><td>11,2x</td><td>286,60 € · 9,1%</td><td>−30,80 €</td><td class="pos"><b>+1,23</b></td><td>−0,31 / +1,66</td><td>5 / 7</td><td>−0,90 € <span class="dim">stimato</span></td><td>stop · conviction bassa · giorno 7</td></tr>
+        <table style="margin-top:14px"><tr><th>Trade</th><th>Ingresso</th><th>Stop (iniziale)</th><th>Dallo stop</th><th>Dalla liquidazione</th><th>Margine = perdita massima</th><th>R</th><th>MAE / MFE</th><th>Giorno</th></tr>
+          <tr class="sel"><td><b>BTC</b> ▲ rialzo · confermato · 11,2x</td><td>74.120</td><td>71.990 (71.303)</td><td>7,2% · 2,3 ATR</td><td>12,5% · 4,0 ATR</td><td>286,60 € · 9,1%</td><td class="pos"><b>+1,23</b></td><td>−0,31 / +1,66</td><td>5 / 7</td></tr>
         </table>
+        <div class="xs mut" style="margin-top:auto">Esce se: stop, conviction bassa, giorno 7 · funding −0,90 € (stimato) · rischio residuo −30,80 €. Selezionare la riga inquadra il trade nel grafico.</div>
       </div>
     </div>
   </div>
@@ -622,7 +632,7 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
   </ul>
 </div>
 <div class="stage"><div class="fit">
-<div class="board" style="height:1130px" data-shell data-active="rischio" data-level="esperto">
+<div class="board" style="height:1086px" data-shell data-active="rischio" data-level="esperto">
   <div class="fold" style="top:900px"><span>piega · 900 px</span></div>
   <div class="main">
     <div class="row" style="height:56px;align-items:center">
@@ -644,7 +654,7 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
           <div class="tk sim" style="left:52.5%"><span>−21% caduta massima <span class="tag sim">SIMULATO</span></span></div>
           <div class="now" style="left:3%"><span>adesso −1,2% &nbsp;<span class="dim" style="font-weight:400">· punto peggiore in paper −3,1%</span></span></div>
         </div>
-        <table style="margin-top:auto"><tr><th>Freno</th><th>Adesso</th><th>Mancano</th><th>In euro</th><th>Scatta a</th><th>In giornate di ES</th><th>Che cosa fa il motore</th></tr>
+        <table style="margin-top:auto"><tr><th>Freno</th><th>Adesso</th><th>Mancano</th><th>In euro</th><th>Scatta a</th><th>Giornate di ES</th><th>Che cosa fa il motore</th></tr>
           <tr><td>Caduta −20%</td><td>−1,2%</td><td>18,8 punti</td><td>2.400 €</td><td>10.210 €</td><td>19</td><td>dimezza le posizioni</td></tr>
           <tr><td>Perdita in 24 ore −4%</td><td>−0,3%</td><td>3,7 punti</td><td>467 €</td><td>12.143 €</td><td>3,8</td><td>dimezza le posizioni</td></tr>
           <tr><td>Perdita in 7 giorni −8%</td><td>+0,8%</td><td>8,8 punti</td><td>1.101 €</td><td>11.509 €</td><td>9,1</td><td>un quarto, nessun aumento</td></tr></table>
@@ -665,14 +675,13 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
       </div>
       <div class="p g1 c5" style="height:268px">
         <div class="ph"><h4 class="pt">Tetti di esposizione</h4><span class="tag paper">PAPER</span><span class="mut sm">lordo 87% · netto 80%</span><span class="q">R4</span></div>
-        <div style="margin-top:12px;display:grid;grid-template-columns:120px 1fr 92px;gap:12px 12px;align-items:center" class="sm n">
+        <div style="margin-top:14px;display:grid;grid-template-columns:118px 1fr 124px;gap:14px 12px;align-items:center;white-space:nowrap" class="sm n">
           <span>Kraken <span class="dim">sede</span></span><div class="bul"><i class="w" style="width:52%"></i><b style="left:80%"></b></div><span style="text-align:right" class="wr">26,0 / 40% · 65%</span>
           <span>Binance <span class="dim">sede</span></span><div class="bul"><i style="width:36%"></i><b style="left:80%"></b></div><span style="text-align:right">18,0 / 40% · 45%</span>
           <span>BTC <span class="dim">strumento</span></span><div class="bul"><i style="width:34%"></i><b style="left:70%"></b></div><span style="text-align:right">17,0 / 35% · 49%</span>
-          <span>GLD <span class="dim">strumento</span></span><div class="bul"><i style="width:24%"></i><b style="left:70%"></b></div><span style="text-align:right">12,2 / 35% · 35%</span>
           <span>SPY <span class="dim">corto</span></span><div class="bul" style="background:linear-gradient(90deg,rgba(22,32,43,.09),rgba(22,32,43,.09))"><i style="width:8%;background:repeating-linear-gradient(135deg,var(--ink2) 0 3px,transparent 3px 5px)"></i><b style="left:70%"></b></div><span style="text-align:right">−3,7 / 35% · 11%</span>
         </div>
-        <div class="xs mut" style="margin-top:auto">Nel disegno finale le barre divergono dallo zero (corto a sinistra). Tocca una riga per le posizioni che la compongono.</div>
+        <div class="xs mut" style="margin-top:auto">Nel disegno finale le barre divergono dallo zero (corto a sinistra).</div>
       </div>
       <div class="p g1 c3" style="height:268px">
         <div class="ph"><h4 class="pt">Leva e volatilità</h4><span class="q">R5</span></div>
@@ -688,7 +697,7 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
         <div class="ph"><h4 class="pt">Stress: giornate storiche</h4><span class="tag sim">SIMULATO</span><span class="q">R · A4</span></div>
         <div class="empty"><b>Non ancora calcolabile</b><span class="sm">Manca la tabella degli shock per strumento (chiusura e minimo del giorno) che deve produrre il motore. Qui compariranno 12 mar 2020, 19 mag 2021, 5 ago 2024, 10 ott 2025 applicati al libro di oggi, con il freno che scatterebbe.</span></div>
       </div>
-      <div class="p g1 c12" style="height:76px;flex-direction:row;align-items:center;gap:28px">
+      <div class="p g1 c12" style="height:84px;flex-direction:row;align-items:center;gap:26px;white-space:nowrap">
         <h4 class="pt">Dati e ordini</h4><span class="state" style="font-size:11px">tutto sicuro</span>
         <span class="sm n"><span class="mut">Crypto</span> 3 h / 36 h</span><span class="sm n"><span class="mut">Azioni</span> 17 h / 100 h</span><span class="sm n"><span class="mut">Fotografia</span> 8 s / 120 s</span><span class="sm n"><span class="mut">Cicli falliti di fila</span> 0 / 5</span><span class="sm n"><span class="mut">Ordini non riconciliati</span> 0</span><span class="sm n"><span class="mut">In attesa</span> 1 · 4 min</span>
         <span class="q">R6 · R7</span>
@@ -751,7 +760,7 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
         <div class="sm" style="margin-top:auto"><span class="mut">Costi doppi, poi ritardo di un giorno:</span><br><b class="n">1,18 → 0,97 → 0,83</b></div>
       </div>
       <div class="p g1 c3" style="height:256px">
-        <div class="ph"><h4 class="pt">Paper contro modello</h4><span class="tag paper">PAPER</span><span class="q">E1</span></div>
+        <div class="ph"><h4 class="pt">Paper contro modello</h4><span class="q">E1</span></div>
         <div class="empty"><b>Da calcolare</b><span class="sm">Manca il modello rigiocato giorno per giorno sugli stessi 24 giorni. Misura l'esecuzione, non il vantaggio.</span></div>
       </div>
       <div class="p g1 c3" style="height:256px">
@@ -760,7 +769,7 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
         <div style="margin-top:auto"><div class="kv sm"><span class="mut">z oggi · soglie</span><span>+0,4 · ± 1,3</span></div><div class="kv sm"><span class="mut">Giorni comuni</span><span>24 / 90</span></div><div class="kv sm"><span class="mut">Per una prova</span><span>~1.550 giorni <span class="tag sim">SIM</span></span></div></div>
       </div>
       <div class="p g1 c3" style="height:256px">
-        <div class="ph"><h4 class="pt">Scartato · cambierebbe idea</h4><span class="q">E · 4.6–4.7</span></div>
+        <div class="ph"><h4 class="pt">Scartato e controprove</h4><span class="q">E §4</span></div>
         <div class="sm" style="margin-top:8px;line-height:20px"><span class="dim">Scartato:</span> livello a 30x · gestione attiva · universo ampio · modelli statistici · otto classi nuove.</div>
         <div class="hr"></div>
         <div class="sm" style="line-height:20px"><span class="dim">Ci farebbe cambiare idea:</span><br>z &lt; −1,3 contro l'originale<br>scalini −20 / −30 / −40% toccati<br>cancelli paper → reale: 4 di 9</div>
@@ -816,7 +825,7 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
   </ul>
 </div>
 <div class="stage phones">
-  <div class="fit" data-w="390"><div class="board ph" style="height:844px">
+  <div class="fit" data-w="390"><div class="board tel" style="height:844px">
     <div class="pband g2">
       <div class="row" style="gap:8px"><span class="tag paper">PAPER 24/90</span><span class="state" style="font-size:12px">NORMAL</span><span class="sm mut n">dati 8 s fa</span><span class="sp"></span><span class="kill" style="height:40px"><i></i>KILL</span></div>
       <div class="sm mut" style="margin-top:6px">Scala 1,0 · nessun freno tirato · reale 0 giorni</div>
@@ -840,7 +849,7 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
     </div>
     <div class="tabbar g2"><a class="on"><i></i>Oggi</a><a><i></i>Mercati</a><a><i></i>Portafoglio</a><a><i></i>Rischio</a><a><i></i>Altro</a></div>
   </div></div>
-  <div class="fit" data-w="390"><div class="board ph" style="height:844px">
+  <div class="fit" data-w="390"><div class="board tel" style="height:844px">
     <div class="pband g2" style="padding-top:6px;padding-bottom:6px">
       <div class="row" style="gap:8px"><span class="tag paper">PAPER 24/90</span><span class="state" style="font-size:12px">NORMAL</span><span class="sm mut n">dati 8 s fa</span><span class="sp"></span><span class="kill" style="height:40px"><i></i>KILL</span></div>
     </div>
@@ -881,51 +890,50 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
 <div class="cap">
   <h2>8 · Fascia di stato e KILL <small>stessa posizione in ogni spazio e a ogni livello</small></h2>
   <ul>
-    <li><b>Ordine fisso da sinistra:</b> modalità e provenienza · stato del rischio, scala, motivo, da quando · età dei dati e prossimo ciclo · sistema · avvisi · KILL.</li>
+    <li><b>Ordine fisso da sinistra:</b> modalità · stato del rischio, scala, motivo, da quando · età dei dati e prossimo ciclo · sistema (solo se non tutto ok) · avvisi · KILL. Disegnata alla larghezza vera della colonna dei contenuti a 1440 (1.141 px).</li>
     <li><b>Mai l'ultimo «sicuro» visto:</b> con dati fermi o pagina offline lo stato diventa SCONOSCIUTO e i numeri sotto si attenuano.</li>
     <li><b>KILL in due passi:</b> il controllo apre soltanto il foglio; il fuoco parte da «Annulla»; l'invio si accende solo con token, parola KILL e anteprima letta.</li>
   </ul>
 </div>
 <div class="stage"><div class="fit">
-<div class="board" style="height:812px">
+<div class="board" style="height:830px">
   <div style="padding:20px 0 0">
-    <div class="xs mut" style="margin:0 32px 6px">A · tutto regolare</div>
-    <div class="band rel g2"><span class="brand">GERVA</span>
-      <div class="seg" style="border-left:0;padding-left:0"><span class="tag paper lg">PAPER</span><span class="n">giorno 24 di 90 · reale 0 giorni</span></div>
+    <div class="xs mut" style="margin:0 29px 6px 270px">A · tutto regolare</div>
+    <div class="band rel g2">
+      <div class="seg"><span class="tag paper lg">PAPER</span><span class="n">giorno 24 di 90</span></div>
       <div class="seg"><span class="state">NORMAL</span><span class="n"><b>scala 1,0</b></span><span class="mut">Nessun freno tirato · da 24 giorni</span></div>
-      <div class="seg"><span class="lbl">Dati</span><span class="n">8 s fa · prossimo ciclo tra 6 min</span></div>
-      <div class="seg"><span class="lbl">Sistema</span><span class="n">8 di 8</span></div>
+      <div class="seg"><span class="lbl">Dati</span><span class="n">8 s fa · ciclo tra 6 min</span></div>
       <span class="sp"></span><div class="seg"><span class="lbl">Avvisi</span><span class="cnt" style="background:rgba(22,32,43,.08);color:var(--ink2)">0</span></div>
       <div class="kill"><i></i>KILL<small>pronto</small></div></div>
 
-    <div class="xs mut" style="margin:22px 32px 6px">B · il motore ha appena frenato: la fascia cambia tinta una volta, il motivo resta aperto finché dura; nessun lampeggio</div>
-    <div class="band rel g2" style="background:linear-gradient(90deg,rgba(255,255,255,.72) 0 22%,rgba(154,82,0,.16) 30% 62%,rgba(255,255,255,.72) 72%)"><span class="brand">GERVA</span>
-      <div class="seg" style="border-left:0;padding-left:0"><span class="tag paper lg">PAPER</span><span class="n">giorno 24 di 90</span></div>
+    <div class="xs mut" style="margin:22px 29px 6px 270px">B · il motore ha appena frenato: la fascia cambia tinta una volta, il motivo resta aperto finché dura; nessun lampeggio</div>
+    <div class="band rel g2" style="background:linear-gradient(90deg,rgba(255,255,255,.72) 0 22%,rgba(154,82,0,.16) 30% 62%,rgba(255,255,255,.72) 72%)">
+      <div class="seg"><span class="tag paper lg">PAPER</span><span class="n">giorno 24 di 90</span></div>
       <div class="seg"><span class="state warn">REDUCED</span><span class="n"><b>scala 0,5</b></span><span>Perdita di 4,1% in 24 ore · dalle 14:45 · rientra sotto −2%</span></div>
       <div class="seg"><span class="lbl">Dati</span><span class="n">8 s fa</span></div>
       <span class="sp"></span><div class="seg"><span class="lbl">Avvisi</span><span class="cnt">1</span></div>
       <div class="kill"><i></i>KILL<small>pronto</small></div></div>
 
-    <div class="xs mut" style="margin:22px 32px 6px">C · dati fermi o offline: stato sconosciuto, numeri attenuati; KILL non configurato su questo server</div>
-    <div class="band rel g2"><span class="brand">GERVA</span>
-      <div class="seg" style="border-left:0;padding-left:0"><span class="tag es lg">ESEMPIO</span><span class="n">dati dimostrativi, non del conto</span></div>
-      <div class="seg"><span class="state unk">SCONOSCIUTO</span><span class="mut">Ultimo stato visto: NORMAL alle 14:45. Non è detto che valga ancora.</span></div>
-      <div class="seg"><span class="lbl">Dati</span><span class="n wr"><b>fermi da 14 min</b> · nuovo tentativo tra 5 s</span></div>
+    <div class="xs mut" style="margin:22px 29px 6px 270px">C · dati fermi o offline: stato sconosciuto, numeri attenuati; KILL non configurato su questo server</div>
+    <div class="band rel g2">
+      <div class="seg"><span class="tag es lg">ESEMPIO</span><span class="n">dati dimostrativi</span></div>
+      <div class="seg"><span class="state unk">SCONOSCIUTO</span><span class="mut">Ultimo visto: NORMAL alle 14:45</span></div>
+      <div class="seg"><span class="lbl">Dati</span><span class="n wr"><b>fermi da 14 min</b> · riprovo tra 5 s</span></div>
       <span class="sp"></span>
       <div class="kill off"><i></i>KILL<small>spento su questo server</small></div></div>
 
-    <div class="xs mut" style="margin:22px 32px 6px">D · critico: la fascia cresce di una riga in ogni spazio e resta finché la condizione dura; dopo la presa in carico si riduce a «preso in carico alle 15:02»</div>
-    <div class="g2" style="margin:0 12px;border-radius:26px;box-shadow:0 0 0 2px var(--bad),0 10px 30px rgba(22,32,43,.08)">
-      <div class="band rel" style="margin:0"><span class="brand">GERVA</span>
-        <div class="seg" style="border-left:0;padding-left:0"><span class="tag paper lg">PAPER</span></div>
+    <div class="xs mut" style="margin:22px 29px 6px 270px">D · critico: la fascia cresce di una riga in ogni spazio e resta finché la condizione dura; dopo la presa in carico si riduce a «preso in carico alle 15:02»</div>
+    <div class="g2" style="margin:0 29px 0 270px;border-radius:30px;box-shadow:0 0 0 2px var(--bad),0 10px 30px rgba(22,32,43,.08)">
+      <div class="band rel" style="margin:0">
+        <div class="seg"><span class="tag paper lg">PAPER</span></div>
         <div class="seg"><span class="state bad">KILLED</span><span class="n"><b>scala 0</b></span><span>Arresto di emergenza alle 14:58 · motivo: «prova di procedura»</span></div>
         <span class="sp"></span><div class="seg"><span class="lbl">Avvisi</span><span class="cnt" style="background:var(--bad-bg);color:var(--bad)">1</span></div>
         <div class="kill off"><i></i>KILL<small>già attivo</small></div></div>
-      <div class="row" style="padding:0 20px 14px 20px;gap:24px"><span><b>Eseguito:</b> 14 posizioni chiuse alle 15:00. I trade a margine restano gestiti dai loro stop.</span><span class="mut">Per ripartire: togliere il file sul server, poi <code>gerva reset-kill</code>. Da qui non si annulla.</span><span class="sp"></span><span class="btn" style="height:32px">Prendi in carico <kbd style="margin-left:8px">x</kbd></span></div>
+      <div class="row" style="padding:0 20px 14px 22px;gap:20px"><span class="sm"><b>Eseguito:</b> 14 posizioni chiuse alle 15:00. I trade a margine restano sui loro stop.<br><span class="mut">Per ripartire: togliere il file sul server, poi <code>gerva reset-kill</code>. Da qui non si annulla.</span></span><span class="sp"></span><span class="btn" style="height:32px">Prendi in carico <kbd style="margin-left:8px">x</kbd></span></div>
     </div>
   </div>
 
-  <div class="row" style="align-items:flex-start;gap:40px;margin:36px 32px 0">
+  <div class="row" style="align-items:flex-start;gap:40px;margin:36px 29px 0 270px">
     <div class="sheet g3">
       <div class="row between"><h4 class="pt" style="font-size:18px">Arresto di emergenza (KILL)</h4><kbd>Esc</kbd></div>
       <div class="sm" style="margin:10px 0;padding:10px 12px;border-radius:12px;background:var(--bad-bg)"><b>Che cosa succede:</b> al prossimo ciclo (entro 15 minuti) il motore chiude <b>14 posizioni</b> per <b>11.030 €</b> e si ferma. <b>Che cosa non fa:</b> non chiude il trade a margine aperto su BTC, che resta sul suo stop. Per ripartire serve un intervento sul server.</div>
@@ -952,23 +960,23 @@ tr.sel td{background:rgba(255,255,255,.75)} tr.sel td:first-child{box-shadow:ins
   var spaces=[['oggi','Oggi','o'],['mercati','Mercati','m'],['portafoglio','Portafoglio','p'],['rischio','Rischio','r'],['evidenza','Evidenza','e'],['apprendimento','Apprendimento','a'],['sistema','Sistema','s']];
   var levels=[['semplice','Semplice'],['esperto','Esperto'],['terminale','Terminale']];
   function band(){
-    return '<div class="band g2"'+'><span class="brand">GERVA</span>'+
-      '<div class="seg" style="border-left:0;padding-left:0"><span class="tag paper lg">PAPER</span><span class="n">giorno 24 di 90 · reale 0 giorni</span></div>'+
+    return '<div class="band g2">'+
+      '<div class="seg"><span class="tag paper lg">PAPER</span><span class="n">giorno 24 di 90</span></div>'+
       '<div class="seg"><span class="state">NORMAL</span><span class="n"><b>scala 1,0</b></span><span class="mut">Nessun freno tirato · da 24 giorni</span></div>'+
-      '<div class="seg"><span class="lbl">Dati</span><span class="n">8 s fa · prossimo ciclo tra 6 min</span></div>'+
-      '<div class="seg"><span class="lbl">Sistema</span><span class="n">7 di 8 · dati crypto lenti</span></div>'+
+      '<div class="seg"><span class="lbl">Dati</span><span class="n">8 s fa · ciclo tra 6 min</span></div>'+
+      '<div class="seg"><span class="lbl">Sistema</span><span class="n wr"><b>7 di 8</b></span></div>'+
       '<span class="sp"></span><div class="seg"><span class="lbl">Avvisi</span><span class="cnt">2</span></div>'+
       '<div class="kill"><i></i>KILL<small>pronto</small></div></div>';
   }
   function rail(active,level,mini){
-    var h='<div class="rail g2'+(mini?' mini':'')+'"><div class="grp">Ogni giorno</div>';
+    var h='<div class="rail g2'+(mini?' mini':'')+'"><div class="brand">'+(mini?'G':'GERVA<small>CAPITAL</small>')+'</div><div class="grp">Ogni giorno</div>';
     spaces.forEach(function(s,i){
       if(i===4) h+='<div class="grp">Quando serve</div>';
       h+='<a class="'+(s[0]===active?'on':'')+'"><i></i><span>'+s[1]+'</span>'+(s[0]==='sistema'?'<b class="dot"></b>':'<kbd>g '+s[2]+'</kbd>')+'</a>';
     });
     h+='<div class="lev"><div class="grp">Cerca e aiuto</div><a><i style="border-radius:6px;width:18px;height:18px"></i><span>Cerca</span><kbd>/</kbd></a><a><i style="border-radius:6px;width:18px;height:18px"></i><span>Glossario e guida</span><kbd>?</kbd></a><div class="grp">Livello di lettura</div>';
     levels.forEach(function(l){ h+='<a class="'+(l[0]===level?'on':'')+'"><i></i><span>'+l[1]+'</span></a>'; });
-    return h+'</div></div>';
+    return h+'</div><div class="foot"><div><span>Giorni simulati</span><b>3.140</b></div><div><span>Giorni paper</span><b>24</b></div><div><span>Giorni reali</span><b>0</b></div></div></div>';
   }
   document.querySelectorAll('.board[data-shell]').forEach(function(b){
     var t=document.createElement('div');

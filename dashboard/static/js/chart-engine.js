@@ -78,7 +78,7 @@ export function underwater(host, opts = {}) {
 /**
  * fanChart(host, { label, zoom, table }).update({
  *   x, bands: [{ lo, hi, name }] dalla più larga alla più stretta, median, lines: [{ values, cls, name }],
- *   scale: 'linear' | 'log', format, height, title, refs, marks, xTicks, xFormat })
+ *   scale: 'linear' | 'log', format, height, title, refs, marks, xTicks, xFormat, xHead })
  */
 export function fanChart(host, opts = {}) {
   const chart = timeChart(host, { label: 'Ventaglio di percentili', ...opts });
@@ -93,7 +93,7 @@ export function fanChart(host, opts = {}) {
       const format = data.format || ((v) => fmtNum(v, 2));
       const xFormat = data.xFormat || ((t) => fmtDate(t, true));
       chart.update({
-        x, xTicks: data.xTicks, marks: data.marks, xFormat,
+        x, xTicks: data.xTicks, marks: data.marks, xFormat, xHead: data.xHead,
         panels: [{
           height: data.height || 240, title: data.title || '', scale: data.scale || 'linear', format, refs: data.refs || [],
           bands: bands.map((b, i) => ({ lo: b.lo, hi: b.hi, cls: i === bands.length - 1 && bands.length > 1 ? 'fan-inner' : 'fan-outer' })),
