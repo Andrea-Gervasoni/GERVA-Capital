@@ -78,3 +78,15 @@ def test_funding_is_charged_and_enters_conviction():
     s_cold = TC.step(b, TC.empty_state(10_000), 10.0, funding=cold)
     assert "BTC" in s_cold["open"] and "BTC" in s["open"]
     assert len(s_hot["open"]) <= len(s_cold["open"])
+
+
+def test_kill_closes_open_leveraged_trades_immediately():
+    """L'arresto di emergenza non si limita a bloccare i nuovi ingressi: chiude i trade aperti, anche a barra gia' elaborata."""
+    b = {"BTC": bars(), "ETH": bars(seed=1)}
+    s = TC.step(b, TC.empty_state(10_000), 10.0)
+    assert set(s["open"]) == {"BTC", "ETH"}
+    k = TC.step(b, s, 10.0, flatten=True)                    # stessa barra: l'arresto agisce comunque
+    assert k["open"] == {} and len(k["closed"]) == 2 and all(c["why"] == "arresto di emergenza" for c in k["closed"])
+    again = TC.step(b, k, 10.0, flatten=True)                # ripetuto: nulla da chiudere, nessun nuovo ingresso
+    assert again["open"] == {} and len(again["closed"]) == 2
+    assert TC.step(b, TC.empty_state(10_000), 10.0, flatten=True)["open"] == {}

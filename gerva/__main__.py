@@ -188,6 +188,11 @@ def main(argv=None) -> int:
             with open(snap) as fh:
                 scale = SCALE.get(str((json.load(fh).get("risk") or {}).get("state", "")).upper(), 0.0)
         scale = min(scale, 1.0) if scale in (1.0, 0.5) else 0.0   # HALTED e KILLED: nessun nuovo trade
+        # arresto di emergenza: file KILL presente o stato KILLED nella fotografia -> si chiudono anche i trade a leva aperti
+        killed = os.path.exists(os.environ.get("GERVA_KILL_FILE") or os.path.join(s.home, "KILL"))
+        if os.path.exists(snap):
+            with open(snap) as fh:
+                killed = killed or str((json.load(fh).get("risk") or {}).get("state", "")).upper() == "KILLED"
         from .learn import Registry, TradeMemory
         from .risk.isolated import BookLimits, Tier
         tcfg = _.get("trades") or {}
@@ -196,7 +201,10 @@ def main(argv=None) -> int:
                          exceptional=Tier("eccezionale", min(float(tcfg.get("risk_exceptional", d.exceptional.risk)), d.hard_max_risk), 1.0, None, 15.0, 2.0))
         ldir = os.path.join(s.home, "learn")
         state = TC.step(bars, TC.load_state(path, s.start_cash), a.venue_max_leverage, engine_scale=scale, funding=funding, limits=lim,
-                        memory=TradeMemory(os.path.join(ldir, "trades.jsonl")), rules=Registry(os.path.join(ldir, "registry.jsonl")).rules("ATTIVA"))
+                        memory=TradeMemory(os.path.join(ldir, "trades.jsonl")), rules=Registry(os.path.join(ldir, "registry.jsonl")).rules("ATTIVA"),
+                        flatten=killed)
+        if killed:
+            print("ARRESTO DI EMERGENZA attivo: trade a leva chiusi, nessun nuovo ingresso.")
         print(f"scala del motore di rischio: {scale} (0 = nessun nuovo trade; serve una fotografia recente del ciclo principale)")
         TC.save_state(path, state)
         print(json.dumps(dict(riepilogo=TC.summary(state), aperti=state["open"], ultimo=state["log"][-1] if state["log"] else None,

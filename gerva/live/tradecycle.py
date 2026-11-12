@@ -73,15 +73,17 @@ def funding_paid(funding: dict | None, coin: str, opened: str, day: str) -> floa
 
 def step(bars: dict[str, pd.DataFrame], state: dict, venue_max_leverage: float, engine_scale: float = 1.0,
          ai_multiplier: dict | None = None, limits: BookLimits | None = None, funding: dict | None = None,
-         memory=None, rules: list | None = None) -> dict:
+         memory=None, rules: list | None = None, flatten: bool = False) -> dict:
     """bars: moneta -> DataFrame giornaliero (open, high, low, close) fino all'ultima barra chiusa; deve contenere BTC.
     ai_multiplier: moneta -> fattore in [0, 1] (assente = 1). funding: moneta -> serie giornaliera del funding (somma dei
     tassi del giorno); entra nel segnale di conviction e nei costi, come nella ricerca.
     memory: gerva.learn.TradeMemory, in cui ogni trade chiuso viene registrato con contesto, costi, MAE e MFE.
     rules: regole ATTIVE del ciclo di automiglioramento (gerva.learn.Rule): possono solo saltare o dimezzare un trade.
+    flatten: arresto di emergenza (KILL). Chiude SUBITO tutti i trade aperti all'ultimo prezzo e non ne apre di nuovi;
+    vale anche se la barra di oggi e' gia' stata elaborata (l'arresto non aspetta domani).
     Restituisce lo stato aggiornato."""
     day = str(max(b.index[-1] for b in bars.values()).date())
-    if state.get("asof") == day:
+    if state.get("asof") == day and not (flatten and state.get("open")):
         return state
     book = TradeBook(limits)
     for sym, t in state["open"].items():
@@ -102,7 +104,9 @@ def step(bars: dict[str, pd.DataFrame], state: dict, venue_max_leverage: float, 
         extra["mfe"] = max(extra.get("mfe", 0.0), t.side * (float(favour) - t.entry) / risk_px)
         held = (pd.Timestamp(day) - pd.Timestamp(opened)).days
         exit_px, why = None, ""
-        if t.side * (adverse - t.stop) <= 0:
+        if flatten:
+            exit_px, why = float(b["close"]), "arresto di emergenza"
+        elif t.side * (adverse - t.stop) <= 0:
             px = min(t.stop, b["open"]) if t.side == 1 else max(t.stop, b["open"])
             exit_px, why = px * (1 - t.side * STOP_SLIP), "stop"
         else:
@@ -128,7 +132,7 @@ def step(bars: dict[str, pd.DataFrame], state: dict, venue_max_leverage: float, 
             events.append(f"chiuso {sym} ({why}): {pnl:+.2f}, R {rec['R']:+.2f}")
     # 2. nuovi ingressi
     new_ctx = {}
-    if not book.must_flatten():
+    if not book.must_flatten() and not flatten:
         for sym, b in bars.items():
             if sym in book.open or len(b) < 260 or str(b.index[-1].date()) != day:
                 continue
