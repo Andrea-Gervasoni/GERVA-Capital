@@ -797,6 +797,7 @@ export function heatmap(host, grid) {
       h('span', { class: 'num', text: fmtPctSigned(grid.scale, 0) }),
       h('span', { class: 'hm-legend__note', text: 'arancio = perdita, blu = guadagno; intensità = ampiezza' }));
     host.replaceChildren(wrap, legend);
+    growOnce(host, wrap);
     if (isNarrow) wrap.scrollLeft = wrap.scrollWidth;           // parte dagli anni più recenti
   }
 
@@ -985,6 +986,7 @@ export function histogram(host, data, { log = false, label = 'Distribuzione', xF
   const normal = mids.map((m, i) => total * (edges[i + 1] - edges[i]) * Math.exp(-0.5 * ((m - mean) / sd) ** 2) / (sd * Math.sqrt(2 * Math.PI)));
   const svg = s('svg', { class: 'chart chart--static', role: 'img', 'aria-label': label });
   host.replaceChildren(svg);
+  growOnce(host, svg);
   if (table) {
     host.append(tableFallback({
       caption: label, head: ['Intervallo', unit, 'Quota'],
@@ -1065,6 +1067,7 @@ export function columns(host, values, { labels = [], height = 96, label = 'Colon
   if (vals.filter((v) => v != null).length < 2) return false;
   const svg = s('svg', { class: 'chart chart--static', role: 'img', 'aria-label': label });
   host.replaceChildren(svg);
+  growOnce(host, svg);
   let last = 0;
   function draw(width) {
     const w = Math.floor(width);

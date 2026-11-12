@@ -95,7 +95,7 @@ export function mount(root, api) {
     const d = ladderData(ctxNow, tb, worst && worst.total > 0 ? worst : null);
     const b = d.b;
     stateLine.replaceChildren(...[
-      h('span', { class: `pill pill--lg pill--${!fresh ? 'unknown' : rs.code === 'KILLED' ? 'killed' : rs.kind}` }, icon(!fresh ? 'help' : rs.icon), h('span', { text: !fresh ? 'Sconosciuto' : rs.label })),
+      h('span', { class: `pill pill--lg pill--${!fresh ? 'unknown' : rs.code === 'KILLED' ? 'killed' : rs.kind}` }, icon(!fresh ? 'help' : rs.icon), h('span', { text: !fresh ? 'Sconosciuto' : rs.code === 'KILLED' ? 'Arrestato' : rs.label })),
       h('span', null, 'scala ', h('b', { text: fresh ? SCALE[rs.code] || 'n.d.' : 'n.d.' })),
       h('span', { text: fresh ? str(risk.state_reason).trim() || rs.text : 'I dati sono fermi: lo stato qui sopra non si può confermare.' }),
       h('span', null, 'caduta ', h('b', { text: b.dd == null ? 'n.d.' : fmtPctSigned(b.dd, 2) }), b.peak == null ? '' : ` dal massimo di ${fmtMoney(b.peak, ccy, { digits: 0 })}`),

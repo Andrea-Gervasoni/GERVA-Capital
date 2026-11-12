@@ -318,7 +318,7 @@ export function candleChart(host, { label = 'Grafico a candele', panes: paneIds 
         ctx.fillRect(x0, top, plotW - x0, Math.min(pp.y1, yb) - top);
         ctx.strokeStyle = theme.slabEdge;
         ctx.beginPath(); ctx.moveTo(x0, Math.round(top) + 0.5); ctx.lineTo(plotW, Math.round(top) + 0.5); ctx.stroke();
-        if (m.label && Math.min(pp.y1, yb) - top >= 16 && plotW - x0 > 40) { ctx.fillStyle = theme.textMuted; ctx.textAlign = 'left'; ctx.fillText(m.label, x0 + 6, top + 9); }
+        if (m.label && Math.min(pp.y1, yb) - top >= 16 && plotW - x0 > 40) { ctx.fillStyle = theme.textMuted; ctx.textAlign = 'left'; ctx.fillText(m.label, x0 + 14, top + 9); }
         continue;
       }
       if (m.kind === 'level') {

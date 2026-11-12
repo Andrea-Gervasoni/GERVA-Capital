@@ -159,7 +159,7 @@ export function colHist(host, { label = 'Distribuzione' } = {}) {
       svg.append(probe);
       l.tw = Math.max(textW(probe, l.text), l.r.sub ? String(l.r.sub).length * 6 : 0);
       probe.remove();
-      l.flip = l.x + 6 + l.tw > right;
+      l.flip = l.r.side === 'left' ? l.x - 6 - l.tw > left : l.x + 6 + l.tw > right;
       const x0 = l.flip ? l.x - 6 - l.tw : l.x + 6;
       let row = 0;
       while (rowsEnd[row] != null && rowsEnd[row] > x0 - 8) row++;
@@ -209,7 +209,7 @@ export function colHist(host, { label = 'Distribuzione' } = {}) {
     svg.append(bars);
     svg.append(s('line', { class: 'c-axis', x1: left, x2: right, y1: bottom + 0.5, y2: bottom + 0.5 }));
     const every = Math.max(1, Math.ceil((edges.length - 1) / Math.max(2, Math.floor((right - left) / 64))));
-    for (let i = 0; i < edges.length; i += every) {
+    for (let i = edges.length - 1; i >= 0; i -= every) {
       const x = xOf(edges[i]);
       const edge = x < left + 16 ? 'start' : x > right - 16 ? 'end' : null;
       svg.append(s('line', { class: 'c-axis', x1: Math.round(x) + 0.5, x2: Math.round(x) + 0.5, y1: bottom, y2: bottom + 4 }),
@@ -253,7 +253,7 @@ export function luckChart(host, { label = 'Quanto può essere fortuna' } = {}) {
     const left = 2;
     const right = w - 2;
     const top = 22;
-    const ph = 96;
+    const ph = 108;
     const bottom = top + ph;
     const H = bottom + 22;
     svg.setAttribute('viewBox', `0 0 ${w} ${H}`);
@@ -268,7 +268,7 @@ export function luckChart(host, { label = 'Quanto può essere fortuna' } = {}) {
     for (let v = Math.ceil(lo * 2) / 2; v <= hi; v += 0.5) {
       const x = xOf(v);
       svg.append(s('line', { class: 'c-axis', x1: Math.round(x) + 0.5, x2: Math.round(x) + 0.5, y1: bottom, y2: bottom + 4 }));
-      if (Number.isInteger(v)) svg.append(s('text', { class: 'c-tick c-tick--x', x: x.toFixed(1), y: bottom + 17 }, fmtNum(v, 0)));
+      if (Number.isInteger(v) && x > left + 12 && x < right - 70) svg.append(s('text', { class: 'c-tick c-tick--x', x: x.toFixed(1), y: bottom + 17 }, fmtNum(v, 0)));
     }
     svg.append(s('text', { class: 'c-tick', x: right, y: bottom + 17, 'text-anchor': 'end' }, 'Sharpe →'));
     svg.append(s('text', { class: 'c-tick', x: xOf(0), y: bottom - ph * 0.36, 'text-anchor': 'middle' }, 'una prova'), s('text', { class: 'c-tick', x: xOf(0), y: bottom - ph * 0.36 + 13, 'text-anchor': 'middle' }, 'senza abilità'));
@@ -276,7 +276,7 @@ export function luckChart(host, { label = 'Quanto può essere fortuna' } = {}) {
     svg.append(s('line', { class: 'sp-rule sp-rule--strong', x1: xm, x2: xm, y1: 14, y2: bottom }),
       s('text', { class: 'c-ref-label sp-ref-label', x: xm - 6, y: 12, 'text-anchor': 'end' }, `il migliore di ${fmtNum(d.trials, 0)} a caso: ${fmtNum(d.expectedMax, 2)}`));
     marks.forEach((m, i) => {
-      const y = top + 26 + i * 26;
+      const y = top + 30 + i * 30;
       const x = xOf(m.value);
       if (m.se) {
         const a = xOf(m.value - m.se).toFixed(1);
@@ -356,4 +356,41 @@ export function simpleTable(caption, cols, rows, { mark = null, cls = '' } = {})
       const v = c.cell(r);
       return h(i === 0 ? 'th' : 'td', { class: c.cls || null, scope: i === 0 ? 'row' : null }, v == null || v === '' ? nd() : v);
     }))))));
+}
+
+/**
+ * sparkArea(host, { label }) → { update({ values, prov }) } — andamento compatto con area sfumata e punto finale.
+ * Il colore segue il segno della variazione (con freccia e cifra accanto, mai da solo); prov 'demo' = puntinato, 'sim' = tratteggiato;
+ * anello finale = paper, pieno = reale.
+ */
+export function sparkArea(host, { label = 'Andamento', height = 54 } = {}) {
+  const svg = s('svg', { class: 'chart chart--static sp-spark', role: 'img', 'aria-label': label });
+  host.replaceChildren(svg);
+  let d = null;
+  let last = 0;
+  function draw(width, force = false) {
+    const w = Math.floor(width);
+    if (w < 60 || (w === last && !force)) return;
+    last = w;
+    svg.replaceChildren();
+    const v = d ? d.values.map(num).filter((x) => x != null) : [];
+    if (v.length < 2) { svg.setAttribute('height', 0); return; }
+    svg.setAttribute('viewBox', `0 0 ${w} ${height}`);
+    svg.setAttribute('width', w);
+    svg.setAttribute('height', height);
+    const lo = Math.min(...v);
+    const hi = Math.max(...v);
+    const span = hi - lo || 1;
+    const xOf = (i) => 2 + (i / (v.length - 1)) * (w - 10);
+    const yOf = (y) => 6 + (1 - (y - lo) / span) * (height - 14);
+    const tone = v[v.length - 1] >= v[0] ? 'up' : 'down';
+    const path = `M${v.map((y, i) => `${xOf(i).toFixed(1)},${yOf(y).toFixed(1)}`).join('L')}`;
+    const y0 = Math.round(yOf(v[0])) + 0.5;
+    svg.append(s('line', { class: 'c-grid', x1: 2, x2: w - 8, y1: y0, y2: y0 }),
+      s('path', { class: `sp-spark__area sp-spark__area--${tone}`, d: `${path}L${xOf(v.length - 1).toFixed(1)},${height}L${xOf(0).toFixed(1)},${height}Z` }),
+      s('path', { class: `sp-spark__line sp-spark__line--${tone} ${d.prov || ''}`.trim(), d: path }),
+      s('circle', { class: `sp-spark__end sp-spark__end--${tone} ${d.prov === 'real' ? 'is-real' : ''}`.trim(), cx: xOf(v.length - 1).toFixed(1), cy: yOf(v[v.length - 1]).toFixed(1), r: 4 }));
+  }
+  onResize(host, (w) => draw(w));
+  return { update(next) { d = next; draw(host.clientWidth, true); } };
 }

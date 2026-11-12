@@ -14,6 +14,7 @@ import { getOhlc, getSymbols, getTradebook } from './market.js';
 import { arr, fmtAgo, fmtDate, fmtDateTime, fmtDayMonth, fmtDayTime, fmtDuration, fmtMoney, fmtNum, num, obj, parseTs, str } from './format.js';
 import { alertLevel, componentStatus, isBacktest, modeKind, riskState } from './model.js';
 import * as oggi from './views/oggi.js';
+import * as terminale from './views/terminale.js';
 import * as mercati from './views/mercati.js';
 import * as rischio from './views/rischio2.js';
 import * as panoramica from './views/panoramica.js';
@@ -29,22 +30,24 @@ import * as ai from './views/ai.js';
 import * as leva from './views/leva.js';
 import * as apprendimento from './views/apprendimento.js';
 import * as evidenza from './views/evidenza.js';
+import * as portafoglio from './views/portafoglio.js';
+import * as sistemaNuovo from './views/sistema2.js';
 
 /** Gli spazi: quattro «ogni giorno», tre «quando serve». Le viste precedenti restano raggiungibili come schede. */
 const SPACES = [
-  { id: 'oggi', label: 'Oggi', icon: 'today', key: 'o', group: 'Ogni giorno', tabs: [{ id: '', label: 'Oggi', view: oggi }] },
+  { id: 'oggi', label: 'Oggi', icon: 'today', key: 'o', group: 'Ogni giorno', tabs: [{ id: '', label: 'Oggi', view: oggi, terminal: terminale }] },
   { id: 'mercati', label: 'Mercati', icon: 'trade', key: 'm', group: 'Ogni giorno', tabs: [
     { id: '', label: 'Grafico e libro', view: mercati }, { id: 'ai', label: 'Regime e conviction', view: ai }] },
   { id: 'portafoglio', label: 'Portafoglio', icon: 'portfolio', key: 'p', group: 'Ogni giorno', tabs: [
-    { id: '', label: 'Risultato', view: performance }, { id: 'strategie', label: 'Strategie', view: strategie },
-    { id: 'posizioni', label: 'Posizioni', view: esposizione }, { id: 'panoramica', label: 'Panoramica (archivio)', view: panoramica }] },
+    { id: '', label: 'Portafoglio', view: portafoglio }, { id: 'risultato', label: 'Risultato · archivio', view: performance }, { id: 'strategie', label: 'Strategie · archivio', view: strategie },
+    { id: 'posizioni', label: 'Posizioni · archivio', view: esposizione }, { id: 'panoramica', label: 'Panoramica · archivio', view: panoramica }] },
   { id: 'rischio', label: 'Rischio', icon: 'risk', key: 'r', group: 'Ogni giorno', tabs: [
     { id: '', label: 'Freni e tetti', view: rischio }, { id: 'limiti', label: 'Limiti e leva (archivio)', view: rischioArchivio }] },
   { id: 'evidenza', label: 'Evidenza', icon: 'evidence', key: 'e', group: 'Quando serve', tabs: [
-    { id: '', label: 'Evidenza', view: evidenza }, { id: 'ricerca', label: 'Ricerca (archivio)', view: ricerca }, { id: 'leva', label: 'Leva per trade (archivio)', view: leva }] },
+    { id: '', label: 'Evidenza', view: evidenza }, { id: 'ricerca', label: 'Ricerca · archivio', view: ricerca }, { id: 'leva', label: 'Leva · archivio', view: leva }] },
   { id: 'apprendimento', label: 'Apprendimento', icon: 'learn', key: 'a', group: 'Quando serve', tabs: [{ id: '', label: 'Apprendimento', view: apprendimento }] },
   { id: 'sistema', label: 'Sistema', icon: 'system', key: 's', group: 'Quando serve', tabs: [
-    { id: '', label: 'Salute', view: sistema }, { id: 'ordini', label: 'Ordini', view: ordini }, { id: 'guida', label: 'Come funziona', view: comefunziona }] },
+    { id: '', label: 'Sistema', view: sistemaNuovo }, { id: 'salute', label: 'Salute · archivio', view: sistema }, { id: 'ordini', label: 'Ordini · archivio', view: ordini }, { id: 'guida', label: 'Come funziona · guida', view: comefunziona }] },
 ];
 /** Indirizzi delle dodici pagine precedenti: continuano a funzionare. */
 const LEGACY = {
@@ -245,9 +248,11 @@ function syncChrome() {
     el.pill.hidden = false;
     el.pill.className = `pill pill--${unknown ? 'unknown' : rs.code === 'KILLED' ? 'killed' : rs.kind}`;
     el.pill.setAttribute('aria-label', unknown ? 'Stato del rischio sconosciuto: i dati sono fermi. Apri Rischio' : `Stato del rischio: ${rs.label}. Apri Rischio`);
-    if (el.pill.dataset.state !== key) {
+    if (el.pill.dataset.state !== key || !el.pill.childElementCount) {
+      // cambio di stato visto dal vivo: una sola passata di luce sulla fascia (spenta con «riduci movimento» dal CSS)
+      if (el.pill.childElementCount && fresh) { const cap = $('capsule'); cap.classList.remove('is-sweep'); requestAnimationFrame(() => cap.classList.add('is-sweep')); }
       el.pill.dataset.state = key;
-      fill(el.pill, icon(unknown ? 'help' : rs.icon), h('span', { text: unknown ? 'Sconosciuto' : rs.label }));
+      fill(el.pill, icon(unknown ? 'help' : rs.icon), h('span', { text: unknown ? 'Sconosciuto' : rs.code === 'KILLED' ? 'Arrestato' : rs.label }));
     }
     if (unknown) fill(el.why, lastSeen ? `ultimo visto: ${lastSeen.label} alle ${fmtDayTime(lastSeen.t)}` : 'nessuno stato visto con dati freschi');
     else fill(el.why, 'scala ', h('b', { text: SCALE[rs.code] || 'n.d.' }), ` · ${str(obj(snap.risk).state_reason).trim() || rs.text || 'motivo non dichiarato'}`);
@@ -312,7 +317,7 @@ function syncChrome() {
     const taken = ack && ack.key === key;
     bar = { kind: 'crit', icon: 'crit', key, title: rsNow.code === 'KILLED' ? 'Arresto di emergenza attivo' : 'Motore sospeso',
       text: taken ? `Preso in carico alle ${fmtDayTime(ack.t)}. ${rsNow.text}`
-        : `${str(obj(snap.risk).state_reason).trim() || rsNow.text} Il motore ha già ${rsNow.code === 'KILLED' ? 'chiuso tutto e si è fermato' : 'portato l\'esposizione al minimo'}. Tocca a te: guarda Rischio e il registro in Sistema.` };
+        : `${str(obj(snap.risk).state_reason).trim() || rsNow.text} ${rsNow.code === 'KILLED' ? (arr(snap.positions).length ? `Il motore chiude tutto al ciclo successivo: nella fotografia ci sono ancora ${fmtNum(arr(snap.positions).length, 0)} posizioni` : 'Il motore ha chiuso tutto e si è fermato') : 'Il motore ha già portato l\'esposizione al minimo'}. Tocca a te: guarda Rischio e il registro in Sistema.` };
   }
   el.connbar.hidden = !bar;
   if (bar) {
@@ -381,7 +386,7 @@ function applyLevel(v, { announce = false } = {}) {
   tabKey = '';
   syncView({ force: true });
   requestAnimationFrame(() => markNav(routeNow().space));
-  if (announce) say(v === 'terminale' && narrow() ? 'Terminale non è disponibile su questo schermo: mostro il livello Esperto.' : `Livello ${LEVEL_LABEL[v]}`);
+  if (announce) say(v === 'terminale' && narrow() ? 'Su questo schermo Terminale impila i suoi riquadri uno sotto l\'altro, con la densità del livello Esperto.' : `Livello ${LEVEL_LABEL[v]}`);
 }
 
 function levelSeg(cls = '') {
@@ -527,6 +532,10 @@ function enter(root) {
   });
 }
 
+/** Al livello Terminale lo spazio Oggi apre la schermata a dieci riquadri (views/terminale.js); sotto gli 860 px gli stessi riquadri si impilano. */
+const landing = (route) => (level === 'terminale' && route.tab.terminal ? route.tab.terminal : null);
+const keyOf = (route) => `${route.space.id}/${route.tab.id}${landing(route) ? '@terminale' : ''}`;
+
 function mount(route) {
   hideTip();
   if (mounted && mounted.handle && typeof mounted.handle.destroy === 'function') {
@@ -534,9 +543,9 @@ function mount(route) {
   }
   fill(el.view);
   el.view.classList.remove('is-leaving');
-  const key = `${route.space.id}/${route.tab.id}`;
+  const key = keyOf(route);
   try {
-    mounted = { key, space: route.space, tab: route.tab, params: route.params, handle: route.tab.view.mount(el.view, api) };
+    mounted = { key, space: route.space, tab: route.tab, params: route.params, handle: (landing(route) || route.tab.view).mount(el.view, api) };
   } catch (err) {
     console.error(err);
     mounted = { key, space: route.space, tab: route.tab, params: route.params, handle: null };
@@ -547,7 +556,7 @@ function mount(route) {
 function syncView({ force = false, focus = false, entered = false } = {}) {
   const st = store.state;
   const route = routeNow();
-  const key = `${route.space.id}/${route.tab.id}`;
+  const key = keyOf(route);
   const label = route.tab.id ? `${route.space.label} · ${route.tab.label}` : route.space.label;
   setText(el.title, route.space.label);
   document.title = `${label} · GERVA Capital`;

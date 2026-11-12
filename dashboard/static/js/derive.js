@@ -426,14 +426,14 @@ export function sourceAges({ snap, health, now, tradebook, compare, bars = [] })
   const out = [];
   const push = (id, name, ageS, maxS, detail, present = true) => out.push({ id, name, ageS, maxS, detail, state: !present ? 'missing' : ageS == null ? 'missing' : maxS == null ? 'unknown' : ageS > maxS ? 'stale' : 'ok' });
   const asOf = parseTs(str(meta.as_of));
-  push('snap', 'Fotografia del conto', asOf == null || now == null ? null : Math.max(0, (now - asOf) / 1000), num(meta.stale_after_s), 'scritta dal motore a ogni ciclo');
+  push('snap', 'Fotografia del conto', asOf == null || now == null ? null : Math.max(0, (now - asOf) / 1000), num(meta.stale_after_s), 'scritta a ogni ciclo');
   const hb = num(obj(obj(snap).system).heartbeat_age_s);
-  push('hb', 'Battito del motore', hb, num(rules.interval_s) == null ? null : rules.interval_s * 2, num(rules.interval_s) == null ? 'intervallo del ciclo non letto' : `un ciclo ogni ${Math.round(rules.interval_s / 60)} minuti: oltre due cicli è fermo`);
+  push('hb', 'Battito del motore', hb, num(rules.interval_s) == null ? null : rules.interval_s * 2, num(rules.interval_s) == null ? 'intervallo del ciclo non letto' : `un ciclo ogni ${Math.round(rules.interval_s / 60)} minuti`);
   const dayAge = (id, name, dayMs, kind, detail, present) => { const f = freshness(dayMs, now, kind, rules); push(id, name, f.hours == null ? null : f.hours * 3600, f.maxHours == null ? null : f.maxHours * 3600, detail, present); };
-  dayAge('tb', 'Libro dei trade', tradebook ? parseTs(str(tradebook.asof)) : null, 'crypto', tradebook ? 'data del libro (asof)' : 'il motore non ha scritto il libro', !!tradebook);
+  dayAge('tb', 'Libro dei trade', tradebook ? parseTs(str(tradebook.asof)) : null, 'crypto', tradebook ? 'data del libro' : 'il motore non ha scritto il libro', !!tradebook);
   for (const b of bars) dayAge(`bar-${b.symbol}`, `Barre ${b.symbol}`, b.t, b.kind === 'crypto' ? 'crypto' : 'ibkr', b.t == null ? 'nessuna barra nella cache' : 'ultima barra chiusa', b.t != null);
   const rowsC = arr(obj(compare).rows);
-  dayAge('cmp', 'Confronto con l\'originale', rowsC.length ? parseTs(str(rowsC[rowsC.length - 1].data)) : null, 'ibkr', rowsC.length ? 'ultima riga del confronto' : 'confronto non ancora scritto', rowsC.length > 0);
+  dayAge('cmp', 'Confronto con l\'originale', rowsC.length ? parseTs(str(rowsC[rowsC.length - 1].data)) : null, 'ibkr', rowsC.length ? 'ultima riga' : 'confronto non ancora scritto', rowsC.length > 0);
   return out;
 }
 

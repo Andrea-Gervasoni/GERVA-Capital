@@ -11,7 +11,7 @@
 // carattere o tempo è scritto qui. Arrivano dalle classi CSS (token --chart-*) e da chartTheme().
 
 import { chartTheme } from './chart-theme.js';
-import { bindTip, divStep, hideTip, linearTicks, logTicks, onResize, showTip, tableFallback, timeChart } from './charts.js';
+import { bindTip, divStep, growOnce, hideTip, linearTicks, logTicks, onResize, showTip, tableFallback, timeChart } from './charts.js';
 import { h, s } from './dom.js';
 import { DASH, fmtDate, fmtNum, fmtPct, fmtPctSigned, fmtSigned, list, num } from './format.js';
 
@@ -160,7 +160,7 @@ export function stackedArea(host, opts = {}) {
  *   le altre sono variazioni che partono dal livello raggiunto. orient: 'auto' (in riga quando le colonne
  *   diventano troppo strette), 'v' colonne, 'h' righe.
  */
-export function waterfall(host, steps, { label = 'Cascata', height = 240, format = (v) => fmtSigned(v, 2), levelFormat = (v) => fmtNum(v, 2), orient = 'auto', valueHead = 'Variazione', levelHead = 'Livello', table = false } = {}) {
+export function waterfall(host, steps, { label = 'Cascata', height = 240, format = (v) => fmtSigned(v, 2), levelFormat = (v) => fmtNum(v, 2), totalFormat = null, orient = 'auto', valueHead = 'Variazione', levelHead = 'Livello', table = false } = {}) {
   const svg = s('svg', { class: 'chart chart--static', role: 'img', 'aria-label': label });
   let data = [];
   let last = 0;
@@ -192,6 +192,10 @@ export function waterfall(host, steps, { label = 'Cascata', height = 240, format
     note: d.note,
   });
 
+  // geo: le barre come sono disegnate adesso (durante il passaggio da un periodo all'altro stanno a metà strada);
+  // testi, assi e suggerimenti leggono sempre i valori finali: i numeri non si animano mai.
+  let geo = null;
+  let raf = 0;
   function draw(width, force = false) {
     const w = Math.floor(width);
     if (w < 80 || (w === last && !force)) return;
@@ -204,6 +208,8 @@ export function waterfall(host, steps, { label = 'Cascata', height = 240, format
     const hi = Math.max(0, ...data.flatMap((d) => [d.from, d.to]));
     const pad = (hi - lo) * 0.08 || 1;
     const dom = [lo < 0 ? lo - pad : 0, hi > 0 ? hi + pad : 0];
+    const clamp = (v) => Math.max(dom[0], Math.min(dom[1], v));
+    const G = (i) => (geo && geo[i] ? { from: clamp(geo[i].from), to: clamp(geo[i].to) } : data[i]);
     const horizontal = orient === 'h' || (orient === 'auto' && (w - 50) / n < 56);
     const bar = (d, i, x, y, bw, bh) => {
       const rect = s('rect', {
@@ -233,10 +239,11 @@ export function waterfall(host, steps, { label = 'Cascata', height = 240, format
       const chars = Math.max(3, Math.floor(band / 6.4));
       data.forEach((d, i) => {
         const cx = left + band * (i + 0.5);
-        const y0 = yOf(Math.max(d.from, d.to));
-        const y1 = yOf(Math.min(d.from, d.to));
+        const g = G(i);
+        const y0 = yOf(Math.max(g.from, g.to));
+        const y1 = yOf(Math.min(g.from, g.to));
         if (i < n - 1) {
-          const yy = Math.round(yOf(d.to)) + 0.5;
+          const yy = Math.round(yOf(g.to)) + 0.5;
           svg.append(s('line', { class: 'c-wf-link', x1: (cx + bw / 2).toFixed(1), x2: (cx + band - bw / 2).toFixed(1), y1: yy, y2: yy }));
         }
         svg.append(bar(d, i, cx - bw / 2, y0, bw, y1 - y0));
@@ -248,9 +255,20 @@ export function waterfall(host, steps, { label = 'Cascata', height = 240, format
     }
 
     // in riga: una voce per riga, il nome a sinistra e il valore a destra della barra
-    const row = 28;
     const longest = Math.max(...data.map((d) => d.label.length));
-    const labelW = Math.min(Math.round(w * 0.5), Math.max(90, Math.round(longest * 6.3 + 8)));          // le voci si leggono intere
+    const labelW = Math.min(Math.round(w * 0.46), Math.max(90, Math.round(longest * 6.3 + 8)));
+    // le voci si leggono intere: quelle lunghe vanno su due righe, mai troncate
+    const fitChars = Math.max(4, Math.floor(labelW / 6.3));
+    const wrap = (text) => {
+      if (text.length <= fitChars) return [text];
+      const words = text.split(' ');
+      let a = '';
+      let k = 0;
+      while (k < words.length && `${a} ${words[k]}`.trim().length <= fitChars) { a = `${a} ${words[k]}`.trim(); k++; }
+      return a && k < words.length ? [a, words.slice(k).join(' ')] : [text];
+    };
+    const lines = data.map((d) => wrap(d.label));
+    const row = lines.some((l) => l.length > 1) ? 36 : 28;
     const valueW = 66;
     const left = labelW + 6;
     const right = w - valueW;
@@ -264,25 +282,47 @@ export function waterfall(host, steps, { label = 'Cascata', height = 240, format
       const x = Math.round(xOf(v)) + 0.5;
       svg.append(s('line', { class: v === 0 ? 'c-grid c-grid--zero' : 'c-grid', x1: x, x2: x, y1: top, y2: bottom }), s('text', { class: 'c-tick c-tick--x', x, y: bottom + 16 }, levelFormat(v)));
     }
-    const chars = Math.max(4, Math.floor(labelW / 6.4));
     data.forEach((d, i) => {
       const cy = top + row * (i + 0.5);
-      const x0 = xOf(Math.min(d.from, d.to));
-      const x1 = xOf(Math.max(d.from, d.to));
+      const g = G(i);
+      const x0 = xOf(Math.min(g.from, g.to));
+      const x1 = xOf(Math.max(g.from, g.to));
       if (i < n - 1) {
-        const xx = Math.round(xOf(d.to)) + 0.5;
+        const xx = Math.round(xOf(g.to)) + 0.5;
         svg.append(s('line', { class: 'c-wf-link', x1: xx, x2: xx, y1: (cy + 8).toFixed(1), y2: (cy + row - 8).toFixed(1) }));
       }
       svg.append(bar(d, i, x0, cy - 8, x1 - x0, 16));
-      svg.append(s('text', { class: 'c-cat c-cat--row', x: 0, y: cy + 4 }, d.label.length > chars ? `${d.label.slice(0, chars - 1)}…` : d.label));
-      svg.append(s('text', { class: 'c-val c-val--row', x: w, y: cy + 4 }, d.total ? levelFormat(d.to) : format(d.value)));
+      if (lines[i].length > 1) svg.append(s('text', { class: 'c-cat c-cat--row', x: 0, y: cy - 3 }, lines[i][0]), s('text', { class: 'c-cat c-cat--row c-cat--sub', x: 0, y: cy + 11 }, lines[i][1]));
+      else svg.append(s('text', { class: 'c-cat c-cat--row', x: 0, y: cy + 4 }, d.label));
+      svg.append(s('text', { class: 'c-val c-val--row', x: w, y: cy + 4 }, d.total ? (totalFormat || levelFormat)(d.to) : format(d.value)));
     });
   }
 
+  const keyOf = (rows) => rows.map((d) => `${d.label}:${d.from.toFixed(4)}:${d.to.toFixed(4)}`).join('|');
+  let shownKey = '';
   const api = {
+    /** Nuovi dati: le barre passano dai valori di prima a quelli nuovi (--chart-morph); al primo ingresso crescono dallo zero. */
     update(next) {
+      const prev = geo || data;
       data = prepare(next);
+      const key = keyOf(data);
+      cancelAnimationFrame(raf);
+      const T = chartTheme();
+      if (key === shownKey || T.reducedMotion || !(T.morph > 1) || host.clientWidth < 80 || !data.length) { geo = null; shownKey = key; draw(host.clientWidth, true); return data.length > 0; }
+      shownKey = key;
+      const before = new Map(prev.map((d) => [d.label, d]));
+      const start = data.map((d) => { const b = before.get(d.label); return b ? { label: d.label, from: b.from, to: b.to } : { label: d.label, from: d.from, to: d.from }; });
+      const t0 = performance.now();
+      const step = (now) => {
+        const k = Math.min(1, (now - t0) / T.morph);
+        const e = 1 - (1 - k) ** 3;
+        geo = k < 1 ? data.map((d, i) => ({ label: d.label, from: start[i].from + (d.from - start[i].from) * e, to: start[i].to + (d.to - start[i].to) * e })) : null;
+        draw(host.clientWidth, true);
+        if (k < 1) raf = requestAnimationFrame(step);
+      };
+      geo = start;
       draw(host.clientWidth, true);
+      raf = requestAnimationFrame(step);
       return data.length > 0;
     },
   };
@@ -690,6 +730,7 @@ export function heatGrid(host, data, { caption = 'Griglia di calore', corner = '
             bindTip(td, () => (tip ? tip(i, j, v, n) : { title: `${r} · ${c}`, rows: [{ label: 'Valore', value: format(v), cls: palette === 'pnl' ? signCls(v) : '' }, ...(n != null ? [{ label: 'Casi', value: fmtNum(n, 0) }] : [])] }));
             return td;
           })))))));
+      growOnce(host, host.firstElementChild);
       return true;
     },
   };

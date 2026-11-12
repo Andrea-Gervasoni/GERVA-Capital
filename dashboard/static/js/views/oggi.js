@@ -44,6 +44,7 @@ export function paperStart(snap) {
 
 export function mount(root, api) {
   let range = '3M';
+  let rangeMoved = false;       // l'intervallo è appena stato cambiato dall'utente: la finestra scorre invece di scattare
   let period = 'day';
   let tb;                 // undefined = in arrivo, null = assente
   let cmp;
@@ -62,7 +63,7 @@ export function mount(root, api) {
   const provLine = h('p', { class: 'hero__prov' });
   const chartHost = h('div', { class: 'chart-host' });
   const chartNote = h('span');
-  const rangeSeg = segmented({ label: 'Intervallo del grafico', options: [{ value: '1M', label: '1M' }, { value: '3M', label: '3M' }, { value: '1A', label: '1A' }, { value: 'ALL', label: 'Avvio' }], value: range, onChange: (v) => { range = v; paintNav(); } });
+  const rangeSeg = segmented({ label: 'Intervallo del grafico', options: [{ value: '1M', label: '1M' }, { value: '3M', label: '3M' }, { value: '1A', label: '1A' }, { value: 'ALL', label: 'Avvio' }], value: range, onChange: (v) => { range = v; rangeMoved = true; paintNav(); } });
   pNav.body.append(h('div', { class: 'hero' },
     h('div', { class: 'hero__main' }, h('div', { class: 'hero__num num' }, heroNum, heroDec, heroCur), delta, ctxLine, books, side, provLine),
     h('div', { class: 'hero__chart' }, h('div', { class: 'hero__chart-head' }, chartNote, rangeSeg.el), chartHost)));
@@ -84,7 +85,7 @@ export function mount(root, api) {
   const attrHost = h('div', { class: 'chart-host' });
   const attrNote = h('p', { class: 'panel__ask' });
   pAttr.body.append(attrHost, attrNote);
-  const attrChart = waterfall(attrHost, [], { label: 'Contributo delle strategie al risultato', orient: 'h', format: (v) => fmtMoney(v, 'EUR', { digits: 2, signed: true }), levelFormat: (v) => fmtMoney(v, 'EUR', { digits: 0 }), valueHead: 'Contributo', levelHead: 'Somma' });
+  const attrChart = waterfall(attrHost, [], { label: 'Contributo delle strategie al risultato', orient: 'h', format: (v) => fmtMoney(v, 'EUR', { digits: 2, signed: true }), levelFormat: (v) => fmtMoney(v, 'EUR', { digits: 0 }), totalFormat: (v) => fmtMoney(v, 'EUR', { digits: 2, signed: true }), valueHead: 'Contributo', levelHead: 'Somma' });
 
   // ---- 4. che cosa è cambiato -----------------------------------------------------------------------------------------------
   const pChg = panel({ title: 'Che cosa è cambiato da ieri', span: 4, what: 'Le cose che il sistema ha fatto o segnalato nelle ultime 24 ore: ordini, avvisi, movimenti del libro dei trade, freni dell\'AI in vigore. Tre righe in Semplice, fino a otto negli altri livelli.' });
@@ -152,19 +153,20 @@ export function mount(root, api) {
     const ps = paperStart(snap);
     const endDay = n ? new Date(curve.t[n - 1]) : new Date(ctxNow.now);
     const mixed = (from) => (ps.t != null && from != null && from < ps.t - DAY / 2 ? Math.round((ps.t - from) / DAY) : 0);
-    const well = (k, v, sub, simDays) => h('div', { class: 'mini' }, h('dt', { text: k }), h('dd', { class: v > 0 ? 'pos' : v < 0 ? 'neg' : '' }, v == null ? 'n.d.' : [v === 0 ? null : icon(v > 0 ? 'up' : 'down', 'icon--solid'), fmtPctSigned(v, 2)]),
-      h('small', { class: 'not-terminale' }, sub), simDays > 0 ? h('span', { class: 'tag tag--sim mini__prov', title: `Il periodo comprende ${fmtNum(simDays, 0)} giorni simulati prima dell'avvio del paper${ps.days == null ? '' : ` e ${fmtNum(ps.days, 0)} giorni di paper`}: non è un risultato ottenuto.`, text: prov === 'demo' ? 'sim + esempio' : 'sim + paper' }) : null);
+    const well = (k, v, sub, simDays) => h('div', { class: `mini ${simDays > 0 ? 'mini--mixed' : ''}`.trim() }, h('dt', { text: k }), h('dd', { class: v > 0 ? 'pos' : v < 0 ? 'neg' : '' }, v == null ? 'n.d.' : [v === 0 ? null : icon(v > 0 ? 'up' : 'down', 'icon--solid'), fmtPctSigned(v, 2)]),
+      h('small', { class: 'not-terminale' }, sub), simDays > 0 ? h('small', { class: 'mini__prov', title: `Il periodo comprende ${fmtNum(simDays, 0)} giorni simulati prima dell'avvio del paper${ps.days == null ? '' : ` e ${fmtNum(ps.days, 0)} giorni di paper`}: non è un risultato ottenuto.`, text: 'con giorni simulati' }) : null);
     side.replaceChildren(well('Mese', num(nav.pnl_mtd_pct), 'dal 1° del mese', mixed(Date.UTC(endDay.getUTCFullYear(), endDay.getUTCMonth(), 1))), well('Anno', num(nav.pnl_ytd_pct), 'dal 1° gennaio', mixed(Date.UTC(endDay.getUTCFullYear(), 0, 1))),
       well('Dall\'avvio', num(nav.pnl_total_pct), start == null ? '' : `da ${fmtMoney(start, ccy, { digits: 0 })}`, ps.simDays || 0));
     provLine.hidden = !ps.simDays;
     provLine.textContent = ps.simDays ? `Anno e Dall'avvio contengono ${fmtNum(ps.simDays, 0)} giorni simulati prima dell'avvio del paper (${fmtNum(ps.days, 0)} giorni fa): sul grafico il simulato è tratteggiato.` : '';
     if (n < 2) { navChart.update(null); chartNote.textContent = 'La curva comparirà dopo i primi due giorni di storico.'; return; }
+    // il grafico riceve tutta la curva; l'intervallo è una finestra che scorre (--chart-range) invece di un taglio netto
     const months = { '1M': 1, '3M': 3, '1A': 12, ALL: null }[range];
     let i0 = 0;
     if (months) { const end = new Date(curve.t[n - 1]); const cut = Date.UTC(end.getUTCFullYear(), end.getUTCMonth() - months, end.getUTCDate()); while (i0 < n - 2 && curve.t[i0] < cut) i0++; }
-    const x = curve.t.slice(i0);
-    const e = curve.equity.slice(i0);
-    const dd = curve.dd.slice(i0);
+    const x = curve.t;
+    const e = curve.equity;
+    const dd = curve.dd;
     // il tratto dice la provenienza: tratteggiato fino all'avvio del paper (simulato), pieno da lì in poi; il confine è disegnato
     const kp = ps.t == null ? -1 : x.findIndex((tt) => tt >= ps.t - DAY / 2);
     const allSim = prov === 'sim' || kp < 0;
@@ -173,17 +175,19 @@ export function mount(root, api) {
       ? [{ values: e.map((v, i) => (i <= kp ? v : null)), cls: 'fund sim', area: true, name: 'Patrimonio (simulato)' }, { values: e.map((v, i) => (i >= kp ? v : null)), cls: 'fund', area: true, end: true, name: prov === 'demo' ? 'Patrimonio (paper di esempio)' : 'Patrimonio (paper)' }]
       : [{ values: e, cls: prov === 'sim' || (ps.t != null && kp < 0) ? 'fund sim' : 'fund', area: true, end: true, name: 'Patrimonio' }];
     const provAt = (i) => (ps.t == null ? '' : x[i] < ps.t - DAY / 2 ? 'Simulato' : prov === 'demo' ? 'Paper (esempio)' : prov === 'real' ? 'Reale' : 'Paper');
-    chartNote.textContent = `${fmtDate(x[0], true)} – ${fmtDate(x[x.length - 1], true)}${split ? ' · tratteggiato: simulato' : ''}`;
+    chartNote.textContent = `${fmtDate(x[i0], true)} – ${fmtDate(x[x.length - 1], true)}${split && kp > i0 ? ' · tratteggiato: simulato' : ''}`;
     navChart.update({
       x,
       marks: split ? [{ t: x[kp], label: 'avvio del paper' }] : [],
       panels: [
         { height: ctxNow.lv === 'terminale' ? 96 : 184, series, format: (v) => fmtNum(v, 0) },
-        { height: 36, title: 'Caduta dal massimo', top: 0, series: [{ values: dd, cls: 'dd', area: true, name: 'Caduta' }], format: (v) => fmtPct(v, 0), refs: arr(obj(snap.risk).dd_ladder).filter((st) => num(st.level) != null && st.level >= Math.min(...dd.filter((v) => v != null)) * 1.6).map((st) => ({ value: st.level, label: fmtPct(st.level, 0) })) },
+        { height: 36, title: 'Caduta dal massimo', top: 0, series: [{ values: dd, cls: 'dd', area: true, name: 'Caduta' }], format: (v) => fmtPct(v, 0), refs: arr(obj(snap.risk).dd_ladder).filter((st) => num(st.level) != null && st.level >= Math.min(...dd.slice(i0).filter((v) => v != null)) * 1.6).map((st) => ({ value: st.level, label: fmtPct(st.level, 0) })) },
       ],
       tip: (i) => ({ title: fmtDate(x[i], true), rows: [{ key: 'fund', label: 'Patrimonio', value: fmtMoney(e[i], ccy) }, { key: 'dd', label: 'Caduta dal massimo', value: dd[i] == null ? '—' : fmtPctSigned(dd[i], 2) }, provAt(i) ? { label: 'Provenienza', value: provAt(i) } : null].filter(Boolean) }),
       say: (i) => `${fmtDate(x[i], true)}${provAt(i) ? ` (${provAt(i).toLowerCase()})` : ''}: patrimonio ${fmtMoney(e[i], ccy)}, caduta dal massimo ${dd[i] == null ? 'non disponibile' : fmtPctSigned(dd[i], 2)}`,
     });
+    navChart.setWindow(x[i0], x[n - 1], { animate: rangeMoved });
+    rangeMoved = false;
   }
 
   function paintBrake() {

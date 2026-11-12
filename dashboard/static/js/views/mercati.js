@@ -13,7 +13,7 @@ import { convLevel, freshness, gqLevel, tradeAge, tradeR } from '../derive.js';
 import { emptyState, panel, provOf, provTag, tradeMarkers } from '../panels.js';
 
 const DAY = 86400000;
-const RANGES = [{ value: 1, label: '1M' }, { value: 3, label: '3M' }, { value: 6, label: '6M' }, { value: 12, label: '1A' }, { value: 0, label: 'Tutto' }];
+const RANGES = [{ value: 1, label: '1M' }, { value: 3, label: '3M' }, { value: 6, label: '6M' }, { value: 12, label: '1A' }, { value: 0, label: 'Tutto' }, { value: 'trade', label: 'Trade' }];
 const KIND = { crypto: 'crypto', etf: 'ETF', indice: 'indice' };
 const px = (v) => (v == null ? 'n.d.' : fmtNum(v, Math.abs(v) >= 1000 ? 0 : Math.abs(v) >= 10 ? 2 : 4));
 
@@ -37,7 +37,7 @@ export function mount(root, api) {
   pList.body.append(listBox);
 
   // ---- grafico ----
-  const rangeSeg = segmented({ label: 'Intervallo', options: RANGES, value: months, onChange: (v) => { months = v; chart.setRange(v || null); } });
+  const rangeSeg = segmented({ label: 'Intervallo', options: RANGES, value: months, onChange: (v) => { if (v === 'trade') { stepTrade(0); return; } months = v; chart.setRange(v || null); } });
   const logBtn = h('button', { class: 'btn btn--sm btn--ghost not-semplice', type: 'button', 'aria-pressed': 'false' }, 'Log');
   const ovBox = h('div', { class: 'ovs not-semplice', role: 'group', 'aria-label': 'Sovrapposizioni' });
   const paneBox = h('div', { class: 'ovs not-semplice', role: 'group', 'aria-label': 'Riquadri sotto il prezzo' });
@@ -104,6 +104,7 @@ export function mount(root, api) {
     if (!sym || sym === sel) return;
     sel = sym;
     tradeIdx = -1;
+    if (rangeSeg.value === 'trade') rangeSeg.set(months);
     api.setParams({ s: sym });
     paintList();
     paintChart(true);
@@ -181,6 +182,16 @@ export function mount(root, api) {
       }))));
   }
 
+  /** Inquadra un trade dello strumento scelto: 0 = l'ultimo (o quello corrente), ±1 = precedente / successivo. Il selettore passa su «Trade». */
+  function stepTrade(dir) {
+    const mine = [...closedTrades(), ...openTrades()].filter((x) => str(x.symbol) === sel);
+    if (!mine.length) { rangeSeg.set(months); chartNote.replaceChildren(`${sel || 'Questo strumento'} non ha trade nel libro: l'intervallo resta quello di prima.`); return false; }
+    tradeIdx = tradeIdx < 0 ? mine.length - 1 : Math.max(0, Math.min(mine.length - 1, tradeIdx + dir));
+    rangeSeg.set('trade');
+    focusTrade(mine[tradeIdx]);
+    return true;
+  }
+
   function focusTrade(t) {
     if (!bars || !t) return;
     const a = parseTs(str(t.opened));
@@ -211,7 +222,7 @@ export function mount(root, api) {
           return { sym, trade: t, cells: [h('b', { text: sym }), num(t.side) === -1 ? 'ribasso' : 'rialzo', `${fmtNum(t.leverage, 1)}x`, px(num(t.entry)), px(num(t.stop)), px(num(t.liquidation)), last == null ? '…' : px(last),
             { v: r == null ? 'n.d.' : `${fmtSigned(r, 2)} R`, cls: r > 0 ? 'pos' : r < 0 ? 'neg' : '' }, last != null && num(t.stop) ? fmtPctSigned(t.stop / last - 1, 1) : 'n.d.', fmtMoney(num(t.margin), ccy), fmtMoney(num(t.risk), ccy),
             { v: age.held == null ? 'n.d.' : `${fmtNum(age.held, 0)}${age.maxHold == null ? '' : ` di ${fmtNum(age.maxHold, 0)}`}${age.over ? ' · oltre il massimo' : ''}`, cls: age.over ? 'neg' : '' }, ...(full ? [`${num(t.mae) == null ? 'n.d.' : fmtSigned(t.mae, 2)} / ${num(t.mfe) == null ? 'n.d.' : fmtSigned(t.mfe, 2)}`, str(t.tier) || 'n.d.'] : [])] };
-        }), (r) => { select(r.sym); focusTrade(r.trade); }));
+        }), (r) => { select(r.sym); rangeSeg.set('trade'); focusTrade(r.trade); }));
       }
       const margin = open.reduce((a, t) => a + (num(t.margin) || 0), 0);
       const risk = open.reduce((a, t) => a + (num(t.risk) || 0), 0);
@@ -223,7 +234,7 @@ export function mount(root, api) {
       const day = (v) => { const t = parseTs(str(v)); return t == null ? 'n.d.' : fmtDayMonth(t, true); };
       bookBox.replaceChildren(table('Trade chiusi', head, closed.map((t) => ({ sym: str(t.symbol), trade: t, cells: [h('b', { text: str(t.symbol) }), day(t.opened), day(t.closed), px(num(t.entry)), px(num(t.exit)), `${fmtNum(t.leverage, 1)}x`,
         { v: num(t.R) == null ? 'n.d.' : `${fmtSigned(t.R, 2)} R`, cls: t.R > 0 ? 'pos' : t.R < 0 ? 'neg' : '' }, { v: fmtMoney(num(t.pnl), ccy, { signed: true }), cls: t.pnl > 0 ? 'pos' : t.pnl < 0 ? 'neg' : '' }, str(t.why) || 'n.d.', ...(full ? [str(t.tier) || 'n.d.'] : [])] })),
-      (r) => { select(r.sym); focusTrade(r.trade); }));
+      (r) => { select(r.sym); rangeSeg.set('trade'); focusTrade(r.trade); }));
       const rs = closed.map((t) => num(t.R)).filter((v) => v != null);
       pBook.setFoot(`${fmtNum(closed.length, 0)} chiusi · vinti ${fmtNum(rs.filter((v) => v > 0).length, 0)} · R medio ${rs.length ? fmtSigned(rs.reduce((a, b) => a + b, 0) / rs.length, 2) : 'n.d.'}${rs.length < 30 ? ` · n = ${fmtNum(rs.length, 0)}: troppo pochi per una statistica` : ''}`);
     } else {
@@ -256,11 +267,8 @@ export function mount(root, api) {
       rangeSeg.set(r.value);
       chart.setRange(r.value || null);
     } else if (e.key === '[' || e.key === ']') {
-      const mine = [...closedTrades(), ...openTrades()].filter((x) => str(x.symbol) === sel);
-      if (!mine.length) return;
       e.preventDefault();
-      tradeIdx = tradeIdx < 0 ? mine.length - 1 : Math.max(0, Math.min(mine.length - 1, tradeIdx + (e.key === ']' ? 1 : -1)));
-      focusTrade(mine[tradeIdx]);
+      stepTrade(tradeIdx < 0 ? 0 : e.key === ']' ? 1 : -1);
     }
   }
   document.addEventListener('keydown', onKey);

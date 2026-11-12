@@ -119,16 +119,17 @@ export function mount(root) {
   pCand.body.append(candFacts, candBox);
 
   // ---- 9. leva per trade ----
-  const pLev = panel({ title: 'Quanta leva regge un singolo trade?', eyebrow: 'Leva per trade', span: 7, cls: 'not-semplice', id: 'leva',
+  const pLev = panel({ title: 'Quanta leva regge un singolo trade?', eyebrow: 'Leva per trade', span: 8, cls: 'not-semplice', id: 'leva',
     what: 'Per ogni distanza dello stop: la leva che ne deriva, quanti trade nella storia, quanto rende in media un trade in R (1 R = ciò che rischiava), lo stesso sul periodo di verifica, e quanto pesano i costi. Più lo stop è stretto, più la leva è alta e più i costi mangiano il risultato.' });
   const levBox = h('div');
   pLev.body.append(levBox);
   const liqSeg = segmented({ label: 'Finestra senza stop', options: [{ value: 'p_liq_1h', label: '1 ora' }, { value: 'p_liq_4h', label: '4 ore' }, { value: 'p_liq_24h', label: '24 ore' }], value: liqWin, onChange: (v) => { liqWin = v; paintStress(); } });
-  const pStress = panel({ title: 'E se lo stop non viene eseguito?', eyebrow: 'Stress della leva', span: 5, cls: 'not-semplice', tools: liqSeg.el, id: 'stress-leva',
+  const pStress = panel({ title: 'E se lo stop non viene eseguito?', eyebrow: 'Stress della leva', span: 4, cls: 'not-semplice', tools: liqSeg.el, id: 'stress-leva',
     what: 'Se la sede non risponde e lo stop resta ineseguito per la finestra scelta, questa è la probabilità storica che il prezzo arrivi fino alla liquidazione, per moneta e per leva. È il motivo per cui la leva del trade ha un tetto.' });
   const stressPlot = plot();
   const stressLegend = h('div');
-  pStress.body.append(stressPlot.el, stressLegend);
+  const stressTable = h('div');
+  pStress.body.append(stressPlot.el, stressLegend, stressTable);
   const stressChart = timeChart(stressPlot.host, { label: 'Probabilità di liquidazione senza stop, per leva' });
   const tierSeg = segmented({ label: 'Scenario', options: [...SCEN.slice(0, 2), { value: 'verifica', label: 'Verifica' }, SCEN[2]], value: tierScen, onChange: (v) => { tierScen = v; paintTier(); } });
   const pTier = panel({ title: 'Quanto rischiare per trade?', eyebrow: 'Schemi di rischio', span: 12, cls: 'not-semplice', tools: tierSeg.el, id: 'schemi',
@@ -157,15 +158,16 @@ export function mount(root) {
     if (!L) { vTitle.textContent = ctxNow.quant4Status === 'loading' ? 'Ricerca in lettura…' : 'Ricerca non disponibile.'; vText.textContent = 'Senza il file della ricerca il verdetto non si può formulare.'; }
     else {
       vTitle.textContent = L.pass ? 'Regge all\'esame delle prove.' : 'Promettente, non provato.';
-      vText.replaceChildren(`Il vantaggio viene da simulazioni sulla storia: dopo ${fmtNum(L.trials, 0)} prove contate, la probabilità che sia vero (Deflated Sharpe) sta tra ${fmtNum(L.lo, 2)} e ${fmtNum(L.hi, 2)}, `,
+      vText.replaceChildren(`Il vantaggio viene da simulazioni sulla storia. Dopo ${fmtNum(L.trials, 0)} prove contate, la probabilità che sia vero (Deflated Sharpe) sta tra ${fmtNum(L.lo, 2)} e ${fmtNum(L.hi, 2)}: `,
         h('b', { text: L.pass ? `sopra la soglia di ${fmtNum(L.threshold, 2)}` : `sotto la soglia di ${fmtNum(L.threshold, 2)}` }), '. ',
-        pd.paper != null ? `Il paper è al giorno ${fmtNum(pd.paper, 0)}${pd.paperTarget ? ` di ${fmtNum(pd.paperTarget, 0)}` : ''}${demo ? ' (dati di esempio)' : ''}: serve a scoprire se il sistema non replica le simulazioni, non a provare il vantaggio. ` : '',
-        'Denaro reale: nessun giorno. «Track record» vale solo per il reale.');
+        pd.paper != null ? `Il paper è al giorno ${fmtNum(pd.paper, 0)}${pd.paperTarget ? ` di ${fmtNum(pd.paperTarget, 0)}` : ''}${demo ? ' (dati di esempio)' : ''}: può smentire le simulazioni, non provarle. ` : '',
+        'Nessun giorno con denaro reale.');
     }
+    const span = Object.values(obj(q4().fund_curves)).find((c) => Array.isArray(c) && c.length > 1);
     vDays.replaceChildren(
-      statWell('Giorni simulati', pd.sim == null ? 'n.d.' : fmtNum(pd.sim, 0), [provTag('sim'), gen == null ? '' : `ricerca del ${fmtDate(gen, true)}`]),
-      statWell('Giorni di paper', pd.paper == null ? 'n.d.' : fmtNum(pd.paper, 0), [provTag(demo ? 'demo' : 'paper'), pd.paperTarget ? `su ${fmtNum(pd.paperTarget, 0)} richiesti` : '']),
-      statWell('Giorni reali', fmtNum(pd.real || 0, 0), [provTag('real'), 'nessun denaro vero']));
+      statWell('Storia simulata', pd.sim == null ? 'n.d.' : [fmtNum(pd.sim, 0), h('span', { class: 'sp-unit', text: 'giorni' })], [provTag('sim'), h('span', { class: 'sp-well__note', text: span ? `ricerca ${str(span[0][0]).slice(0, 4)}–${str(span[span.length - 1][0]).slice(0, 4)}${gen == null ? '' : `, del ${fmtDate(gen, true)}`}` : '' })]),
+      statWell('Paper', pd.paper == null ? 'n.d.' : [fmtNum(pd.paper, 0), h('span', { class: 'sp-unit', text: 'giorni' })], [provTag(demo ? 'demo' : 'paper'), h('span', { class: 'sp-well__note', text: pd.paperTarget ? `su ${fmtNum(pd.paperTarget, 0)} richiesti dai cancelli` : '' })]),
+      statWell('Denaro reale', [fmtNum(pd.real || 0, 0), h('span', { class: 'sp-unit', text: 'giorni' })], [provTag('real'), h('span', { class: 'sp-well__note', text: '«track record» vale solo qui' })]));
   }
 
   function paintCurves() {
@@ -238,7 +240,7 @@ export function mount(root) {
     pCone.setAsk(c.pctNow == null ? 'Il paper è appena partito: per ora si vede solo ciò che le simulazioni si aspettano.' : c.pctNow > 0.05 && c.pctNow < 0.95 ? 'La fascia è ciò che le simulazioni considerano normale; la linea piena è il conto. Per ora è dentro: tutto come previsto.' : 'Il conto è fuori da ciò che le simulazioni consideravano normale: da guardare.');
     const every = c.horizon > 18 ? 6 : c.horizon > 6 ? 3 : 1;
     coneChart.update({
-      x: c.x, height: ctxNow.lv === 'terminale' ? 170 : 220, xHead: 'Mese', xFormat: (m) => `mese ${fmtNum(m, 1)}`,
+      x: c.x, height: ctxNow.lv === 'terminale' ? 170 : ctxNow.lv === 'semplice' ? 250 : 220, xHead: 'Mese', xFormat: (m) => `mese ${fmtNum(m, 1)}`,
       xTicks: Array.from({ length: Math.floor(c.horizon / every) + 1 }, (_, i) => ({ t: i * every, label: i === 0 ? 'avvio' : `${i * every} m` })),
       bands: [{ lo: c.p05, hi: c.p95, name: '5°–95° percentile' }, { lo: c.p25, hi: c.p75, name: '25°–75° percentile' }],
       lines: [{ values: c.p50, cls: 'median', name: 'Mediana simulata' }, { values: c.path, cls: demo ? 'paper demo' : 'paper', name: demo ? 'Conto (esempio)' : 'Conto in paper' }],
@@ -271,7 +273,7 @@ export function mount(root) {
       edges: e, counts: cts, reverse: true, height: ctxNow.lv === 'terminale' ? 130 : 170, unit: 'Percorsi', xFormat: (v) => (v === 0 ? '0' : fmtPct(v, 0)), xTitle: 'caduta massima dal picco →',
       zones: [{ from: 0, to: steps.length ? steps[0] : e[0], kind: 'safe' }, ...steps.map((lv, i) => ({ from: lv, to: i + 1 < steps.length ? steps[i + 1] : e[0], kind: kinds[Math.min(i, 2)] }))],
       refs: [
-        num(dd.p50) != null ? { value: dd.p50, label: `mediana ${fmtPct(dd.p50, 0)}`, cls: 'soft' } : null,
+        num(dd.p50) != null ? { value: dd.p50, label: `mediana ${fmtPct(dd.p50, 0)}`, cls: 'soft', side: 'left' } : null,
         ...steps.map((lv, i) => ({ value: lv, label: fmtPct(lv, 0), sub: prob(lv, i) == null ? 'quota n.d.' : `${fmtPct(prob(lv, i), prob(lv, i) < 0.1 ? 1 : 0)} oltre`, cls: kinds[Math.min(i, 2)] })),
       ].filter(Boolean),
     });
@@ -327,8 +329,8 @@ export function mount(root) {
       });
     }
     const need = c.need10;
-    cmpNeed.replaceChildren(need == null ? '' : meterRow({ name: 'Giorni osservati', sub: 'su quelli necessari', value: c.n, cap: need, scale: need, state: 'none',
-      text: `${fmtNum(c.n, 0)} su ~${fmtNum(need, 0)} per vedere una differenza di Sharpe di 1,0${c.need05 == null ? '' : ` (${fmtNum(c.need05, 0)} per 0,5)`}` }));
+    cmpNeed.replaceChildren(...(need == null ? [] : [meterRow({ name: 'Giorni osservati', sub: 'su quelli necessari', value: c.n, cap: need, scale: need, state: 'none', text: `${fmtNum(c.n, 0)} su ~${fmtNum(need, 0)}` }),
+      h('p', { class: 'panel__ask', text: `Per distinguere dal caso una differenza di Sharpe di 1,0 servono circa ${fmtNum(need, 0)} giorni comuni${c.need05 == null ? '' : ` (${fmtNum(c.need05, 0)} per una differenza di 0,5)`}: con ${fmtNum(c.n, 0)} giorni qualunque distacco è rumore.` })]));
     pCmp.setFoot(legendRow([[demo ? 'fund-demo' : 'fund', 'nuovo sistema'], [demo ? 'orig-demo' : 'orig', 'sistema originale'], ['band', `imbuto ±${fmtNum(c.zWin, 1)} errori standard × √giorni`]]),
       h('span', { class: 'not-semplice', text: `Formula di research/v5/v6/b8_confronto/confronto.py: solo giorni comuni, versamenti tolti${c.fxApplied ? ', cambio applicato' : ''}. z oltre la soglia esce per caso circa una volta su dieci: è una regola di decisione, non una prova.` }));
   }
@@ -350,8 +352,7 @@ export function mount(root) {
     const E = 'is-num not-semplice';
     profBox.replaceChildren(simpleTable('Profili del fondo: statistiche simulate e Monte Carlo', [
       { label: 'Profilo', cell: (s) => h('span', { class: 'sp-name' }, short(s.portafoglio), str(s.portafoglio) === str(rec.prudent) ? stateChip('accent', 'prudente', { iconName: 'check' }) : str(s.portafoglio) === str(rec.maximum) ? stateChip('muted', 'massimo') : null) },
-      { label: 'Sharpe', cls: E, cell: (s) => n2(s.sharpe) },
-      { label: 'Scelta', cls: E, cell: (s) => n2(s.sh_scelta) },
+      { label: 'Sharpe scelta', cls: E, cell: (s) => n2(s.sh_scelta) },
       { label: 'Verifica', cls: `${E} sp-split`, cell: (s) => h('b', { text: n2(s.sh_verifica) || 'n.d.' }) },
       { label: 'Rend. annuo', cls: 'is-num', cell: (s) => ps(s.cagr, 1) },
       { label: 'Volatilità', cls: E, cell: (s) => pc(s.vol, 1) },
@@ -359,9 +360,8 @@ export function mount(root) {
       { label: 'Mese medio', cls: 'is-num', cell: (s) => ps(s.mese_medio, 2) },
       { label: 'Mese mediano', cls: 'is-num', cell: (s) => h('b', { text: ps(s.mese_mediano, 2) || 'n.d.' }) },
       { label: 'Mediano ○ medio ●', cls: 'sp-mmcol', cell: mm },
-      { label: 'Mesi negativi', cls: E, cell: (s) => pc(s.mesi_negativi, 0) },
-      { label: 'MC: rend. 5°·50°·95°', cls: E, cell: (s) => (num(m(s).cagr_p50) == null ? null : `${ps(m(s).cagr_p05, 0)} · ${ps(m(s).cagr_p50, 0)} · ${ps(m(s).cagr_p95, 0)}`) },
-      { label: 'MC: caduta 50°·95°', cls: E, cell: (s) => (num(m(s).dd_p50) == null ? null : `${ps(m(s).dd_p50, 0)} · ${ps(m(s).dd_p95, 0)}`) },
+      { label: 'MC: rend. annuo 5° · 50° · 95°', cls: E, cell: (s) => (num(m(s).cagr_p50) == null ? null : `${ps(m(s).cagr_p05, 0)} · ${ps(m(s).cagr_p50, 0)} · ${ps(m(s).cagr_p95, 0)}`) },
+      { label: 'MC: caduta al 95°', cls: E, cell: (s) => ps(m(s).dd_p95, 0) },
       { label: 'P(−30%)', cls: E, cell: (s) => pc(m(s).p_meno30, 1) },
     ], stats, { mark: (s) => str(s.portafoglio) === str(rec.prudent) }));
     const dec = obj(q4().decomposition);
@@ -397,7 +397,6 @@ export function mount(root) {
     const rows = arr(q4().stop_table);
     if (!rows.length) { levBox.replaceChildren(missing('Tabella della leva per trade')); pLev.setProv(); return; }
     pLev.setProv(provTag('sim'));
-    const open = Object.values(obj(obj(ctxNow.tb).open)).filter((t) => t && typeof t === 'object');
     const inUse = (r) => /^1\.0 x ATR$/i.test(str(r.label));
     const retired = (r) => /ritirat/i.test(str(r.note));
     levBox.replaceChildren(simpleTable('Stop, leva e R medio per operazione', [
@@ -412,14 +411,14 @@ export function mount(root) {
       { label: 'Serie perdente', cls: 'is-num', cell: (r) => (num(r.max_losing_streak) == null ? null : fmtNum(r.max_losing_streak, 0)) },
     ], rows, { mark: inUse }));
     const notes = rows.filter((r) => str(r.note)).map((r) => `${str(r.label).replace('.', ',')}: ${str(r.note)}`);
-    pLev.setFoot(`Trade simulati su BTC, ETH e SOL; R al netto di commissioni e funding. ${notes.join(' ')}${open.length ? '' : ''}`);
+    pLev.setFoot(`Trade simulati su BTC, ETH e SOL; R al netto di commissioni e funding. ${notes.join(' ')}`);
   }
 
   function paintStress() {
     const all = arr(q4().stress);
     const coins = [...new Set(all.map((r) => str(r.coin)))];
     const levs = [...new Set(all.map((r) => num(r.leverage)))].filter((v) => v != null).sort((a, b) => a - b);
-    if (!coins.length || levs.length < 2) { stressPlot.el.hidden = true; stressLegend.replaceChildren(missing('Analisi di stress della leva')); pStress.setProv(); return; }
+    if (!coins.length || levs.length < 2) { stressPlot.el.hidden = true; stressLegend.replaceChildren(missing('Analisi di stress della leva')); stressTable.replaceChildren(); pStress.setProv(); return; }
     stressPlot.el.hidden = false;
     pStress.setProv(provTag('sim'));
     stressPlot.setTags(provTag('sim'));
@@ -427,10 +426,13 @@ export function mount(root) {
     const series = coins.map((c, i) => ({ name: c, cls: `${cls[i % 4]} sim`, key: `${cls[i % 4]}-sim`, values: levs.map((lv) => { const r = all.find((x) => str(x.coin) === c && num(x.leverage) === lv); return r ? num(r[liqWin]) : null; }), end: true, dots: true }));
     stressChart.update({
       x: levs, xHead: 'Leva', xFormat: (v) => `${fmtNum(v, 0)}×`, xTicks: levs.map((v) => ({ t: v, label: `${fmtNum(v, 0)}×` })),
-      panels: [{ height: 200, bottom: 0, series, format: (v) => fmtPct(v, v < 0.1 ? 1 : 0) }],
+      panels: [{ height: 170, bottom: 0, series, format: (v) => fmtPct(v, v < 0.1 ? 1 : 0) }],
       tip: (i) => ({ title: `Leva ${fmtNum(levs[i], 0)}×`, rows: series.map((sr) => ({ key: sr.key, label: sr.name, value: sr.values[i] == null ? '—' : fmtPct(sr.values[i], 2) })) }),
     });
     stressLegend.replaceChildren(legendRow(series.map((sr) => [sr.key, sr.name])));
+    stressTable.replaceChildren(simpleTable('Probabilità di liquidazione senza stop, per leva e moneta', [
+      { label: 'Leva', cell: (i) => `${fmtNum(levs[i], 0)}×` }, ...series.map((sr) => ({ label: sr.name, cls: 'is-num', cell: (i) => (sr.values[i] == null ? null : fmtPct(sr.values[i], sr.values[i] < 0.1 ? 1 : 0)) })),
+    ], levs.map((_, i) => i)));
     pStress.setFoot('Quota storica dei casi in cui, senza stop, il prezzo raggiunge la liquidazione entro la finestra. Fonte: quant_v4.json (stress).');
   }
 
@@ -454,6 +456,7 @@ export function mount(root) {
   function paintVenues() {
     const rows = arr(q4().venues);
     if (!rows.length) { venuesBox.replaceChildren(missing('Tabella delle sedi')); return; }
+    pVenues.setProv(h('span', { class: 'tag tag--wait', text: 'Documentale' }));
     venuesBox.replaceChildren(simpleTable('Sedi di negoziazione valutate', [
       { label: 'Sede', cell: (r) => h('b', { text: str(r.venue) }) }, { label: 'Stato legale', cls: 'is-wrap', cell: (r) => str(r.legal) }, { label: 'Leva massima', cell: (r) => str(r.max_leverage) },
       { label: 'Commissioni', cell: (r) => str(r.fees) }, { label: 'Rischio proprio', cls: 'is-wrap', cell: (r) => str(r.risk) }, { label: 'Ruolo nel fondo', cls: 'is-wrap', cell: (r) => str(r.role) },
