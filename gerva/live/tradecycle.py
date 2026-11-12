@@ -23,6 +23,7 @@ from dataclasses import asdict
 import pandas as pd
 
 from .. import ensemble as E
+from .. import gervasoni as GV
 from ..risk.isolated import BookLimits, Trade, TradeBook
 
 FEE = 0.00065            # per lato: 4,5 pb taker + 2 pb slippage
@@ -31,7 +32,7 @@ MAX_HOLD = 7
 
 
 def empty_state(equity: float) -> dict:
-    return dict(asof=None, equity=equity, open={}, closed=[], log=[])
+    return dict(asof=None, equity=equity, open={}, closed=[], log=[], shadow=[])
 
 
 def load_state(path: str, equity: float) -> dict:
@@ -120,6 +121,15 @@ def step(bars: dict[str, pd.DataFrame], state: dict, venue_max_leverage: float, 
                               f"margine {d.trade.margin:.2f}, stop {d.trade.stop:.4g}")
             elif score is not None and score > 0.60:
                 events.append(f"rifiutato {sym}: {d.reason}")
+    # indicatore Gervasoni in OMBRA: si registra accanto alla conviction, non decide nulla
+    shadow = {}
+    for sym, b in bars.items():
+        if "volume" in b.columns and len(b) >= 150 and str(b.index[-1].date()) == day:
+            g = GV.gq(b, b["volume"], bars["BTC"]["close"]).iloc[-1]
+            score, tier_c = _conviction(bars, sym, funding)
+            shadow[sym] = dict(gq=None if g != g else round(float(g), 4), gq_tier=GV.tier(g), conviction=score, conviction_tier=tier_c,
+                               close=float(b["close"].iloc[-1]))
+    state["shadow"] = (state.get("shadow", []) + [dict(day=day, coins=shadow)])[-800:]
     opened_map = {s: state["open"].get(s, {}).get("opened", day) for s in book.open}
     state["open"] = {s: dict(asdict(t), opened=opened_map[s]) for s, t in book.open.items()}
     state["asof"] = day

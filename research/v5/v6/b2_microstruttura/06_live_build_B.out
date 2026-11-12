@@ -1,42 +1,42 @@
-hl_bbo 52277
-hl_l2 718
-hl_l2f 10807
-hl_tr 13617
-bn_bt 73501
-bn_d5 55829
-bn_tr 71514
-sp_bt 50344
-kr_tk 10665
-kr_tr 5292
-bn_liq 39
-inizio 2026-11-11 23:21:35.620267352 fine 2026-11-11 23:53:55.668495055 celle 19400 ore 0.54
-BTC (19400, 48) NaN%: {'hl_bid': 0.01, 'bn_bid': 0.0, 'kr_bid': 0.0, 'krt_bid': 0.02}
-ETH (19400, 48) NaN%: {'hl_bid': 0.01, 'bn_bid': 0.0, 'kr_bid': 0.0, 'krt_bid': 0.02}
-SOL (19400, 48) NaN%: {'hl_bid': 0.01, 'bn_bid': 0.0, 'kr_bid': 0.0, 'krt_bid': 0.02}
+hl_bbo 102812
+hl_l2 1482
+hl_l2f 22187
+hl_tr 26316
+bn_bt 140512
+bn_d5 114125
+bn_tr 132972
+sp_bt 94084
+kr_tk 19426
+kr_tr 10607
+bn_liq 83
+inizio 2026-11-11 23:21:35.620267352 fine 2026-11-12 00:28:20.284455152 celle 40046 ore 1.11
+BTC (40046, 48) NaN%: {'hl_bid': 0.0, 'bn_bid': 0.0, 'kr_bid': 0.0, 'krt_bid': 0.01}
+ETH (40046, 48) NaN%: {'hl_bid': 0.0, 'bn_bid': 0.0, 'kr_bid': 0.0, 'krt_bid': 0.01}
+SOL (40046, 48) NaN%: {'hl_bid': 0.0, 'bn_bid': 0.0, 'kr_bid': 0.0, 'krt_bid': 0.01}
 
 LATENZA osservata = ora di ricezione locale - timestamp dello exchange (ms). Include lo scarto dell'orologio locale (non sincronizzato via NTP: vedi REPORT).
-hl_bbo  BTC: n=  17723 p5=    290 mediana=    358 p95=    602 p99=    715
-hl_l2   BTC: n=    238 p5=    378 mediana=    436 p95=    649 p99=    703
-hl_l2f  BTC: n=   3580 p5=    332 mediana=    393 p95=    618 p99=    713
-hl_tr   BTC: n=   6534 p5=    302 mediana=    387 p95=    651 p99=    792
-bn_bt   BTC: n=  26074 p5=     91 mediana=     94 p95=    200 p99=    336
-bn_tr   BTC: n=  31402 p5=     91 mediana=     94 p95=    241 p99=    284
-kr_tk   BTC: n=   4378 p5=     61 mediana=    137 p95=    657 p99=    963
-kr_tr   BTC: n=   3285 p5=     55 mediana=     61 p95=    143 p99=    210
-hl_bbo  ETH: n=  18585 p5=    290 mediana=    357 p95=    602 p99=    715
-hl_l2   ETH: n=    238 p5=    380 mediana=    436 p95=    649 p99=    703
-hl_l2f  ETH: n=   3580 p5=    332 mediana=    393 p95=    618 p99=    713
-hl_tr   ETH: n=   3778 p5=    299 mediana=    404 p95=    699 p99=    826
-bn_bt   ETH: n=  31254 p5=     91 mediana=     94 p95=    190 p99=    320
-bn_tr   ETH: n=  34289 p5=     91 mediana=     94 p95=    241 p99=    315
-kr_tk   ETH: n=   3394 p5=     58 mediana=    100 p95=    492 p99=    952
-kr_tr   ETH: n=   1397 p5=     56 mediana=     63 p95=    131 p99=    220
-hl_bbo  SOL: n=  15704 p5=    291 mediana=    359 p95=    604 p99=    716
-hl_l2   SOL: n=    238 p5=    380 mediana=    436 p95=    649 p99=    705
-hl_l2f  SOL: n=   3580 p5=    332 mediana=    393 p95=    618 p99=    713
-hl_tr   SOL: n=   3133 p5=    299 mediana=    402 p95=    620 p99=    765
-bn_bt   SOL: n=  15712 p5=     91 mediana=     93 p95=    151 p99=    304
-bn_tr   SOL: n=   5703 p5=     95 mediana=    240 p95=    242 p99=    360
-kr_tk   SOL: n=   2837 p5=     60 mediana=    120 p95=    528 p99=    830
-kr_tr   SOL: n=    604 p5=     55 mediana=     60 p95=     96 p99=    288
-alt: ore 0.55 monete 20
+hl_bbo  BTC: n=  34708 p5=    291 mediana=    356 p95=    603 p99=    729
+hl_l2   BTC: n=    492 p5=    362 mediana=    427 p95=    653 p99=    744
+hl_l2f  BTC: n=   7386 p5=    331 mediana=    392 p95=    609 p99=    718
+hl_tr   BTC: n=  12972 p5=    301 mediana=    386 p95=    691 p99=    812
+bn_bt   BTC: n=  49573 p5=     90 mediana=     94 p95=    185 p99=    316
+bn_tr   BTC: n=  58899 p5=     91 mediana=     95 p95=    241 p99=    284
+kr_tk   BTC: n=   7831 p5=     61 mediana=    144 p95=    693 p99=    964
+kr_tr   BTC: n=   6573 p5=     55 mediana=     61 p95=    125 p99=    210
+hl_bbo  ETH: n=  36659 p5=    290 mediana=    354 p95=    601 p99=    727
+hl_l2   ETH: n=    492 p5=    362 mediana=    428 p95=    650 p99=    735
+hl_l2f  ETH: n=   7385 p5=    331 mediana=    392 p95=    609 p99=    718
+hl_tr   ETH: n=   7465 p5=    299 mediana=    396 p95=    689 p99=    963
+bn_bt   ETH: n=  59086 p5=     90 mediana=     94 p95=    158 p99=    296
+bn_tr   ETH: n=  61696 p5=     91 mediana=     94 p95=    241 p99=    290
+kr_tk   ETH: n=   6308 p5=     60 mediana=    117 p95=    585 p99=    914
+kr_tr   ETH: n=   2808 p5=     55 mediana=     63 p95=    112 p99=    221
+hl_bbo  SOL: n=  31075 p5=    291 mediana=    356 p95=    604 p99=    731
+hl_l2   SOL: n=    491 p5=    362 mediana=    428 p95=    651 p99=    736
+hl_l2f  SOL: n=   7385 p5=    331 mediana=    392 p95=    609 p99=    718
+hl_tr   SOL: n=   5765 p5=    299 mediana=    395 p95=    639 p99=   1042
+bn_bt   SOL: n=  31621 p5=     90 mediana=     93 p95=    127 p99=    270
+bn_tr   SOL: n=  12220 p5=     95 mediana=    240 p95=    242 p99=    321
+kr_tk   SOL: n=   5254 p5=     61 mediana=    135 p95=    586 p99=    877
+kr_tr   SOL: n=   1218 p5=     54 mediana=     59 p95=     89 p99=    264
+alt: ore 1.11 monete 20

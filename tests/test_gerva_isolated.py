@@ -39,16 +39,15 @@ def test_confirmed_trade_numbers():
     assert t.margin <= 2.0 * t.risk                       # il massimo che si puo' perdere resta vicino al rischio dichiarato
 
 
-def test_exceptional_tight_is_30x_with_smaller_risk():
+def test_30x_tier_is_retired():
     d = book().propose("ETH", 1, 100.0, 0.05, 0.9, 10_000, 50, tight=True)
-    assert d.ok and d.trade.leverage == pytest.approx(30, abs=0.2)
-    assert d.trade.risk == pytest.approx(50.0)            # 0,5%: piu' leva, MENO rischio
+    assert d.ok and d.trade.tier == "eccezionale" and d.trade.leverage <= 15.0
+    assert d.trade.risk == pytest.approx(200.0)           # resta il livello eccezionale normale: 2%, stop a 1 x ATR
 
 
 def test_venue_cap_and_hard_cap_bind():
     assert book().propose("BTC", 1, 100.0, 0.05, 0.9, 10_000, 2).trade.leverage == 2          # sede a 2x: 2x
-    b = TradeBook(BookLimits(exceptional_tight=BookLimits().exceptional_tight.__class__("x", 0.005, None, 0.004, 100.0, None)))
-    assert b.propose("BTC", 1, 100.0, 0.05, 0.9, 10_000, 100, tight=True).trade.leverage <= 30
+    assert book().propose("BTC", 1, 100.0, 0.01, 0.9, 10_000, 100).trade.leverage <= 15       # stop stretto, sede a 100x: mai oltre 15
 
 
 def test_ai_can_only_reduce():

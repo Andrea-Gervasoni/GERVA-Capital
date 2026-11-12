@@ -110,7 +110,7 @@ def main(argv=None) -> int:
         st = Store(os.environ.get("GERVA_CACHE") or os.path.join(ROOT, "data_cache"))
         bars = {}
         for c in ("BTC", "ETH", "SOL"):
-            rec = binance_recent(c + "USDT", "1d", 400)[["open", "high", "low", "close"]]
+            rec = binance_recent(c + "USDT", "1d", 400)[["open", "high", "low", "close", "volume"]]
             now = pd.Timestamp.now(tz="UTC").tz_localize(None).normalize()
             bars[c] = rec[rec.index < now]                      # solo barre chiuse
         path = os.path.join(s.home, "tradebook.json")
@@ -133,7 +133,8 @@ def main(argv=None) -> int:
         state = TC.step(bars, TC.load_state(path, s.start_cash), a.venue_max_leverage, engine_scale=scale, funding=funding)
         print(f"scala del motore di rischio: {scale} (0 = nessun nuovo trade; serve una fotografia recente del ciclo principale)")
         TC.save_state(path, state)
-        print(json.dumps(dict(riepilogo=TC.summary(state), aperti=state["open"], ultimo=state["log"][-1] if state["log"] else None),
+        print(json.dumps(dict(riepilogo=TC.summary(state), aperti=state["open"], ultimo=state["log"][-1] if state["log"] else None,
+                              indicatore_gervasoni_in_ombra=(state.get("shadow") or [None])[-1]),
                          indent=1, ensure_ascii=False, default=str))
         print("PAPER: nessun ordine inviato a una sede.")
         return 0

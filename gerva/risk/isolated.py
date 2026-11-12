@@ -13,7 +13,7 @@ La leva quindi NON e' una scelta libera: discende dalla distanza dello stop. Sto
 stop all'1,7% -> 30x; stop allo 0,9% -> 50x. Che cosa dicono i dati:
 
     stop 1 x ATR, ~11x : R medio +0,24 (verifica +0,18), 43% di trade vincenti          -> livello CONFERMATO
-    stop 1,7%,    30x  : R medio +0,36 (verifica +0,20), 18% vincenti, 29 perdite di fila -> solo setup ECCEZIONALI
+    stop 1,7%,    30x  : R medio +0,36 su prezzi spot; sui perpetual veri +0,10 in verifica     -> RITIRATO (quinta tornata)
     stop 0,9%,    50x  : R medio +0,18 (verifica +0,13),  9% vincenti, 53 perdite di fila -> NON sostenuta
     stop 0,4%,    50x  : R medio negativo: i costi valgono un terzo dello stop            -> NON sostenuta
 
@@ -47,7 +47,10 @@ class BookLimits:
     """Limiti dell'insieme dei trade aperti. Valori della ricerca v4, schema S2 (1% / 2%)."""
     confirmed: Tier = Tier("confermato", 0.010, 1.0, None, 15.0, 2.0)
     exceptional: Tier = Tier("eccezionale", 0.020, 1.0, None, 15.0, 2.0)
-    exceptional_tight: Tier = Tier("eccezionale-30x", 0.005, None, 0.017, 30.0, None)
+    # Il livello a 30x (stop 1,7%, rischio 0,5%) e' RITIRATO: sui prezzi veri dei perpetual il suo R in verifica si dimezza
+    # (+0,20 -> +0,10) e con il funding di Hyperliquid scende a +0,08, non distinguibile da zero
+    # (research/v5/v5/a9_esecuzione). Il campo resta per poterlo riprovare in paper, ma `propose` non lo usa piu'.
+    exceptional_tight: Tier = Tier("eccezionale-30x (ritirato)", 0.005, None, 0.017, 30.0, None)
     max_open_risk: float = 0.06        # somma dei rischi dei trade aperti
     max_margin: float = 0.15           # somma dei margini isolati = PERDITA MASSIMA del libro in un solo evento (gap, sede
                                        # irraggiungibile). Se la sede concede meno leva di quella 'sicura' il margine per trade
@@ -56,7 +59,7 @@ class BookLimits:
     max_trades: int = 4
     day_stop_new: float = -0.03        # perdita di giornata oltre la quale non si aprono trade
     day_close_all: float = -0.05       # perdita di giornata oltre la quale si chiude tutto fino a domani
-    hard_max_leverage: float = 30.0    # nessun trade oltre, qualunque cosa dica la sede o la configurazione
+    hard_max_leverage: float = 15.0    # nessun trade oltre, qualunque cosa dica la sede o la configurazione (era 30: ritirato)
     hard_max_risk: float = 0.02        # nessun trade rischia oltre, qualunque sia il livello
 
 
@@ -98,7 +101,7 @@ def tier_for(score: float | None, limits: BookLimits, tight: bool = False) -> Ti
     if score is None or score != score or score <= SCORE_CONFIRMED:
         return None
     if score > SCORE_EXCEPTIONAL:
-        return limits.exceptional_tight if tight else limits.exceptional
+        return limits.exceptional          # `tight` e' ignorato: il livello a 30x e' ritirato
     return limits.confirmed
 
 
