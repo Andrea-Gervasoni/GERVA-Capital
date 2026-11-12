@@ -40,19 +40,36 @@ export function mount(root, api) {
   const rangeSeg = segmented({ label: 'Intervallo', options: RANGES, value: months, onChange: (v) => { months = v; chart.setRange(v || null); } });
   const logBtn = h('button', { class: 'btn btn--sm btn--ghost not-semplice', type: 'button', 'aria-pressed': 'false' }, 'Log');
   const ovBox = h('div', { class: 'ovs not-semplice', role: 'group', 'aria-label': 'Sovrapposizioni' });
+  const paneBox = h('div', { class: 'ovs not-semplice', role: 'group', 'aria-label': 'Riquadri sotto il prezzo' });
+  const legendBox = h('div', { class: 'legend mk-legend' });
+  const panesOn = new Set(PANES.map((p) => p.id));
   const pChart = panel({ title: 'Dov\'è il prezzo rispetto ai livelli del trade?', eyebrow: 'Grafico', span: 9, id: 'grafico', tools: [rangeSeg.el, logBtn],
     ask: 'Ogni candela è un giorno: vuota se ha chiuso in rialzo, piena se in ribasso. Le righe piene sono i livelli del trade aperto (entrata, stop, liquidazione); la fascia chiara tra entrata e stop vale 1 R, il rischio preso.',
     what: 'Sotto il prezzo: il volume, poi la conviction del motore (a gradini, con le soglie in cui il libro dei trade può aprire) e l\'indicatore Gervasoni, che per ora è solo osservato («in ombra»). Le medie a 50 e 200 giorni e il VWAP del mese sono le stesse grandezze che usano le strategie.' });
   const chartHost = h('div', { class: 'mk-chart' });
   const chartNote = h('p', { class: 'panel__ask' });
-  pChart.body.append(ovBox, chartHost, chartNote);
+  pChart.body.append(ovBox, paneBox, legendBox, chartHost, chartNote);
   const chart = candleChart(chartHost, { label: 'Grafico a candele', panes: ['conv'], overlays: [...overlays], table: true });
   logBtn.addEventListener('click', () => { logScale = !logScale; logBtn.setAttribute('aria-pressed', String(logScale)); chart.setLog(logScale); });
   for (const ov of OVERLAYS) {
     const b = h('button', { class: 'btn btn--sm btn--ghost', type: 'button', 'aria-pressed': String(overlays.has(ov.id)), text: ov.label });
-    b.addEventListener('click', () => { if (overlays.has(ov.id)) overlays.delete(ov.id); else overlays.add(ov.id); b.setAttribute('aria-pressed', String(overlays.has(ov.id))); chart.setOverlays([...overlays]); });
+    b.addEventListener('click', () => { if (overlays.has(ov.id)) overlays.delete(ov.id); else overlays.add(ov.id); b.setAttribute('aria-pressed', String(overlays.has(ov.id))); chart.setOverlays([...overlays]); paintLegend(); });
     ovBox.append(b);
   }
+  ovBox.prepend(h('span', { class: 'ovs__label', text: 'Linee' }));
+  paneBox.append(h('span', { class: 'ovs__label', text: 'Riquadri' }));
+  for (const pn of PANES) {
+    const b = h('button', { class: 'btn btn--sm btn--ghost', type: 'button', 'aria-pressed': 'true', text: pn.title.replace(' · IN OMBRA', '').replace('CONVICTION', 'Conviction') });
+    b.addEventListener('click', () => { if (panesOn.has(pn.id)) panesOn.delete(pn.id); else panesOn.add(pn.id); b.setAttribute('aria-pressed', String(panesOn.has(pn.id))); chart.setPanes([...panesOn]); });
+    paneBox.append(b);
+  }
+  /** Legenda: un tratto del colore per ogni linea accesa, più i segni del trade. */
+  function paintLegend() {
+    const item = (cls, text) => h('span', { class: 'legend__item' }, h('span', { class: `key ${cls}`, 'aria-hidden': 'true' }), text);
+    legendBox.replaceChildren(...OVERLAYS.filter((ov) => overlays.has(ov.id)).map((ov) => item(`key--ov-${ov.id}`, ov.label)),
+      item('key--mk-entry', 'entrata'), item('key--mk-stop', 'stop'), item('key--mk-liq', 'liquidazione'), item('key--mk-exit', 'uscita (rombo)'));
+  }
+  paintLegend();
 
   // ---- libro dei trade ----
   const bookSeg = segmented({ label: 'Libro dei trade', options: [{ value: 'aperti', label: 'Aperti' }, { value: 'chiusi', label: 'Chiusi' }, { value: 'decisioni', label: 'Decisioni' }], value: bookTab, onChange: (v) => { bookTab = v; paintBook(); } });
@@ -112,7 +129,7 @@ export function mount(root, api) {
         h('div', { class: 'wl__sym' }, h('b', { text: r.symbol }), h('small', { text: KIND[r.kind] || r.kind })),
         h('div', { class: 'wl__px num' }, !c ? '…' : c.missing ? 'n.d.' : px(c.last), c && c.chg != null ? h('small', { class: c.chg > 0 ? 'pos' : c.chg < 0 ? 'neg' : '' }, c.chg === 0 ? null : icon(c.chg > 0 ? 'up' : 'down', 'icon--solid'), fmtPctSigned(c.chg, 2)) : null),
         h('div', { class: 'wl__sig' }, fr && fr.stale ? h('span', { class: 'chip chip--xs chip--warn', title: `Ultima barra oltre l'età massima (${fmtNum(fr.maxHours, 0)} ore)` }, `dati del ${fmtDayMonth(fr.day, true)}`)
-            : c && c.conv != null ? h('span', { class: `chip chip--xs ${lvl.trade ? 'chip--accent' : ''}`, title: 'Conviction del motore: bassa, media, alta; il libro dei trade apre da «confermato»' }, lv === 'semplice' ? `conviction ${lvl.text}` : `conv ${fmtNum(c.conv, 2)} · ${lvl.text}`) : c && !c.missing ? h('small', { text: 'conviction non calcolata' }) : null,
+            : c && c.conv != null ? h('span', { class: `chip chip--xs ${lvl.trade ? 'chip--accent' : ''}`, title: 'Conviction del motore: bassa, media, alta; il libro dei trade apre da «confermato»' }, lv === 'semplice' ? `conviction ${lvl.tier}${lvl.trade ? ` · trade ${lvl.trade}` : ''}` : `conv ${fmtNum(c.conv, 2)} · ${lvl.tier}${lvl.trade ? ` · ${lvl.trade}` : ''}`) : c && !c.missing ? h('small', { text: 'conviction non calcolata' }) : null,
           open.has(r.symbol) ? h('span', { class: 'tag tag--paper', text: 'trade aperto' }) : lv !== 'semplice' && c && c.gq != null ? h('small', { class: 'num', text: `GQ ${fmtSigned(c.gq, 2)}${g ? ` · ${g}` : ''}` }) : null));
       row.addEventListener('click', () => select(r.symbol));
       return row;
@@ -134,6 +151,7 @@ export function mount(root, api) {
       if (init != null && stop != null && Math.abs(init - stop) / entry > 0.002) out.push({ kind: 'level', i, price: init, label: 'Stop in.', color: 'warn', past: true });
       if (stop != null) out.push({ kind: 'level', i, price: stop, label: 'Stop', color: 'warn' });
       if (entry != null) { out.push({ kind: 'level', i, price: entry, label: 'Entr.', color: 'text' }); out.push({ kind: 'entry', i, price: entry }); }
+      if (entry != null && num(t.initial_stop_distance)) out.push({ kind: 'rscale', entry, dist: entry * t.initial_stop_distance });
     }
     for (const t of closedTrades().filter((x) => str(x.symbol) === sel)) {
       const a = idxOf(t.opened);
@@ -147,7 +165,7 @@ export function mount(root, api) {
   function paintChart(reset = false) {
     const c = sel ? cache.get(sel) : null;
     const lv = ctxNow.lv;
-    chart.setPanes(lv === 'semplice' ? ['conv'] : PANES.map((p) => p.id));
+    chart.setPanes(lv === 'semplice' ? ['conv'] : [...panesOn]);
     if (!sel) { chartNote.textContent = 'Scegli uno strumento dall\'elenco.'; return; }
     if (!c) { chartNote.textContent = `${sel}: barre in lettura…`; return; }
     if (c.missing) { chart.setData(null); chartNote.textContent = `${sel}: nessuna barra nella cache dei prezzi. Il grafico resta vuoto finché il motore non le scarica.`; return; }
@@ -158,8 +176,19 @@ export function mount(root, api) {
     pChart.setProv(provTag(bars.example ? 'demo' : 'real', bars.example ? 'Esempio' : 'Prezzi reali'), openTrades().some((t) => str(t.symbol) === sel) ? provTag(tb && tb.example ? 'demo' : 'paper', tb && tb.example ? 'Trade · esempio' : 'Trade · paper') : null);
     const kindSel = (arr(symbols).find((x) => str(x.symbol) === sel) || {}).kind;
     const frSel = freshness(c.t, ctxNow.now, kindSel === 'crypto' ? 'crypto' : 'ibkr', obj(obj(ctxNow.health).rules));
-    chartNote.replaceChildren(frSel.stale ? h('b', { class: 'neg', text: `Dati fermi: l'ultima barra è del ${fmtDate(c.t, true)} (oltre ${fmtNum(frSel.maxHours, 0)} ore). ` }) : `${sel} · ultima barra chiusa: ${fmtDate(c.t, true)}.`, noSig ? ' Conviction e indicatore GQ non sono calcolati per questo strumento.' : bars.gq ? ' L\'indicatore GQ è in ombra: si osserva, non decide.' : '');
+    chartNote.replaceChildren(frSel.stale ? h('b', { class: 'neg', text: `Dati fermi: l'ultima barra è del ${fmtDate(c.t, true)} (oltre ${fmtNum(frSel.maxHours, 0)} ore). ` }) : `${sel} · ultima barra chiusa: ${fmtDate(c.t, true)}.`, noSig ? ' Conviction e indicatore GQ non sono calcolati per questo strumento.' : bars.gq ? ' L\'indicatore GQ è in ombra: si osserva, non decide.' : '', ...distances(c.last));
     chartNote.classList.remove('only-semplice');
+  }
+
+  /** Distanze del trade aperto dall'ultima chiusura, in % e in ATR: stop, liquidazione, entrata. */
+  function distances(last) {
+    const t = openTrades().find((x) => str(x.symbol) === sel);
+    if (!t || last == null) return [];
+    const atr = num(obj(t.ctx).atr_pct);
+    const one = (name, level) => (num(level) == null ? null : `${name} ${fmtPctSigned(level / last - 1, 1)}${atr ? ` (${fmtNum(Math.abs(level / last - 1) / atr, 1)} ATR)` : ''}`);
+    const parts = [one('stop', t.stop), one('liquidazione', t.liquidation), one('entrata', t.entry)].filter(Boolean);
+    const ratio = num(t.entry) && num(t.stop) && num(t.liquidation) ? (t.entry - t.stop) / (t.entry - t.liquidation) : null;
+    return parts.length ? [h('br'), h('b', { text: 'Dal prezzo: ' }), parts.join(' · '), ratio == null ? '' : ` · lo stop sta al ${fmtPct(ratio, 0)} della strada verso la liquidazione.`] : [];
   }
 
   function table(caption, head, rows, onRow) {

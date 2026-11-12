@@ -154,14 +154,17 @@ export function brakeLadder(host, { compact = false, label = 'Scala dei freni' }
         const x1 = xOf(Math.max(z.to, lo));
         if (x1 - x0 > 1) svg.append(s('rect', { class: `bl-zone bl-zone--${z.kind}`, x: x0.toFixed(1), y: y - laneH / 2, width: (x1 - x0).toFixed(1), height: laneH, rx: 3 }));
       }
+      let lastLabelX = -999;
       ticks.forEach((t, i) => {
         const x = Math.round(xOf(t.level)) + 0.5;
+        const lift = x - lastLabelX < 46 ? 13 : 0;                      // tacche vicine: l'etichetta sale di una riga, con la tacca che la raggiunge
+        lastLabelX = lift ? lastLabelX : x;
         const hit = s('rect', { class: 'bl-hit', x: x - 9, y: y - 30, width: 18, height: 46, tabindex: '0', 'aria-label': `${t.text}${t.action ? `: ${t.action}` : ''}` });
         bindTip(hit, tipFor(`${t.text}${t.action ? ` · ${t.action}` : ''}`, t.level, value ?? 0, ''));
         const flip = x > right - (compact ? 30 : 120);
-        svg.append(s('line', { class: `bl-tick bl-tick--${t.kind}`, x1: x, x2: x, y1: y - (compact ? 13 : 24), y2: y + laneH / 2 + 1 }),
-          s('text', { class: 'bl-tick-label', x: flip ? x - 5 : x + 5, y: y - (compact ? 15 : 26), 'text-anchor': flip ? 'end' : null }, t.text),
-          !compact && t.action && !narrow && !flip ? s('text', { class: 'bl-tick-note', x: flip ? x - 5 : x + 5, y: y - 13, 'text-anchor': flip ? 'end' : null }, fit(t.action, flip ? 150 : (i + 1 < ticks.length ? xOf(ticks[i + 1].level) : right) - x - 12)) : null, hit);
+        svg.append(s('line', { class: `bl-tick bl-tick--${t.kind}`, x1: x, x2: x, y1: y - (compact ? 13 : 24) - lift, y2: y + laneH / 2 + 1 }),
+          s('text', { class: 'bl-tick-label', x: flip ? x - 5 : x + 5, y: y - (compact ? 15 : 26) - lift, 'text-anchor': flip ? 'end' : null }, t.text),
+          !compact && t.action && !narrow && !flip && !lift ? s('text', { class: 'bl-tick-note', x: flip ? x - 5 : x + 5, y: y - 13, 'text-anchor': flip ? 'end' : null }, fit(t.action, flip ? 150 : (i + 1 < ticks.length ? xOf(ticks[i + 1].level) : right) - x - 12)) : null, hit);
       });
       if (value != null && !unknown) {
         const x = xOf(Math.max(lo, Math.min(hi, value)));

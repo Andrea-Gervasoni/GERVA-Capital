@@ -292,7 +292,7 @@ export function mount(root, api) {
     tradesBox.classList.toggle('is-stale', anomalies.length > 0);
     const one = open[0];
     pTrades.setAsk(open.length === 1 ? `C'è una scommessa aperta su ${str(one.symbol)}: al massimo può perdere ${fmtMoney(num(one.margin), ccy)} (il margine).` : `Ci sono ${fmtNum(open.length, 0)} scommesse aperte: insieme rischiano ${fmtMoney(risk, ccy)} agli stop.`);
-    pTrades.setFoot(h('a', { class: 'linkrow', href: '#/mercati' }, 'Grafico e libro in Mercati', icon('arrow')));
+    pTrades.setFoot(h('a', { class: 'linkrow linkrow--primary', href: '#/mercati' }, 'Apri il grafico in Mercati', icon('arrow')));
   }
 
   function paintCone() {

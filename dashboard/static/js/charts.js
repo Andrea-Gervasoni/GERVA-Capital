@@ -406,6 +406,7 @@ export function timeChart(host, { label = 'Grafico', zoom = false, table = false
 
     overlay = s('g', { class: 'c-overlay' });
     svg.append(overlay);
+    if (!svg.dataset.drawn) { svg.dataset.drawn = '1'; svg.classList.add('is-new'); svg.addEventListener('animationend', () => svg.classList.remove('is-new'), { once: true }); }
     geo = { left, right, t0, t1, px, panels, top: panels[0].y0, bottom, n };
     paintHover();
   }

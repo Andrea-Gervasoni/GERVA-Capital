@@ -8,11 +8,12 @@ const WORD = 'KILL';
 let result = null;            // esito dell'ultimo tentativo: { ok, t, already } oppure { ok: false, error }
 let onDone = () => {};
 let els = null;
+let enabled = true;          // false quando il server non ha il token: la finestra spiega, l'invio resta spento
 
 export const lastKill = () => result;
 
 function validate() {
-  els.submit.disabled = !(els.token.value.length > 0 && els.confirm.value.trim() === WORD);
+  els.submit.disabled = !(enabled && els.token.value.length > 0 && els.confirm.value.trim() === WORD);
 }
 
 function say(text, tone = '') {
@@ -83,6 +84,12 @@ export function initKill({ done }) {
   els.dialog.addEventListener('close', wipe);
   // Invio dentro il campo del token non invia: si passa alla parola di conferma
   els.token.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); els.confirm.focus(); } });
+}
+
+/** Il server dice se il comando è utilizzabile (token configurato): se no, «Attiva KILL» non si abilita mai. */
+export function setKillEnabled(flag) {
+  enabled = flag !== false;
+  if (els) validate();
 }
 
 /** Anteprima degli effetti (quante posizioni, quale controvalore, che cosa non fa): la scrive chi conosce i dati. */

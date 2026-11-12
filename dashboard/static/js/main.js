@@ -7,7 +7,7 @@ import { h, icon, fill, loadPref, savePref } from './dom.js';
 import { segmented } from './components.js';
 import { glossaryList } from './glossary.js';
 import { hideTip } from './charts.js';
-import { initKill, lastKill, openKill, setKillPreview } from './kill.js';
+import { initKill, lastKill, openKill, setKillEnabled, setKillPreview } from './kill.js';
 import { initPalette, SHORTCUTS } from './cmd.js';
 import { getTradebook } from './market.js';
 import { arr, fmtAgo, fmtDate, fmtDateTime, fmtDayTime, fmtDuration, fmtMoney, fmtNum, num, obj, parseTs, str } from './format.js';
@@ -284,7 +284,8 @@ function syncChrome() {
   const hl = obj(st.health);
   const ready = hl.kill_active === true ? 'active' : hl.kill_enabled === false ? 'no' : st.health ? 'yes' : 'wait';
   el.killBtn.dataset.ready = ready;
-  setText(el.killState, ready === 'active' ? 'già attivo' : ready === 'no' ? 'spento' : ready === 'yes' ? 'pronto' : '…');
+  setText(el.killState, ready === 'active' ? 'già attivo' : ready === 'no' ? 'serve il token' : ready === 'yes' ? 'pronto' : '…');
+  setKillEnabled(hl.kill_enabled !== false);
   el.killBtn.title = ready === 'no' ? 'KILL spento su questo server (manca GERVA_DASH_TOKEN): la finestra spiega come fare a mano' : 'Apre la finestra di conferma: non invia';
 
   // riga in più: dati fermi, offline, stato critico. Mai numeri vecchi in silenzio.

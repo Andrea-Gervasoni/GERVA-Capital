@@ -799,7 +799,7 @@ def test_guscio_senza_codice_in_linea_e_con_ordine_del_fuoco():
         assert f'href="{css}"' in html
     # ordine del fuoco: fascia di stato (con il KILL) → binario → contenuto
     assert html.index('id="capsule"') < html.index('id="kill-open"') < html.index('id="rail"') < html.index('id="main"')
-    assert 'class="aurora"' in html and html.count('<i class="a') == 6 and 'id="dock"' in html
+    assert 'class="aurora"' in html and html.count('<i class="a') == 8 and 'id="dock"' in html
     for dialog in ("kill-dialog", "glossary", "cmdk", "alerts-sheet", "keys-sheet", "more-sheet"):
         assert f'id="{dialog}"' in html, dialog
     assert 'id="kill-preview"' in html and "apre la conferma, non invia" in html
@@ -1026,6 +1026,24 @@ def test_demo_tutti_gli_esempi_alla_data_di_oggi_e_regole_dal_motore(client):
     assert rules["conviction_tiers"]["crypto"] == [0.30, 0.60] and set(rules["gq_tiers"]) == {"eccezionale", "alta", "bassa"}
     if "max_data_age_h" in rules:
         assert rules["max_data_age_h"]["crypto"] == 36.0
+
+
+def test_grafici_righello_inquadrato_e_kill_spento_senza_token():
+    """Giro 2, blocchi B e C: il righello del trade resta nel quadro, i segni non escono dal prezzo, il KILL senza token non si abilita."""
+    js = STATIC / "js"
+    candles = (js / "candles.js").read_text(encoding="utf-8")
+    assert "m.kind === 'level' && !m.past && m.price > 0" in candles                           # i livelli attivi allargano la scala del prezzo
+    assert "ctx.rect(0, pp.y0, plotW, pp.y1 - pp.y0); ctx.clip();" in candles and "m.kind === 'rscale'" in candles
+    assert "function applyRange" in candles and "chartTheme().reducedMotion" in candles          # transizione dell'intervallo, spenta con «riduci movimento»
+    mercati = (js / "views" / "mercati.js").read_text(encoding="utf-8")
+    assert "paintLegend" in mercati and "chart.setPanes([...panesOn])" in mercati and "function distances" in mercati and "Trade · esempio" in mercati
+    kill = (js / "kill.js").read_text(encoding="utf-8")
+    assert "export function setKillEnabled" in kill and "!(enabled && els.token.value.length > 0" in kill
+    main = (js / "main.js").read_text(encoding="utf-8")
+    assert "setKillEnabled(hl.kill_enabled !== false)" in main and "'serve il token'" in main
+    css = (STATIC / "css" / "glass.css").read_text(encoding="utf-8")
+    for needle in ("chart-reveal", ".key--ov-vwap", ".app::before", ".linkrow--primary", "clip-path: inset(calc(var(--topbar-h) + 26px) 0 0 0)", ".more__nav .nav__label { display: inline; }"):
+        assert needle in css, needle
 
 
 # ---------------------------------------------------------------------------

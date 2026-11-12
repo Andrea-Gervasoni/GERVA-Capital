@@ -249,7 +249,8 @@ export function waterfall(host, steps, { label = 'Cascata', height = 240, format
 
     // in riga: una voce per riga, il nome a sinistra e il valore a destra della barra
     const row = 28;
-    const labelW = Math.min(150, Math.round(w * 0.36));
+    const longest = Math.max(...data.map((d) => d.label.length));
+    const labelW = Math.min(Math.round(w * 0.5), Math.max(90, Math.round(longest * 6.3 + 8)));          // le voci si leggono intere
     const valueW = 66;
     const left = labelW + 6;
     const right = w - valueW;

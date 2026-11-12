@@ -130,7 +130,7 @@ export function candleChart(host, { label = 'Grafico a candele', panes: paneIds 
     const subs = PANES.filter((p) => subPanes.has(p.id) && (p.id !== 'conv' || d.conviction) && (p.id !== 'gq' || d.gq));
     const avail = H - AXIS;
     const subH = Math.max(34, Math.min(62, Math.floor(avail * 0.105)));
-    const use = avail < 300 ? subs.slice(0, 0) : avail < 420 ? subs.slice(-Math.min(subs.length, 2)) : subs;
+    const use = avail < 260 ? [] : avail < 380 ? subs.slice(-Math.min(subs.length, 2)) : subs;
     const volH = Math.max(30, Math.min(56, Math.floor(avail * 0.11)));
     let y = avail - use.length * subH;
     const out = [{ id: 'price', y0: 4, y1: y - volH - 2 }, { id: 'vol', title: 'VOLUME', y0: y - volH, y1: y }];
@@ -225,6 +225,7 @@ export function candleChart(host, { label = 'Grafico a candele', panes: paneIds 
       if (d.l[i] != null && d.l[i] < lo) lo = d.l[i];
       if (d.h[i] != null && d.h[i] > hi) hi = d.h[i];
     }
+    for (const m of d.markers || []) if (m.kind === 'level' && !m.past && m.price > 0) { if (m.price < lo) lo = m.price; if (m.price > hi) hi = m.price; }
     if (!(hi > lo)) { hi = lo + 1; }
     const useLog = log && lo > 0;
     const pad = useLog ? 1 : (hi - lo) * 0.06;
@@ -232,7 +233,8 @@ export function candleChart(host, { label = 'Grafico a candele', panes: paneIds 
     const pticks = useLog
       ? [1, 2, 5].flatMap((m) => Array.from({ length: 12 }, (_, k) => m * 10 ** (k - 4))).filter((v) => v >= pp.lo && v <= pp.hi).sort((x, y) => x - y)
       : niceTicks(pp.lo, pp.hi, Math.max(3, Math.floor((pp.y1 - pp.y0) / 44)));
-    grid(pp, pticks.length >= 2 ? pticks : niceTicks(pp.lo, pp.hi, 4), price);
+    const levelYs = (d.markers || []).filter((m) => m.kind === 'level').map((m) => pp.yOf(m.price));
+    grid(pp, pticks.length >= 2 ? pticks : niceTicks(pp.lo, pp.hi, 4), (v) => (levelYs.some((y) => Math.abs(y - pp.yOf(v)) < 12) ? '' : price(v)));
 
     if (overlays.has('boll')) {
       ctx.save();
@@ -277,7 +279,16 @@ export function candleChart(host, { label = 'Grafico a candele', panes: paneIds 
     // righello del trade: zona entrata–stop (lastra «1 R»), livelli pieni con cartellino sul righello di destra,
     // stop iniziale puntinato (non più attivo), trade passati come anello → rombo con R. Il tratteggio resta al simulato.
     const tags = [];
+    const exits = (d.markers || []).filter((m) => m.kind === 'exit' && m.i >= a && m.i <= b).length;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, pp.y0, plotW, pp.y1 - pp.y0); ctx.clip();
     for (const m of d.markers || []) {
+      if (m.kind === 'rscale') {                                 // scala in R accanto al righello: entrata = 0 R, stop iniziale = −1 R
+        ctx.fillStyle = theme.textMuted; ctx.textAlign = 'left';                     // a sinistra: a destra stanno i cartellini dei livelli
+        let lastY = 1e9;
+        for (let k = -1; k <= 6; k++) { const y = pp.yOf(m.entry + k * m.dist); if (y > pp.y0 + 6 && y < pp.y1 - 6 && lastY - y >= 13) { ctx.fillText(`${k > 0 ? '+' : k < 0 ? '−' : ''}${Math.abs(k)} R`, 4, y); lastY = y; } }
+        continue;
+      }
       const idx = m.i;
       if (m.kind === 'zone') {
         const ya = pp.yOf(Math.max(m.from, m.to));
@@ -317,21 +328,25 @@ export function candleChart(host, { label = 'Grafico a candele', panes: paneIds 
       } else {                                                    // rombo: dove è uscito, colorato dal segno di R
         ctx.fillStyle = m.color ? theme[m.color] || theme.text : theme.text; ctx.strokeStyle = theme.halo;
         ctx.beginPath(); ctx.moveTo(x, y - r - 1.5); ctx.lineTo(x + r + 1.5, y); ctx.lineTo(x, y + r + 1.5); ctx.lineTo(x - r - 1.5, y); ctx.closePath(); ctx.fill(); ctx.stroke();
-        if (m.label) { ctx.fillStyle = theme.text; ctx.textAlign = 'center'; ctx.fillText(m.label, x, y - r - 10); }
+        if (m.label && exits <= 8) { ctx.fillStyle = theme.text; ctx.textAlign = 'center'; ctx.fillText(m.label, x, y - r - 10); }      // tanti trade: restano i segni, le cifre stanno nel libro
       }
       ctx.lineWidth = theme.gridWidth;
     }
-    // cartellini dei livelli sul righello di destra: mai sovrapposti
+    ctx.restore();
+    // cartellini dei livelli sul righello di destra: di vetro (fondo scuro, filetto del colore del livello), mai sovrapposti
     tags.sort((u, v) => u.y - v.y);
     let lastTag = -99;
     for (const tg of tags) {
       const y = Math.max(lastTag + 15, tg.y);
       lastTag = y;
       const tw = Math.max(GUTTER - 1, ctx.measureText(tg.text).width + 10);      // il cartellino può sporgere nel grafico: nome e prezzo si leggono interi
-      ctx.fillStyle = tg.past ? theme.halo : tg.color;
-      ctx.fillRect(W - tw, y - 7.5, tw, 15);
-      if (tg.past) { ctx.strokeStyle = tg.color; ctx.strokeRect(W - tw + 0.5, y - 7, tw - 1, 14); }
-      ctx.fillStyle = tg.past ? tg.color : theme.onFill;
+      ctx.fillStyle = theme.halo;
+      ctx.fillRect(W - tw, y - 8, tw, 16);
+      ctx.strokeStyle = tg.color;
+      ctx.setLineDash(tg.past ? theme.dashPast : []);
+      ctx.strokeRect(W - tw + 0.5, y - 7.5, tw - 1, 15);
+      ctx.setLineDash([]);
+      ctx.fillStyle = tg.color === theme.text ? theme.text : tg.color;
       ctx.textAlign = 'left';
       ctx.fillText(tg.text, W - tw + 5, y);
     }
@@ -543,7 +558,30 @@ export function candleChart(host, { label = 'Grafico a candele', panes: paneIds 
   if (ro) ro.observe(plot);
   const offTheme = onChartThemeChange(request);
 
-  function setRange(months) {
+  let tween = 0;
+  function setRange(months, opts = {}) {
+    const a0 = i0;
+    const a1 = i1;
+    applyRange(months);
+    const dur = chartTheme().range;
+    cancelAnimationFrame(tween);
+    if (!d || opts.animate === false || !(dur > 1) || chartTheme().reducedMotion || a1 - a0 < 2) return;
+    const b0 = i0;
+    const b1 = i1;
+    const t0 = performance.now();
+    const step = (t) => {
+      const k = Math.min(1, (t - t0) / dur);
+      const e = 1 - (1 - k) ** 3;
+      i0 = a0 + (b0 - a0) * e;
+      i1 = a1 + (b1 - a1) * e;
+      request();
+      if (k < 1) tween = requestAnimationFrame(step);
+    };
+    i0 = a0;
+    i1 = a1;
+    tween = requestAnimationFrame(step);
+  }
+  function applyRange(months) {
     if (!d) return;
     const n = d.t.length;
     if (!months) { i0 = -1; i1 = n + 2; } else {
