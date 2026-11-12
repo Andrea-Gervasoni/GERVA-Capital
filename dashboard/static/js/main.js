@@ -32,6 +32,7 @@ import * as apprendimento from './views/apprendimento.js';
 import * as evidenza from './views/evidenza.js';
 import * as portafoglio from './views/portafoglio.js';
 import * as sistemaNuovo from './views/sistema2.js';
+import * as apprendimentoNuovo from './views/apprendimento2.js';
 
 /** Gli spazi: quattro «ogni giorno», tre «quando serve». Le viste precedenti restano raggiungibili come schede. */
 const SPACES = [
@@ -45,7 +46,8 @@ const SPACES = [
     { id: '', label: 'Freni e tetti', view: rischio }, { id: 'limiti', label: 'Limiti e leva (archivio)', view: rischioArchivio }] },
   { id: 'evidenza', label: 'Evidenza', icon: 'evidence', key: 'e', group: 'Quando serve', tabs: [
     { id: '', label: 'Evidenza', view: evidenza }, { id: 'ricerca', label: 'Ricerca · archivio', view: ricerca }, { id: 'leva', label: 'Leva · archivio', view: leva }] },
-  { id: 'apprendimento', label: 'Apprendimento', icon: 'learn', key: 'a', group: 'Quando serve', tabs: [{ id: '', label: 'Apprendimento', view: apprendimento }] },
+  { id: 'apprendimento', label: 'Apprendimento', icon: 'learn', key: 'a', group: 'Quando serve', tabs: [
+    { id: '', label: 'Apprendimento', view: apprendimentoNuovo }, { id: 'archivio', label: 'Pagina precedente · archivio', view: apprendimento }] },
   { id: 'sistema', label: 'Sistema', icon: 'system', key: 's', group: 'Quando serve', tabs: [
     { id: '', label: 'Sistema', view: sistemaNuovo }, { id: 'salute', label: 'Salute · archivio', view: sistema }, { id: 'ordini', label: 'Ordini · archivio', view: ordini }, { id: 'guida', label: 'Come funziona · guida', view: comefunziona }] },
 ];

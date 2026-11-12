@@ -169,6 +169,8 @@ export function colHist(host, { label = 'Distribuzione' } = {}) {
     const lines = Math.max(1, rowsEnd.length);
     const rowHt = labels.some((l) => l.r.sub) ? 28 : 15;
     const top = 6 + lines * rowHt;
+    host.parentElement.style.setProperty('--tag-top', `${top + 8}px`);
+    host.parentElement.classList.toggle('sp-plot--tagr', d.tagSide === 'right');
     const ph = d.height || 170;
     const bottom = top + ph;
     const H = bottom + (d.xTitle ? 40 : 24);
@@ -209,11 +211,11 @@ export function colHist(host, { label = 'Distribuzione' } = {}) {
     svg.append(bars);
     svg.append(s('line', { class: 'c-axis', x1: left, x2: right, y1: bottom + 0.5, y2: bottom + 0.5 }));
     const every = Math.max(1, Math.ceil((edges.length - 1) / Math.max(2, Math.floor((right - left) / 64))));
-    for (let i = edges.length - 1; i >= 0; i -= every) {
-      const x = xOf(edges[i]);
+    const tickAt = d.ticks ? d.ticks.filter((v) => v >= lo && v <= hi).filter((_, i, all) => all.length * 44 <= right - left || i % 2 === 0) : edges.filter((_, i) => (edges.length - 1 - i) % every === 0 && !(d.overflow && i === edges.length - 1));
+    for (const v of tickAt) {
+      const x = xOf(v);
       const edge = x < left + 16 ? 'start' : x > right - 16 ? 'end' : null;
-      svg.append(s('line', { class: 'c-axis', x1: Math.round(x) + 0.5, x2: Math.round(x) + 0.5, y1: bottom, y2: bottom + 4 }),
-        s('text', { class: 'c-tick c-tick--x', x: x.toFixed(1), y: bottom + 17, 'text-anchor': edge }, d.overflow && i === edges.length - 1 ? '' : xFormat(edges[i])));
+      svg.append(s('line', { class: 'c-axis', x1: Math.round(x) + 0.5, x2: Math.round(x) + 0.5, y1: bottom, y2: bottom + 4 }), s('text', { class: 'c-tick c-tick--x', x: x.toFixed(1), y: bottom + 17, 'text-anchor': edge }, xFormat(v)));
     }
     if (d.xTitle) svg.append(s('text', { class: 'c-tick', x: right, y: H - 6, 'text-anchor': 'end' }, d.xTitle));
     for (const l of labels) {

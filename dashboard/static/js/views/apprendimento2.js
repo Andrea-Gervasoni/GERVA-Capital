@@ -60,7 +60,8 @@ export function mount(root) {
   const distChart = colHist(distPlot.host, { label: 'Distribuzione di R dei trade simulati' });
 
   // ---- 4. R cumulato ----
-  const pCum = panel({ title: 'Il vantaggio si accumula con regolarità, o a strappi?', eyebrow: 'R cumulato', span: 6, cls: 'not-semplice', id: 'cumulato',
+  const pCum = panel({ title: 'Il vantaggio si accumula con regolarità, o a strappi?', eyebrow: 'R cumulato', span: 6, id: 'cumulato',
+    ask: 'La linea somma i risultati trade dopo trade. Se sale a gradini regolari il vantaggio è diffuso; se sale con pochi salti, dipende da pochi trade fortunati.',
     what: 'La somma di R trade dopo trade, alla data di uscita. Una scala che sale a gradini regolari è un vantaggio diffuso; pochi salti isolati sono un vantaggio che dipende da pochi trade. Simulati e paper sono due linee distinte, ognuna dal proprio zero.' });
   const cumFacts = h('div');
   const cumPlot = plot();
@@ -75,10 +76,12 @@ export function mount(root) {
   const sliceGrid = h('div', { class: 'sp-two sp-slices' });
   const sliceNote = h('div');
   pSlices.body.append(sliceNote, sliceGrid);
-  const SL = [['conv', 'Per conviction all\'ingresso'], ['day', 'Per giorno della settimana'], ['coin', 'Per moneta'], ['year', 'Per anno']].map(([key, title]) => {
+  const sliceCols = [h('div', { class: 'sp-slicecol' }), h('div', { class: 'sp-slicecol' })];
+  sliceGrid.append(...sliceCols);
+  const SL = [['conv', 'Per conviction all\'ingresso', 0], ['day', 'Per giorno della settimana', 0], ['coin', 'Per moneta', 1], ['year', 'Per anno', 1]].map(([key, title, col]) => {
     const host = h('div', { class: 'chart-host' });
     const el = h('div', { class: 'sp-slice' }, h('div', { class: 'sp-sub', text: title }), host);
-    sliceGrid.append(el);
+    sliceCols[col].append(el);
     return { key, title, host, el, chart: errBars(host, { label: `R medio ${title.toLowerCase()}` }) };
   });
 
@@ -216,7 +219,7 @@ export function mount(root) {
     if (sim.length) {
       const hist = histR(sim, 0.25, -1.5, 6);
       distPlot.setTags(provTag('sim', `Simulato · n = ${fmtNum(st.n, 0)}`));
-      distChart.update({ edges: hist.edges, counts: hist.counts, unit: 'Trade', height: ctxNow.lv === 'terminale' ? 150 : 190, tone: (mid) => (mid >= 0 ? 'up' : 'down'), xFormat: (v) => (v === 0 ? '0' : fmtSigned(v, Number.isInteger(v) ? 0 : 2)), overflow: `oltre +${fmtNum(hist.overflowFrom, 0)} R`, xTitle: 'risultato del trade, in R →',
+      distChart.update({ edges: hist.edges, counts: hist.counts, tagSide: 'right', ticks: [-1, 0, 1, 2, 3, 4, 5, 6], unit: 'Trade', height: ctxNow.lv === 'terminale' ? 150 : 190, tone: (mid) => (mid >= 0 ? 'up' : 'down'), xFormat: (v) => (v === 0 ? '0' : fmtSigned(v, Number.isInteger(v) ? 0 : 2)), overflow: `oltre +${fmtNum(hist.overflowFrom, 0)} R`, xTitle: 'risultato del trade, in R →',
         refs: [{ value: 0, label: 'zero', cls: 'strong' }, { value: st.mean, label: `media ${rr(st.mean)}` }, { value: st.median, label: `mediana ${rr(st.median)}`, cls: 'soft', side: 'left' }] });
     }
     distPaper.replaceChildren(paper.length ? factRow([['Paper · R medio', rr(rStats(paper).mean)], ['Paper · n', fmtNum(paper.length, 0)]]) : h('p', { class: 'panel__ask' }, provTag('paper'), ` 0 trade chiusi in paper: quando esisteranno avranno il loro grafico, a colonne piene, mai sommato a questo.`));
@@ -397,9 +400,10 @@ export function mount(root) {
       const k = `${ctx.learnStatus}|${ctx.lv}|${ctx.learn ? str(ctx.learn.generated) + JSON.stringify(ctx.learn).length : ''}|${obj(obj(ctx.health).rules).score_confirmed}`;
       const first = !ctxNow;
       const lvChanged = ctxNow && ctxNow.lv !== ctx.lv;
+      const changed = k !== key;
       ctxNow = ctx;
-      if (k !== key) { key = k; paintLearn(); }            // il rapporto cambia solo quando gira `gerva learn`: le regole aperte restano aperte
-      if (first || lvChanged || k !== key) paintTrades();
+      if (changed) { key = k; paintLearn(); }              // il rapporto cambia solo quando gira `gerva learn`: le regole aperte restano aperte
+      if (first || lvChanged || changed) paintTrades();
     },
     summary(ctx) {
       const l = obj(ctx.learn);

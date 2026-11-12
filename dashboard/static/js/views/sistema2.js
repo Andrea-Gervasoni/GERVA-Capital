@@ -276,7 +276,7 @@ export function mount(root, api) {
       if (bar) { bar.style.setProperty('--v', `${(ratio * 95).toFixed(1)}%`); bar.style.setProperty('--t', '95%'); }
       return h('div', { class: 'sp-gate', dataset: { state: s } },
         h('span', { class: 'sp-gate__state' }, s === 'ok' ? stateChip('ok', 'Superato') : s === 'open' ? stateChip('accent', 'In corso') : stateChip('unknown', 'Non ancora misurabile')),
-        h('span', { class: 'sp-gate__name' }, h('b', { text: str(g.name) }), bar),
+        h('span', { class: 'sp-gate__name' }, h('b', { text: str(g.name).replace(/a'(?=\s|$)/g, 'à') }), bar),
         h('span', { class: 'sp-gate__val num' }, s === 'unmeasured' ? nd('valore n.d.') : fmtUnit(value, g.unit), h('small', { text: target == null ? 'soglia non letta' : `${min ? 'almeno' : 'al massimo'} ${fmtUnit(target, g.unit)}` })));
     }));
     pGates.setAsk(ok === gates.length ? 'Tutti i cancelli sono superati: il passaggio al denaro reale è una decisione del proprietario.' : `Superati ${fmtNum(ok, 0)} cancelli su ${fmtNum(gates.length, 0)}. ${un ? `${fmtNum(un, 0)} non si possono ancora misurare: servono più giorni o più ordini. ` : ''}Finché non sono tutti superati si resta in paper.`);

@@ -826,3 +826,8 @@ body[data-term] .summary { margin: 0; padding: 0 6px; font-size: var(--fs-small)
 @media (prefers-reduced-motion: reduce) { .capsule.is-sweep { animation: none; background-image: none; } }
 /* tema chiaro: i due testi sotto AA */
 :root[data-theme="light"] .summary__tag { color: #0b4f9e; } :root[data-theme="light"] .band__item[data-kind="warn"] b { background: #8a5a00; color: #ffffff; } :root[data-theme="light"] .band__item[data-kind="crit"] b { background: #b3261e; color: #ffffff; }
+/* contrasto misurato sui pixel: riga scelta su fondo scuro (non sul cursore chiaro), sigle e rimandi più pieni */
+.tlist .trow[aria-selected="true"] { background: var(--surface-3); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 60%, transparent); }
+.tlist .trow[aria-selected="true"].is-linked { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 60%, transparent), inset 3px 0 0 var(--accent); }
+.tchip--ai { color: var(--text); } .tp__n { color: var(--text-2); } .tgrid__hint { color: var(--text-2); } .tgrid__more { color: var(--text); text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 3px; }
+:root[data-theme="light"] #summary-btn { color: #0b4f9e; } :root[data-theme="light"] #alerts-n { background: #b3261e; color: #ffffff; }
