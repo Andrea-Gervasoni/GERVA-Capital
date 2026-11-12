@@ -29,7 +29,10 @@ def env(tmp_path, monkeypatch):
     monkeypatch.setenv("GERVA_QUANT", str(tmp_path / "quant.json"))
     monkeypatch.setenv("GERVA_QUANT4", str(tmp_path / "quant_v4.json"))
     monkeypatch.setenv("GERVA_LEARN", str(tmp_path / "learn" / "report.json"))
-    monkeypatch.delenv("GERVA_HOME", raising=False)
+    monkeypatch.setenv("GERVA_HOME", str(tmp_path / "casa"))
+    monkeypatch.setenv("GERVA_CACHE", str(tmp_path / "cache"))
+    monkeypatch.setenv("GERVA_TRADES_HIST", str(tmp_path / "trade_storici.parquet"))
+    server._market_cache.clear()
     return tmp_path
 
 
@@ -297,6 +300,7 @@ def test_learn_percorsi_host_e_sola_lettura(client, env, monkeypatch):
         assert getattr(client, method)("/api/v1/learn").status_code == 404
         assert getattr(client, method)("/api/v1/learn/approve").status_code == 404
     monkeypatch.delenv("GERVA_LEARN")
+    monkeypatch.delenv("GERVA_HOME")
     assert server.learn_path() == Path(server.ROOT) / "var" / "gerva" / "learn" / "report.json"
     monkeypatch.setenv("GERVA_HOME", str(env / "casa"))
     assert server.learn_path() == env / "casa" / "learn" / "report.json"
@@ -332,6 +336,192 @@ def test_pagina_apprendimento_non_puo_attivare_regole():
     for term in ("Ombra (shadow)", "Walk-forward", "Fuori campione", "MAE / MFE"):
         assert f"term: '{term}'" in js, term
     assert "api/v1/learn" in (STATIC / "js" / "store.js").read_text(encoding="utf-8")
+
+
+# ---- mercato, libro dei trade, storico, confronto (v6): sola lettura ----
+def _bars(n=420, seed=1, start=100.0):
+    import numpy as np
+    import pandas as pd
+    rng = np.random.default_rng(seed)
+    close = start * np.exp(np.cumsum(rng.normal(0.0005, 0.02, n)))
+    idx = pd.date_range("2025-01-01", periods=n, freq="D")
+    return pd.DataFrame(dict(open=close * 0.995, high=close * 1.02, low=close * 0.98, close=close, volume=rng.uniform(1e3, 5e3, n), quote_volume=1.0), index=idx)
+
+
+def _cache(env, **frames) -> Path:
+    cache = env / "cache"
+    cache.mkdir(exist_ok=True)
+    for name, df in frames.items():
+        df.to_parquet(cache / f"{name}.parquet")
+    return cache
+
+
+def test_mercato_in_demo_serve_l_esempio_marcato(client, env):
+    r = client.get("/api/v1/market/symbols")
+    assert r.status_code == 200 and r.json()["example"] is True and r.json()["source"] == "esempio"
+    syms = {x["symbol"]: x["kind"] for x in r.json()["symbols"]}
+    assert syms["BTC"] == "crypto" and "SPY" in syms
+    r = client.get("/api/v1/market/ohlc?symbol=BTC")
+    assert r.status_code == 200 and r.headers["x-gerva-source"] == "demo"
+    d = r.json()
+    assert d["example"] is True and d["source"] == "esempio" and d["symbol"] == "BTC"
+    n = len(d["t"])
+    assert n >= 300 and all(len(d[k]) == n for k in ("o", "h", "l", "c", "v", "conviction", "gq"))
+    assert d["thresholds"]["conviction"] == [0.6, 0.75] and [round(x, 2) for x in d["thresholds"]["gq"]] == [-0.5, 0.53, 1.42]
+    assert client.get("/api/v1/market/ohlc?symbol=NOPE").status_code == 404
+
+
+def test_mercato_senza_cache_con_snapshot_vero_da_404(client, env):
+    _write(env / "snapshot.json", {"meta": {"mode": "paper"}})
+    assert client.get("/api/v1/market/symbols").status_code == 404
+    r = client.get("/api/v1/market/ohlc?symbol=BTC")
+    assert r.status_code == 404 and r.json()["ok"] is False and "o" not in r.json()
+
+
+def test_ohlc_dalla_cache_con_indicatori_del_motore(client, env):
+    import pandas as pd
+    from gerva import ensemble as E, gervasoni as G
+
+    btc, eth, spy = _bars(seed=1, start=60000), _bars(seed=2, start=2000), _bars(n=300, seed=3, start=500)
+    _cache(env, bn_spot_1d_BTCUSDT=btc, bn_spot_1d_ETHUSDT=eth, yahoo_1d_SPY=spy.assign(adj=spy["close"]), **{"yahoo_1d_BTC-USD": btc, "yahoo_1d_^VIX": spy, "v5_um_1h_BTCUSDT": btc})
+    syms = client.get("/api/v1/market/symbols").json()
+    assert syms["source"] == "cache" and "example" not in syms
+    assert syms["symbols"] == [dict(symbol="BTC", kind="crypto"), dict(symbol="ETH", kind="crypto"), dict(symbol="SPY", kind="etf"), dict(symbol="^VIX", kind="indice")]
+
+    r = client.get("/api/v1/market/ohlc?symbol=eth&limit=120")
+    assert r.status_code == 200 and r.headers["cache-control"] == "no-store" and "default-src 'self'" in r.headers["content-security-policy"]
+    d = r.json()
+    assert (d["symbol"], d["kind"], d["tf"], d["source"], d["rows"]) == ("ETH", "crypto", "1d", "cache", 120) and "example" not in d
+    assert d["t"][-1] == str(eth.index[-1].date()) and d["c"][-1] == pytest.approx(float(eth["close"].iloc[-1]))
+    # stessi numeri delle funzioni del fondo, calcolati su tutto lo storico e poi tagliati
+    score = E.conviction(E.crypto_signals(eth[["open", "high", "low", "close", "volume"]], btc["close"]))["score"].tail(120)
+    gq = G.gq(eth, eth["volume"], btc["close"]).tail(120)
+    assert d["conviction"] == [None if pd.isna(v) else pytest.approx(float(v)) for v in score]
+    assert d["gq"] == [None if pd.isna(v) else pytest.approx(float(v)) for v in gq]
+    assert d["thresholds"] == dict(conviction=[0.6, 0.75], gq=[G.THRESHOLDS["bassa"], G.THRESHOLDS["alta"], G.THRESHOLDS["eccezionale"]])
+
+    etf = client.get("/api/v1/market/ohlc?symbol=SPY").json()
+    assert etf["kind"] == "etf" and etf["rows"] == 300 and etf["conviction"] is None and etf["gq"] is None and etf["thresholds"] is None
+    assert client.get("/api/v1/market/ohlc?symbol=%5EVIX&limit=3").json()["rows"] == 10          # limite minimo 10
+    assert client.get("/api/v1/market/ohlc?symbol=BTC&limit=999999").json()["rows"] == 420       # e massimo = ciò che c'è
+
+
+def test_ohlc_cache_in_memoria_e_file_aggiornato(client, env):
+    cache = _cache(env, bn_spot_1d_BTCUSDT=_bars(seed=1))
+    first = client.get("/api/v1/market/ohlc?symbol=BTC").json()
+    assert any(k[0] == "ohlc" for k in server._market_cache)
+    assert client.get("/api/v1/market/ohlc?symbol=BTC").json() == first
+    _bars(n=200, seed=9).to_parquet(cache / "bn_spot_1d_BTCUSDT.parquet")
+    os.utime(cache / "bn_spot_1d_BTCUSDT.parquet", (1_800_000_000, 1_800_000_000))
+    assert client.get("/api/v1/market/ohlc?symbol=BTC").json()["rows"] == 200                   # file cambiato: si rilegge
+
+
+@pytest.mark.parametrize("symbol", ["../../etc/passwd", "..%2F..%2Fsecret", "BTC/../ETH", "BTCUSDT.parquet", "a b", "BTC;rm", "X" * 40, "", "bn_spot_1d_BTC", "%00"])
+def test_ohlc_simbolo_fuori_dalla_lista_bianca(client, env, symbol):
+    _cache(env, bn_spot_1d_BTCUSDT=_bars())
+    (env / "secret.parquet").write_bytes(b"x")
+    r = client.get(f"/api/v1/market/ohlc?symbol={symbol}")
+    assert r.status_code == 400 and r.json() == {"ok": False, "error": "simbolo non valido"}
+    assert str(env) not in r.text
+
+
+def test_ohlc_intervallo_file_rotto_e_sola_lettura(client, env):
+    cache = _cache(env, bn_spot_1d_BTCUSDT=_bars())
+    assert client.get("/api/v1/market/ohlc?symbol=BTC&tf=1h").status_code == 400
+    assert client.get("/api/v1/market/ohlc?symbol=ETH").status_code == 404
+    (cache / "bn_spot_1d_ETHUSDT.parquet").write_bytes(b"non un parquet")
+    r = client.get("/api/v1/market/ohlc?symbol=ETH")
+    assert r.status_code == 503 and r.json()["ok"] is False and str(env) not in r.text
+    assert client.get("/api/v1/market/ohlc?symbol=BTC", headers={"Host": "esempio.invalid"}).status_code == 400
+    for url in ("/api/v1/market/ohlc?symbol=BTC", "/api/v1/market/symbols", "/api/v1/tradebook", "/api/v1/trades/history", "/api/v1/compare"):
+        for method in ("post", "put", "patch", "delete"):
+            assert getattr(client, method)(url).status_code == 404, (method, url)
+    link = cache / "bn_spot_1d_LINKUSDT.parquet"
+    try:
+        link.symlink_to(env / "fuori.parquet")
+        _bars().to_parquet(env / "fuori.parquet")
+    except OSError:
+        return
+    assert client.get("/api/v1/market/ohlc?symbol=LINK").status_code == 404                      # un collegamento che esce dalla cache non si segue
+
+
+def test_tradebook_demo_file_e_assente(client, env):
+    r = client.get("/api/v1/tradebook")
+    assert r.status_code == 200 and r.json()["example"] is True and {"open", "closed", "shadow"} <= set(r.json())
+    home = env / "casa"
+    home.mkdir()
+    _write(home / "tradebook.json", '{"asof": "2026-11-12", "equity": 3000.0, "open": {"BTC": {"entry": 70000.0, "stop": NaN}}, "closed": [], "log": [], "shadow": [{"day": "2026-11-12", "coins": {}}]}')
+    r = client.get("/api/v1/tradebook")
+    assert r.status_code == 200 and "example" not in r.json() and r.json()["open"]["BTC"] == {"entry": 70000.0, "stop": None} and len(r.json()["shadow"]) == 1
+    (home / "tradebook.json").write_text("{rotto", encoding="utf-8")
+    assert client.get("/api/v1/tradebook").status_code == 503
+    (home / "tradebook.json").unlink()
+    _write(env / "snapshot.json", {"meta": {}})
+    r = client.get("/api/v1/tradebook")
+    assert r.status_code == 404 and r.json()["error"] == "libro dei trade non disponibile"
+
+
+def test_storico_dei_trade_sim_e_paper_marcati(client, env):
+    import pandas as pd
+
+    assert client.get("/api/v1/trades/history").json()["example"] is True                       # demo: esempio in dotazione
+    pd.DataFrame([dict(strategy_id="TRADE-11X", symbol="BTC", entry_time="2024-01-02", exit_time="2024-01-05", leverage=11.0, R=1.5, exit_reason="tempo",
+                       mae=None, mfe=None, source="sim", weekday=1, tier="alta", conviction=0.7, gq=float("nan"), atr_pct=0.03, notional=None),
+                  dict(strategy_id="TRADE-11X", symbol="ETH", entry_time="2024-02-01", exit_time="2024-02-02", leverage=12.0, R=-1.0, exit_reason="stop",
+                       mae=None, mfe=None, source="sim", weekday=3, tier="alta", conviction=0.8, gq=0.9, atr_pct=0.04, notional=None)]).to_parquet(env / "trade_storici.parquet")
+    learn = env / "casa" / "learn"
+    learn.mkdir(parents=True)
+    (learn / "trades.jsonl").write_text(
+        json.dumps(dict(strategy_id="TRADE-11X", symbol="SOL", entry_time="2026-11-01", exit_time="2026-11-03", leverage=10.0, R=0.4, exit_reason="tempo", mae=-0.3, mfe=1.1,
+                        source="paper", context=dict(weekday=6, tier="alta", conviction=0.66, gq=0.6, atr_pct=0.05))) + "\n"
+        + "riga rotta\n" + json.dumps(dict(symbol="BTC", R=9.9, source="sim")) + "\n", encoding="utf-8")
+    r = client.get("/api/v1/trades/history")
+    assert r.status_code == 200
+    d = r.json()
+    assert "example" not in d and (d["n_sim"], d["n_paper"]) == (2, 1) and "SIMULATO" in d["label"]
+    assert [x["source"] for x in d["rows"]] == ["sim", "sim", "paper"]
+    assert d["rows"][0]["gq"] is None and d["rows"][0]["R"] == 1.5 and "notional" not in d["rows"][0]
+    paper = d["rows"][2]
+    assert (paper["symbol"], paper["mae"], paper["mfe"], paper["weekday"], paper["conviction"]) == ("SOL", -0.3, 1.1, 6, 0.66)
+    (env / "trade_storici.parquet").unlink()
+    assert [x["source"] for x in client.get("/api/v1/trades/history").json()["rows"]] == ["paper"]
+    (learn / "trades.jsonl").unlink()
+    _write(env / "snapshot.json", {"meta": {}})
+    r = client.get("/api/v1/trades/history")
+    assert r.status_code == 404 and r.json()["error"] == "storico dei trade non disponibile"
+
+
+def test_confronto_csv_demo_e_assente(client, env):
+    assert client.get("/api/v1/compare").json()["example"] is True
+    home = env / "casa"
+    home.mkdir()
+    (home / "confronto_nav.csv").write_text("data,nuovo_totale,legacy_nav,legacy_fonte,spy\n2026-11-11,12000.5,1060000,manuale,\n2026-11-12,12010,,manuale,750.2\n", encoding="utf-8")
+    r = client.get("/api/v1/compare")
+    assert r.status_code == 200 and "example" not in r.json()
+    assert r.json()["rows"] == [dict(data="2026-11-11", nuovo_totale=12000.5, legacy_nav=1060000.0, legacy_fonte="manuale", spy=None),
+                                dict(data="2026-11-12", nuovo_totale=12010.0, legacy_nav=None, legacy_fonte="manuale", spy=750.2)]
+    (home / "confronto_nav.csv").unlink()
+    _write(env / "snapshot.json", {"meta": {}})
+    r = client.get("/api/v1/compare")
+    assert r.status_code == 404 and r.json()["error"] == "confronto non disponibile"
+
+
+def test_esempi_v6_marcati_e_coerenti():
+    ohlc = json.loads(server.SAMPLE_OHLC.read_text(encoding="utf-8"))
+    assert ohlc["example"] is True and "ESEMPIO" in ohlc["label"] and {"BTC", "ETH", "SPY"} <= set(ohlc["symbols"])
+    for sym, d in ohlc["symbols"].items():
+        n = len(d["t"])
+        assert n >= 300 and d["t"] == sorted(d["t"]) and all(len(d[k]) == n for k in ("o", "h", "l", "c", "v")), sym
+        assert all(lo <= min(o, c) and hi >= max(o, c) for o, hi, lo, c in zip(d["o"], d["h"], d["l"], d["c"])), sym
+        assert (d["conviction"] is not None) == (d["kind"] == "crypto")
+    book = json.loads(server.SAMPLE_TRADEBOOK.read_text(encoding="utf-8"))
+    assert "ESEMPIO" in book["label"] and book["open"] and book["closed"] and book["shadow"]
+    for t in book["open"].values():
+        assert t["liquidation"] < t["stop"] < t["entry"] and t["side"] == 1                     # lo stop sta prima della liquidazione
+    trades = json.loads(server.SAMPLE_TRADES.read_text(encoding="utf-8"))
+    assert "ESEMPIO" in trades["label"] and len(trades["rows"]) == trades["n_sim"] and {r["source"] for r in trades["rows"]} == {"sim"}
+    cmp_ = json.loads(server.SAMPLE_COMPARE.read_text(encoding="utf-8"))
+    assert "ESEMPIO" in cmp_["label"] and len(cmp_["rows"]) >= 60 and {"data", "nuovo_totale", "legacy_nav", "spy"} <= set(cmp_["rows"][0])
 
 
 def test_esempio_ha_il_blocco_ai():
