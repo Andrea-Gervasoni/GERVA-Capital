@@ -12,6 +12,7 @@ const POLL_MS = 5000;
 const HEALTH_MS = 20000;
 const QUANT_URL = 'api/v1/quant';
 const QUANT4_URL = 'api/v1/quant4';
+const LEARN_URL = 'api/v1/learn';
 const QUANT_MS = 600000;         // la ricerca è statica: una volta al caricamento, poi ogni 10 minuti
 const QUANT_RETRY_MS = 60000;    // se manca o non si legge si riprova più spesso
 const TIMEOUT_MS = 4500;
@@ -45,6 +46,9 @@ export function createStore() {
     quant4: null,        // quarta tornata di ricerca (/api/v1/quant4)
     quant4Status: 'loading',
     quant4At: null,
+    learn: null,         // rapporto del ciclo di automiglioramento (/api/v1/learn)
+    learnStatus: 'loading',
+    learnAt: null,
   };
   const subscribers = new Set();
   let lastText = null;
@@ -152,6 +156,7 @@ export function createStore() {
   }
   const pollQuant = research(QUANT_URL, 'quant');
   const pollQuant4 = research(QUANT4_URL, 'quant4');
+  const pollLearn = research(LEARN_URL, 'learn');
 
   async function tick() {
     if (busy) return;
@@ -161,6 +166,7 @@ export function createStore() {
       await pollHealth();
       await pollQuant();
       await pollQuant4();
+      await pollLearn();
     } finally {
       busy = false;
       schedule();
@@ -186,6 +192,7 @@ export function createStore() {
     refreshHealth: () => pollHealth(true),
     refreshQuant: () => pollQuant(true),
     secondsSinceReceived: () => (state.receivedAt == null ? null : Math.max(0, (Date.now() - state.receivedAt) / 1000)),
+    secondsSinceLearn: () => (state.learnAt == null ? null : Math.max(0, (Date.now() - state.learnAt) / 1000)),
     secondsSinceQuant: () => (state.quantAt == null ? null : Math.max(0, (Date.now() - state.quantAt) / 1000)),
     /** Da chiamare ogni secondo: lo stato può diventare "stale" senza che arrivi nulla di nuovo. */
     reevaluate: () => emit(false),

@@ -43,6 +43,17 @@ services:
       retries: 2
       start_period: 10m
 
+  daily:                                  # passi giornalieri: libro dei trade, automiglioramento, confronto con il sistema originale
+    build: {context: .., dockerfile: deploy/Dockerfile}
+    <<: *hardening
+    restart: unless-stopped
+    entrypoint: ["sh", "-c"]
+    command: ["while true; do python -m gerva daily; python research/v5/v6/b8_confronto/confronto.py --var-dir /data/gerva --csv /data/gerva/confronto_nav.csv --legacy-file /data/gerva/legacy_nav.csv || true; sleep 3600; done"]
+    environment: *env
+    env_file: [{path: ../secrets/gerva.env, required: false}]
+    volumes: ["gervadata:/data"]
+    depends_on: [runner]
+
   dashboard:
     build: {context: .., dockerfile: deploy/Dockerfile}
     <<: *hardening

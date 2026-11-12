@@ -34,7 +34,9 @@ MAX_HOLD = 7
 
 
 def empty_state(equity: float) -> dict:
-    return dict(asof=None, equity=equity, open={}, closed=[], log=[], shadow=[])
+    # start_equity: il libro dei trade NON e' un secondo conto. Lavora sullo stesso capitale del libro giornaliero; il suo
+    # contributo al patrimonio e' equity - start_equity (cosi' lo legge lo strumento di confronto).
+    return dict(asof=None, equity=equity, start_equity=equity, open={}, closed=[], log=[], shadow=[])
 
 
 def load_state(path: str, equity: float) -> dict:

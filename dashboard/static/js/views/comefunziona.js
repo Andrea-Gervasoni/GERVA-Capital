@@ -1,6 +1,7 @@
 // Come funziona: il percorso dai dati agli ordini disegnato come diagramma, e le quattro strategie spiegate.
 
-import { h, s, fill } from '../dom.js';
+import { h, fill } from '../dom.js';
+import { flowDiagram } from '../flow.js';
 import { card, chip, empty, explain, simTag } from '../components.js';
 import { arr, fmtNum, fmtPct, fmtPctSigned, num, obj, str } from '../format.js';
 import { gloss } from '../glossary.js';
@@ -74,7 +75,6 @@ const STRATEGY_COPY = {
 export function mount(root) {
   let ctx = null;
   let selected = 'dati';
-  let lastWidth = 0;
   let stratKey = null;
 
   const flowCard = card({
@@ -82,10 +82,10 @@ export function mount(root) {
     sub: 'Otto passaggi, sempre nello stesso ordine. Tocca un passaggio per leggerne la spiegazione.',
     what: 'Il fondo non è una persona che decide: è una catena di passaggi automatici. I primi quattro costruiscono il portafoglio; il livello AI e il motore di rischio possono solo frenarlo; gli ultimi due lo eseguono.',
   });
-  const svg = s('svg', { class: 'flow', role: 'group', 'aria-label': 'Diagramma di flusso del fondo: dai dati agli ordini' });
   const detail = h('div', { class: 'flow-detail', 'aria-live': 'polite' });
-  const host = h('div', { class: 'flow-host' }, svg);
+  const host = h('div', { class: 'flow-host' });
   flowCard.body.append(host, detail);
+  const flow = flowDiagram(host, STEPS, { label: 'Diagramma di flusso del fondo: dai dati agli ordini', initial: selected, onSelect: (id) => { selected = id; paintDetail(); } });
 
   const stratHead = h('div', { class: 'section-head span-12' });
   const stratGrid = h('div', { class: 'strats span-12' });
@@ -99,16 +99,6 @@ export function mount(root) {
   let venueKey = null;
   root.append(h('div', { class: 'grid' }, flowCard.el, stratHead, stratGrid, venueCard.el));
 
-  function select(id, focus = false) {
-    selected = id;
-    drawFlow(true);
-    paintDetail();
-    if (focus) {
-      const node = svg.querySelector(`[data-step="${id}"]`);
-      if (node) node.focus();
-    }
-  }
-
   function paintDetail() {
     const i = STEPS.findIndex((x) => x.id === selected);
     const st = STEPS[i] || STEPS[0];
@@ -121,78 +111,6 @@ export function mount(root) {
       h('p', { class: 'flow-detail__expert only-esperto' }, gloss(st.expert)),
       h('p', { class: 'flow-detail__file only-esperto' }, 'Codice: ', h('code', { text: st.file })));
   }
-
-  function drawFlow(force = false) {
-    const W = Math.floor(host.clientWidth);
-    if (W < 120 || (!force && W === lastWidth)) return;
-    lastWidth = W;
-    svg.replaceChildren();
-    const wide = W >= 720;
-    const cols = wide ? 4 : 1;
-    const gapX = wide ? 34 : 0;
-    const gapY = wide ? 40 : 18;
-    const nw = wide ? (W - gapX * (cols - 1) - 2) / cols : W - 2;
-    const nh = wide ? 76 : 54;
-    const pos = STEPS.map((_, i) => {
-      const row = Math.floor(i / cols);
-      const col = wide && row % 2 === 1 ? cols - 1 - (i % cols) : i % cols;      // la seconda riga torna indietro: a serpentina
-      return { x: 1 + col * (nw + gapX), y: 1 + row * (nh + gapY) };
-    });
-    const H = pos[pos.length - 1].y + nh + 2;
-    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-    svg.setAttribute('width', W);
-    svg.setAttribute('height', H);
-    // frecce
-    for (let i = 0; i < STEPS.length - 1; i++) {
-      const a = pos[i];
-      const b = pos[i + 1];
-      let d;
-      let head;
-      if (Math.abs(a.y - b.y) < 1) {
-        const dir = b.x > a.x ? 1 : -1;
-        const x1 = dir > 0 ? a.x + nw : a.x;
-        const x2 = dir > 0 ? b.x : b.x + nw;
-        const y = a.y + nh / 2;
-        d = `M${x1 + 4 * dir},${y}L${x2 - 5 * dir},${y}`;
-        head = `M${x2 - 11 * dir},${y - 5}L${x2 - 4 * dir},${y}L${x2 - 11 * dir},${y + 5}`;
-      } else {
-        const x = a.x + nw / 2;
-        d = `M${x},${a.y + nh + 4}L${x},${b.y - 5}`;
-        head = `M${x - 5},${b.y - 11}L${x},${b.y - 4}L${x + 5},${b.y - 11}`;
-      }
-      svg.append(s('path', { class: 'flow__arrow', d }), s('path', { class: 'flow__arrow', d: head }));
-    }
-    STEPS.forEach((st, i) => {
-      const { x, y } = pos[i];
-      const on = st.id === selected;
-      const g = s('g', {
-        class: `flow__node ${on ? 'is-on' : ''} ${st.guard ? 'flow__node--guard' : ''}`.trim(), role: 'button', tabindex: '0',
-        'aria-pressed': String(on), 'aria-label': `Passaggio ${i + 1}: ${st.title}, ${st.sub}`, 'data-step': st.id,
-      });
-      g.append(s('rect', { class: 'flow__box', x, y, width: nw, height: nh, rx: 6 }));
-      const cy = y + nh / 2;
-      g.append(s('circle', { class: 'flow__badge', cx: x + 22, cy, r: 11 }));
-      g.append(s('text', { class: 'flow__n', x: x + 22, y: cy + 4 }, String(i + 1)));
-      g.append(s('text', { class: 'flow__title', x: x + 42, y: cy - 3 }, st.title));
-      g.append(s('text', { class: 'flow__sub', x: x + 42, y: cy + 14 }, st.sub));
-      g.addEventListener('click', () => select(st.id));
-      g.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          select(st.id, true);
-        } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-          e.preventDefault();
-          select(STEPS[Math.min(STEPS.length - 1, i + 1)].id, true);
-        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-          e.preventDefault();
-          select(STEPS[Math.max(0, i - 1)].id, true);
-        }
-      });
-      svg.append(g);
-    });
-  }
-
-  if (typeof ResizeObserver === 'function') new ResizeObserver(() => drawFlow()).observe(host);
 
   function metricRows(sl) {
     const a = obj(sl.scelta);
@@ -243,7 +161,7 @@ export function mount(root) {
   return {
     update(next) {
       ctx = next;
-      drawFlow();
+      flow.redraw();
       if (!detail.firstChild) paintDetail();
       fillStrategies();
       const venues = arr(ctx.quant4 && ctx.quant4.venues);

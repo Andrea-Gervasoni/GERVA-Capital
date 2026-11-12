@@ -28,6 +28,8 @@ def env(tmp_path, monkeypatch):
     monkeypatch.delenv("GERVA_DASH_ALLOWED_HOSTS", raising=False)
     monkeypatch.setenv("GERVA_QUANT", str(tmp_path / "quant.json"))
     monkeypatch.setenv("GERVA_QUANT4", str(tmp_path / "quant_v4.json"))
+    monkeypatch.setenv("GERVA_LEARN", str(tmp_path / "learn" / "report.json"))
+    monkeypatch.delenv("GERVA_HOME", raising=False)
     return tmp_path
 
 
@@ -241,6 +243,95 @@ def test_pagina_leva_e_termini_della_quarta_tornata():
     assert "lev > 30.5" in leva and "rv > 0.15" in leva
     ricerca = (STATIC / "js" / "views" / "ricerca.js").read_text(encoding="utf-8")
     assert "da misurare in paper" in ricerca and "ai_contribution" not in ricerca      # il contributo dell'AI non è mai un numero
+
+
+# ---- ciclo di automiglioramento (learn/report.json) ----
+def _learn_file(env) -> Path:
+    path = env / "learn" / "report.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def test_learn_in_demo_serve_l_esempio_marcato(client, env):
+    r = client.get("/api/v1/learn")                       # né snapshot né rapporto: modalità demo
+    assert r.status_code == 200
+    body = r.json()
+    assert body["example"] is True and r.headers["x-gerva-learn-source"] == "demo"
+    assert {"evaluation", "weaknesses", "improvement", "registry"} <= set(body)
+    assert r.headers["cache-control"] == "no-store" and "default-src 'self'" in r.headers["content-security-policy"]
+
+
+def test_learn_assente_con_snapshot_vero_da_404(client, env):
+    _write(env / "snapshot.json", {"meta": {"mode": "paper"}})      # conto vero: l'esempio non deve comparire
+    r = client.get("/api/v1/learn")
+    assert r.status_code == 404 and r.json() == {"ok": False, "error": "ricerca non disponibile"}
+    assert "x-gerva-learn-source" not in r.headers
+
+
+def test_learn_dal_file_con_nan_ripuliti_e_mai_marcato_esempio(client, env):
+    _write(_learn_file(env), '{"generated": "2026-11-12 06:05:14+00:00", "evaluation": {"all": {"n": 3, "performance": {"mean_R": NaN}}, "paper": {"n": 0}}, '
+                             '"improvement": {"proposed": [], "shadow": [], "active": [], "tried": 4, "threshold_t": 2.0}, "registry": []}')
+    r = client.get("/api/v1/learn")
+    assert r.status_code == 200
+    body = r.json()
+    assert "example" not in body and "x-gerva-learn-source" not in r.headers
+    assert body["evaluation"]["all"]["performance"]["mean_R"] is None and body["improvement"]["tried"] == 4
+    assert int(r.headers["x-gerva-quant-age"]) >= 0
+
+
+@pytest.mark.parametrize("contenuto", ['{"generated": "20', "[]", ""])
+def test_learn_illeggibile_o_troppo_grande_da_503(client, env, monkeypatch, contenuto):
+    _write(_learn_file(env), contenuto)
+    r = client.get("/api/v1/learn")
+    assert r.status_code == 503 and r.json()["ok"] is False and str(env) not in r.text
+    assert "weaknesses" not in r.text                      # un rapporto rotto non fa comparire l'esempio
+    _write(_learn_file(env), {"x": "y" * 4000})
+    monkeypatch.setattr(server, "MAX_SNAPSHOT_BYTES", 1000)
+    assert client.get("/api/v1/learn").status_code == 503
+
+
+def test_learn_percorsi_host_e_sola_lettura(client, env, monkeypatch):
+    _write(_learn_file(env), {"generated": "x"})
+    assert client.get("/api/v1/learn", headers={"Host": "esempio.invalid"}).status_code == 400
+    for method in ("post", "put", "patch", "delete"):       # nessun endpoint attiva o modifica una regola
+        assert getattr(client, method)("/api/v1/learn").status_code == 404
+        assert getattr(client, method)("/api/v1/learn/approve").status_code == 404
+    monkeypatch.delenv("GERVA_LEARN")
+    assert server.learn_path() == Path(server.ROOT) / "var" / "gerva" / "learn" / "report.json"
+    monkeypatch.setenv("GERVA_HOME", str(env / "casa"))
+    assert server.learn_path() == env / "casa" / "learn" / "report.json"
+    monkeypatch.setenv("GERVA_LEARN", str(env / "altro.json"))
+    assert server.learn_path() == env / "altro.json"
+    writers = [r.path for r in server.app.routes if getattr(r, "methods", None) and r.methods & {"POST", "PUT", "PATCH", "DELETE"} and "{rest" not in r.path]
+    assert writers == ["/api/v1/kill"]                     # l'unica scrittura della dashboard resta il KILL
+
+
+def test_esempio_learn_ha_la_forma_attesa():
+    d = json.loads(server.SAMPLE_LEARN.read_text(encoding="utf-8"))
+    assert {"generated", "evaluation", "weaknesses", "improvement", "registry"} <= set(d)
+    assert {"all", "paper"} <= set(d["evaluation"]) and d["evaluation"]["all"]["n"] > 0
+    imp = d["improvement"]
+    assert {"proposed", "shadow", "active", "tried", "threshold_t"} <= set(imp)
+    for p in imp["proposed"]:
+        assert set(p["checks"]) == {"numerosita", "quota", "in_campione", "fuori_campione", "walk_forward", "soglie_vicine"}
+        assert p["state"] in ("RESPINTA", "IN_OMBRA")
+        assert len(p["fails"]) == sum(1 for ok in p["checks"].values() if not ok)
+    assert {r["state"] for r in d["registry"]} <= {"RESPINTA", "IN_OMBRA", "PROMUOVIBILE", "ATTIVA", "RITIRATA"}
+
+
+def test_pagina_apprendimento_non_puo_attivare_regole():
+    view = (STATIC / "js" / "views" / "apprendimento.js").read_text(encoding="utf-8")
+    assert "python -m gerva learn --approve ${str(id)} --confirm" in view      # il comando si mostra…
+    for vietato in ("fetch(", "XMLHttpRequest", "method: 'POST'", "h('button'", "h('form'", "h('input'", "onclick"):
+        assert vietato not in view, vietato                                    # …ma la pagina non può eseguirlo
+    for check in ("numerosita", "quota", "in_campione", "fuori_campione", "walk_forward", "soglie_vicine"):
+        assert f"key: '{check}'" in view
+    main = (STATIC / "js" / "main.js").read_text(encoding="utf-8")
+    assert "'apprendimento'" in main and main.index("id: 'ai'") < main.index("id: 'apprendimento'") < main.index("id: 'ricerca'")
+    js = (STATIC / "js" / "glossary.js").read_text(encoding="utf-8")
+    for term in ("Ombra (shadow)", "Walk-forward", "Fuori campione", "MAE / MFE"):
+        assert f"term: '{term}'" in js, term
+    assert "api/v1/learn" in (STATIC / "js" / "store.js").read_text(encoding="utf-8")
 
 
 def test_esempio_ha_il_blocco_ai():

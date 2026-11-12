@@ -7,6 +7,7 @@ Che cosa fa:
                            se il file non esiste serve l'esempio, marcato "DEMO: dati di esempio";
   * GET  /api/v1/health    {"ok": true, "snapshot_age_s": ...};
   * GET  /api/v1/quant     i risultati della ricerca (env GERVA_QUANT, default research/v5/quant.json): tutto SIMULATO;
+  * GET  /api/v1/learn     il rapporto del ciclo di automiglioramento (env GERVA_LEARN, default $GERVA_HOME/learn/report.json);
   * GET  /api/v1/quant4    la quarta tornata di ricerca (env GERVA_QUANT4, default research/v5/quant_v4.json): SIMULATO;
   * POST /api/v1/kill      crea in modo atomico il file KILL (env GERVA_KILL_FILE). Non lo cancella mai.
 
@@ -43,6 +44,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 STATIC = HERE / "static"
 SAMPLE = STATIC / "sample_snapshot.json"
+SAMPLE_LEARN = STATIC / "sample_learn.json"
 
 DEMO_LABEL = "DEMO: dati di esempio"
 MAX_SNAPSHOT_BYTES = 16 * 1024 * 1024       # uno snapshot più grande di così è un errore, non un dato
@@ -81,6 +83,15 @@ def quant_path() -> Path:
 def quant4_path() -> Path:
     raw = os.environ.get("GERVA_QUANT4", "").strip()
     return Path(raw).expanduser() if raw else ROOT / "research" / "v5" / "quant_v4.json"
+
+
+def learn_path() -> Path:
+    """Rapporto del ciclo di automiglioramento: GERVA_LEARN, altrimenti $GERVA_HOME/learn/report.json."""
+    raw = os.environ.get("GERVA_LEARN", "").strip()
+    if raw:
+        return Path(raw).expanduser()
+    home = os.environ.get("GERVA_HOME", "").strip()
+    return (Path(home).expanduser() if home else ROOT / "var" / "gerva") / "learn" / "report.json"
 
 
 def kill_path() -> Path:
@@ -302,6 +313,21 @@ def get_quant():
 def get_quant4():
     """Quarta tornata di ricerca (leva per trade, fondo intero, strategie provate): stesse regole di /quant."""
     return _research(quant4_path())
+
+
+@app.get("/api/v1/learn")
+def get_learn():
+    """Rapporto di `python -m gerva learn`. Sola lettura: nessun endpoint attiva una regola (lo fa solo il comando).
+    Senza rapporto e senza snapshot (modalità demo) si serve l'esempio, marcato come tale."""
+    path = learn_path()
+    if path.is_file() or snapshot_path().is_file() or not SAMPLE_LEARN.is_file():
+        return _research(path)
+    try:
+        data = _read_json(SAMPLE_LEARN, attempts=1)
+    except SnapshotError as exc:
+        return _error(503, str(exc).replace("snapshot", "file della ricerca"))
+    data["example"] = True
+    return JSONResponse(data, headers={"X-Gerva-Learn-Source": "demo"})
 
 
 def _research(path: Path):

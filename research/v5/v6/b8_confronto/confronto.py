@@ -63,7 +63,10 @@ def read_new(var_dir: str) -> dict:
         pass
     try:
         t = json.load(open(os.path.join(var_dir, "tradebook.json")))
-        out["nuovo_trade"] = _f(t.get("equity"))
+        # il libro dei trade lavora sullo stesso capitale del libro giornaliero: conta solo il suo guadagno (equity - start_equity).
+        # Uno stato senza start_equity (vecchio formato) si legge come conto a se', com'era prima.
+        eq, st = _f(t.get("equity")), _f(t.get("start_equity"))
+        out["nuovo_trade"] = eq if st is None or eq is None else eq - st
     except (OSError, ValueError):
         pass
     return out
@@ -141,7 +144,7 @@ def save_csv(path: str, rows: list[dict]) -> None:
 def append(path: str, day: str, var_dir: str, legacy_file: str, db_path: str, gq_path: str | None, no_net: bool,
            market: dict | None = None) -> dict:
     row = dict(data=day, **read_new(var_dir), **read_legacy(day, legacy_file, db_path, gq_path), **(market or read_market(no_net)))
-    parts = [v for v in (row["nuovo_libro"], row["nuovo_trade"]) if v]
+    parts = [v for v in (row["nuovo_libro"], row["nuovo_trade"]) if v is not None]
     row["nuovo_totale"] = sum(parts) if parts else None
     rows = [r for r in load_csv(path) if r.get("data") != day] + [row]
     save_csv(path, rows)

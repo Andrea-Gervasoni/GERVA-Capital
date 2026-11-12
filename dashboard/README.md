@@ -40,6 +40,10 @@ Panoramica, Performance, Esposizione, Rischio, Strategie, Ordini, Sistema, e in 
 
 - **AI** — regime di mercato, conviction di oggi con le soglie, overlay in vigore (moltiplicatori, motivi, fonti,
   scadenza). Legge il blocco `ai` dello snapshot; se manca lo dice.
+- **Apprendimento** — il ciclo di automiglioramento (`python -m gerva learn`): il percorso memoria → valutazione →
+  ipotesi → validazione → ombra → approvazione → attiva, come stanno andando i trade (tutti e solo paper), dove
+  perdono, le regole provate con i sei controlli, quelle in ombra e quelle attive. **La pagina è di sola lettura**:
+  mostra il comando `python -m gerva learn --approve <id> --confirm` ma non ha alcun pulsante che attivi una regola.
 - **Ricerca** — tutto ciò che viene da `research/v5/quant.json`: tabella della leva nei tre scenari, ventaglio a tre
   anni, rischio di rovina per leva, scenari, correlazioni, curve delle strategie con il confine scelta/verifica,
   quote nel tempo, Sharpe mobile, drawdown, istogramma, conviction, robustezza, significatività, idee scartate.
@@ -62,6 +66,7 @@ In fondo a Rischio c'è l'esempio «leva del trade e leva del conto» con i tett
 | `GERVA_SNAPSHOT` | `var/gerva/snapshot.json` | Lo snapshot da servire. Se il file non esiste si serve l'esempio DEMO; se esiste ma è illeggibile la risposta è 503 (mai l'esempio al posto di dati veri). |
 | `GERVA_QUANT` | `research/v5/quant.json` | I risultati della ricerca (statici, simulati). Se manca, `/api/v1/quant` risponde 404 e le pagine lo dicono. |
 | `GERVA_QUANT4` | `research/v5/quant_v4.json` | La quarta tornata di ricerca. Stesse regole di `GERVA_QUANT`, endpoint `/api/v1/quant4`. |
+| `GERVA_LEARN` | `$GERVA_HOME/learn/report.json` (senza `GERVA_HOME`: `var/gerva/learn/report.json`) | Il rapporto del ciclo di automiglioramento. Se manca: 404; in modalità demo (nessuno snapshot) si serve `static/sample_learn.json`, marcato come esempio. |
 | `GERVA_KILL_FILE` | `var/gerva/KILL` | Il file che il comando KILL crea. |
 | `GERVA_DASH_TOKEN` | *(non impostato)* | Token richiesto dal KILL. Senza, il KILL è spento (503). |
 | `GERVA_DASH_HOST` | `127.0.0.1` | Indirizzo di ascolto. |
@@ -79,6 +84,7 @@ I percorsi predefiniti sono relativi alla radice del repository; quelli passati 
 | GET | `/api/v1/health` | `{"ok": true, "snapshot_age_s": …, "snapshot_source": …, "kill_enabled": …, "kill_active": …}` |
 | GET | `/api/v1/quant` | Il file della ricerca così com'è (NaN → `null`); 404 se manca, 503 se illeggibile. Header `X-Gerva-Quant-Age`. |
 | GET | `/api/v1/quant4` | Come `/quant`, per `quant_v4.json`. |
+| GET | `/api/v1/learn` | Il rapporto di `gerva learn`, stesse regole di `/quant`. Sola lettura: l'unica scrittura della dashboard resta il KILL. |
 | POST | `/api/v1/kill` | Crea il file KILL. Vedi sotto. |
 
 Ogni risposta porta le intestazioni di sicurezza (CSP `default-src 'self'` senza script né stili inline,
@@ -161,7 +167,8 @@ static/js/store.js        interrogazione ogni 5 s, dati fermi / offline
 static/js/model.js        lettura tollerante dello snapshot (funzioni pure)
 static/js/charts.js       grafici SVG: linee con mirino, drawdown, heatmap, barre, sparkline, barre di limite
 static/js/glossary.js     definizioni e termini cliccabili
-static/js/views/          una sezione per file (undici)
+static/js/flow.js         diagramma di flusso cliccabile (Come funziona, Apprendimento)
+static/js/views/          una sezione per file (dodici)
 static/sample_snapshot.json   esempio DEMO, coerente al centesimo (lo verifica il test)
 ```
 

@@ -19,6 +19,7 @@ import * as comefunziona from './views/comefunziona.js';
 import * as ricerca from './views/ricerca.js';
 import * as ai from './views/ai.js';
 import * as leva from './views/leva.js';
+import * as apprendimento from './views/apprendimento.js';
 
 const ROUTES = [
   { id: 'panoramica', label: 'Panoramica', icon: 'overview', view: panoramica },
@@ -29,6 +30,7 @@ const ROUTES = [
   { id: 'ordini', label: 'Ordini', icon: 'orders', view: ordini },
   { id: 'sistema', label: 'Sistema', icon: 'system', view: sistema },
   { id: 'ai', label: 'AI', icon: 'ai', view: ai, group: true },
+  { id: 'apprendimento', label: 'Apprendimento', icon: 'learn', view: apprendimento },
   { id: 'ricerca', label: 'Ricerca', icon: 'research', view: ricerca },
   { id: 'leva-trade', label: 'Leva per trade', icon: 'lever', view: leva },
   { id: 'come-funziona', label: 'Come funziona', icon: 'flow', view: comefunziona },
@@ -225,6 +227,10 @@ function syncSources() {
   else parts.push(`Ricerca: ${st.quantStatus === 'loading' ? 'in caricamento' : 'non disponibile'}`);
   if (st.quant4Status === 'ok') parts.push('Quarta tornata: letta');
   else if (st.quant4Status !== 'loading') parts.push('Quarta tornata: non disponibile');
+  if (st.learnStatus === 'ok') {
+    const lg = parseTs(str(obj(st.learn).generated).replace(' ', 'T').replace(/(\.\d+)?\+00:00$/, 'Z'));
+    parts.push(`Apprendimento: letto ${fmtAgo(store.secondsSinceLearn())}${lg == null ? '' : `, rapporto di ${fmtAgo(Math.max(0, (store.serverNow() - lg) / 1000))}`}`);
+  }
   setText(el.sources, parts.join('  ·  '));
 }
 
@@ -306,7 +312,7 @@ function placeholder() {
 
 function context() {
   const st = store.state;
-  return { snap: st.snap, health: st.health, status: st.status, now: store.serverNow(), ccy: str(obj(st.snap.meta).base_ccy) || 'EUR', quant: st.quant, quantStatus: st.quantStatus, quant4: st.quant4, quant4Status: st.quant4Status, level };
+  return { snap: st.snap, health: st.health, status: st.status, now: store.serverNow(), ccy: str(obj(st.snap.meta).base_ccy) || 'EUR', quant: st.quant, quantStatus: st.quantStatus, quant4: st.quant4, quant4Status: st.quant4Status, learn: st.learn, learnStatus: st.learnStatus, level };
 }
 
 const api = {

@@ -6,7 +6,7 @@ non c'e' un'opinione da dare, c'e' una tabella da leggere. Tutti devono essere v
     2. disponibilita' del ciclo >= 99% (giri eseguiti / giri attesi)
     3. zero ordini rimasti non riconciliati
     4. zero KILL scattati per difetti del software (un KILL per caduta di mercato va capito, non contato)
-    5. caduta massima in paper <= 10% (la soglia del primo scalino di rischio)
+    5. caduta massima in paper <= 15% (la soglia del primo scalino di rischio)
     6. Sharpe realizzato >= 0 e non incompatibile con il backtest: PSR(Sharpe vero > 0) >= 0,60
        (90 giorni non bastano a "provare" uno Sharpe: bastano a scoprire che e' negativo o che il sistema non
        replica il backtest)
@@ -30,7 +30,7 @@ from ..validation import metrics as M
 
 MIN_DAYS = 90
 MIN_UPTIME = 0.99
-MAX_DD = 0.10
+MAX_DD = 0.15                  # il primo scalino del motore di rischio nel profilo scelto (config/gerva.yaml)
 MIN_PSR = 0.60
 MAX_TRACKING = 0.03
 MAX_COST_RATIO = 1.5

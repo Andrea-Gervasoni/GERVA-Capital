@@ -118,6 +118,30 @@ export const GLOSSARY = [
     text: 'Sui contratti perpetual, ogni poche ore chi sta dalla parte più affollata paga una piccola somma all\'altra parte: è il funding. Incassarlo stando dalla parte meno affollata, coperti sul prezzo, si chiama carry. Nel 2021 rendeva il 30–40% l\'anno, oggi il 2–5%: è un premio che si è consumato.',
     expert: 'Carry = Σ funding incassato − costi di copertura. Dipende dalla venue; le serie di venue diverse non vanno incollate senza dichiararlo.',
   },
+  {
+    id: 'ombra', term: 'Ombra (shadow)', match: ['in ombra', 'In ombra', 'ombra'],
+    short: 'Una regola osservata senza che agisca.',
+    text: 'Una correzione che ha superato i controlli sui dati storici non viene applicata subito: entra «in ombra». Il sistema annota che cosa avrebbe fatto su ogni nuovo trade del conto di prova, senza toccare nulla. Solo se anche lì si dimostra utile diventa promuovibile, e solo il proprietario può attivarla.',
+    expert: 'Stato IN_OMBRA: servono almeno 20 trade paper colpiti, con R medio sotto zero e sotto quello degli altri, per passare a PROMUOVIBILE.',
+  },
+  {
+    id: 'walk-forward', term: 'Walk-forward', match: ['walk-forward', 'Walk-forward'],
+    short: 'Controllo anno per anno, sempre in avanti nel tempo.',
+    text: 'Invece di guardare tutto lo storico insieme, si controlla se una regola avrebbe aiutato in ciascun anno preso da solo. Una regola buona funziona in molti anni diversi; una che funziona solo in uno o due è probabilmente un caso.',
+    expert: 'Qui: quota di anni (con almeno 5 trade colpiti) in cui i trade colpiti rendono meno degli altri; soglia 60%.',
+  },
+  {
+    id: 'fuori-campione', term: 'Fuori campione', match: ['fuori campione', 'Fuori campione', 'in campione'],
+    short: 'Dati che non sono serviti a trovare la regola.',
+    text: 'Una regola si cerca su una parte dei dati («in campione») e si controlla su un\'altra parte che non ha mai visto («fuori campione»). Se funziona solo dove è stata cercata, ha imparato il passato a memoria; se funziona anche fuori, c\'è qualche speranza che valga in futuro. È la stessa idea del periodo di scelta e di verifica.',
+    expert: 'In campione: trade fino al 31/12/2022. Fuori campione: dal 2023. La soglia in campione è t ≤ −√(2 ln K), mai sotto 2, con K = ipotesi provate.',
+  },
+  {
+    id: 'mae-mfe', term: 'MAE / MFE', match: ['MAE', 'MFE'],
+    short: 'Il momento peggiore e il momento migliore di un\'operazione mentre era aperta.',
+    text: 'MAE (escursione avversa massima) è quanto un\'operazione è andata in perdita nel suo momento peggiore; MFE (escursione favorevole massima) è quanto è andata in guadagno nel momento migliore. Si misurano in R. Servono a capire se gli stop sono troppo stretti o se si esce troppo presto.',
+    expert: 'MAE e MFE in multipli del rischio iniziale, registrati nella memoria dei trade (gerva/learn/memory.py).',
+  },
 ];
 
 const BY_ID = new Map(GLOSSARY.map((g) => [g.id, g]));
