@@ -28,6 +28,7 @@ import * as ricerca from './views/ricerca.js';
 import * as ai from './views/ai.js';
 import * as leva from './views/leva.js';
 import * as apprendimento from './views/apprendimento.js';
+import * as evidenza from './views/evidenza.js';
 
 /** Gli spazi: quattro «ogni giorno», tre «quando serve». Le viste precedenti restano raggiungibili come schede. */
 const SPACES = [
@@ -40,7 +41,7 @@ const SPACES = [
   { id: 'rischio', label: 'Rischio', icon: 'risk', key: 'r', group: 'Ogni giorno', tabs: [
     { id: '', label: 'Freni e tetti', view: rischio }, { id: 'limiti', label: 'Limiti e leva (archivio)', view: rischioArchivio }] },
   { id: 'evidenza', label: 'Evidenza', icon: 'evidence', key: 'e', group: 'Quando serve', tabs: [
-    { id: '', label: 'Ricerca', view: ricerca }, { id: 'leva', label: 'Leva per trade (archivio)', view: leva }] },
+    { id: '', label: 'Evidenza', view: evidenza }, { id: 'ricerca', label: 'Ricerca (archivio)', view: ricerca }, { id: 'leva', label: 'Leva per trade (archivio)', view: leva }] },
   { id: 'apprendimento', label: 'Apprendimento', icon: 'learn', key: 'a', group: 'Quando serve', tabs: [{ id: '', label: 'Apprendimento', view: apprendimento }] },
   { id: 'sistema', label: 'Sistema', icon: 'system', key: 's', group: 'Quando serve', tabs: [
     { id: '', label: 'Salute', view: sistema }, { id: 'ordini', label: 'Ordini', view: ordini }, { id: 'guida', label: 'Come funziona', view: comefunziona }] },

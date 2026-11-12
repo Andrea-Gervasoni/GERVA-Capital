@@ -24,7 +24,7 @@ export const CHART_TOKENS = {
   // opacità
   areaOpacity: ['--chart-area-opacity', 0.1, 'n'], bandOpacity: ['--chart-band-opacity', 0.13, 'n'], bandOpacityStrong: ['--chart-band-opacity-strong', 0.24, 'n'], volumeOpacity: ['--chart-volume-opacity', 0.55, 'n'],
   // movimento
-  motion: ['--chart-motion', 160, 'ms'], range: ['--chart-range', 420, 'ms'],
+  motion: ['--chart-motion', 160, 'ms'], range: ['--chart-range', 420, 'ms'], morph: ['--chart-morph', 460, 'ms'],
 };
 
 let cached = null;

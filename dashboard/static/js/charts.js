@@ -520,6 +520,22 @@ export function timeChart(host, { label = 'Grafico', zoom = false, table = false
     if (!silent) for (const fn of winSubs) fn(win ? [full.x[win.a], full.x[win.b]] : null);
   }
   const bounds = () => win || { a: 0, b: full.x.length - 1 };
+  /** Cambio di intervallo: il dominio scorre fino alla nuova finestra (--chart-range); con «riduci movimento» scatta. */
+  let winTween = 0;
+  function tweenWin(a1, b1) {
+    cancelAnimationFrame(winTween);
+    const T = chartTheme();
+    const { a: a0, b: b0 } = bounds();
+    if (T.reducedMotion || !(T.range > 1) || !geo || (a0 === a1 && b0 === b1)) { setWin(a1, b1); return; }
+    const start = performance.now();
+    const step = (now) => {
+      const k = Math.min(1, (now - start) / T.range);
+      const e = 1 - (1 - k) ** 3;
+      setWin(a0 + (a1 - a0) * e, b0 + (b1 - b0) * e, k < 1);
+      if (k < 1) winTween = requestAnimationFrame(step);
+    };
+    winTween = requestAnimationFrame(step);
+  }
   function zoomBy(factor, anchor) {
     const { a, b } = bounds();
     const size = Math.max(8, (b - a) * factor);
@@ -640,11 +656,25 @@ export function timeChart(host, { label = 'Grafico', zoom = false, table = false
       hover = t == null || t < spec.x[0] || t > spec.x[spec.x.length - 1] ? null : nearest(spec.x, t);
       paintHover();
     },
-    setWindow(t0, t1, { silent = false } = {}) { if (full) setWin(nearest(full.x, t0), nearest(full.x, t1), silent); },
+    setWindow(t0, t1, { silent = false, animate = false } = {}) {
+      if (!full) return;
+      if (animate) tweenWin(nearest(full.x, t0), nearest(full.x, t1)); else { cancelAnimationFrame(winTween); setWin(nearest(full.x, t0), nearest(full.x, t1), silent); }
+    },
     resetWindow() { if (full) setWin(0, full.x.length - 1); },
     onWindow(fn) { winSubs.add(fn); return () => winSubs.delete(fn); },
     get window() { return full && win ? [full.x[win.a], full.x[win.b]] : null; },
   };
+}
+
+/**
+ * Primo ingresso di barre e celle: la prima volta che un grafico compare in `host` l'elemento prende `is-grow` (le barre
+ * crescono dallo zero, le celle si accendono); ai ridisegni successivi no. Il CSS lo spegne con «riduci movimento».
+ */
+export function growOnce(host, el) {
+  if (!host || !el || host.dataset.grown) return;
+  host.dataset.grown = '1';
+  el.classList.add('is-grow');
+  setTimeout(() => el.classList.remove('is-grow'), 1600);
 }
 
 // ---- tabella alternativa a un grafico ------------------------------------------------------------------------------------------
@@ -994,6 +1024,7 @@ export function histogram(host, data, { log = false, label = 'Distribuzione', xF
       const x1 = xOf(edges[i + 1]);
       const y = yOf(c);
       const rect = s('rect', { class: `c-col ${mids[i] < 0 ? 'c-col--neg' : 'c-col--pos'}`, x: (x0 + 1).toFixed(1), y: y.toFixed(1), width: Math.max(1, x1 - x0 - 2).toFixed(1), height: Math.max(1, bottom - y).toFixed(1), rx: Math.min(1.5, T.barRadius), tabindex: '0' });
+      rect.style.setProperty('--i', String(i));
       bindTip(rect, () => ({
         title: `da ${rangeFormat(edges[i])} a ${rangeFormat(edges[i + 1])}`,
         rows: [{ label: unit, value: fmtNum(c, 0) }, { label: 'Quota', value: fmtPct(c / total, 1) }, withNormal ? { label: 'Attesi se normale', value: fmtNum(normal[i], 1) } : null].filter(Boolean),
@@ -1060,6 +1091,7 @@ export function columns(host, values, { labels = [], height = 96, label = 'Colon
       const y = yOf(Math.max(v, 0));
       const hgt = Math.max(1, Math.abs(yOf(v) - yOf(0)));
       const rect = s('rect', { class: `c-col ${v < 0 ? 'c-col--down' : 'c-col--up'}`, x: (i * bw + 1).toFixed(1), y: y.toFixed(1), width: Math.max(1, bw - 2).toFixed(1), height: hgt.toFixed(1), rx: Math.min(chartTheme().barRadius, bw / 4) });
+      rect.style.setProperty('--i', String(i));
       bindTip(rect, () => ({ title: labels[i] || '', rows: [{ label: 'Rendimento', value: fmt(v), cls: v > 0 ? 'pos' : v < 0 ? 'neg' : '' }] }));
       svg.append(rect);
     });
