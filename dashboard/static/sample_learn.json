@@ -1,0 +1,166 @@
+{
+ "generated": "2026-11-12 06:03:47.832645+00:00",
+ "simulated": true,
+ "note": "I trade 'sim' sono simulazioni storiche; i trade 'paper' sono del conto di prova. Nessuna regola e' attiva senza approvazione.",
+ "evaluation": {
+  "all": {
+   "n": 652,
+   "per_year": 76.57331189710611,
+   "performance": {
+    "mean_R": 0.23651832189701225,
+    "total_R": 154.20994587685198,
+    "win_rate": 0.4325153374233129,
+    "profit_factor": 1.4539649857973929,
+    "payoff": 1.907684555833459,
+    "t_stat": 3.471577467580031,
+    "ratio": 0.13595746647123944,
+    "kelly_fraction": 0.0781522232232263
+   },
+   "risk": {
+    "max_drawdown_R": -21.35541112286691,
+    "max_losing_streak": 17,
+    "worst_R": -1.1880920158898658,
+    "var95_R": -1.0855292741821105,
+    "cvar95_R": -1.1088480683628634
+   },
+   "robustness": {
+    "by_year": {
+     "2018": {
+      "n": 10,
+      "mean_R": -0.6421567481283633
+     },
+     "2019": {
+      "n": 56,
+      "mean_R": 0.5475567214635613
+     },
+     "2020": {
+      "n": 95,
+      "mean_R": 0.4469208927426435
+     },
+     "2021": {
+      "n": 108,
+      "mean_R": 0.248820839484688
+     },
+     "2022": {
+      "n": 16,
+      "mean_R": -0.3368741952111759
+     },
+     "2023": {
+      "n": 119,
+      "mean_R": 0.3209366405445386
+     },
+     "2024": {
+      "n": 114,
+      "mean_R": 0.17315928976852288
+     },
+     "2025": {
+      "n": 84,
+      "mean_R": 0.011691476857500212
+     },
+     "2026": {
+      "n": 50,
+      "mean_R": 0.14228970580431693
+     }
+    },
+    "by_exit": {
+     "stop": {
+      "n": 388,
+      "mean_R": -0.5081952615663636
+     },
+     "tempo": {
+      "n": 264,
+      "mean_R": 1.3310216188053072
+     }
+    },
+    "recent_vs_past": {
+     "past_mean_R": 0.2381542176699439,
+     "recent_mean_R": 0.2114891165711575,
+     "t": -0.07112738000262547,
+     "recent_n": 40
+    }
+   },
+   "by_source": {
+    "sim": {
+     "n": 652,
+     "mean_R": 0.23651832189701225
+    }
+   }
+  },
+  "paper": {
+   "n": 0
+  }
+ },
+ "weaknesses": [
+  {
+   "slice": "atr_pct > 0.07161",
+   "feature": "atr_pct",
+   "n": 95,
+   "share": 0.3333333333333333,
+   "mean_R": 0.10988102182605687,
+   "rest_mean_R": 0.4091740010458895,
+   "t": -1.5112267249078648,
+   "cost_total_R": 10.438697073475403,
+   "rule": {
+    "feature": "atr_pct",
+    "op": ">",
+    "value": 0.07160833333333333
+   },
+   "action": "Provare a saltare o a dimezzare i trade di questa fetta",
+   "level": "sospetta"
+  },
+  {
+   "slice": "weekday = 1",
+   "feature": "weekday",
+   "n": 44,
+   "share": 0.1543859649122807,
+   "mean_R": 0.0495688443814114,
+   "rest_mean_R": 0.3568494942714204,
+   "t": -1.3135347897150569,
+   "cost_total_R": 2.1810291527821017,
+   "rule": {
+    "feature": "weekday",
+    "op": "==",
+    "value": 1
+   },
+   "action": "Provare a saltare o a dimezzare i trade di questa fetta",
+   "level": "sospetta"
+  }
+ ],
+ "improvement": {
+  "proposed": [],
+  "shadow": [],
+  "active": [],
+  "tried": 4,
+  "threshold_t": 2.0
+ },
+ "registry": [
+  {
+   "id": "473a8ad162",
+   "rule": "se atr_pct > 0.07160833333333333: salta il trade",
+   "state": "RESPINTA",
+   "by": "codice",
+   "origin": "valutazione"
+  },
+  {
+   "id": "7d4b91c50a",
+   "rule": "se atr_pct > 0.07160833333333333: dimezza la taglia",
+   "state": "RESPINTA",
+   "by": "codice",
+   "origin": "valutazione"
+  },
+  {
+   "id": "b4035ce4dd",
+   "rule": "se weekday == 1: salta il trade",
+   "state": "RESPINTA",
+   "by": "codice",
+   "origin": "valutazione"
+  },
+  {
+   "id": "78c1611c9a",
+   "rule": "se weekday == 1: dimezza la taglia",
+   "state": "RESPINTA",
+   "by": "codice",
+   "origin": "valutazione"
+  }
+ ]
+}

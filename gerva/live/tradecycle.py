@@ -26,6 +26,8 @@ from .. import ensemble as E
 from .. import gervasoni as GV
 from ..risk.isolated import BookLimits, Trade, TradeBook
 
+_TRADE_FIELDS = set(Trade.__dataclass_fields__)
+
 FEE = 0.00065            # per lato: 4,5 pb taker + 2 pb slippage
 STOP_SLIP = 0.0005       # in piu' sullo stop
 MAX_HOLD = 7
@@ -68,16 +70,20 @@ def funding_paid(funding: dict | None, coin: str, opened: str, day: str) -> floa
 
 
 def step(bars: dict[str, pd.DataFrame], state: dict, venue_max_leverage: float, engine_scale: float = 1.0,
-         ai_multiplier: dict | None = None, limits: BookLimits | None = None, funding: dict | None = None) -> dict:
+         ai_multiplier: dict | None = None, limits: BookLimits | None = None, funding: dict | None = None,
+         memory=None, rules: list | None = None) -> dict:
     """bars: moneta -> DataFrame giornaliero (open, high, low, close) fino all'ultima barra chiusa; deve contenere BTC.
     ai_multiplier: moneta -> fattore in [0, 1] (assente = 1). funding: moneta -> serie giornaliera del funding (somma dei
-    tassi del giorno); entra nel segnale di conviction e nei costi, come nella ricerca. Restituisce lo stato aggiornato."""
+    tassi del giorno); entra nel segnale di conviction e nei costi, come nella ricerca.
+    memory: gerva.learn.TradeMemory, in cui ogni trade chiuso viene registrato con contesto, costi, MAE e MFE.
+    rules: regole ATTIVE del ciclo di automiglioramento (gerva.learn.Rule): possono solo saltare o dimezzare un trade.
+    Restituisce lo stato aggiornato."""
     day = str(max(b.index[-1] for b in bars.values()).date())
     if state.get("asof") == day:
         return state
     book = TradeBook(limits)
     for sym, t in state["open"].items():
-        book.open[sym] = Trade(**{k: v for k, v in t.items() if k != 'opened'})
+        book.open[sym] = Trade(**{k: v for k, v in t.items() if k in _TRADE_FIELDS})
     eq0 = float(state["equity"])
     events = []
     # 1. gestione dei trade aperti
@@ -86,7 +92,12 @@ def step(bars: dict[str, pd.DataFrame], state: dict, venue_max_leverage: float, 
             continue
         t, b = book.open[sym], bars[sym].iloc[-1]
         adverse = b["low"] if t.side == 1 else b["high"]
-        opened = state["open"][sym].get("opened", day)
+        favour = b["high"] if t.side == 1 else b["low"]
+        extra = state["open"][sym]
+        opened = extra.get("opened", day)
+        risk_px = t.initial_stop_distance * t.entry
+        extra["mae"] = min(extra.get("mae", 0.0), t.side * (float(adverse) - t.entry) / risk_px)
+        extra["mfe"] = max(extra.get("mfe", 0.0), t.side * (float(favour) - t.entry) / risk_px)
         held = (pd.Timestamp(day) - pd.Timestamp(opened)).days
         exit_px, why = None, ""
         if t.side * (adverse - t.stop) <= 0:
@@ -104,8 +115,17 @@ def step(bars: dict[str, pd.DataFrame], state: dict, venue_max_leverage: float, 
             rec = dict(symbol=sym, opened=opened, closed=day, entry=t.entry, exit=float(exit_px), leverage=t.leverage, tier=t.tier,
                        pnl=pnl, R=pnl / risk if risk else 0.0, why=why)
             state["closed"].append(rec)
+            if memory is not None:
+                from ..learn.memory import TradeRecord
+                fpaid = funding_paid(funding, sym, opened, day) * t.notional
+                memory.append(TradeRecord(strategy_id="TRADE-11X", symbol=sym, entry_time=opened, exit_time=day, entry_price=t.entry,
+                                          exit_price=float(exit_px), notional=t.notional, leverage=t.leverage, risk=risk, pnl=pnl,
+                                          R=rec["R"], exit_reason=why, commission=2 * FEE * t.notional, funding=fpaid,
+                                          slippage=STOP_SLIP if why == "stop" else 0.0, mae=extra.get("mae"), mfe=extra.get("mfe"),
+                                          source="paper", context=extra.get("ctx") or {}))
             events.append(f"chiuso {sym} ({why}): {pnl:+.2f}, R {rec['R']:+.2f}")
     # 2. nuovi ingressi
+    new_ctx = {}
     if not book.must_flatten():
         for sym, b in bars.items():
             if sym in book.open or len(b) < 260 or str(b.index[-1].date()) != day:
@@ -113,10 +133,20 @@ def step(bars: dict[str, pd.DataFrame], state: dict, venue_max_leverage: float, 
             score, _ = _conviction(bars, sym, funding)
             atr = float(((b["high"] - b["low"]) / b["close"]).rolling(14).mean().iloc[-1])
             m = (ai_multiplier or {}).get(sym, 1.0)
+            ctx = {}
+            if score is not None and score > 0.60:
+                from ..learn.features import context as _context
+                from ..learn.improve import multiplier as _multiplier
+                ctx = _context(bars, sym, funding)
+                lm, why_rules = _multiplier(ctx, rules or [])
+                if lm < 1.0:
+                    events.append(f"{sym}: regole apprese -> taglia x{lm:g} ({'; '.join(why_rules)})")
+                m = min(m, lm) if 0.0 <= m <= 1.0 else m
             d = book.propose(sym, 1, float(b["close"].iloc[-1]), atr, score, float(state["equity"]), venue_max_leverage,
                              engine_scale=engine_scale, ai_multiplier=m)
             if d.ok:
                 book.add(d.trade)
+                new_ctx[sym] = ctx
                 events.append(f"aperto {sym} ({d.trade.tier}): leva {d.trade.leverage:.1f}x, rischio {d.trade.risk:.2f}, "
                               f"margine {d.trade.margin:.2f}, stop {d.trade.stop:.4g}")
             elif score is not None and score > 0.60:
@@ -131,7 +161,9 @@ def step(bars: dict[str, pd.DataFrame], state: dict, venue_max_leverage: float, 
                                close=float(b["close"].iloc[-1]))
     state["shadow"] = (state.get("shadow", []) + [dict(day=day, coins=shadow)])[-800:]
     opened_map = {s: state["open"].get(s, {}).get("opened", day) for s in book.open}
-    state["open"] = {s: dict(asdict(t), opened=opened_map[s]) for s, t in book.open.items()}
+    keep = {s: {k: v for k, v in state["open"].get(s, {}).items() if k in ("mae", "mfe", "ctx")} for s in book.open}
+    state["open"] = {s: dict(asdict(t), opened=opened_map[s], **({"ctx": new_ctx[s]} if s in new_ctx else {}), **keep[s])
+                     for s, t in book.open.items()}
     state["asof"] = day
     state["totals"] = book.totals(float(state["equity"])) if state["equity"] > 0 else {}
     state["log"] = (state.get("log", []) + [dict(day=day, events=events)])[-400:]
