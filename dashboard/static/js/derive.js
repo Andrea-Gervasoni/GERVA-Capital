@@ -266,7 +266,8 @@ export function coneData(snap, quant4, horizon = null) {
     else for (let i = 0; i < 4; i++) if (v >= qs[i][1] && v <= qs[i + 1][1]) pctNow = qs[i][0] + (qs[i + 1][0] - qs[i][0]) * ((v - qs[i][1]) / ((qs[i + 1][1] - qs[i][1]) || 1));
   }
   const where = pctNow == null ? '' : pctNow <= 0.05 ? 'sotto la fascia' : pctNow >= 0.95 ? 'sopra la fascia' : pctNow < 0.5 ? 'dentro la fascia, sotto la mediana' : 'dentro la fascia, sopra la mediana';
-  return { x, p05, p25, p50, p75, p95, path, pctNow, where, days, horizon: hz, last, paths: num(c.paths), method: str(c.method), profile: str(c.profile), cagr: { p05: num(c.cagr_p05), p50: num(c.cagr_p50), p95: num(c.cagr_p95) } };
+  const edge = pctNow == null ? null : pctNow <= 0.05 ? 'low' : pctNow >= 0.95 ? 'high' : 'in';          // fuori dalla fascia 5°–95°?
+  return { x, p05, p25, p50, p75, p95, path, pctNow, edge, where, days, horizon: hz, last, paths: num(c.paths), method: str(c.method), profile: str(c.profile), cagr: { p05: num(c.cagr_p05), p50: num(c.cagr_p50), p95: num(c.cagr_p95) } };
 }
 
 /**

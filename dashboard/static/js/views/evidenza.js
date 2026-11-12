@@ -236,8 +236,8 @@ export function mount(root) {
     const demo = provOf(snap.meta) === 'demo';
     pCone.setProv(provTag('sim', 'Sim fascia'), provTag(demo ? 'demo' : 'paper', demo ? 'Esempio linea' : 'Paper linea'));
     conePlot.setTags(provTag('sim', `Simulato · ${fmtNum(c.paths, 0)} percorsi`), c.days >= 1 ? provTag(demo ? 'demo' : 'paper', `${demo ? 'Esempio' : 'Paper'} · giorno ${fmtNum(c.days, 0)}`) : null);
-    coneBig.replaceChildren(c.pctNow == null ? 'troppo presto' : `${c.pctNow <= 0.05 ? '≤ 5' : c.pctNow >= 0.95 ? '≥ 95' : fmtNum(c.pctNow * 100, 0)}° percentile`, h('small', { class: 'bignum__sub', text: c.pctNow == null ? 'serve almeno un giorno di paper: per ora si vede solo l\'atteso' : `${c.where} · dopo ${fmtNum(c.days, 0)} giorni` }));
-    pCone.setAsk(c.pctNow == null ? 'Il paper è appena partito: per ora si vede solo ciò che le simulazioni si aspettano.' : c.pctNow > 0.05 && c.pctNow < 0.95 ? 'La fascia è ciò che le simulazioni considerano normale; la linea piena è il conto. Per ora è dentro: tutto come previsto.' : 'Il conto è fuori da ciò che le simulazioni consideravano normale: da guardare.');
+    coneBig.replaceChildren(c.pctNow == null ? 'troppo presto' : `${c.edge === 'low' ? '≤ 5' : c.edge === 'high' ? '≥ 95' : fmtNum(c.pctNow * 100, 0)}° percentile`, h('small', { class: 'bignum__sub', text: c.pctNow == null ? 'serve almeno un giorno di paper: per ora si vede solo l\'atteso' : `${c.where} · dopo ${fmtNum(c.days, 0)} giorni` }));
+    pCone.setAsk(c.pctNow == null ? 'Il paper è appena partito: per ora si vede solo ciò che le simulazioni si aspettano.' : c.edge === 'in' ? 'La fascia è ciò che le simulazioni considerano normale; la linea piena è il conto. Per ora è dentro: tutto come previsto.' : 'Il conto è fuori da ciò che le simulazioni consideravano normale: da guardare.');
     const every = c.horizon > 18 ? 6 : c.horizon > 6 ? 3 : 1;
     coneChart.update({
       x: c.x, height: ctxNow.lv === 'terminale' ? 170 : ctxNow.lv === 'semplice' ? 250 : 220, xHead: 'Mese', xFormat: (m) => `mese ${fmtNum(m, 1)}`,
