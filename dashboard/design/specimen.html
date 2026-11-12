@@ -149,7 +149,7 @@ a { color: inherit; text-decoration: none; }
 /* ============ statistiche ============ */
 .stat { padding: 20px var(--pad-card) 20px; display: grid; gap: 8px; align-content: start; }
 .stat__val { font: 600 var(--fs-stat)/1.15 var(--font-display); letter-spacing: var(--tr-title); font-variant-numeric: var(--num-variant); }
-.stat__val small { font: 500 var(--fs-body)/1 var(--font-num); color: var(--text-3); letter-spacing: 0; margin-left: 2px; }
+.stat__val small { font: 500 var(--fs-body)/1 var(--font-num); color: var(--text-3); letter-spacing: 0; margin-left: 8px; }
 .stat__foot { display: flex; align-items: center; min-height: 24px; font: var(--type-caption); color: var(--text-3); }
 .meter { position: relative; height: 8px; margin: 4px 0; border-radius: 4px; background: var(--well-bg); box-shadow: var(--well-fx); }
 .meter > i { position: absolute; inset: 0 auto 0 0; width: var(--v); min-width: 8px; border-radius: 4px; background: linear-gradient(90deg, color-mix(in srgb, var(--m, var(--accent)) 70%, #000) 0%, var(--m, var(--accent)) 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 0 0 12px color-mix(in srgb, var(--m, var(--accent)) 60%, transparent); }
@@ -162,7 +162,7 @@ a { color: inherit; text-decoration: none; }
 .chip--watch { background: var(--warn-soft); color: var(--warn-ink); box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), inset 0 0 0 1px color-mix(in srgb, var(--warn) 34%, transparent); }
 .chip--serious { background: var(--serious-soft); color: var(--serious-ink); box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), inset 0 0 0 1px color-mix(in srgb, var(--serious) 34%, transparent); }
 .chip--breach { background: var(--crit-soft); color: var(--crit-ink); box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), inset 0 0 0 1.5px color-mix(in srgb, var(--crit-mark) 70%, transparent); }
-.chip--killed { background: var(--gloss-bg), var(--killed-bg); color: var(--killed-ink); box-shadow: var(--gloss-edge), var(--kill-glow); letter-spacing: 0.08em; text-shadow: 0 1px 1px rgba(80,0,10,0.5); }
+.chip--killed { background: var(--gloss-over), var(--killed-bg); color: var(--killed-ink); box-shadow: var(--gloss-edge), var(--kill-glow); letter-spacing: 0.08em; text-shadow: 0 1px 1px rgba(80,0,10,0.5); }
 .chip--unknown { background: transparent; color: var(--unknown-ink); box-shadow: none; border: 1px dashed var(--unknown-border); }
 .chip--accent { background: var(--accent-soft); color: var(--accent-ink); box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), inset 0 0 0 1px color-mix(in srgb, var(--accent) 36%, transparent); }
 .chip--xs { height: 24px; padding: 0 10px 0 7px; font-size: var(--fs-micro); }
@@ -182,10 +182,10 @@ a { color: inherit; text-decoration: none; }
 .btn:active, .btn.is-pressed { transform: scale(var(--press-scale)); box-shadow: var(--gloss-edge-pressed), var(--gloss-shadow); transition-duration: var(--dur-instant); filter: brightness(0.96); }
 .btn:disabled { color: var(--text-disabled); cursor: not-allowed; transform: none; filter: saturate(0.2) brightness(0.8); box-shadow: inset 0 0 0 1px var(--border); background: var(--surface-2); }
 .btn:disabled::after { display: none; }
-.btn--primary { background: var(--gloss-bg), var(--accent-grad); color: var(--on-accent); box-shadow: var(--gloss-edge), var(--accent-glow); text-shadow: 0 1px 1px rgba(0, 20, 90, 0.5); }
+.btn--primary { background: var(--gloss-over), var(--accent-grad); color: var(--on-accent); box-shadow: var(--gloss-edge), var(--accent-glow); text-shadow: 0 1px 1px rgba(0, 20, 90, 0.5); }
 .btn--primary:active, .btn--primary.is-pressed { box-shadow: var(--gloss-edge-pressed), var(--accent-glow); }
 .btn--quiet { background: transparent; box-shadow: none; color: var(--text-2); } .btn--quiet:hover { background: var(--surface-2); color: var(--text); filter: none; } .btn--quiet::after { display: none; }
-.btn--danger, .btn--kill { background: var(--gloss-bg), var(--kill-grad); color: var(--on-crit); box-shadow: var(--gloss-edge), var(--kill-glow); text-shadow: 0 1px 1px rgba(80, 0, 10, 0.55); }
+.btn--danger, .btn--kill { background: var(--gloss-over), var(--kill-grad); color: var(--on-crit); box-shadow: var(--gloss-edge), var(--kill-glow); text-shadow: 0 1px 1px rgba(80, 0, 10, 0.55); }
 .btn--danger:active, .btn--kill:active, .btn--kill.is-pressed { box-shadow: var(--gloss-edge-pressed), var(--kill-glow); }
 /* KILL: rosso profondo e lucido, sempre visibile. Il collare a strisce dice «comando protetto»: apre la conferma, non invia. */
 .btn--kill { margin: 5px; padding: 0 18px 0 14px; font-weight: 700; letter-spacing: 0.1em; }
@@ -246,6 +246,7 @@ a { color: inherit; text-decoration: none; }
 .hm__c { display: grid; place-items: center; height: 32px; border-radius: var(--chart-cell-radius); background: var(--b); color: var(--k); font: 600 10px/1 var(--font-num); letter-spacing: -0.02em; font-variant-numeric: var(--num-variant); box-shadow: inset 0 1px 0 rgba(255,255,255,0.16); transition: transform var(--dur-base) var(--ease-spring), box-shadow var(--dur-fast) var(--ease-out); }
 .hm__c:hover { transform: scale(1.14); box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), 0 0 0 1.5px var(--text), 0 8px 18px -4px rgba(0,0,0,0.7); z-index: 1; }
 .hm__c--empty { background: none; box-shadow: inset 0 0 0 1px var(--border); color: var(--text-3); }
+.hm__short { display: none; }
 .ramp { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 3px; }
 .ramp > i { height: 24px; border-radius: 6px; background: var(--b); color: var(--k); display: grid; place-items: center; font: 600 10px/1 var(--font-num); font-style: normal; box-shadow: inset 0 1px 0 rgba(255,255,255,0.16); }
 .ramps { display: grid; gap: 8px; margin-top: var(--sp-6); } .ramps > div { display: grid; grid-template-columns: 88px minmax(0, 1fr); align-items: center; gap: 12px; }
@@ -302,8 +303,8 @@ a { color: inherit; text-decoration: none; }
   .delta { font-size: var(--fs-lead); height: 32px; }
   .hide-sm { display: none; }
   .type-row { grid-template-columns: minmax(0, 1fr); gap: 6px; }
-  .hm { grid-template-columns: 30px repeat(12, minmax(0, 1fr)); gap: 2px; } .hm__c { height: 24px; font-size: 0; border-radius: 5px; }
-  .popover { left: auto !important; right: 8px; top: 96px !important; }
+  .hm { grid-template-columns: 30px repeat(12, minmax(0, 1fr)); gap: 2px; } .hm__c { height: 26px; font-size: 9.5px; border-radius: 5px; } .hm__full { display: none; } .hm__short { display: inline; }
+  .popover { position: relative; left: auto !important; top: auto !important; margin-top: 8px; }
   .toast { left: 12px; right: 12px; bottom: calc(var(--dock-h) + 24px + env(safe-area-inset-bottom)); max-width: none; }
   .col { padding-bottom: 176px; }
   .dock { position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: var(--z-chrome); display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; height: var(--dock-h); padding: 10px; }
@@ -312,7 +313,7 @@ a { color: inherit; text-decoration: none; }
 }
 @media (max-width: 560px) { .grid--4, .stage__grid { grid-template-columns: minmax(0, 1fr); } .grid--stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .stat { padding: 16px; } .stat__val { font-size: 20px; } .stat__val small { display: block; margin: 6px 0 0; } .mat { min-height: 0; } .capsule .tag { display: none; } }
 @media (prefers-reduced-motion: reduce) { .aurora i, .live__dot, .skel::after, .c-pulse, .is-sweeping > .sweep-layer, .btn:hover::after { animation: none; } .c-draw { animation: none; stroke-dashoffset: 0; } .c-pulse { opacity: 0; } }
-@media (prefers-reduced-transparency: reduce) { .lensed > .bd, .lensed::before { -webkit-backdrop-filter: none; backdrop-filter: none; } }
+@media (prefers-reduced-transparency: reduce) { .lensed { background: var(--glass-chrome-solid); } .lensed > .bd, .lensed::before { -webkit-backdrop-filter: none; backdrop-filter: none; } }
 @media (forced-colors: active) { .glass, .lensed { border: 1px solid CanvasText; } .glass::before { display: none; } }
 </style>
 </head>
@@ -707,7 +708,8 @@ a { color: inherit; text-decoration: none; }
 
   /* ---- grafico: backtest tratteggiato → avvio del paper → linea piena e luminosa dentro la fascia attesa ---- */
   (function () {
-    var el = $('#chart'), W = 720, H = 336, L = 4, R = 50, T = 16, B = 28, N = 150, P0 = 88, r = rng(29), i;
+    var small = window.innerWidth < 860, el = $('#chart'), W = small ? 400 : 720, H = small ? 300 : 336, L = 4, R = small ? 44 : 50, T = 16, B = 28, N = 150, P0 = 88, r = rng(29), i;
+    el.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
     var fund = [10000], bench = [10000];
     for (i = 1; i < N; i++) { fund.push(fund[i - 1] * (1 + 0.0010 + (r() - 0.5) * 0.017)); bench.push(bench[i - 1] * (1 + 0.0006 + (r() - 0.5) * 0.013)); }
     var f0 = fund[N - 1], b0 = bench[N - 1];
@@ -720,7 +722,7 @@ a { color: inherit; text-decoration: none; }
     var defs = svg('defs', {}, el), g = svg('linearGradient', { id: 'g-area', x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
     svg('stop', { offset: '0', 'stop-color': 'var(--chart-accent)', 'stop-opacity': 'var(--chart-area-opacity)' }, g); svg('stop', { offset: '0.6', 'stop-color': 'var(--chart-accent)', 'stop-opacity': '0.06' }, g); svg('stop', { offset: '1', 'stop-color': 'var(--chart-accent)', 'stop-opacity': '0' }, g);
     for (var v = mn; v <= mx; v += 500) { svg('line', { class: 'c-grid', x1: L, x2: W - R, y1: y(v), y2: y(v) }, el); var tx = svg('text', { class: 'c-tick', x: W - R + 12, y: y(v) + 4 }, el); tx.textContent = it(v / 1000, 1) + ' k'; }
-    ['nov', 'gen', 'mar', 'mag', 'lug', 'set', 'nov'].forEach(function (m, j) { var tt = svg('text', { class: 'c-tick', x: x(j * (N - 1) / 6), y: H - 8, 'text-anchor': j === 0 ? 'start' : j === 6 ? 'end' : 'middle' }, el); tt.textContent = m; });
+    ['nov', 'gen', 'mar', 'mag', 'lug', 'set', 'nov'].forEach(function (m, j) { if (small && j % 2) return; var tt = svg('text', { class: 'c-tick', x: x(j * (N - 1) / 6), y: H - 8, 'text-anchor': j === 0 ? 'start' : j === 6 ? 'end' : 'middle' }, el); tt.textContent = m; });
     svg('line', { class: 'c-axis', x1: L, x2: W - R, y1: H - B, y2: H - B }, el);
     svg('path', { class: 'c-band', d: path(hi, P0) + lo.slice().reverse().map(function (v, i) { return 'L' + x(N - 1 - i).toFixed(1) + ' ' + y(v).toFixed(1); }).join('') + 'Z' }, el);
     svg('path', { class: 'c-area', d: path(fund.slice(P0), P0) + 'L' + x(N - 1) + ' ' + (H - B) + 'L' + x(P0) + ' ' + (H - B) + 'Z' }, el);
@@ -729,7 +731,7 @@ a { color: inherit; text-decoration: none; }
     svg('path', { class: 'c-line c-line--sim', d: path(fund.slice(0, P0 + 1)) }, el);
     svg('path', { class: 'c-line c-line--glow c-draw', d: path(fund.slice(P0), P0), pathLength: 1 }, el);
     svg('line', { class: 'c-ref', x1: x(P0), x2: x(P0), y1: T, y2: H - B }, el);
-    var n1 = svg('text', { class: 'c-note', x: x(P0) + 8, y: H - B - 10 }, el); n1.textContent = 'avvio del paper →';
+    var n1 = svg('text', { class: 'c-note', x: x(P0) + 8, y: H - B - 10 }, el); n1.textContent = small ? 'paper →' : 'avvio del paper →';
     var n2 = svg('text', { class: 'c-note', x: x(P0) - 8, y: H - B - 10, 'text-anchor': 'end' }, el); n2.textContent = '← simulato';
     var n3 = svg('text', { class: 'c-note', x: L + 2, y: T + 10, 'letter-spacing': '0.09em' }, el); n3.textContent = 'ESEMPIO';
     var ci = 118; svg('line', { class: 'c-ref', x1: x(ci), x2: x(ci), y1: T + 20, y2: H - B, 'stroke-dasharray': '3 3' }, el);
@@ -748,7 +750,7 @@ a { color: inherit; text-decoration: none; }
       for (var m = 0; m < 12; m++) {
         if (yr === 2026 && m > 10) { html += '<span class="hm__c hm__c--empty">—</span>'; continue; }
         var v = (r() - 0.36) * 11, st = v <= -3 ? 1 : v <= -1.2 ? 2 : v < -0.25 ? 3 : v < 0.25 ? 4 : v < 1.8 ? 5 : v < 4 ? 6 : 7;
-        html += '<span class="hm__c" style="--b:var(--pnl-' + st + ');--k:var(--pnl-' + st + '-ink)" title="' + months[m] + ' ' + yr + '">' + (v >= 0 ? '+' : '−') + it(v, 1) + '</span>';
+        html += '<span class="hm__c" style="--b:var(--pnl-' + st + ');--k:var(--pnl-' + st + '-ink)" title="' + months[m] + ' ' + yr + ': ' + (v >= 0 ? '+' : '−') + it(v, 1) + '%"><span class="hm__full">' + (v >= 0 ? '+' : '−') + it(v, 1) + '</span><span class="hm__short">' + (Math.round(v) === 0 ? '0' : (v >= 0 ? '+' : '−') + Math.abs(Math.round(v))) + '</span></span>';
       }
     });
     el.innerHTML = html;
