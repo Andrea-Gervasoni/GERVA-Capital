@@ -310,3 +310,37 @@ Per ridisegnare i grafici si cambiano i token, non il codice. `grafici.html` li 
   solo se entra per intero, altrimenti nell'elenco sotto la scala (sempre al telefono).
 - **Fonte più vecchia**: la fascia considera il libro dei trade e l'ultima barra degli strumenti seguiti (`derive.oldestSource`,
   `derive.watchedSymbols`). Test: `python -m pytest tests/test_dashboard_terminale.py -q`.
+
+## Evidenza, Portafoglio, Apprendimento, Sistema (giro 2, blocco B)
+
+I quattro spazi «quando serve» (più Portafoglio) con la stessa grammatica di Oggi, Rischio e Mercati: titolo = domanda, «Come si
+legge» in Semplice, provenienza su ogni riquadro e dentro il tracciato, tabella alternativa, stati vuoti dichiarati. Semplice mostra
+meno riquadri e più frasi; Esperto tutti i riquadri con le note di metodo; Terminale gli stessi, più stretti.
+
+| Spazio | File | Riquadri |
+|---|---|---|
+| Evidenza | `views/evidenza.js` | Verdetto a parole con i giorni simulati · paper · reali; profili simulati a base 100 (log) con il confine scelta \| verifica e la caduta sotto; quanto può essere fortuna (prove, Sharpe atteso dal migliore a caso, Deflated Sharpe come intervallo contro la soglia); cono dell'atteso con il percorso del conto; distribuzione della caduta a tre anni con gli scalini e le quote oltre ciascuno; contro l'originale (curve a base 100, distacco cumulato dentro l'imbuto, z, giorni comuni e necessari); profili con mese medio contro mediano e Monte Carlo per scenario; strategie provate con esito e striscia per anno; leva per trade, stress senza stop, schemi di rischio; sedi. |
+| Portafoglio | `views/portafoglio.js` | Cascata di attribuzione (oggi / mese / dall'avvio, libro dei trade, «non attribuito»); mappa sede → strumento colorata per strategia; strategie una accanto all'altra (andamento a 30 giorni, risultati, Sharpe del conto solo da 60 giorni, Sharpe mobile simulato con banda); esposizione nel tempo e contro i tetti; posizioni ordinabili con barra del peso e tacca del tetto; mesi × anni; correlazioni; rischio e rendimento di strategie e profili con l'originale. |
+| Apprendimento | `views/apprendimento2.js` | I sette passaggi con i conteggi del rapporto e le tre garanzie; tutti i trade contro solo paper (mai sommati); distribuzione di R; R cumulato; R medio per conviction, giorno, moneta e anno con baffo al 90% e n su ogni barra; MAE contro MFE dei soli trade paper; debolezze; regole provate con i sei controlli; in ombra e attive con il comando esatto; registro. **Nessun comando che attivi una regola.** |
+| Sistema | `views/sistema2.js` | Battito e componenti; età dei dati per fonte contro i limiti del motore; il ciclo «come funziona» con lo stato vivo su ogni passaggio; registro degli ordini con stati e motivi di rifiuto; avvisi per gravità; cancelli paper → reale; livello AI (regime, conviction con le soglie del libro, overlay). |
+
+- **`views/kit.js`**: i grafici e i mattoni di questo blocco — `errBars` (media, baffo, n; n < 30 attenuato), `colHist` (colonne
+  velate = simulato, piene = dati veri; lastre delle zone; righe piene con il valore in testa, mai sovrapposte), `luckChart`,
+  `rangeBar`, `yearStrip` (rampa blu ↔ arancio, numero in ogni cella, stacco al 2023), `stepper` (passaggi con stato vivo),
+  `sparkArea`, `plot` (etichetta di provenienza dentro l'area), `simpleTable`. Stile solo in `css/spaces.css`, sui token.
+- **`derive.js`** (aggiunte): `luck` (intervallo del Deflated Sharpe e soglia dal file della ricerca), `compareStats` (stessa
+  formula di `research/v5/v6/b8_confronto/confronto.py`: z a pari volatilità, giorni necessari, esito; con meno di 3 giorni z non
+  esiste), `coneData`, `provenanceDays`, `attribution`, `rollingSharpe`, `drawdownSeries`, `rStats` / `groupR` / `histR`,
+  `gateState` (un cancello senza valore è «non ancora misurabile», mai superato), `sourceAges`, `SPLIT_T`.
+- **Provenienza.** Ricerca = SIMULATO (tratteggiato, colonne velate); conto = PAPER o ESEMPIO (puntinato in demo); mai una cifra
+  su dati mescolati: cono e percorso, simulati e paper, memoria e conto stanno in colonne, linee o grafici distinti.
+- **Stati vuoti che oggi si vedono.** Storia dell'esposizione vera (la fotografia non ha `exposure_history`: al suo posto le quote
+  di rischio simulate, dichiarate, e per sede uno stato vuoto); MAE / MFE (nessun trade paper chiuso); regole in ombra e attive;
+  cancelli senza valore; confronto con meno di 90 giorni comuni («In corso»).
+- **Pagine precedenti.** Restano come schede d'archivio (`#/evidenza/ricerca`, `#/evidenza/leva`, `#/portafoglio/risultato`,
+  `…/strategie`, `…/posizioni`, `…/panoramica`, `#/apprendimento/archivio`, `#/sistema/salute`, `…/ordini`, `…/guida`). Contenuto non
+  ancora migrato: di Ricerca ventaglio e rischio di rovina per leva, quote nel tempo, robustezza, walk-forward, quintili di GEX,
+  funding per anno, conviction per livello, idee scartate della prima tornata; di Risultato rendimenti giornalieri e statistiche
+  mobili; di Come funziona le quattro strategie spiegate. Il resto è nei quattro spazi.
+
+Test: `python -m pytest tests/test_dashboard_spazi.py -q`.
