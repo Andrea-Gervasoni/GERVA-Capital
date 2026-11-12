@@ -739,6 +739,54 @@ def test_moduli_importati_esistono():
 
 
 # ---------------------------------------------------------------------------
+# Motore dei grafici: logica separata dallo stile, primitive presenti, galleria tecnica
+# ---------------------------------------------------------------------------
+CHART_JS = ("charts.js", "chart-engine.js", "candles.js", "indicators.js", "gallery.js")
+
+
+def test_grafici_senza_stile_nel_codice_e_token_tutti_definiti():
+    """Colori, raggi, spessori e tempi dei grafici stanno nei token --chart-*: il codice dei grafici non ne contiene."""
+    js = STATIC / "js"
+    defined = set(re.findall(r"(--chart-[a-z0-9-]+)\s*:", (STATIC / "css" / "tokens.css").read_text(encoding="utf-8")))
+    read = set(re.findall(r"'(--chart-[a-z0-9-]+)'", (js / "chart-theme.js").read_text(encoding="utf-8")))
+    used = set(re.findall(r"var\((--chart-[a-z0-9-]+)", (STATIC / "css" / "app.css").read_text(encoding="utf-8")))
+    assert len(read) >= 30 and read <= defined, sorted(read - defined)
+    assert len(used) >= 30 and used <= defined, sorted(used - defined)
+    assert defined <= read | used, sorted(defined - read - used)                                 # nessun token morto
+    for name in CHART_JS:
+        text = (js / name).read_text(encoding="utf-8")
+        assert not re.search(r"#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(", text), name
+        assert "getComputedStyle" not in text, name                                              # lo stile si chiede solo a chartTheme()
+    assert "chartTheme" in (js / "candles.js").read_text(encoding="utf-8")
+
+
+def test_primitive_dei_grafici_esportate():
+    js = STATIC / "js"
+    exported = {name: set(re.findall(r"export (?:async )?(?:function|const) (\w+)", (js / name).read_text(encoding="utf-8")))
+                for name in ("charts.js", "chart-engine.js", "candles.js", "indicators.js", "chart-theme.js", "market.js")}
+    assert {"timeChart", "heatmap", "histogram", "matrix", "sparkline", "tableFallback", "linearTicks", "logTicks", "timeTicks", "nearest"} <= exported["charts.js"]
+    assert {"underwater", "fanChart", "stackedArea", "waterfall", "scatter", "treemap", "heatGrid", "linkCharts", "squarify", "olsLine", "drawdownOf"} <= exported["chart-engine.js"]
+    assert {"candleChart", "OVERLAYS", "PANES"} <= exported["candles.js"]
+    assert {"sma", "ema", "bollinger", "vwapMonth", "donchian", "atrPct", "rsi"} <= exported["indicators.js"]
+    assert {"chartTheme", "onChartThemeChange", "CHART_TOKENS"} <= exported["chart-theme.js"]
+    assert {"getSymbols", "getOhlc", "getTradebook", "getTrades", "getCompare"} <= exported["market.js"]
+
+
+def test_galleria_tecnica_fuori_dal_prodotto_e_senza_codice_in_linea(client):
+    r = client.get("/grafici.html")
+    assert r.status_code == 200 and "default-src 'self'" in r.headers["content-security-policy"]
+    html = r.text
+    assert "ESEMPI" in html and 'name="robots" content="noindex"' in html
+    assert not re.search(r"<style|\sstyle=|\son[a-z]+=", html)
+    assert all("src=" in tag for tag in re.findall(r"<script[^>]*>", html))
+    # le pagine del prodotto non cambiano: due livelli, nessun collegamento alla galleria, nessuna pagina Terminale
+    index = (STATIC / "index.html").read_text(encoding="utf-8")
+    main = (STATIC / "js" / "main.js").read_text(encoding="utf-8")
+    assert "grafici.html" not in index and "grafici.html" not in main and "terminale" not in main.lower()
+    assert "const LEVELS = ['semplice', 'esperto'];" in main
+
+
+# ---------------------------------------------------------------------------
 # L'esempio: completo e coerente
 # ---------------------------------------------------------------------------
 def test_esempio_usa_le_soglie_di_rischio_della_configurazione():

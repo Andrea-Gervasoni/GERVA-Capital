@@ -691,7 +691,7 @@ export function sparkline(values, { width = 132, height = 36, label = 'Andamento
   const y0 = (Math.round(yOf(pts[0])) + 0.5).toFixed(1);
   svg.append(s('line', { class: 'spark__base', x1: pad, x2: width - pad, y1: y0, y2: y0 }));
   svg.append(s('path', { class: 'spark__line', d: 'M' + pts.map((v, i) => `${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`).join('L') }));
-  svg.append(s('circle', { class: 'spark__dot', cx: xOf(pts.length - 1).toFixed(1), cy: yOf(pts[pts.length - 1]).toFixed(1), r: 3.5 }));
+  svg.append(s('circle', { class: 'spark__dot', cx: xOf(pts.length - 1).toFixed(1), cy: yOf(pts[pts.length - 1]).toFixed(1), r: chartTheme().dotRadiusSmall }));
   return svg;
 }
 
@@ -851,8 +851,8 @@ export function dumbbell({ from, to, min = 0, max = 1, width = 132, label = '' }
   svg.append(s('line', { class: 'dumbbell__track', x1: pad, x2: width - pad, y1: 9.5, y2: 9.5 }));
   if (min < 0 && max > 0) svg.append(s('line', { class: 'dumbbell__zero', x1: xOf(0).toFixed(1), x2: xOf(0).toFixed(1), y1: 4, y2: 15 }));
   if (a != null && b != null) svg.append(s('line', { class: 'dumbbell__link', x1: xOf(a).toFixed(1), x2: xOf(b).toFixed(1), y1: 9.5, y2: 9.5 }));
-  if (a != null) svg.append(s('circle', { class: 'dumbbell__from', cx: xOf(a).toFixed(1), cy: 9.5, r: 4 }));
-  if (b != null) svg.append(s('circle', { class: 'dumbbell__to', cx: xOf(b).toFixed(1), cy: 9.5, r: 4.5 }));
+  if (a != null) svg.append(s('circle', { class: 'dumbbell__from', cx: xOf(a).toFixed(1), cy: 9.5, r: chartTheme().dotRadius }));
+  if (b != null) svg.append(s('circle', { class: 'dumbbell__to', cx: xOf(b).toFixed(1), cy: 9.5, r: chartTheme().dotRadius + 0.5 }));
   return svg;
 }
 

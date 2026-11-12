@@ -42,6 +42,9 @@
   --chart-dot-radius: 4; --chart-dot-radius-small: 3.5; --chart-dot-ring: 2; --chart-bar-radius: 2; --chart-cell-radius: 3px;
   --chart-bubble-min: 5; --chart-bubble-max: 20; --chart-candle-body: 0.7; --chart-candle-max: 14; --chart-gutter: 58;
   --chart-area-opacity: 0.1; --chart-band-opacity: 0.13; --chart-band-opacity-strong: 0.24; --chart-volume-opacity: 0.55;
+  --chart-stack-opacity: 0.82; --chart-point-opacity: 0.75; --chart-label-bg-opacity: 0.88; --chart-hover-opacity: 0.75;
+  --chart-heat-min: 7%; --chart-heat-range: 53%; --chart-tile-min: 22%; --chart-tile-range: 48%;
+  --chart-focus: var(--accent); --chart-focus-width: 2px;
   --chart-motion: 160ms; --chart-ease: ease;
 
   --radius-s: 4px;

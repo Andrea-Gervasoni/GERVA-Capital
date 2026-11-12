@@ -67,6 +67,9 @@ In fondo a Rischio c'è l'esempio «leva del trade e leva del conto» con i tett
 | `GERVA_QUANT` | `research/v5/quant.json` | I risultati della ricerca (statici, simulati). Se manca, `/api/v1/quant` risponde 404 e le pagine lo dicono. |
 | `GERVA_QUANT4` | `research/v5/quant_v4.json` | La quarta tornata di ricerca. Stesse regole di `GERVA_QUANT`, endpoint `/api/v1/quant4`. |
 | `GERVA_LEARN` | `$GERVA_HOME/learn/report.json` (senza `GERVA_HOME`: `var/gerva/learn/report.json`) | Il rapporto del ciclo di automiglioramento. Se manca: 404; in modalità demo (nessuno snapshot) si serve `static/sample_learn.json`, marcato come esempio. |
+| `GERVA_HOME` | `var/gerva` | La cartella del motore: da qui si leggono `tradebook.json`, `confronto_nav.csv`, `learn/trades.jsonl`. |
+| `GERVA_CACHE` | `data_cache` | La cache dei prezzi giornalieri (`bn_spot_1d_<SIM>USDT.parquet`, `yahoo_1d_<SIM>.parquet`) per `/api/v1/market/*`. |
+| `GERVA_TRADES_HIST` | `research/v5/v6/trade_storici.parquet` | Lo storico dei trade simulati per `/api/v1/trades/history`. |
 | `GERVA_KILL_FILE` | `var/gerva/KILL` | Il file che il comando KILL crea. |
 | `GERVA_DASH_TOKEN` | *(non impostato)* | Token richiesto dal KILL. Senza, il KILL è spento (503). |
 | `GERVA_DASH_HOST` | `127.0.0.1` | Indirizzo di ascolto. |
@@ -85,7 +88,17 @@ I percorsi predefiniti sono relativi alla radice del repository; quelli passati 
 | GET | `/api/v1/quant` | Il file della ricerca così com'è (NaN → `null`); 404 se manca, 503 se illeggibile. Header `X-Gerva-Quant-Age`. |
 | GET | `/api/v1/quant4` | Come `/quant`, per `quant_v4.json`. |
 | GET | `/api/v1/learn` | Il rapporto di `gerva learn`, stesse regole di `/quant`. Sola lettura: l'unica scrittura della dashboard resta il KILL. |
+| GET | `/api/v1/market/symbols` | `{"source", "symbols": [{"symbol", "kind": crypto \| etf \| indice}]}`: gli strumenti presenti nella cache dei prezzi. |
+| GET | `/api/v1/market/ohlc?symbol=BTC&tf=1d&limit=1500` | Barre giornaliere a colonne: `t[], o[], h[], l[], c[], v[]` più `conviction[]`, `gq[]` e `thresholds`, calcolati dalle funzioni del fondo (`gerva.ensemble`, `gerva.gervasoni`) su tutta la storia. Il simbolo deve passare una lista bianca (`^\^?[A-Z0-9]{1,10}(-[A-Z]{3})?$`) e risolversi in un file dentro la cache: altrimenti 400 / 404. `tf` diverso da `1d`: 400. `limit` tra 10 e 5.000. Risposte tenute in memoria 5 minuti. |
+| GET | `/api/v1/tradebook` | Lo stato del libro dei trade a margine isolato (`$GERVA_HOME/tradebook.json`) così com'è: aperti, chiusi (compreso il motivo, per esempio «arresto di emergenza»), registro, indicatore in ombra. |
+| GET | `/api/v1/trades/history` | `{"label", "n_sim", "n_paper", "rows": […]}`: i trade simulati (`source: "sim"`) e quelli chiusi in paper (`source: "paper"`, da `learn/trades.jsonl`), solo i campi utili ai grafici. |
+| GET | `/api/v1/compare` | `{"rows": […]}`: il confronto giornaliero con il conto originale (`$GERVA_HOME/confronto_nav.csv`), numeri già convertiti. |
 | POST | `/api/v1/kill` | Crea il file KILL. Vedi sotto. |
+
+Gli endpoint di mercato, libro, storico e confronto sono di sola lettura e seguono le regole degli altri: limite di
+dimensione, NaN → `null`, 404 in JSON se la fonte manca, 503 se è illeggibile. In modalità demo (nessuno snapshot) una
+fonte assente è sostituita dall'esempio in dotazione (`static/sample_ohlc.json`, `sample_tradebook.json`,
+`sample_trades.json`, `sample_compare.json`), sempre marcato `"example": true` e con un'etichetta che comincia per ESEMPIO.
 
 Ogni risposta porta le intestazioni di sicurezza (CSP `default-src 'self'` senza script né stili inline,
 `X-Content-Type-Options`, `Referrer-Policy`, `frame-ancestors 'none'`). Nessuna risposta contiene token,
@@ -165,7 +178,13 @@ static/css/app.css        stile
 static/js/main.js         instradamento per hash (#/panoramica, #/rischio…), tema, stato della connessione
 static/js/store.js        interrogazione ogni 5 s, dati fermi / offline
 static/js/model.js        lettura tollerante dello snapshot (funzioni pure)
-static/js/charts.js       grafici SVG: linee con mirino, drawdown, heatmap, barre, sparkline, barre di limite
+static/js/charts.js       grafici SVG: linee con mirino, drawdown, heatmap, barre, sparkline, barre di limite, istogramma
+static/js/chart-engine.js caduta dal massimo, ventaglio, aree impilate, cascata, dispersione/bolle, mappa ad albero, griglia di calore
+static/js/candles.js      candele su canvas con volume, sovrapposizioni e pannelli (ATR%, RSI, conviction, GQ)
+static/js/indicators.js   SMA, EMA, Bollinger, VWAP ancorato al mese, Donchian, ATR%, RSI
+static/js/chart-theme.js  l'unico oggetto di stile dei grafici, letto dai token CSS --chart-*
+static/js/market.js       letture di prezzi, libro dei trade, storico, confronto (cache di 5 minuti nel browser)
+static/grafici.html       galleria tecnica: ogni primitiva con i dati di esempio (non è una pagina del prodotto)
 static/js/glossary.js     definizioni e termini cliccabili
 static/js/flow.js         diagramma di flusso cliccabile (Come funziona, Apprendimento)
 static/js/views/          una sezione per file (dodici)
@@ -175,3 +194,28 @@ static/sample_snapshot.json   esempio DEMO, coerente al centesimo (lo verifica i
 Tema scuro di base, chiaro se lo chiede il sistema o l'utente (pulsante in alto a destra, ricordato nel browser).
 Verde e rosso compaiono solo sul P&L, sempre insieme a segno e freccia; ambra e rosso di stato solo sulle anomalie,
 sempre con icona e parola. Le cifre sono tabellari. I grafici si leggono anche da tastiera (frecce) e in tabella.
+
+## Il motore dei grafici
+
+Nessuna libreria: SVG e HTML scritti a mano, canvas solo per le candele. La logica (geometria, scale, ricerca del punto
+più vicino, zoom, tastiera, tabella alternativa) è separata dallo stile: **ogni colore, raggio, spessore, tratteggio,
+carattere, opacità e tempo è un token `--chart-*`** definito una volta in `css/tokens.css` (oggi alias dei token del tema).
+Le regole SVG in `css/app.css` usano quei token; ciò che il canvas e gli attributi SVG vogliono come numeri arriva da
+`chartTheme()` (`js/chart-theme.js`), che rilegge i token al cambio di tema, di livello o di preferenza di movimento.
+Per ridisegnare i grafici si cambiano i token, non il codice. `grafici.html` li mostra tutti insieme.
+
+| Primitiva | Firma | Note |
+|---|---|---|
+| Linee nel tempo | `timeChart(host, { label, zoom, table }) → { update(spec), empty, onHover, setHoverTime, setWindow, resetWindow, onWindow, window }` | `spec = { x, panels: [{ height, title, scale, series: [{ values, cls, area, end, dots, step, name }], format, top, bottom, refs, bands }], marks, xTicks, tip, say, xFormat, xHead }`. `zoom: true`: rotella, trascinamento, doppio clic, `+ − 0`. |
+| Candele | `candleChart(host, { label, panes, overlays, table }) → { setData, setOverlays, setPanes, setLog, setRange, redraw, view, onHover, setHoverTime, setWindow, resetWindow, onWindow, destroy }` | Volume sempre; pannelli `atr`, `rsi`, `conv`, `gq`; sovrapposizioni in `OVERLAYS`; segni delle operazioni in `data.markers`. |
+| Caduta dal massimo | `underwater(host, opts).update({ x, equity \| values, refs, height, format, title })` | Restituisce `{ min, minIndex, current, daysUnder }`. |
+| Ventaglio | `fanChart(host, opts).update({ x, bands: [{ lo, hi, name }], median, lines, scale, format, refs, marks, xTicks, xFormat, xHead })` | Fasce dalla più larga alla più stretta. |
+| Aree impilate | `stackedArea(host, opts).update({ x, layers: [{ name, values, cls }], normalize, format, height, title })` | `normalize: true` = 100%. |
+| Istogramma | `histogram(host, { edges, counts }, { refs: [{ value, label, cls }], normal, unit, xFormat, rangeFormat, height, log, table })` | Linee verticali di riferimento; curva normale facoltativa. |
+| Cascata | `waterfall(host, steps: [{ label, value, total, note }], { label, height, format, levelFormat, orient, valueHead, levelHead, table }) → { update }` | In riga quando le colonne sono troppo strette. |
+| Dispersione / bolle | `scatter(host, points: [{ x, y, size, group, label, cls }], { groups, fit, diagonal, refsX, refsY, xScale, yScale, showLabels, tip, table, … }) → { update, setHidden, fit }` | Punto più vicino al puntatore; frecce da tastiera; legenda con interruttori. |
+| Mappa ad albero | `treemap(host, items: [{ name, value, cls, k, note, children }], { label, height, format, valueHead, tip, table }) → { update }` | Disposizione «squarified», uno o due livelli. |
+| Griglia di calore | `heatGrid(host, { rows, cols, values, counts }, { caption, corner, format, palette, scale, tip }) → { update }` | Una vera tabella; `heatmap()` resta per i rendimenti mensili, `matrix()` per le correlazioni. |
+| Legame tra grafici | `linkCharts([grafici…], { window }) → scioglie` | Mirino alla stessa data su tutti; con `window: true` anche zoom e scorrimento. |
+| Tabella alternativa | `tableFallback({ summary, caption, head, rows, max }) → { el, refresh }` | `<details>` chiuso, righe costruite solo all'apertura; è ciò che aggiunge `table: true`. |
+| Indicatori | `sma, ema, bollinger, vwapMonth, donchian, atrPct, rsi` | Conviction e GQ non si calcolano nel browser: arrivano dal server. |
