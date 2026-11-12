@@ -644,7 +644,7 @@ Tre garanzie fatte rispettare dal codice: chi propone non approva; una regola pu
 
 ### 13.2 Profilo scelto e avvio
 
-Scelta, numeri e istruzioni sono in [`PAPER.md`](PAPER.md). In breve: libro giornaliero a volatilità obiettivo 15% con leva al massimo 2x, trade a margine isolato con rischio 0,5% / 1%, scalini di rischio a −15% / −22% / −30%. Simulato con il motore di rischio dentro: 36,9% l'anno (34,6% dal 2023), Sharpe 1,21, caduta massima −19%.
+Scelta, numeri e istruzioni sono in [`PAPER.md`](PAPER.md). In breve: libro giornaliero a volatilità obiettivo 15% con leva al massimo 2x, trade a margine isolato con rischio 0,5% / 1%, scalini di rischio a −20% / −30% / −40% (decisione di Andrea; la mia proposta era −15 / −22 / −30). Simulato con il motore di rischio dentro: 39,5% l'anno (37,8% dal 2023), Sharpe 1,27, caduta massima −21%. L'arresto totale scatta solo a −40%.
 
 ---
 
@@ -663,7 +663,7 @@ Aggiornato dopo la sesta tornata. Tutto SIMULATO.
 - **Sedi:** IBKR, più Kraken o OKX Europe a 10x; Hyperliquid solo come quota a perdere.
 - **Veicolo:** persona fisica; denaro dei familiari solo come donazione o prestito.
 - **Costi fissi:** 60–260 € al mese, cioè dal 7% al 30% l'anno su 10.000 €.
-- **Profilo scelto per il paper:** libro giornaliero fino a 2x, trade a 0,5% / 1%, scalini a −15 / −22 / −30%. Simulato con il motore di rischio dentro: 36,9% l'anno, cioè circa 2,6% al mese, caduta massima −19%.
+- **Profilo del paper:** libro giornaliero fino a 2x, trade a 0,5% / 1%, scalini a −20 / −30 / −40%. Simulato con il motore di rischio dentro: 39,5% l'anno, cioè circa 2,8% al mese, caduta massima −21%; l'arresto totale scatta solo a −40%.
 - **Automiglioramento:** il sistema registra ogni trade, cerca dove perde, propone correzioni che possono solo ridurre il rischio e le fa validare da codice indipendente; le attivi solo tu.
 
 ## I primi cinque passi

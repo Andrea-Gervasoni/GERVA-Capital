@@ -88,8 +88,8 @@ def test_config_file_is_valid_and_paper_only(tmp_path):
     from gerva.config import load
     s, l, c = load()
     assert s.mode in ("paper", "alpaca-paper") and l.max_leverage <= 2.0
-    # profilo scelto per il paper (research/v5/v6/scelta_profilo.out): scalini 15 / 22 / 30; l'arresto totale mai oltre il 30%
-    assert (l.dd_reduce, l.dd_halt, l.dd_kill) == (0.15, 0.22, 0.30) and l.dd_kill <= 0.30
+    # profilo del paper deciso da Andrea (research/v5/v6/scelta_profilo.out): scalini 20 / 30 / 40; l'arresto totale mai oltre il 40%
+    assert (l.dd_reduce, l.dd_halt, l.dd_kill) == (0.20, 0.30, 0.40) and l.dd_kill <= 0.40
     t = c.get("trades") or {}
     assert 0 < t["risk_confirmed"] <= t["risk_exceptional"] <= 0.02           # mai oltre il 2% per trade
     bad = tmp_path / "g.yaml"

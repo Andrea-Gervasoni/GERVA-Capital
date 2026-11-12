@@ -10,21 +10,22 @@ Scelto misurando ogni combinazione **con il motore di rischio dentro**, perché 
 |---|---|---|
 | Libro giornaliero | Quattro strategie, volatilità obiettivo 15%, leva al massimo 2x, liquidità ferma in un ETF monetario | `config/gerva.yaml`, `limits` e `cash` |
 | Libro dei trade | Margine isolato, circa 11x (mai oltre 15x), rischio 0,5% sui setup confermati e 1% sugli eccezionali | `config/gerva.yaml`, `trades` |
-| Scalini di rischio | −15% dimezza, −22% un quarto, −30% chiude tutto e si ferma | `config/gerva.yaml`, `limits` |
+| Scalini di rischio | −20% dimezza, −30% un quarto, −40% chiude tutto e si ferma | `config/gerva.yaml`, `limits` |
 
 | Simulato, 2018–2026, motore di rischio dentro | Rendimento annuo | Sharpe | Caduta massima | Giorni con il freno tirato |
 |---|---:|---:|---:|---:|
-| **Profilo scelto** | **36,9%** (dal 2023: 34,6%) | **1,21** (1,02) | **−19%** | 13% |
+| **Profilo del paper** (scalini 20 / 30 / 40) | **39,5%** (dal 2023: 37,8%) | **1,27** (1,09) | **−21%** | 2% |
+| Stesso profilo con scalini 15 / 22 / 30 | 36,9% (34,6%) | 1,21 (1,02) | −19% | 13% |
 | Stesso profilo con gli scalini precedenti (10 / 15 / 20) | 30,2% | 1,12 | −17% | 39% |
-| Stesso profilo con scalini 20 / 30 / 40 | 39,5% | 1,27 | −21% | 2% |
 | Profilo "massimo" (trade 1% / 2%) con scalini 15 / 22 / 30 | 33,5% | 0,96 | −26% | 53% |
 
-- **Scelta:** scalini 15 / 22 / 30 e trade a 0,5% / 1%.
-- **Motivazione:** è il profilo con il rendimento più alto tra quelli in cui i freni restano un'eccezione e l'arresto totale non supera il −30%. Gli scalini precedenti erano tarati per un portafoglio senza leva e frenavano quattro giorni su dieci.
-- **Alternative scartate:** scalini 20 / 30 / 40 (3 punti in più, ma fermano tutto solo a −40%); trade a 1% / 2% (più rischio e meno rendimento, perché i freni scattano metà del tempo).
-- **Avvertenza:** ho aggiunto il vincolo "freni attivi in meno del 10–15% dei giorni" dopo aver visto che la prima regola di scelta dava un risultato degenere. È un criterio di progetto, ma è stato fissato dopo aver guardato i dati.
+- **Scelta (di Andrea, 12/11/2026):** scalini 20 / 30 / 40 e trade a 0,5% / 1%.
+- **Motivazione:** è la combinazione con il rendimento e lo Sharpe più alti tra quelle senza arresti e con caduta massima entro il 25%; i freni scattano nel 2% dei giorni.
+- **Il prezzo:** l'arresto totale scatta solo a −40% dal massimo. Nelle simulazioni la caduta massima è −21% e lo scalino dei −30% non viene mai toccato; in un periodo peggiore di quelli del campione il conto può perdere il 40% prima che il motore chiuda tutto.
+- **Alternative scartate:** scalini 15 / 22 / 30 (2,6 punti in meno, arresto a −30%: era la mia proposta); scalini 10 / 15 / 20 (frenano quattro giorni su dieci); trade a 1% / 2% (più rischio e meno rendimento, perché i freni scattano metà del tempo).
+- **Avvertenza:** il vincolo "freni attivi di rado" è stato aggiunto dopo aver visto che la prima regola di scelta dava un risultato degenere.
 
-Sono circa il 2,6% al mese composto nelle simulazioni; lo scenario centrale è la metà.
+Sono circa il 2,8% al mese composto nelle simulazioni; lo scenario centrale è la metà.
 
 ## Che cosa gira
 
@@ -100,7 +101,7 @@ Sul passato, oggi, il ciclo trova due fette sospette (volatilità alta, martedì
 
 ## Cancelli
 
-Libro giornaliero: 90 giorni; ciclo disponibile al 99%; nessun ordine non riconciliato; nessun arresto; caduta entro il 15%; probabilità che lo Sharpe vero sia positivo almeno 60%; scostamento dal backtest entro 3 punti; costi reali entro 1,5 volte quelli ipotizzati.
+Libro giornaliero: 90 giorni; ciclo disponibile al 99%; nessun ordine non riconciliato; nessun arresto; caduta entro il 20%; probabilità che lo Sharpe vero sia positivo almeno 60%; scostamento dal backtest entro 3 punti; costi reali entro 1,5 volte quelli ipotizzati.
 
 Libro dei trade: almeno 40 trade chiusi; R medio positivo e almeno metà di quello simulato; nessuna perdita oltre il margine.
 

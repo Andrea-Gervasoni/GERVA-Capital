@@ -10,16 +10,15 @@ band: 0.02                  # non si ritocca una posizione per meno del 2% del p
 equity_window: ["15:45", "16:00"]   # ora di New York: le azioni si scambiano solo a ridosso della chiusura
 
 limits:
-  # PROFILO SCELTO PER IL PAPER (12/11/2026, research/v5/v6/scelta_profilo.out): libro giornaliero a volatilita' obiettivo 15% con
-  # tetto 2x + libro dei trade a rischio 0,5% / 1%, scalini 15 / 22 / 30. Simulato con il motore di rischio dentro:
-  # 36,9% l'anno, caduta massima -19%, Sharpe 1,21 (dal 2023: 34,6% e 1,02); il motore frena nel 13% dei giorni.
-  # Con gli scalini precedenti (10 / 15 / 20) lo stesso profilo rende il 30% e frena nel 39% dei giorni: erano tarati per un
-  # portafoglio senza leva. Gli scalini 20 / 30 / 40 rendono il 39,5% ma fermano tutto solo a -40%: scartati.
+  # PROFILO DEL PAPER, deciso da Andrea il 12/11/2026 (research/v5/v6/scelta_profilo.out): libro giornaliero a volatilita' obiettivo
+  # 15% con tetto 2x + libro dei trade a rischio 0,5% / 1%, scalini 20 / 30 / 40. Simulato con il motore di rischio dentro:
+  # 39,5% l'anno, caduta massima -21%, Sharpe 1,27 (dal 2023: 37,8% e 1,09); il motore frena nel 2% dei giorni.
+  # Il prezzo: l'arresto totale scatta solo a -40% dal massimo. Con scalini 15 / 22 / 30 lo stesso profilo rende il 36,9%.
   vol_target: 0.15          # volatilita' annua obiettivo del libro giornaliero
   max_leverage: 2.0         # tetto operativo; il codice rifiuta qualunque valore sopra 3,0 (HARD_MAX_LEVERAGE)
-  dd_reduce: 0.15           # -15% dal massimo: esposizione dimezzata
-  dd_halt: 0.22             # -22%: un quarto dell'esposizione, nessun aumento
-  dd_kill: 0.30             # -30%: chiude tutto e si ferma (a ritenuta)
+  dd_reduce: 0.20           # -20% dal massimo: esposizione dimezzata
+  dd_halt: 0.30             # -30%: un quarto dell'esposizione, nessun aumento
+  dd_kill: 0.40             # -40%: chiude tutto e si ferma (a ritenuta)
   daily_loss: 0.04          # -4% in 24 ore: esposizione dimezzata
   weekly_loss: 0.08         # -8% in 7 giorni: come dd_halt
   max_weight: 0.35          # peso massimo di un singolo strumento
