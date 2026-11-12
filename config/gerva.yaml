@@ -25,6 +25,10 @@ limits:
   max_data_age_h: {crypto: 36.0, ibkr: 100.0}
   max_errors: 5
 
+cash:                       # liquidita' ferma in un ETF monetario (in media il 47% del capitale; +0,9 punti l'anno a 1x)
+  symbol: IB01.L            # T-bill USA 0-1 anno, UCITS, in dollari (il paper e' in dollari). In euro: XEON.DE. Vuoto = non si parcheggia
+  buffer: 0.05              # il 5% resta sempre liquido. Il peso dell'ETF e' comunque limitato da max_weight (35%)
+
 paper:
   fee: {crypto: 0.0025, ibkr: 0.0005}        # commissione per lato simulata
   slippage: {crypto: 0.0005, ibkr: 0.0002}

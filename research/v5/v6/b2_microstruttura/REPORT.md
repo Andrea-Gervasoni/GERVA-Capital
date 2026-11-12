@@ -72,10 +72,76 @@ Flusso firmato in 1 s o 5 s ≥ 10/20/50 volte la media dei 30 minuti precedenti
 - Regola migliore in selezione (5 s, 50×, ≥ 5 bp, 15 m): −9,4 bp (n 66, t −1,2) → verifica −3,7 bp (n 189, t −1,1). Decade anno dopo anno e
   resta sotto il costo taker. Continuazione a 5–60 s: ≤ 0,2 bp, non distinguibile da zero.
 
-## 6. Registrazione live (PROVVISORIO: solo segmento A, 39 minuti; il segmento B è in corso) — 07_live_A.out
-- Latenza misurata da questa macchina (FATTO; orologio locale allineato a Binance entro ±93 ms): il dato arriva vecchio di ~96 ms da Binance,
-  ~60–130 ms da Kraken Futures, **~325–370 ms da Hyperliquid** (p95 480–580 ms). Andata/ritorno di una richiesta: 185–190 ms HL e Binance, 115 ms Kraken.
-- Spread mediani: HL BTC 0,13 bp, ETH 0,48, SOL 0,12; Kraken BTC 0,13, ETH 0,48, SOL 1,18. Profondità HL entro 5 bp per lato: BTC 4,5 M$, ETH 3,2 M$, SOL 0,4 M$.
-- Lead-lag Binance → Hyperliquid: reale e grande. Dopo un movimento Binance ≥ 2 bp in 500 ms, HL non si è ancora mosso e fa +2,9…+3,7 bp nei 5 s successivi
-  (latenza 200 ms), +2,4…+3,4 bp a 500 ms, +0,7…+1,6 bp a 1 s. Costo 9 bp. Eventi ≥ 4 bp: 5–12 bp a 500 ms ma n = 4–11.
-- Market making su HL, fill conservativo: BTC −2,3, ETH −3,6, SOL −2,0 bp/$ netti; al tocco −1,6…−1,9.
+## 6. Registrazione live, 11–12 novembre 2026 (07_live_AB.out, 06_live_build_*.out)
+1,77 ore in due segmenti (19:11–19:51 e 23:21–00:28 UTC; i recorder sono morti due volte con la sessione: **non** le 2–4 ore chieste).
+Hyperliquid (bbo, trades, l2Book a 20 livelli ogni ~8 s e a 5 livelli ~2/s) per BTC, ETH, SOL + bbo/trades di 20 perps meno liquidi (1,4 ore);
+Binance USDT-M (bookTicker, depth5, aggTrade, forceOrder) e spot; Kraken Futures (book, ticker, trade). OKX non raggiungibile da qui.
+- **Latenza da questa macchina** (FATTO; orologio locale allineato a Binance entro ±93 ms): il dato arriva vecchio di ~95 ms da Binance, 60–145 ms da
+  Kraken, **325–385 ms da Hyperliquid** (p95 480–690 ms). Andata e ritorno di una richiesta: ~187 ms Binance e HL, ~116 ms Kraken.
+  Un ordine deciso su un dato HL colpisce quindi un book che io vedrò solo ~0,6–0,8 s dopo (STIMA): la latenza realistica è 700 ms, non 200.
+- **Spread e profondità** (mediane): HL BTC 0,13 bp, ETH 0,49, SOL 0,12; Kraken BTC 0,13, ETH 0,49, SOL 1,20; Binance BTC 0,01.
+  HL entro 5 bp per lato: BTC 4,9 M$, ETH 3,3 M$, SOL 0,4 M$. Volume orario: HL BTC 74 M$, Binance 323 M$, Kraken 13 M$.
+- **Prevedibilità del mid HL** (fit prima metà, verifica seconda; 14 variabili fra cui squilibrio HL a 1/2/5/10/20 livelli e scarto Binance−HL):
+  R² in verifica a 1 s: 54–63% a latenza 0, 40–44% a 200 ms, **0–2% a 500 ms, negativo a 700 ms e 1 s**. È quasi tutto ritardo del feed HL
+  rispetto a Binance (corr. 0,30–0,50 dello scarto Binance−HL, 0,27–0,38 dello squilibrio L1; i livelli 10–20 valgono 0,08–0,22).
+  Top 10% dei segnali, taker prima delle commissioni: +0,8…+1,6 bp a 200 ms, **−0,3…+0,4 bp a 1 s** (orizzonti 1–5 s). Costo: 9 bp.
+
+| Binance → Hyperliquid: taker su HL dopo un salto Binance in 500 ms (3 monete insieme) | n | L 500 ms | L 700 ms | L 1 s |
+|---|---|---|---|---|
+| salto ≥ 2 bp, uscita 5 s: lordo attraversando lo spread → netto dopo 9 bp | 963 | +1,85 → −7,15 | +1,12 → −7,88 | +0,40 → −8,60 |
+| salto ≥ 4 bp, uscita 5 s | 84 | +3,40 → −5,60 | +2,31 → −6,69 | +0,59 → −8,41 |
+| salto ≥ 6 bp, uscita 30 s | 21 | +9,14 → +0,14 | +7,26 → −1,74 | +4,44 → −4,56 |
+| salto ≥ 8 bp, uscita 30 s | 9 | +14,73 → +5,73 | +12,41 → +3,41 | +7,27 → −1,73 |
+
+- I salti ≥ 8 bp sono solo **6 grappoli indipendenti** (le tre monete saltano insieme): netto +4,4 bp (t 1,3) a 500 ms, +1,8 bp (t 0,5) a 700 ms,
+  −3,7 bp (t −1,6) a 1 s. Sulla stessa regola con uscita a 5 s: +1,9 / −0,9 / −6,7 bp. **Non è evidenza** (IPOTESI). Vedi §8.
+- Binance → Kraken: Kraken ha già fatto 1,5–2,5 bp del movimento quando lo vedo; netto −3,7…−12 bp in ogni cella. Morto.
+- **Market making su HL**, quota al miglior bid/ask, fill conservativo, latenza 500 ms: BTC −2,67, ETH −4,06, SOL −2,87 bp/$ netti (markout a 1 s:
+  −1,1…−1,7 bp); al tocco −1,7…−2,3. Quote a ±2 bp: −2,3…−3,1. Le uniche celle positive (ETH ±5 bp: +0,15/+0,52) hanno 8–16 fill l'ora.
+- **20 perps meno liquidi** (spread mediano 0,1–8,6 bp): netto medio −4,4 bp/$ (coda in fondo), −2,7 (al tocco); positivi 3 su 20 e 2 su 20.
+  Dove lo spread è largo (AERO, ETHFI 8 bp) l'incasso è 2–3 bp e il netto +1 bp, ma con 80–110 fill l'ora di taglia ignota: non è una prova.
+- Liquidazioni Binance viste: 123 in 1,77 ore, 0,76 M$ in tutto, la più grande 149 k$: troppo poche per un test.
+
+## 7. Verdetto
+**No.** Per un conto retail su VPS, con API pubbliche e commissioni base, nessuna delle strategie provate ha aspettativa positiva.
+
+| Strategia | Edge misurato | Costo | Di quanto manca | Cosa servirebbe |
+|---|---|---|---|---|
+| Taker su segnali di book/flusso (1 s–5 m) | 0,2–0,8 bp | 9,0 bp + spread | fattore 12–18 | commissione ≤ 0,3 bp per lato |
+| Maker su BTC/ETH/SOL | −0,7…−1,2 bp lordi | +1,5 bp | −2,2…−4,1 bp per $ | rebate ≥ 0,7–1,2 bp (HL max 0,3) |
+| Lead-lag Binance → HL, salti ≥ 2–4 bp | 1,1–3,4 bp | 9,0 bp | 5,6–7,9 bp | taker ≤ 0,6–1,7 bp per lato |
+| Lead-lag spot ↔ perp Binance | 0,1–1,4 bp | 9 bp | 7,6–8,9 bp | idem |
+| Raffiche: inversione a 15 minuti | 0,2–1,9 bp (verifica) | 9 bp | 7–9 bp | — |
+
+Livelli di commissione: il taker più basso di Hyperliquid è 2,4 bp (7 mld $ in 14 giorni) e non basta nemmeno quello. Maker a 0 bp da 500 M$ in 14 giorni
+(36 M$ al giorno); rebate da ~24 M$ al giorno di volume maker. Con €10k a 40x servirebbero 60–90 rotazioni complete della posizione massima al giorno.
+
+**Candidato migliore e consegne del brief.** Non c'è un candidato con aspettativa positiva dimostrata. Chi paga l'edge qui è il retail stesso:
+il rendimento della velocità va a chi ha latenza di millisecondi e commissioni maker negative. Leva che massimizza la crescita: **0**.
+Rendimento mensile sostenuto: **0%** (negativo se eseguito). Correlazione col fondo e P(−50%) non calcolabili: i rendimenti sono 16 giorni sparsi e
+tutti negativi (`returns.parquet`). Nei termini del brief: ΔN grande ma R̄ < 0, quindi N·(R̄/σ_R)² non sale.
+
+## 8. Unico punto aperto (IPOTESI, non un risultato)
+Il ritardo Binance → Hyperliquid è reale (3–4 bp dopo salti ≥ 4 bp, 12–15 bp dopo salti ≥ 8 bp) e sui salti grandi supera i 9 bp se si arriva entro
+~500 ms. Salti ≥ 8 bp in 500 ms su Binance: 20–140 al giorno per moneta nel 2023–26 (10_jumpfreq.out). Contro: 6 grappoli in tutto; a 1 s il segno si
+inverte; HL esegue cancellazioni e post-only prima degli ordini taker nello stesso blocco (da documentazione, non verificato qui), quindi il prezzo vero
+di esecuzione è peggiore di quello che ho usato; la taglia al primo livello nei salti non è misurata; ci competono arbitraggisti professionali.
+Per decidere servono 1–2 settimane di registrazione da un VPS a Tokyo e ordini reali di taglia minima. Probabilità che regga: bassa.
+
+## 9. Conteggio delle varianti
+Circa **320 varianti**: 20 regressioni × 3 soglie (test 1), 8 regressioni bookDepth, 112 + 16 configurazioni di market making storiche, 36 + 240 live
+(3 + 20 monete), 60 celle raffiche, 12 lead-lag storico, 80 celle lead-lag live, 15 regressioni live. Nessuna è stata scartata dopo averla vista.
+
+## 10. Dubbi
+- Il book storico è Binance, non Hyperliquid: uso Binance come limite superiore della prevedibilità e le commissioni HL come costo.
+- bookTicker copre solo 10 mesi (2023-05 → 2024-03): 16 giorni per simbolo; i test col book non hanno selezione ≤ 2022.
+- La griglia a 100 ms nasconde ciò che accade sotto i 100 ms; irrilevante per chi ha 200 ms–1 s di latenza.
+- Il fill «oltre la quota» è pessimista per chi quota al miglior prezzo; il fill «al tocco» è il limite opposto: la verità sta in mezzo, ed è negativa in entrambi.
+- Live: 1,77 ore di una sola serata, mercato tranquillo; latenza misurata attraverso il proxy di questa sessione (un VPS vero può essere più veloce o più lento).
+- Kraken: commissione taker presa a 5 bp dal brief, non letta dall'API. Limite di richieste HL per indirizzo (legato al volume scambiato): non testato.
+- Il conto del rebate assume volume maker ≈ volume totale dell'exchange (STIMA).
+
+## File
+`00*_recorder*.py` (recorder live), `01_build.py` (scarico + griglia 100 ms), `02_predict`, `03_mm`, `03b_mm_touch`, `04_leadlag_hist`, `05_bursts`,
+`06_live_build`, `07_live`, `08_bookdepth`, `09_signacf`, `10_jumpfreq` (.py e .out), `lib.py`, `mm.py`, `returns.parquet`, `hl_universe.csv`.
+Dati grandi in `data_cache/` (`v6_g100_*`, `v6_live/`, `v6_livegrid_*`, `v6_livealt_*`, `v6_raw/`).

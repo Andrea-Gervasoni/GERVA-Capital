@@ -48,6 +48,23 @@ class Settings:
     equity_window: tuple = ("15:45", "16:00")     # ora di New York: le azioni si scambiano solo qui (a ridosso della chiusura)
     base_ccy: str = "USD"
     start_cash: float = 12_000.0
+    cash_symbol: str | None = None        # ETF monetario in cui parcheggiare la liquidita' ferma (None = non si parcheggia)
+    cash_buffer: float = 0.05             # quota di patrimonio che resta sempre liquida
+
+
+def park_cash(w: dict, symbol: str | None, buffer: float, has_price: bool, state: str) -> dict:
+    """Aggiunge ai pesi obiettivo la liquidita' ferma, investita in un ETF monetario.
+    Ricerca (research/v5/v5/a10_sistema): in media il 47% del capitale resta fermo; remunerarlo vale +0,9 punti l'anno
+    a 1x (Sharpe 1,36 -> 1,49). Si calcola DOPO la scala del motore di rischio: se il rischio taglia l'esposizione, la
+    cassa cresce. Mai in stato KILLED (li' si chiude tutto), mai se manca il prezzo, mai a debito (solo se l'esposizione
+    lunga e' sotto 1 - buffer)."""
+    if not symbol or not has_price or state == "KILLED":
+        return w
+    free = 1.0 - buffer - sum(v for k, v in w.items() if v > 0 and k != symbol)
+    out = {k: v for k, v in w.items() if k != symbol}
+    if free > 0:
+        out[symbol] = free
+    return out
 
 
 class Runner:
@@ -163,6 +180,8 @@ class Runner:
             self.j.set("expo", dict(sorted(expo.items())[-800:]))            # serve al cancello "scostamento dal backtest"
         if self.targets is not None and not unreconciled:
             w = {k: v * a.scale for k, v in self.targets.weights.items()}
+            cs = self.s.cash_symbol
+            w = park_cash(w, cs, self.s.cash_buffer, bool(cs and self.market.last_prices([cs])), a.state)
             w, notes = self.risk.clamp_weights(w, {k: self.market.venue_of(k) for k in w})
             done, rej = self._trade(w, pos, acct.equity, a.state, ages, in_window, now)
             summary.update(orders=done, rejected=rej)

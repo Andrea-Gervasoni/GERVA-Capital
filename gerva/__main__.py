@@ -32,7 +32,7 @@ def _runner():
     from .live.runner import Runner
     from .ops.journal import Journal
     s, limits, cfg = load()
-    market = Market(Store(os.environ.get("GERVA_CACHE") or os.path.join(ROOT, "data_cache")))
+    market = Market(Store(os.environ.get("GERVA_CACHE") or os.path.join(ROOT, "data_cache")), cash_symbol=s.cash_symbol)
     j = Journal(os.path.join(s.home, "journal.sqlite"))
     if s.mode == "alpaca-paper":
         from .execution.alpaca import AlpacaPaper

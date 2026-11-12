@@ -21,5 +21,8 @@ def load(path: str | None = None) -> tuple[Settings, Limits, dict]:
     home = os.environ.get("GERVA_HOME") or c.get("home", "var/gerva")
     home = home if os.path.isabs(home) else os.path.join(ROOT, home)
     s = Settings(home=home, mode=mode, interval=float(c.get("interval_s", 900)), band=float(c.get("band", 0.02)),
-                 equity_window=tuple(c.get("equity_window", ("15:45", "16:00"))), start_cash=float(c.get("start_cash", 12000)))
+                 equity_window=tuple(c.get("equity_window", ("15:45", "16:00"))), start_cash=float(c.get("start_cash", 12000)),
+                 cash_symbol=(c.get("cash") or {}).get("symbol") or None, cash_buffer=float((c.get("cash") or {}).get("buffer", 0.05)))
+    if not 0.0 <= s.cash_buffer <= 0.5:
+        raise ValueError("cash.buffer deve stare tra 0 e 0,5")
     return s, Limits(**(c.get("limits") or {})), c

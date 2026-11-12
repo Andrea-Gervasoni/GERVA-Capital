@@ -20,8 +20,9 @@ EQUITY = sorted(set(book.TREND_UNIVERSE) | {"SPY", "QQQ", "^IRX", "^VIX", "^VIX3
 
 
 class Market:
-    def __init__(self, store: Store, coins=COINS, equity=EQUITY):
+    def __init__(self, store: Store, coins=COINS, equity=EQUITY, cash_symbol: str | None = None):
         self.st, self.coins, self.eq_symbols = store, list(coins), list(equity)
+        self.cash_symbol = cash_symbol
         self.cclose = self.cdvol = self.cret = None
         self.P = None
         self.errors: dict[str, str] = {}
@@ -63,6 +64,13 @@ class Market:
         P = {f: pd.DataFrame({s: d[f] for s, d in out.items()}).sort_index() for f in fields}
         keep = P["adj"]["SPY"].notna()
         self.P = {k: v[keep] for k, v in P.items()}
+        if self.cash_symbol:                       # ETF monetario: se il dato manca si prosegue senza parcheggiare la cassa
+            try:
+                c = yahoo(self.cash_symbol, keep_open_bar=keep_open_bar)
+                for f in fields:
+                    self.P[f][self.cash_symbol] = c[f].reindex(self.P[f].index).ffill()
+            except Exception as e:
+                log.warning("ETF monetario %s non disponibile (%s): la liquidita' resta ferma", self.cash_symbol, str(e)[:80])
 
     def refresh(self, keep_open_bar: bool = False) -> None:
         self.errors = {}

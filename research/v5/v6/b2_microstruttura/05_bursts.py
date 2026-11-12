@@ -29,7 +29,7 @@ for sym in ("BTCUSDT", "ETHUSDT"):
                     for hk, h in HZ.items(): r[hk] = sg * (p[keep + 1 + h] / p[keep + 1] - 1) * 1e4
                     rows.append(pd.DataFrame(r))
 E = pd.concat(rows, ignore_index=True); E["per"] = np.where(E["day"] < "2023", "sel", "ver")
-E.to_parquet("05_bursts_events.parquet")
+E.to_parquet("data/05_bursts_events.parquet")
 def st(x):
     x = x.dropna(); return f"{x.mean():+6.2f} (t {x.mean()/(x.std(ddof=1)/np.sqrt(len(x))+1e-12):+5.1f})"
 print("Rendimento medio in bp dopo la raffica, firmato nella direzione della raffica; ingresso 1 s dopo. Costo taker a/r = 9 bp (HL) + spread.")

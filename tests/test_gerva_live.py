@@ -433,3 +433,18 @@ def test_demo_snapshot_is_labelled_simulated():
     assert s["meta"]["mode"] == "backtest" and s["meta"]["data_label"].startswith("SIMULATO")
     assert len(s["equity_curve"]) > 1000 and len(s["strategies"]) == 4 and s["positions"] == []
     json.dumps(snapshot._clean(s))
+
+
+def test_park_cash_rules():
+    from gerva.live.runner import park_cash
+    w = {"BTC": 0.2, "SPY": 0.3}
+    assert park_cash(w, None, 0.05, True, "NORMAL") == w                       # non configurato
+    assert park_cash(w, "IB01.L", 0.05, False, "NORMAL") == w                  # senza prezzo non si compra
+    assert park_cash(w, "IB01.L", 0.05, True, "KILLED") == w                   # in KILLED si chiude tutto, cassa compresa
+    out = park_cash(w, "IB01.L", 0.05, True, "NORMAL")
+    assert abs(out["IB01.L"] - 0.45) < 1e-12 and out["BTC"] == 0.2
+    assert abs(sum(out.values()) - 0.95) < 1e-12                               # mai a debito: resta il 5% liquido
+    assert "IB01.L" not in park_cash({"BTC": 0.6, "SPY": 0.5}, "IB01.L", 0.05, True, "NORMAL")   # a leva: niente cassa da parcheggiare
+    red = park_cash({"BTC": 0.1, "SPY": 0.15}, "IB01.L", 0.05, True, "REDUCED")                 # rischio ridotto: piu' cassa
+    assert abs(red["IB01.L"] - 0.70) < 1e-12
+    assert park_cash({"BTC": 0.2, "IB01.L": 0.9}, "IB01.L", 0.05, True, "NORMAL")["IB01.L"] == 0.75  # il peso vecchio si ricalcola
