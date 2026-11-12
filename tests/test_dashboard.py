@@ -223,9 +223,10 @@ def test_quant4_vero_se_presente_ha_la_forma_attesa():
     names = {r["portafoglio"] for r in q["fund_stats"]}
     assert q["recommended"]["prudent"] in names and q["recommended"]["maximum"] in names
     assert q["decomposition"]["ai_contribution"] is None              # mai un numero: si misura in paper
-    # la regola «sostenuta» della pagina (leva ≤ 30x e R in verifica > 0,15) individua 1,0 x ATR e 1,7%
+    # la regola «sostenuta» della pagina (leva ≤ 30x e R in verifica > 0,15) individua solo 1,0 x ATR: il livello a 30x
+    # (stop 1,7%) e' stato ritirato dopo la misura sui prezzi veri dei perpetual (quinta tornata, analista A9)
     ok = sorted(r["label"] for r in q["stop_table"] if r["leverage"] <= 30.5 and r["mean_R_verify"] > 0.15)
-    assert ok == ["1.0 x ATR", "1.7%"]
+    assert ok == ["1.0 x ATR"]
     assert all(r["leverage"] > 30.5 or r["mean_R_verify"] <= 0.2 for r in q["stop_table"])
 
 

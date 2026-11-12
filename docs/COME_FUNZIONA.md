@@ -39,22 +39,20 @@ Insieme, senza leva: 13,8% l'anno, volatilità 9,0%, caduta massima −9,4%, Sha
 
 ## Leva: due numeri diversi
 
-- **Sul libro giornaliero:** al massimo 2x, con un tetto di 3x scritto nel codice. Oltre, nei dati il capitale viene dimezzato troppo spesso (a 5x nel 20% dei casi in tre anni nello scenario prudente, a 10x nel 62%).
-- **Sul singolo trade, a margine isolato:** 11x sui setup confermati, 30x sugli eccezionali. La leva discende da quanto è stretto lo stop; ciò che puoi perdere su un trade è il margine, circa 1,7 volte il rischio dichiarato (1% o 2% del patrimonio). A 50x i dati dicono no: 9% di trade vincenti e 53 perdite di fila.
-
-Il modulo è in `gerva/risk/isolated.py`, testato, non ancora collegato al ciclo.
+- **Sul libro giornaliero:** al massimo 2x, con un tetto di 3x scritto nel codice.
+- **Sul singolo trade, a margine isolato:** circa 11x, mai oltre 15x. La leva discende da quanto è stretto lo stop; ciò che puoi perdere su un trade è il margine, circa 1,7 volte il rischio dichiarato (1% o 2% del patrimonio). I livelli a 30x e 50x sono ritirati: sui prezzi veri dei perpetual non reggono.
 
 ## Che cosa aspettarsi
 
-Simulato, tre anni, rendimento annuo mediano:
+Simulato, tre anni, rendimento mensile composto:
 
-| Profilo | Base | Prudente | Caduta tipica | Probabilità di dimezzare il conto |
-|---|---:|---:|---:|---:|
-| Solo libro giornaliero, 2x | 23% | 12% | −9% | 0% |
-| Prudente: libro giornaliero 1x + trade a 0,5% / 1% | 28% | 15% | −9% | 0% |
-| Massimo: libro giornaliero 2x + trade a 1% / 2% | 55% | 22% | −19% | 0–4,5% |
+| Profilo | Scenario base | Scenario centrale | Caduta tipica (dati mensili) |
+|---|---:|---:|---:|
+| Libro giornaliero 2x | 2,1% | 1,1% | −7% |
+| Prudente: libro 1x + trade a 0,5% / 1% | 2,1% | 1,1% | −9% |
+| Massimo: libro 2x + trade a 1% / 2% | 3,9% | 1,8% | −18% |
 
-Il mese tipico resta sotto l'1% in tutti i profili: il rendimento arriva in pochi mesi grandi. Il Deflated Sharpe, che sconta le 812 prove fatte, è 0,38 contro una soglia di 0,95: **l'evidenza è promettente, non è una prova**. Per questo il sistema parte in paper per 90 giorni, con cancelli numerici. Dettaglio in [`RIFONDAZIONE.md`](RIFONDAZIONE.md).
+Le cadute sui dati giornalieri sono più profonde di circa metà. Dopo le tasse i rendimenti scendono di circa un quarto. Il 30% al mese non è sostenuto da nessuna delle 4.071 varianti provate. Dettaglio in [`RIFONDAZIONE.md`](RIFONDAZIONE.md), sezioni 11 e 12.
 
 ## Perché è meglio della versione su GitHub
 
@@ -62,7 +60,7 @@ La versione precedente (ramo principale del repository, fino alla v3.9) era una 
 
 | | Versione precedente | Versione attuale |
 |---|---|---|
-| **Rendimento simulato** | Motore v3: 5,7% l'anno, Sharpe 0,69, caduta −15,9% (dal suo `STATUS.md`) | Portafoglio: 13,8% l'anno, Sharpe 1,18, caduta −9,4%; a leva 2x 18,8% |
+| **Rendimento simulato, con le stesse convenzioni** | 20,3% l'anno, Sharpe 0,96, caduta −17,7% senza leva; 33,5% e −36,5% con la leva al 150% | Libro a 2x: 27,7% l'anno, Sharpe 1,47, caduta −17,9%; profilo massimo: 55,0% e −31,0% |
 | **Come è misurato lo Sharpe** | Sui rendimenti grezzi: la cassa che rende il tasso contava come abilità. In eccesso del tasso la "v4 approvata" non superava il suo stesso cancello | Sempre in eccesso del tasso a breve |
 | **Costi** | 8 punti base fissi; nessun costo della leva, nessun prestito titoli | Per sede (30 pb crypto, 5–10 pb indici ed ETF), finanziamento della leva, costi raddoppiati come prova |
 | **Quando si esegue** | Sulla stessa chiusura del segnale, mentre la documentazione diceva "il giorno dopo" | Ritardo esplicito; ogni strategia provata anche con un giorno in più |

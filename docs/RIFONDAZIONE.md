@@ -23,7 +23,7 @@ La versione precedente è in [`archivio_RIFONDAZIONE_v2.md`](archivio_RIFONDAZIO
 | **AI** | Può ridurre o vietare le strategie | In più: moltiplicatore sul rischio del singolo trade, sempre tra 0 e 1 |
 | **Evidenza statistica** | Deflated Sharpe 0,51 su 110 prove | **0,38 su 812 prove** (0,20 per il vecchio portafoglio): contare tutte le prove ha abbassato la fiducia, non alzata |
 
-**Aggiornamento, quinta tornata.** Dieci analisti hanno rivisto tutto (sezione 11). Hanno corretto i profili di questa versione in entrambe le direzioni, ritirato il livello a 30x e aggiunto un flusso di trade a leva sugli indici. Dove la sezione 11 e le sezioni 2–3 divergono, vale la sezione 11.
+**Aggiornamento, quinta e sesta tornata.** Diciotto analisti hanno rivisto tutto e cercato in classi nuove (sezioni 11 e 12). Hanno corretto i profili di questa versione in entrambe le direzioni, ritirato il livello a 30x e misurato il fondo contro il GERVA Capital originale. **Dove le sezioni 11–12 e le sezioni 1–3 divergono, valgono le sezioni 11–12; il riepilogo in fondo è aggiornato.**
 
 **Un errore mio corretto in questa versione.** La prima misura del fondo combinato dava uno Sharpe di 1,50. Era gonfiata: attribuivo l'intero guadagno di un trade al giorno di uscita, e la correlazione giornaliera con il resto del portafoglio risultava 0,16 invece di 0,64. Sui rendimenti mensili lo Sharpe è 1,17. Tutti i numeri del fondo combinato qui sotto sono mensili.
 
@@ -401,6 +401,8 @@ Verificate nel browser le tre pagine nuove o modificate, nei due temi, a schermo
 
 ![Il fondo intero (ricerca simulata)](img/dashboard-v3-fondo.png)
 
+![Il fondo a confronto con il GERVA Capital originale (ricerca simulata)](img/dashboard-v4-confronto.png)
+
 ![Panoramica in modalità Semplice (dati di esempio)](img/dashboard-v2-semplice-panoramica.png)
 
 ---
@@ -532,26 +534,107 @@ Sintesi di tutta la tornata: dieci analisti e circa 1.700 varianti non hanno tro
 
 ---
 
+## 12. Sesta tornata: otto classi di vantaggio nuove, e chiusura della ricerca
+
+Dopo la quinta tornata i segnali di prezzo sulle crypto erano esauriti. Otto analisti hanno cercato dove un vantaggio ha un pagatore strutturale, cioè qualcuno che paga per liquidità, assicurazione, leva o immediatezza ([`research/v5/v6/`](../research/v5/v6/)). Circa 1.560 varianti in più; in tutto **4.071**. Tutto SIMULATO.
+
+### 12.1 Esito per classe
+
+| Analista | Classe | Chi pagherebbe | Esito | Mese composto sostenuto |
+|---|---|---|---|---|
+| B1 | Fare da banco su Hyperliquid (vault HLP) | I trader che perdono contro il vault | Rendimento in calo con la crescita del vault: +63% nel 2024, +17% nel 2025, +9% nel 2026; mese tipico +0,16%. È un deposito | 0,5–0,9% in media, 0,2% tipico |
+| B1 | Copiare i trader migliori | — | Persistenza solo nei conti ad altissima rotazione, non copiabili dopo le commissioni. Classifica distorta: Sharpe 3,7 su quella di oggi, 1,0 su quella ricostruita com'era; il 71% del decile migliore di gennaio 2025 oggi vale meno di un decimo | 0 |
+| B2 | Alta frequenza su dati veri di book e scambi | Chi vuole immediatezza | Il segnale esiste ma vale 0,3–0,5 pb lordi a 5–30 secondi, contro 9 pb di commissioni. Market making: da −2,2 a −4,4 pb per dollaro eseguito. Servirebbe uno sconto raggiungibile solo con circa 24 milioni di dollari al giorno di volume | 0 |
+| B3 | ETP a leva 3x–5x e leva costante sugli indici | Nessuno: è il premio azionario | Leva ottimale circa 2x, instabile (da 0 a 5,5 secondo il decennio); stimata sul passato rende meno dell'indice. Il 3x ha perso il 98–100% almeno una volta; il 5x sul Nasdaq perde il 58% l'anno dal 2022 | 1,3% con cadute del 50% |
+| B4 | Premio di volatilità (short VIX, vendita di put) | Chi compra assicurazione | Sharpe 0,54 (0,28 dal 2023), pari all'indice comprato e tenuto, con una seduta da −96% (5 febbraio 2018) evitata per un giorno. Le versioni a rischio limitato perdono il rendimento | 0,9% |
+| B5 | Azioni singole | — | Inversione a breve: da +34% l'anno lordo (2005–09) a +0,8% (2023–26). Tenere 5 azioni solo di notte: Sharpe 1,12, ma coperta con l'indice dal 2023 vale 0,08, e 3 pb in più per lato la dimezzano | 1,9% (è mercato, non abilità) |
+| B6 | Futures su 37 mercati | Chi si copre | Trend: Sharpe 0,47, −0,41 dal 2023. Con 10.000 € si tengono da 1 a 6 mercati: non praticabile sotto 50–100.000 € | 0,2–2,5% |
+| B7 | Rendimenti crypto neutrali | I long a leva che pagano il funding | Rotazione su tutte le monete di Hyperliquid: 22% (2024), 14% (2025), 11% (2026) sul controvalore; 0,5–0,6% al mese sul capitale. Dopo il 33% di tasse e il rischio di sede: circa 2,5% l'anno contro 3,5% dei titoli di Stato | 0,5% |
+| B8 | Confronto con il GERVA Capital originale | — | 12.2 | — |
+
+Nessuna classe supera ciò che il fondo ha già. Due risultati restano in osservazione senza capitale: le azioni tenute di notte (serve un mese di paper con esecuzioni d'asta vere) e il vault HLP come parcheggio di una quota piccola della liquidità.
+
+### 12.2 Il confronto con il GERVA Capital originale
+
+Dal repository si ricostruisce il vecchio modello (libro azionario al 50%, crypto al 50%, leva fino al 150%); con il suo motore riproduce i numeri che dichiarava (Sharpe 0,69, 5,7% l'anno). Rimisurato con le convenzioni di questo documento, aprile 2018 – ottobre 2026, statistiche mensili:
+
+| | Sharpe (tutto \| verifica) | CAGR | Caduta massima | Mese mediano |
+|---|---|---:|---:|---:|
+| Originale, senza leva | 0,96 \| 0,88 | 20,3% | −17,7% | 0,5% |
+| Originale, com'è usato ora (leva 150%) | 0,85 \| 0,77 | 33,5% | −36,5% | −0,1% |
+| Nuovo, libro giornaliero 1x con cassa remunerata | 1,46 \| 1,20 | 14,7% | −8,8% | 0,7% |
+| **Nuovo, libro giornaliero 2x** | **1,47 \| 1,21** | **27,7%** | **−17,9%** | **1,1%** |
+| Nuovo, prudente (C1) | 1,15 \| 0,96 | 26,8% | −16,5% | 0,6% |
+| **Nuovo, massimo (C3)** | **1,20 \| 1,04** | **55,0%** | **−31,0%** | **1,1%** |
+
+- **A parità di caduta il nuovo fondo è avanti:** il libro a 2x rende 7 punti l'anno in più dell'originale senza leva; il profilo massimo 22 punti in più dell'originale a leva, con caduta minore.
+- **Non è provato.** La differenza di Sharpe ha z = 1,3 sul periodo intero e 0,65 in verifica. Con un giorno di ritardo nell'esecuzione il nuovo portafoglio a quattro strategie scende da 1,18 a 0,83; l'originale regge meglio.
+- **Avevo sottovalutato l'originale:** scrivevo 5,7% l'anno, con queste convenzioni è 20,3%.
+- **Dal vivo servono anni.** I due sistemi sono correlati (0,66): per distinguere una differenza vera di Sharpe pari a 1 servono circa 1.550 giorni. A 90 giorni "ha reso di più" passa il 48% delle volte anche senza alcun vantaggio.
+
+**Criteri numerici per "batte GERVA Capital"**, su almeno 90 giorni comuni e a parità di volatilità (libro a 2x contro l'originale senza leva; profilo massimo contro l'originale a leva):
+
+| Criterio | Significato |
+|---|---|
+| Rendimento più alto e caduta non oltre 1,5 volte | "Non smentito" |
+| Differenza di Sharpe con z > 1,3 | "Batte"; da rivedere a 180 e 365 giorni |
+| Differenza con z < −1,3 | Si torna all'originale |
+
+Lo strumento è [`research/v5/v6/b8_confronto/confronto.py`](../research/v5/v6/b8_confronto/confronto.py): eseguito una volta al giorno accoda i valori dei due conti, dell'S&P 500 e di Bitcoin e stampa il confronto con i giorni ancora necessari.
+
+### 12.3 Perché la ricerca si chiude qui
+
+Tre fatti indipendenti portano alla stessa conclusione.
+
+1. **Crescita massima.** Con Sharpe S e volatilità σ la crescita logaritmica annua è g = S·σ − σ²/2, massima a σ = S, dove vale S²/2 (Kelly, 1956). Il 30% al mese richiede g = 12·ln(1,30) = 3,15, cioè S ≈ 2,5 a Kelly pieno, con cadute tipiche oltre il 70%. Il fondo misura 1,2–1,5; lo scenario centrale è la metà.
+2. **Legge fondamentale della gestione attiva** (Grinold, 1989): S ≈ IC·√N. Con le 50–85 scommesse indipendenti l'anno che il mercato concede servirebbe una correlazione tra previsione ed esito di 0,27–0,35; quella misurata è 0,10–0,14. L'altra via, migliaia di scommesse indipendenti, è l'alta frequenza, dove il vantaggio lordo è un ventesimo dei costi (B2).
+3. **Selezione.** Lo Sharpe atteso dal migliore di 4.071 tentativi senza alcuna abilità è 1,24. Ogni ricerca in più alza quella soglia: i candidati diventano più belli e meno veri. Il Deflated Sharpe, con la varianza nulla teorica, è 0,76 per il libro giornaliero e 0,64 per il fondo; con la varianza empirica usata nella quarta tornata è più basso. In entrambi i casi sotto 0,95.
+
+Come riferimento: il fondo Medallion di Renaissance ha reso circa il 66% l'anno lordo per trent'anni, cioè circa il 4% al mese.
+
+La certezza in più può venire solo da dati nuovi, cioè dal paper trading.
+
+### 12.4 Che cosa è entrato nel codice
+
+| Miglioramento | Dove | Stato |
+|---|---|---|
+| Liquidità ferma in un ETF monetario (+0,9 punti l'anno a 1x) | `gerva/live/runner.py`, `park_cash`; `config/gerva.yaml`, `cash` | Fatto e testato |
+| Livello a 30x ritirato; tetto assoluto per trade a 15x | `gerva/risk/isolated.py` | Fatto e testato |
+| Ciclo paper dei trade: funding nei costi e nel segnale, collegato al motore di rischio | `gerva/live/tradecycle.py` | Fatto e testato |
+| Indicatore Gervasoni in ombra, registrato a ogni giro | `gerva/gervasoni.py` | Fatto e testato; non decide nulla |
+| Rischio per trade proporzionale alla conviction (1% / 2%) | `gerva/risk/isolated.py` | Già presente |
+| Dashboard: profili corretti, originale a confronto, 4.071 prove | `research/v5/quant_v4.json` | Fatto |
+| Ingresso con ordine limite all'apertura, valido 15 minuti | — | Da fare nell'adattatore della sede |
+| Strategia sugli ETF ribilanciata ogni mese sotto 100.000 $ | — | Da fare: cambia il libro, va deciso |
+| Scalini di rischio coerenti con il profilo | `config/gerva.yaml` | **Decisione tua**: con −10 / −15 / −20% il profilo massimo rende il 25% l'anno |
+| DIP-24h e carry nel ciclo; adattatori Kraken, Hyperliquid, IBKR; due libri con e senza AI | — | Da fare |
+
+---
+
 ## Riepilogo di una pagina
 
-- **Obiettivo chiesto:** 20–30% al mese. **Che cosa sostengono i dati:** in media 2,2% al mese nel profilo prudente e 4,2% in quello massimo (simulato, scenario base); circa la metà nello scenario prudente. Il mese tipico resta sotto l'1%: il rendimento arriva in pochi mesi grandi.
-- **Come:** sei strategie giornaliere poco correlate (Sharpe 1,34) più un libro di trade a leva sui giorni ad alta conviction.
-- **Leva:** 2x sul libro giornaliero; 11x per trade sui setup confermati, 30x sugli eccezionali, sempre a margine isolato, con rischio dell'1–2% per trade. 50x respinta: 9% di trade vincenti e 53 perdite di fila.
-- **Rischio:** nel profilo massimo caduta tipica −19%, −35% nel 5% dei casi peggiori, probabilità di dimezzare il conto fino al 4,5% nello scenario prudente. Caso peggiore del libro dei trade in un solo evento: circa −10%, mai oltre −15%.
-- **Evidenza:** 812 prove, Deflated Sharpe 0,38 contro una soglia di 0,95. Promettente, non provato.
+Aggiornato dopo la sesta tornata. Tutto SIMULATO.
+
+- **Obiettivo chiesto:** 30% al mese. **Che cosa sostengono i dati:** 2,0% al mese composto nel profilo prudente e 3,8% in quello massimo nello scenario base; 1,1% e 1,8% nello scenario centrale, che dimezza il vantaggio misurato. Dopo le tasse italiane, circa un quarto in meno. Il mese tipico è intorno all'1%.
+- **Perché non di più:** 4.071 varianti provate su crypto, indici, azioni, futures, volatilità, alta frequenza, rendimenti neutrali e dati on-chain convergono su 1–4% al mese. Il 30% richiede uno Sharpe di 2,5 giocato a Kelly pieno, con cadute oltre il 70%; il fondo misura 1,2–1,5.
+- **Come:** sei strategie giornaliere poco correlate, con la liquidità ferma remunerata, più un libro di trade a margine isolato sui giorni ad alta conviction.
+- **Leva:** 2x sul libro giornaliero; circa 11x per trade (mai oltre 15x), con rischio dell'1–2% per trade. I livelli a 30x e 50x sono ritirati: sui prezzi veri dei perpetual non reggono.
+- **Rischio:** profilo massimo, caduta tipica a tre anni −18% sui dati mensili (circa −30% su quelli giornalieri), −33% nel 5% dei casi peggiori; probabilità di dimezzare il conto 0–4%.
+- **Contro il GERVA Capital originale:** a parità di caduta il nuovo fondo rende di più nel backtest (27,7% contro 20,3% l'anno; 55% contro 33,5%). Non è statisticamente provato; decide il confronto dal vivo, con criteri numerici già scritti.
+- **Evidenza:** Deflated Sharpe tra 0,4 e 0,76 secondo il metodo, sotto la soglia di 0,95. Promettente, non provato.
+- **Indicatore Gervasoni:** esiste, è in ombra. Seleziona trade migliori nelle simulazioni (+0,22 R contro +0,13 dal 2023), ma il vantaggio non è distinguibile da zero.
 - **Sedi:** IBKR, più Kraken o OKX Europe a 10x; Hyperliquid solo come quota a perdere.
 - **Veicolo:** persona fisica; denaro dei familiari solo come donazione o prestito.
 - **Costi fissi:** 60–260 € al mese, cioè dal 7% al 30% l'anno su 10.000 €.
-- **AI:** filtra e riduce, non decide; il suo valore si misura solo in paper.
-- **Prima del denaro reale:** 90 giorni di paper e almeno 40 trade con i cancelli della sezione 4.2.
+- **Una decisione aperta:** con gli scalini di rischio di oggi il profilo massimo rende il 25% l'anno. O si allargano gli scalini, o si sceglie il profilo prudente.
 
 ## I primi cinque passi
 
-1. **Scrivere l'adattatore per Kraken demo e Hyperliquid testnet** e portarvi il libro dei trade (oggi gira in paper interno con `python -m gerva trades`), con lo stop che nasce insieme all'ordine.
-2. **Provare su testnet le due ipotesi di sicurezza**: l'agent non può prelevare; il "cancella tutto" non rimuove gli stop.
-3. **Avviare i 90 giorni di paper** con i due libri in parallelo, con e senza AI.
-4. **Portare al commercialista e all'avvocato** le domande della sezione 6, prima di depositare un euro.
-5. **Aprire IBKR e Kraken** e verificare a schermo leva, commissioni e disponibilità per l'Italia.
+1. **Avviare il paper su un server tuo** (`python -m gerva supervise`, più `python -m gerva trades` una volta al giorno) e lo strumento di confronto con il sistema originale.
+2. **Scrivere l'adattatore per Kraken demo e Hyperliquid testnet**, con lo stop che nasce insieme all'ordine e l'ingresso con ordine limite all'apertura.
+3. **Provare su testnet le due ipotesi di sicurezza**: la chiave del server non può prelevare; il "cancella tutto" non rimuove gli stop.
+4. **Decidere gli scalini di rischio** e quindi il profilo: prudente con quelli di oggi, massimo solo allargandoli.
+5. **Portare al commercialista e all'avvocato** le domande della sezione 6, prima di depositare un euro.
 
 ## Fonti principali
 
