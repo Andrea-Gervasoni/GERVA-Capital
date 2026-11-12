@@ -11,7 +11,7 @@ import { arr, fmtDate, fmtDayMonth, fmtMoney, fmtNum, fmtPct, fmtPctSigned, fmtS
 import { getCompare, getOhlc, getTradebook } from '../market.js';
 import { alertLevel, curveOf, riskState, utilization } from '../model.js';
 import { brakes, freshness, sigmaDay, totalNav, tradeAge, tradeR } from '../derive.js';
-import { brakeLadder, emptyState, meterRow, panel, provOf, provTag, rollNumber, tradeRuler } from '../panels.js';
+import { brakeLadder, emptyState, freshLine, meterRow, panel, provOf, provTag, rollNumber, tradeRuler } from '../panels.js';
 
 const DAY = 86400000;
 const HHMM = new Intl.DateTimeFormat('it-IT', { hour: '2-digit', minute: '2-digit' });
@@ -27,6 +27,19 @@ export function ladderData(ctx, tb, worst = null) {
     lanes: b.lanes.map((l) => ({ label: l.label, sub: 'finestra mobile', value: l.value, limit: l.limit, action: l.action })),
     worst,
   };
+}
+
+/** Avvio del paper sulla curva: l'ultimo punto meno i giorni di paper del cancello. → { t (ms) | null, days, simDays }. */
+export function paperStart(snap) {
+  const gate = arr(obj(snap).gates).find((g) => /giorni di paper/i.test(str(g.name)));
+  const days = gate && num(gate.value) != null ? Math.max(0, Math.round(gate.value)) : null;
+  const curve = curveOf(snap);
+  const n = curve.t.length;
+  const mode = str(obj(obj(snap).meta).mode).toLowerCase();
+  if (days == null || n < 2 || mode === 'backtest') return { t: null, days, simDays: null };
+  const k = n - 1 - days;
+  const perfDays = num(obj(obj(snap).performance).days);
+  return { t: k > 0 ? curve.t[k] : curve.t[0], days, simDays: k > 0 ? Math.max(k, perfDays != null && perfDays > days ? perfDays - days : 0) : 0 };
 }
 
 export function mount(root, api) {
@@ -46,11 +59,12 @@ export function mount(root, api) {
   const ctxLine = h('p', { class: 'hero__ctx' });
   const books = h('p', { class: 'hero__books' });
   const side = h('dl', { class: 'hero__side' });
+  const provLine = h('p', { class: 'hero__prov' });
   const chartHost = h('div', { class: 'chart-host' });
   const chartNote = h('span');
   const rangeSeg = segmented({ label: 'Intervallo del grafico', options: [{ value: '1M', label: '1M' }, { value: '3M', label: '3M' }, { value: '1A', label: '1A' }, { value: 'ALL', label: 'Avvio' }], value: range, onChange: (v) => { range = v; paintNav(); } });
   pNav.body.append(h('div', { class: 'hero' },
-    h('div', { class: 'hero__main' }, h('div', { class: 'hero__num num' }, heroNum, heroDec, heroCur), delta, ctxLine, books, side),
+    h('div', { class: 'hero__main' }, h('div', { class: 'hero__num num' }, heroNum, heroDec, heroCur), delta, ctxLine, books, side, provLine),
     h('div', { class: 'hero__chart' }, h('div', { class: 'hero__chart-head' }, chartNote, rangeSeg.el), chartHost)));
   const navChart = timeChart(chartHost, { label: 'Patrimonio e, sotto, caduta dal massimo' });
 
@@ -59,7 +73,8 @@ export function mount(root, api) {
   const brakeBig = h('div', { class: 'bignum' });
   const brakeHost = h('div', { class: 'chart-host' });
   const brakeKv = h('div', { class: 'kv' });
-  pBrake.body.append(brakeBig, brakeHost, brakeKv);
+  const brakeLanes = h('div', { class: 'lanes' });
+  pBrake.body.append(brakeBig, brakeHost, brakeLanes, brakeKv);
   const ladder = brakeLadder(brakeHost, { compact: true, label: 'Distanza dai freni automatici' });
   pBrake.setFoot(h('a', { class: 'linkrow', href: '#/rischio' }, 'Scala completa in Rischio', icon('arrow')));
 
@@ -131,11 +146,18 @@ export function mount(root, api) {
       : !tn.complete ? `Libro giornaliero ${fmtMoney(tn.daily, ccy)} · contributo dei trade n.d. (libro non disponibile): il totale è solo il libro giornaliero`
         : `Libro giornaliero ${fmtMoney(tn.daily, ccy)} · contributo dei trade ${fmtMoney(tn.tradeGain, ccy, { signed: true })}${tbDay == null ? '' : ` (libro del ${fmtDayMonth(tbDay, true)})`}${tb.example ? ' · esempio' : ''}`;
     const start = num(nav.start_equity);
-    const well = (k, v, sub) => h('div', { class: 'mini' }, h('dt', { text: k }), h('dd', { class: v > 0 ? 'pos' : v < 0 ? 'neg' : '' }, v == null ? 'n.d.' : [v === 0 ? null : icon(v > 0 ? 'up' : 'down', 'icon--solid'), fmtPctSigned(v, 2)]), h('small', { class: 'not-terminale' }, sub));
-    side.replaceChildren(well('Mese', num(nav.pnl_mtd_pct), 'dal primo del mese'), well('Anno', num(nav.pnl_ytd_pct), 'dal 1° gennaio'), well('Dall\'avvio', num(nav.pnl_total_pct), start == null ? '' : `da ${fmtMoney(start, ccy, { digits: 0 })}`));
-
     const curve = curveOf(snap);
     const n = curve.t.length;
+    // provenienza di ogni cifra di periodo: se il periodo comincia prima dell'avvio del paper, dentro ci sono giorni simulati e lo si scrive
+    const ps = paperStart(snap);
+    const endDay = n ? new Date(curve.t[n - 1]) : new Date(ctxNow.now);
+    const mixed = (from) => (ps.t != null && from != null && from < ps.t - DAY / 2 ? Math.round((ps.t - from) / DAY) : 0);
+    const well = (k, v, sub, simDays) => h('div', { class: 'mini' }, h('dt', { text: k }), h('dd', { class: v > 0 ? 'pos' : v < 0 ? 'neg' : '' }, v == null ? 'n.d.' : [v === 0 ? null : icon(v > 0 ? 'up' : 'down', 'icon--solid'), fmtPctSigned(v, 2)]),
+      h('small', { class: 'not-terminale' }, sub), simDays > 0 ? h('span', { class: 'tag tag--sim mini__prov', title: `Il periodo comprende ${fmtNum(simDays, 0)} giorni simulati prima dell'avvio del paper${ps.days == null ? '' : ` e ${fmtNum(ps.days, 0)} giorni di paper`}: non è un risultato ottenuto.`, text: prov === 'demo' ? 'sim + esempio' : 'sim + paper' }) : null);
+    side.replaceChildren(well('Mese', num(nav.pnl_mtd_pct), 'dal 1° del mese', mixed(Date.UTC(endDay.getUTCFullYear(), endDay.getUTCMonth(), 1))), well('Anno', num(nav.pnl_ytd_pct), 'dal 1° gennaio', mixed(Date.UTC(endDay.getUTCFullYear(), 0, 1))),
+      well('Dall\'avvio', num(nav.pnl_total_pct), start == null ? '' : `da ${fmtMoney(start, ccy, { digits: 0 })}`, ps.simDays || 0));
+    provLine.hidden = !ps.simDays;
+    provLine.textContent = ps.simDays ? `Anno e Dall'avvio contengono ${fmtNum(ps.simDays, 0)} giorni simulati prima dell'avvio del paper (${fmtNum(ps.days, 0)} giorni fa): sul grafico il simulato è tratteggiato.` : '';
     if (n < 2) { navChart.update(null); chartNote.textContent = 'La curva comparirà dopo i primi due giorni di storico.'; return; }
     const months = { '1M': 1, '3M': 3, '1A': 12, ALL: null }[range];
     let i0 = 0;
@@ -143,16 +165,24 @@ export function mount(root, api) {
     const x = curve.t.slice(i0);
     const e = curve.equity.slice(i0);
     const dd = curve.dd.slice(i0);
-    const cls = prov === 'demo' ? 'fund demo' : prov === 'sim' ? 'fund sim' : 'fund';
-    chartNote.textContent = `${fmtDate(x[0], true)} – ${fmtDate(x[x.length - 1], true)}`;
+    // il tratto dice la provenienza: tratteggiato fino all'avvio del paper (simulato), pieno da lì in poi; il confine è disegnato
+    const kp = ps.t == null ? -1 : x.findIndex((tt) => tt >= ps.t - DAY / 2);
+    const allSim = prov === 'sim' || kp < 0;
+    const split = !allSim && kp > 0;
+    const series = split
+      ? [{ values: e.map((v, i) => (i <= kp ? v : null)), cls: 'fund sim', area: true, name: 'Patrimonio (simulato)' }, { values: e.map((v, i) => (i >= kp ? v : null)), cls: 'fund', area: true, end: true, name: prov === 'demo' ? 'Patrimonio (paper di esempio)' : 'Patrimonio (paper)' }]
+      : [{ values: e, cls: prov === 'sim' || (ps.t != null && kp < 0) ? 'fund sim' : 'fund', area: true, end: true, name: 'Patrimonio' }];
+    const provAt = (i) => (ps.t == null ? '' : x[i] < ps.t - DAY / 2 ? 'Simulato' : prov === 'demo' ? 'Paper (esempio)' : prov === 'real' ? 'Reale' : 'Paper');
+    chartNote.textContent = `${fmtDate(x[0], true)} – ${fmtDate(x[x.length - 1], true)}${split ? ' · tratteggiato: simulato' : ''}`;
     navChart.update({
       x,
+      marks: split ? [{ t: x[kp], label: 'avvio del paper' }] : [],
       panels: [
-        { height: ctxNow.lv === 'terminale' ? 96 : 184, series: [{ values: e, cls, area: true, end: true, name: 'Patrimonio' }], format: (v) => fmtNum(v, 0) },
+        { height: ctxNow.lv === 'terminale' ? 96 : 184, series, format: (v) => fmtNum(v, 0) },
         { height: 36, title: 'Caduta dal massimo', top: 0, series: [{ values: dd, cls: 'dd', area: true, name: 'Caduta' }], format: (v) => fmtPct(v, 0), refs: arr(obj(snap.risk).dd_ladder).filter((st) => num(st.level) != null && st.level >= Math.min(...dd.filter((v) => v != null)) * 1.6).map((st) => ({ value: st.level, label: fmtPct(st.level, 0) })) },
       ],
-      tip: (i) => ({ title: fmtDate(x[i], true), rows: [{ key: 'fund', label: 'Patrimonio', value: fmtMoney(e[i], ccy) }, { key: 'dd', label: 'Caduta dal massimo', value: dd[i] == null ? '—' : fmtPctSigned(dd[i], 2) }] }),
-      say: (i) => `${fmtDate(x[i], true)}: patrimonio ${fmtMoney(e[i], ccy)}, caduta dal massimo ${dd[i] == null ? 'non disponibile' : fmtPctSigned(dd[i], 2)}`,
+      tip: (i) => ({ title: fmtDate(x[i], true), rows: [{ key: 'fund', label: 'Patrimonio', value: fmtMoney(e[i], ccy) }, { key: 'dd', label: 'Caduta dal massimo', value: dd[i] == null ? '—' : fmtPctSigned(dd[i], 2) }, provAt(i) ? { label: 'Provenienza', value: provAt(i) } : null].filter(Boolean) }),
+      say: (i) => `${fmtDate(x[i], true)}${provAt(i) ? ` (${provAt(i).toLowerCase()})` : ''}: patrimonio ${fmtMoney(e[i], ccy)}, caduta dal massimo ${dd[i] == null ? 'non disponibile' : fmtPctSigned(dd[i], 2)}`,
     });
   }
 
@@ -179,6 +209,9 @@ export function mount(root, api) {
     const lims = arr(obj(snap.risk).limits).map((l) => ({ l, u: utilization(l.value, l.limit) })).filter((x) => x.u != null).sort((a, b) => b.u - a.u);
     const open = Object.values(obj(obj(tb).open));
     const atRisk = open.reduce((a, t) => a + (num(t.risk) || 0), 0);
+    // i due freni rapidi in miniatura: perdita della finestra mobile contro la sua soglia (la scala estesa è in Rischio)
+    brakeLanes.replaceChildren(...b.lanes.map((l) => meterRow({ name: l.label, value: !fresh || l.value == null ? 0 : Math.max(0, -l.value), cap: Math.abs(l.limit), state: !fresh || l.value == null ? 'none' : l.value <= l.limit ? 'breach' : -l.value / Math.abs(l.limit) >= 0.6 ? 'warn' : 'ok',
+      text: !fresh ? 'sconosciuta' : l.value == null ? 'non calcolabile' : `${fmtPctSigned(l.value, 2)} / ${fmtPct(l.limit, 0)}` })));
     brakeKv.replaceChildren(
       h('div', null, h('span', { class: 'k', text: 'Limite più vicino' }), h('span', { class: 'v', title: lims.length ? str(lims[0].l.name) : null, text: lims.length ? `${str(lims[0].l.name).replace(/^Esposizione sulla /i, '').replace(/^Peso massimo di uno strumento$/i, 'peso di uno strumento')} · ${fmtPct(lims[0].u, 0)}` : 'n.d.' })),
       h('div', null, h('span', { class: 'k', text: 'A rischio nei trade' }), h('span', { class: 'v', title: 'Somma del rischio agli stop, in percentuale del patrimonio totale', text: tb === undefined ? '…' : !tb ? 'n.d.' : `${fmtMoney(atRisk, ccy)}${totalNav(snap, tb).total ? ` · ${fmtPct(atRisk / totalNav(snap, tb).total, 2)} del totale` : ''}` })));
@@ -339,7 +372,11 @@ export function mount(root, api) {
       lines: [{ values: p50, cls: 'median', name: 'Mediana simulata' }, { values: path, cls: 'paper', name: demo ? 'Conto (esempio)' : 'Conto in paper' }],
       format: (v) => fmtPctSigned(v - 1, 0), refs: [{ value: 1, label: '' }],
     });
-    pCone.setFoot(`${fmtNum(c.paths, 0)} percorsi · ${str(c.method)}`);
+    // freschezza per fonte: la fascia è la ricerca (statica, datata), la linea è la fotografia del conto
+    const gen = parseTs(str(quant4.generated).replace(' ', 'T').replace(/(\.\d+)?\+00:00$/, 'Z'));
+    pCone.setFoot(freshLine([{ name: 'fascia', text: gen == null ? 'ricerca senza data' : `ricerca del ${fmtDayMonth(gen)}` }, { name: 'linea', text: ctxNow.fresh ? `fotografia del conto, giorno ${fmtNum(days, 0)} di paper` : 'fotografia ferma', stale: !ctxNow.fresh }]),
+      h('span', { class: 'not-semplice', text: `${fmtNum(c.paths, 0)} percorsi · ${str(c.method)}` }));
+    coneHost.classList.toggle('is-stale', !ctxNow.fresh);
   }
   const arr0 = (v) => (Array.isArray(v) ? v : []);
 
@@ -369,7 +406,12 @@ export function mount(root, api) {
       panels: [{ height: 116, series: [{ values: b, cls: 'orig', end: true, name: 'Originale' }, { values: a, cls: 'fund', end: true, name: 'Nuovo' }], format: (v) => fmtNum(v, 0), refs: [{ value: 100, label: 'base 100' }] }],
       tip: (i) => ({ title: fmtDate(x[i], true), rows: [{ key: 'fund', label: 'Nuovo sistema', value: fmtNum(a[i], 1) }, { key: 'orig', label: 'Sistema originale', value: fmtNum(b[i], 1) }, { label: 'Distacco', value: `${fmtSigned(a[i] - b[i], 1)} punti` }] }),
     });
-    pCmp.setFoot(h('span', { class: 'legend__item' }, h('span', { class: 'key key--fund', 'aria-hidden': 'true' }), ' nuovo'), h('span', { class: 'legend__item' }, h('span', { class: 'key key--orig', 'aria-hidden': 'true' }), ' originale'), ' · base 100 al primo giorno comune · il test completo è in Evidenza');
+    // freschezza: il confronto è una fonte a sé, scritta una volta al giorno; oltre l'età massima lo si dichiara
+    const fr = freshness(x[n - 1], ctxNow.now, 'ibkr', obj(obj(ctxNow.health).rules));
+    cmpHost.classList.toggle('is-stale', fr.stale === true);
+    if (fr.stale) cmpBig.replaceChildren('Fermo', h('small', { class: 'bignum__sub', text: `ultima riga del ${fmtDayMonth(x[n - 1], true)}: il confronto non è aggiornato` }));
+    pCmp.setFoot(freshLine([{ name: 'confronto', text: `ultima riga del ${fmtDayMonth(x[n - 1], true)}`, stale: fr.stale === true }]),
+      h('span', { class: 'legend__item' }, h('span', { class: 'key key--fund', 'aria-hidden': 'true' }), ' nuovo'), h('span', { class: 'legend__item' }, h('span', { class: 'key key--orig', 'aria-hidden': 'true' }), ' originale'), ' · base 100 al primo giorno comune · il test completo è in Evidenza');
   }
 
   function paintGates() {
@@ -378,8 +420,22 @@ export function mount(root, api) {
     if (!gates.length) { gatesBig.replaceChildren('n.d.'); gatesBox.replaceChildren(emptyState('Cancelli non dichiarati', 'La fotografia non riporta i cancelli tra paper e denaro reale.')); return; }
     const ok = gates.filter((g) => g.ok === true).length;
     gatesBig.replaceChildren(`${fmtNum(ok, 0)} di ${fmtNum(gates.length, 0)}`, h('small', { text: 'cancelli superati' }));
-    const open = gates.filter((g) => g.ok !== true && num(g.value) != null && num(g.target) > 0).slice(0, 3);
-    gatesBox.replaceChildren(...open.map((g) => meterRow({ name: str(g.name).replace(/\s*\(.*\)$/, ''), value: g.value, cap: g.target, scale: g.target * 1.05, state: 'ok', text: `${fmtNum(g.value, 0)} / ${fmtNum(g.target, 0)}` })));
+    // tutti i cancelli, nell'ordine del motore: superato, in corso (con la barra se è un conteggio) o non ancora misurabile
+    gatesBox.replaceChildren(h('ul', { class: 'gates' }, gates.map((g) => {
+      const v = num(g.value);
+      const target = num(g.target);
+      const unit = str(g.unit);
+      const fmt = (x) => (unit === '%' ? fmtPct(x, Math.abs(x * 100 - Math.round(x * 100)) < 0.05 ? 0 : 1) : unit === 'x' ? `${fmtNum(x, 1)}x` : fmtNum(x, Number.isInteger(x) ? 0 : 2));
+      const state = g.ok === true ? 'ok' : v == null ? 'none' : 'run';
+      const count = state === 'run' && target > 0 && v >= 0 && v < target && unit !== '%';
+      const bar = count ? h('span', { class: 'gate__bar', 'aria-hidden': 'true' }, h('i')) : null;
+      if (bar) bar.style.setProperty('--v', `${Math.max(2, Math.min(100, (v / target) * 100)).toFixed(1)}%`);
+      return h('li', { class: 'gate', dataset: { state } },
+        state === 'ok' ? icon('check-circle', 'icon--sm') : h('span', { class: 'gate__dot', 'aria-hidden': 'true' }),
+        h('span', { class: 'gate__name', text: str(g.name).replace(/\s*\(.*\)$/, '').replace(/([aeiou])'(?=\s|$)/g, (m, c) => ({ a: 'à', e: 'è', i: 'ì', o: 'ò', u: 'ù' })[c]) }),
+        h('span', { class: 'gate__val num', text: v == null ? 'non ancora misurabile' : target == null ? fmt(v) : count ? `${fmt(v)} / ${fmt(target)}` : `${fmt(v)} · soglia ${fmt(target)}` }),
+        h('span', { class: 'sr-only', text: state === 'ok' ? ' (superato)' : state === 'none' ? ' (non ancora misurabile)' : ' (in corso)' }), bar);
+    })));
     const miss = gates.find((g) => g.ok !== true && /giorni di paper/i.test(str(g.name)));
     pGates.setAsk(ok === gates.length ? 'Tutti i cancelli sono verdi: il passaggio al denaro reale è una decisione del proprietario.' : `Mancano ${miss && num(miss.target) != null ? `${fmtNum(miss.target - miss.value, 0)} giorni e ` : ''}${fmtNum(gates.length - ok, 0)} prove prima di poter usare denaro vero.`);
     pGates.setProv(provTag(provOf(snap.meta)));

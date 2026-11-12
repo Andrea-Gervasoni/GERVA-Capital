@@ -10,7 +10,7 @@ import { h, icon } from '../dom.js';
 import { arr, fmtDate, fmtDayMonth, fmtMoney, fmtNum, fmtPct, fmtPctSigned, fmtSigned, num, obj, parseTs, str } from '../format.js';
 import { getOhlc, getSymbols, getTradebook } from '../market.js';
 import { convLevel, freshness, gqLevel, tradeAge, tradeR } from '../derive.js';
-import { emptyState, panel, provOf, provTag } from '../panels.js';
+import { emptyState, panel, provOf, provTag, tradeMarkers } from '../panels.js';
 
 const DAY = 86400000;
 const RANGES = [{ value: 1, label: '1M' }, { value: 3, label: '3M' }, { value: 6, label: '6M' }, { value: 12, label: '1A' }, { value: 0, label: 'Tutto' }];
@@ -138,29 +138,7 @@ export function mount(root, api) {
   }
 
   /** Segni del fondo sul grafico: livelli del trade aperto e trade chiusi sullo strumento scelto. */
-  function markersFor(o) {
-    const out = [];
-    const idxOf = (day) => { const t = parseTs(str(day)); if (t == null) return -1; let k = -1; for (let i = 0; i < o.t.length; i++) if (o.t[i] <= t + DAY / 2) k = i; return k; };
-    for (const t of openTrades().filter((x) => str(x.symbol) === sel)) {
-      const i = Math.max(0, idxOf(t.opened));
-      const entry = num(t.entry);
-      const stop = num(t.stop);
-      const init = entry != null && num(t.initial_stop_distance) != null ? entry * (1 - (num(t.side) === -1 ? -1 : 1) * t.initial_stop_distance) : null;
-      if (entry != null && stop != null) out.push({ kind: 'zone', i, from: entry, to: init ?? stop, label: '1 R' });
-      if (num(t.liquidation) != null) out.push({ kind: 'level', i, price: t.liquidation, label: 'Liq.', color: 'crit' });
-      if (init != null && stop != null && Math.abs(init - stop) / entry > 0.002) out.push({ kind: 'level', i, price: init, label: 'Stop in.', color: 'warn', past: true });
-      if (stop != null) out.push({ kind: 'level', i, price: stop, label: 'Stop', color: 'warn' });
-      if (entry != null) { out.push({ kind: 'level', i, price: entry, label: 'Entr.', color: 'text' }); out.push({ kind: 'entry', i, price: entry }); }
-      if (entry != null && num(t.initial_stop_distance)) out.push({ kind: 'rscale', entry, dist: entry * t.initial_stop_distance });
-    }
-    for (const t of closedTrades().filter((x) => str(x.symbol) === sel)) {
-      const a = idxOf(t.opened);
-      const b = idxOf(t.closed);
-      if (a >= 0 && num(t.entry) != null) out.push({ kind: 'entry', i: a, price: t.entry });
-      if (b >= 0 && num(t.exit) != null) out.push({ kind: 'exit', i: b, price: t.exit, color: num(t.R) >= 0 ? 'up' : 'down', label: num(t.R) == null ? '' : `${fmtSigned(t.R, 1)} R` });
-    }
-    return out;
-  }
+  const markersFor = (o) => tradeMarkers(o, sel, tb);
 
   function paintChart(reset = false) {
     const c = sel ? cache.get(sel) : null;

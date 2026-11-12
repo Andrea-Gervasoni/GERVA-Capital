@@ -1,7 +1,7 @@
 // Grafico a candele su canvas: prezzo con volume, sovrapposizioni attivabili e pannelli sotto (ATR%, RSI, conviction, GQ).
 // Canvas perché deve restare fluido trascinando e zoomando 1.500 barre; un solo disegno per fotogramma.
-// Mouse: rotella = zoom, trascinamento = scorrimento, doppio clic = tutto. Tastiera: ←/→ mirino, Maiusc+←/→ scorre,
-// +/− zoom, Inizio/Fine, Esc. Nessun colore, spessore o carattere è scritto qui: tutto arriva da chartTheme()
+// Mouse: rotella = zoom, trascinamento = scorrimento, doppio clic = tutto. Tastiera: ←/→ mirino (Maiusc: dieci barre),
+// +/− zoom, 0 ripristina, Inizio/Fine, Esc. Nessun colore, spessore o carattere è scritto qui: tutto arriva da chartTheme()
 // (token CSS --chart-*), che si rilegge da solo al cambio di tema o di livello.
 //
 // candleChart(host, { label, panes, overlays, table }) → {
@@ -140,11 +140,26 @@ export function candleChart(host, { label = 'Grafico a candele', panes: paneIds 
 
   function draw() {
     theme = chartTheme();
-    const GUTTER = theme.gutter;
     ctx.clearRect(0, 0, W, H);
     geo = null;
     if (!d || d.t.length < 2 || W < 80) return;
     const n = d.t.length;
+    // cartellini del righello: una colonna tutta loro a destra dell'asse, larga quanto serve (mai sopra le candele)
+    const fontBold = `600 ${theme.fontSize}px ${theme.font}`;
+    const lastClose = d.c[n - 1];
+    const atrLast = ind.atr ? ind.atr[n - 1] : null;
+    const levels = (d.markers || []).filter((m) => m.kind === 'level' && m.price > 0);
+    const tight = W < 520;
+    const specs = levels.map((m) => {
+      const pct = lastClose ? m.price / lastClose - 1 : null;
+      return { y0: 0, color: theme[m.color] || theme.text, past: !!m.past, price: m.price, l1: `${tight && m.short ? m.short : m.label} ${price(m.price)}`,
+        l2: pct == null ? '' : `${fmtPctSigned(pct, 1)}${atrLast ? ` · ${fmtNum(Math.abs(pct) / atrLast, 1)} ATR` : ''}` };
+    });
+    if (lastClose != null) specs.push({ y0: 0, color: theme.text, last: true, price: lastClose, l1: levels.length && !tight ? `Ultima ${price(lastClose)}` : price(lastClose), l2: '' });
+    ctx.font = fontBold;
+    let tagW = 0;
+    for (const sp of specs) tagW = Math.max(tagW, ctx.measureText(sp.l1).width, sp.l2 ? ctx.measureText(sp.l2).width : 0);
+    const GUTTER = Math.round(Math.min(W * 0.4, Math.max(theme.gutter, tagW + 18)));
     const a = Math.max(0, Math.floor(i0));
     const b = Math.min(n - 1, Math.ceil(i1));
     const plotW = W - GUTTER;
@@ -233,8 +248,16 @@ export function candleChart(host, { label = 'Grafico a candele', panes: paneIds 
     const pticks = useLog
       ? [1, 2, 5].flatMap((m) => Array.from({ length: 12 }, (_, k) => m * 10 ** (k - 4))).filter((v) => v >= pp.lo && v <= pp.hi).sort((x, y) => x - y)
       : niceTicks(pp.lo, pp.hi, Math.max(3, Math.floor((pp.y1 - pp.y0) / 44)));
-    const levelYs = (d.markers || []).filter((m) => m.kind === 'level').map((m) => pp.yOf(m.price));
-    grid(pp, pticks.length >= 2 ? pticks : niceTicks(pp.lo, pp.hi, 4), (v) => (levelYs.some((y) => Math.abs(y - pp.yOf(v)) < 12) ? '' : price(v)));
+    // i cartellini si impilano senza sovrapporsi (due righe se c'è posto: nome e prezzo, poi distanza in % e ATR);
+    // le etichette dell'asse vicine a un cartellino si nascondono: il cartellino porta già il prezzo
+    const tags = specs.filter((sp) => { sp.y0 = pp.yOf(sp.price); return sp.y0 >= pp.y0 - 1 && sp.y0 <= pp.y1 + 1; }).sort((u, v) => u.y0 - v.y0);
+    const two = tags.some((sp) => sp.l2) && pp.y1 - pp.y0 >= tags.length * 33 + 24;
+    for (const sp of tags) sp.h = two && sp.l2 ? 30 : 17;
+    let cursor = pp.y0 + 1;
+    for (const sp of tags) { sp.y = Math.max(cursor + sp.h / 2, sp.y0); cursor = sp.y + sp.h / 2 + 2; }
+    let floor = pp.y1 - 1;
+    for (let k = tags.length - 1; k >= 0; k--) { const sp = tags[k]; if (sp.y + sp.h / 2 > floor) sp.y = floor - sp.h / 2; floor = sp.y - sp.h / 2 - 2; }
+    grid(pp, pticks.length >= 2 ? pticks : niceTicks(pp.lo, pp.hi, 4), (v) => (tags.some((sp) => Math.abs(sp.y - pp.yOf(v)) < sp.h / 2 + 7) ? '' : price(v)));
 
     if (overlays.has('boll')) {
       ctx.save();
@@ -278,17 +301,12 @@ export function candleChart(host, { label = 'Grafico a candele', panes: paneIds 
 
     // righello del trade: zona entrata–stop (lastra «1 R»), livelli pieni con cartellino sul righello di destra,
     // stop iniziale puntinato (non più attivo), trade passati come anello → rombo con R. Il tratteggio resta al simulato.
-    const tags = [];
     const exits = (d.markers || []).filter((m) => m.kind === 'exit' && m.i >= a && m.i <= b).length;
+    let rscale = null;
     ctx.save();
     ctx.beginPath(); ctx.rect(0, pp.y0, plotW, pp.y1 - pp.y0); ctx.clip();
     for (const m of d.markers || []) {
-      if (m.kind === 'rscale') {                                 // scala in R accanto al righello: entrata = 0 R, stop iniziale = −1 R
-        ctx.fillStyle = theme.textMuted; ctx.textAlign = 'left';                     // a sinistra: a destra stanno i cartellini dei livelli
-        let lastY = 1e9;
-        for (let k = -1; k <= 6; k++) { const y = pp.yOf(m.entry + k * m.dist); if (y > pp.y0 + 6 && y < pp.y1 - 6 && lastY - y >= 13) { ctx.fillText(`${k > 0 ? '+' : k < 0 ? '−' : ''}${Math.abs(k)} R`, 4, y); lastY = y; } }
-        continue;
-      }
+      if (m.kind === 'rscale') { rscale = m; continue; }          // la scala in R si disegna dopo, sopra le candele
       const idx = m.i;
       if (m.kind === 'zone') {
         const ya = pp.yOf(Math.max(m.from, m.to));
@@ -300,7 +318,7 @@ export function candleChart(host, { label = 'Grafico a candele', panes: paneIds 
         ctx.fillRect(x0, top, plotW - x0, Math.min(pp.y1, yb) - top);
         ctx.strokeStyle = theme.slabEdge;
         ctx.beginPath(); ctx.moveTo(x0, Math.round(top) + 0.5); ctx.lineTo(plotW, Math.round(top) + 0.5); ctx.stroke();
-        if (m.label) { ctx.fillStyle = theme.textMuted; ctx.textAlign = 'left'; ctx.fillText(m.label, x0 + 6, top + 9); }
+        if (m.label && Math.min(pp.y1, yb) - top >= 16 && plotW - x0 > 40) { ctx.fillStyle = theme.textMuted; ctx.textAlign = 'left'; ctx.fillText(m.label, x0 + 6, top + 9); }
         continue;
       }
       if (m.kind === 'level') {
@@ -314,7 +332,6 @@ export function candleChart(host, { label = 'Grafico a candele', panes: paneIds 
         ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(plotW, y); ctx.stroke();
         ctx.setLineDash([]);
         ctx.lineWidth = theme.gridWidth;
-        tags.push({ y, color, text: `${m.label} ${price(m.price)}`, past: !!m.past });
         continue;
       }
       if (idx < a || idx > b || m.price == null) continue;
@@ -333,22 +350,42 @@ export function candleChart(host, { label = 'Grafico a candele', panes: paneIds 
       ctx.lineWidth = theme.gridWidth;
     }
     ctx.restore();
-    // cartellini dei livelli sul righello di destra: di vetro (fondo scuro, filetto del colore del livello), mai sovrapposti
-    tags.sort((u, v) => u.y - v.y);
-    let lastTag = -99;
+    // scala in R: tacche a destra, dentro l'area, con un fondo che le stacca dalle candele (entrata = 0 R, stop iniziale = −1 R)
+    if (rscale && !tight) {
+      ctx.textAlign = 'right';
+      const perR = Math.abs(pp.yOf(rscale.entry + rscale.dist) - pp.yOf(rscale.entry));
+      const stepR = Math.max(1, Math.ceil(16 / Math.max(0.01, perR)));                          // passo intero: +1, +2… oppure +2, +4… quando sono fitti
+      for (let k = stepR; k <= 12; k += stepR) {                                               // 0 R e −1 R sono già i cartellini di entrata e stop
+        const y = pp.yOf(rscale.entry + k * rscale.dist);
+        if (y < pp.y0 + 8) break;
+        if (tags.some((sp) => Math.abs(sp.y0 - y) < 9)) continue;
+        const text = `+${k} R`;
+        const tw = ctx.measureText(text).width;
+        ctx.globalAlpha = 0.78; ctx.fillStyle = theme.halo; ctx.fillRect(plotW - tw - 12, y - 7, tw + 8, 14); ctx.globalAlpha = 1;
+        ctx.strokeStyle = theme.textMuted; ctx.beginPath(); ctx.moveTo(plotW - 3, Math.round(y) + 0.5); ctx.lineTo(plotW, Math.round(y) + 0.5); ctx.stroke();
+        ctx.fillStyle = theme.textSoft; ctx.fillText(text, plotW - 7, y);
+      }
+    }
+    // cartellini di vetro sul righello di destra: fondo scuro, filetto del colore del livello, angoli tondi; «Ultima» è pieno
+    const pill = (x, y, w, hh, r) => { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + hh, r); ctx.arcTo(x + w, y + hh, x, y + hh, r); ctx.arcTo(x, y + hh, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); };
     for (const tg of tags) {
-      const y = Math.max(lastTag + 15, tg.y);
-      lastTag = y;
-      const tw = Math.max(GUTTER - 1, ctx.measureText(tg.text).width + 10);      // il cartellino può sporgere nel grafico: nome e prezzo si leggono interi
-      ctx.fillStyle = theme.halo;
-      ctx.fillRect(W - tw, y - 8, tw, 16);
+      const x = plotW + 5;
+      const w = W - x - 1;
+      const top = Math.round(tg.y - tg.h / 2) + 0.5;
       ctx.strokeStyle = tg.color;
+      ctx.lineWidth = theme.gridWidth;
+      ctx.beginPath(); ctx.moveTo(plotW, Math.round(tg.y0) + 0.5); ctx.lineTo(x, Math.round(tg.y) + 0.5); ctx.stroke();      // il filo lega il cartellino al suo livello anche quando è stato spostato
+      pill(x, top, w, tg.h - 1, 6);
+      ctx.globalAlpha = tg.last ? 1 : 0.92; ctx.fillStyle = tg.last ? theme.text : theme.halo; ctx.fill(); ctx.globalAlpha = 1;
       ctx.setLineDash(tg.past ? theme.dashPast : []);
-      ctx.strokeRect(W - tw + 0.5, y - 7.5, tw - 1, 15);
+      ctx.stroke();
       ctx.setLineDash([]);
-      ctx.fillStyle = tg.color === theme.text ? theme.text : tg.color;
       ctx.textAlign = 'left';
-      ctx.fillText(tg.text, W - tw + 5, y);
+      ctx.font = fontBold;
+      ctx.fillStyle = tg.last ? theme.surface : theme.text;
+      ctx.fillText(tg.l1, x + 7, tg.h > 20 ? tg.y - 6 : tg.y + 0.5);
+      ctx.font = theme.canvasFont;
+      if (tg.h > 20) { ctx.fillStyle = theme.textSoft; ctx.fillText(tg.l2, x + 7, tg.y + 7.5); }
     }
 
     // ---- volume ----
@@ -445,7 +482,10 @@ export function candleChart(host, { label = 'Grafico a candele', panes: paneIds 
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(plotW, y); ctx.stroke();
         ctx.setLineDash([]);
         const v = hp.vOf(hoverY);
-        const txt = hp.id === 'price' ? price(v) : hp.id === 'vol' ? compact(v) : hp.id === 'atr' ? fmtPct(v, 1) : fmtNum(v, 2);
+        const rs = (d.markers || []).find((m) => m.kind === 'rscale');
+        const rTxt = hp.id === 'price' && rs && rs.dist ? ` · ${fmtNum((v - rs.entry) / rs.dist, 1)} R`.replace(' -', ' −') : '';
+        const base = hp.id === 'price' ? price(v) : hp.id === 'vol' ? compact(v) : hp.id === 'atr' ? fmtPct(v, 1) : fmtNum(v, 2);
+        const txt = ctx.measureText(base + rTxt).width <= GUTTER - 10 ? base + rTxt : base;
         ctx.fillStyle = theme.text;
         ctx.fillRect(plotW + 1, y - 8, GUTTER - 1, 16);
         ctx.fillStyle = theme.surface;
@@ -534,19 +574,18 @@ export function candleChart(host, { label = 'Grafico a candele', panes: paneIds 
     if (!d) return;
     const n = d.t.length;
     const cur = hover == null ? Math.min(n - 1, Math.floor(i1)) : hover;
-    const stepBig = Math.max(1, Math.round((i1 - i0) / 10));
     let used = true;
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
       const dir = e.key === 'ArrowLeft' ? -1 : 1;
-      if (e.shiftKey) { i0 += dir * stepBig; i1 += dir * stepBig; clampView(); }
-      else {
-        setHover(Math.max(0, Math.min(n - 1, cur + dir)));
+      {
+        setHover(Math.max(0, Math.min(n - 1, cur + dir * (e.shiftKey ? 10 : 1))));           // Maiusc: dieci barre per volta
         if (hover < i0) { const w = i1 - i0; i0 = hover - 2; i1 = i0 + w; clampView(); }
         if (hover > i1) { const w = i1 - i0; i1 = hover + 2; i0 = i1 - w; clampView(); }
         live.textContent = `${fmtDate(d.t[hover], true)}: apertura ${price(d.o[hover])}, massimo ${price(d.h[hover])}, minimo ${price(d.l[hover])}, chiusura ${price(d.c[hover])}`;
       }
     } else if (e.key === '+' || e.key === '=') zoom(1 / 1.3, cur);
     else if (e.key === '-' || e.key === '_') zoom(1.3, cur);
+    else if (e.key === '0') setRange(lastMonths);
     else if (e.key === 'Home') { const w = i1 - i0; i0 = -1; i1 = i0 + w; clampView(); }
     else if (e.key === 'End') { const w = i1 - i0; i1 = n + 2; i0 = i1 - w; clampView(); }
     else if (e.key === 'Escape') { setHover(null); }
@@ -559,7 +598,9 @@ export function candleChart(host, { label = 'Grafico a candele', panes: paneIds 
   const offTheme = onChartThemeChange(request);
 
   let tween = 0;
+  let lastMonths = 6;
   function setRange(months, opts = {}) {
+    lastMonths = months || null;
     const a0 = i0;
     const a1 = i1;
     applyRange(months);

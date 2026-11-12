@@ -654,3 +654,38 @@ body[data-level="semplice"] .panel__ask, body[data-level="semplice"] .kv > div, 
 :root[data-theme="light"] .card, :root[data-theme="light"] .glass { background: var(--glass-sheen), var(--glass-panel-bg); }
 .wl__row[aria-selected="true"] { background: var(--surface-3); }
 .wl__row[aria-selected="true"] small { color: var(--text); }
+
+/* ==================== giro 3 · blocco E: rifiniture dei tre spazi, Terminale vero, coreografia ==================== */
+/* scala dei freni: che cosa fa il motore a ogni soglia quando non entra sulla tacca (sempre al telefono) */
+.bl-legend { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; font: var(--type-caption); color: var(--text-2); }
+.bl-legend li { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 8px; align-items: baseline; }
+.bl-legend b { color: var(--text); font-weight: 600; }
+/* righello del trade: fili sottili dalle etichette ai segni */
+.tr-mark { stroke-width: 1.5; } .tr-lead { stroke: var(--text-3); stroke-width: 1; }
+.tr-name--last, .tr-price--last { fill: var(--text); font-weight: 600; }
+/* provenienza di una cifra di periodo: giorni simulati e giorni di paper nella stessa percentuale */
+.mini__prov { margin-top: 6px; font-size: 9.5px; height: 18px; padding: 0 6px; letter-spacing: 0.04em; }
+/* freschezza per fonte, in una riga */
+.fresh { display: inline-flex; flex-wrap: wrap; gap: 2px 14px; font: var(--type-caption); color: var(--text-2); }
+.fresh__src { display: inline-flex; align-items: baseline; gap: 5px; } .fresh__src b { font-weight: 600; color: var(--text-2); }
+.fresh__src i { width: 6px; height: 6px; border-radius: 50%; background: var(--safe); align-self: center; flex: none; }
+.fresh__src.is-stale { color: var(--warn-ink); } .fresh__src.is-stale i { background: transparent; box-shadow: inset 0 0 0 1.5px var(--warn); border-radius: 1px; transform: rotate(45deg); }
+body:not([data-conn="ok"]) .fresh__src i { background: transparent; box-shadow: inset 0 0 0 1.5px var(--unknown-border); }
+.chart-host.is-stale { opacity: 0.55; filter: saturate(0.3); }
+/* cancelli verso il denaro reale: tutti, con lo stato di ognuno */
+.gates { list-style: none; margin: 0; padding: 0; display: grid; }
+.gate { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 2px 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--border); font-size: var(--fs-small); }
+.gate:first-child { border-top: 0; padding-top: 2px; }
+.gate .icon { color: var(--safe-ink); width: 16px; height: 16px; }
+.gate__dot { width: 10px; height: 10px; margin: 0 3px; border-radius: 50%; box-shadow: inset 0 0 0 2px var(--accent); }
+.gate[data-state="none"] .gate__dot { box-shadow: none; border: 1.5px dashed var(--unknown-border); }
+.gate__name { color: var(--text); min-width: 0; }
+.gate__val { color: var(--text-2); text-align: right; white-space: nowrap; }
+.gate[data-state="ok"] .gate__val { color: var(--text); }
+.gate[data-state="none"] .gate__name, .gate[data-state="none"] .gate__val { color: var(--text-3); }
+.gate__bar { grid-column: 2 / 4; height: 6px; border-radius: 3px; background: var(--well-bg); box-shadow: var(--well-fx); overflow: hidden; }
+.gate__bar > i { display: block; height: 100%; width: var(--v, 0%); border-radius: 3px; background: var(--accent-grad); transition: width var(--chart-morph) var(--ease-out); }
+.hero__prov { margin: 0; color: var(--text-3); font: var(--type-caption); max-width: 52ch; }
+body[data-level="terminale"] .hero__prov { display: none; }
+.panel__foot .fresh { flex-basis: 100%; }
+.lanes { display: grid; gap: 2px; } .lanes .meterrow { grid-template-columns: minmax(96px, 0.8fr) minmax(60px, 1fr) auto; }

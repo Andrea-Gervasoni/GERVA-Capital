@@ -9,8 +9,8 @@ import { glossaryList } from './glossary.js';
 import { hideTip } from './charts.js';
 import { initKill, lastKill, openKill, setKillEnabled, setKillPreview } from './kill.js';
 import { initPalette, SHORTCUTS } from './cmd.js';
-import { freshness } from './derive.js';
-import { getTradebook } from './market.js';
+import { oldestSource, watchedSymbols } from './derive.js';
+import { getOhlc, getSymbols, getTradebook } from './market.js';
 import { arr, fmtAgo, fmtDate, fmtDateTime, fmtDayMonth, fmtDayTime, fmtDuration, fmtMoney, fmtNum, num, obj, parseTs, str } from './format.js';
 import { alertLevel, componentStatus, isBacktest, modeKind, riskState } from './model.js';
 import * as oggi from './views/oggi.js';
@@ -77,6 +77,7 @@ let summaryOpen = false;
 let lastSeen = null;         // ultimo stato del rischio visto con dati freschi: { label, t }
 let ack = null;              // presa in carico di una condizione critica: { key, t } (resta nel browser: una seconda scrittura è vietata)
 let tradebook = null;
+let barDays = [];            // ultima barra degli strumenti seguiti (trade aperti e posizioni): { name, day, kind }
 const links = new Map();
 const motionOn = () => !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 const narrow = () => window.innerWidth <= 860;
@@ -263,13 +264,13 @@ function syncChrome() {
   else if (st.status === 'stale') connText = age == null ? 'Dati senza orario' : `Dati fermi da ${fmtDuration(age)}`;
   else if (st.status === 'offline') connText = 'Offline';
   // la fascia mostra la fonte più vecchia: un libro dei trade fermo non può stare dietro a «dati di adesso»
-  const tbAge = tradebook ? freshness(parseTs(str(tradebook.asof)), store.serverNow(), 'crypto', obj(obj(st.health).rules)) : null;
-  if (st.status === 'ok' && tbAge && tbAge.stale) {
-    connText = `fonte più vecchia: libro dei trade del ${fmtDayMonth(tbAge.day, true)}`;
+  const tbAge = oldestSource([tradebook ? { name: 'libro dei trade', day: parseTs(str(tradebook.asof)), kind: 'crypto' } : null, ...barDays], store.serverNow(), obj(obj(st.health).rules));
+  if (st.status === 'ok' && tbAge) {
+    connText = `fonte più vecchia: ${tbAge.name} del ${fmtDayMonth(tbAge.day, true)}${tbAge.count > 1 ? ` (+${tbAge.count - 1})` : ''}`;
     el.conn.dataset.state = 'stale';
   }
   setText(el.connText, connText);
-  setText(el.connShort, st.status === 'ok' && tbAge && tbAge.stale ? `libro del ${fmtDayMonth(tbAge.day, true)}` : st.status === 'ok' ? fmtAgo(age) : st.status === 'stale' ? 'Fermi' : st.status === 'offline' ? 'Offline' : '…');
+  setText(el.connShort, st.status === 'ok' && tbAge ? `${tbAge.name.replace('libro dei trade', 'libro')} del ${fmtDayMonth(tbAge.day, true)}` : st.status === 'ok' ? fmtAgo(age) : st.status === 'stale' ? 'Fermi' : st.status === 'offline' ? 'Offline' : '…');
 
   // (4) sistema, solo se non tutto ok · (5) avvisi con contatore
   const comps = arr(obj(snap && snap.system).components);
@@ -715,7 +716,10 @@ syncChrome();
 syncView();
 
 store.subscribe((state, dataChanged) => {
-  if (dataChanged) getTradebook().then((tb) => { tradebook = tb || null; });       // età del libro dei trade per la fascia (cache di 30 s)
+  if (dataChanged) getTradebook().then((tb) => {                                    // età del libro dei trade e delle barre per la fascia (cache nel browser)
+    tradebook = tb || null;
+    getSymbols().then((res) => new Set(arr(res && res.symbols).map((x) => str(x.symbol)))).then((have) => Promise.all(watchedSymbols(state.snap, tradebook).filter((w) => have.has(w.symbol)).slice(0, 12).map((w) => getOhlc(w.symbol, 5).then((o) => (o && o.t && o.t.length ? { name: `barre ${w.symbol}`, day: o.t[o.t.length - 1], kind: w.kind } : null)).catch(() => null)))).then((rows) => { barDays = rows.filter(Boolean); });
+  });
   syncChrome();
   syncView({ force: dataChanged });
 });
