@@ -328,7 +328,7 @@ function syncFoot(snap) {
   const kind = modeKind(meta);
   const g = gateDays(snap);
   const perfDays = num(obj(snap.performance).days);
-  const simDays = num(obj(obj(store.state.quant).meta).days) ?? (kind === 'sim' ? perfDays : null);
+  const simDays = num(obj(obj(store.state.quant).meta).days) ?? (isBacktest(meta) ? perfDays : null);       // un esempio non è un backtest: «n.d.»
   const rows = [['Giorni simulati', simDays == null ? 'n.d.' : fmtNum(simDays, 0)], ['Giorni paper', g && num(g.value) != null ? fmtNum(g.value, 0) : kind === 'paper' && perfDays != null ? fmtNum(perfDays, 0) : '0'],
     ['Giorni reali', kind === 'live' && perfDays != null ? fmtNum(perfDays, 0) : '0']];
   const key = rows.map((r) => r[1]).join('|');

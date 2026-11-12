@@ -10,30 +10,21 @@ import { h, icon } from '../dom.js';
 import { arr, fmtDate, fmtDayMonth, fmtMoney, fmtNum, fmtPct, fmtPctSigned, fmtSigned, num, obj, parseTs, str } from '../format.js';
 import { getCompare, getOhlc, getTradebook } from '../market.js';
 import { alertLevel, curveOf, riskState, utilization } from '../model.js';
-import { brakeLadder, emptyState, meterRow, panel, provOf, provTag, rollNumber, tradeR, tradeRuler } from '../panels.js';
+import { brakes, freshness, sigmaDay, totalNav, tradeAge, tradeR } from '../derive.js';
+import { brakeLadder, emptyState, meterRow, panel, provOf, provTag, rollNumber, tradeRuler } from '../panels.js';
 
 const DAY = 86400000;
 const HHMM = new Intl.DateTimeFormat('it-IT', { hour: '2-digit', minute: '2-digit' });
-const sigmaWord = (z) => (z == null ? '' : Math.abs(z) < 1 ? 'una giornata normale' : Math.abs(z) < 2 ? 'una giornata mossa' : 'una giornata fuori dal comune');
 
-/** Scalini e riferimenti della scala dei freni, tutti letti dai dati. */
-export function ladderData(ctx, tradebook, worst = null) {
-  const snap = ctx.snap;
-  const nav = obj(snap.nav);
-  const risk = obj(snap.risk);
-  const limits = arr(risk.limits);
-  const find = (re) => limits.find((l) => re.test(str(l.name)));
-  const day = find(/24 ore|giornata/i);
-  const week = find(/7 giorni|settiman/i);
+/** Dati della scala dei freni: una sola fonte (derive.brakes), più il riferimento simulato e l'eventuale peggior caso. */
+export function ladderData(ctx, tb, worst = null) {
+  const b = brakes(ctx.snap);
   const cone = obj(obj(ctx.quant4).paper_profile_cone);
   const simDd = num(obj(cone.drawdown).p50);
   return {
-    dd: num(nav.drawdown_pct), peak: num(nav.high_water), equity: num(nav.equity), ccy: ctx.ccy, es: num(risk.es_95_1d_pct), fresh: ctx.fresh,
-    steps: arr(risk.dd_ladder).map((st) => ({ level: num(st.level), action: str(st.action) })),
-    worstPaper: num(nav.max_drawdown_pct),
+    dd: b.dd, peak: b.peak, equity: b.equity, ccy: ctx.ccy, es: b.es, fresh: ctx.fresh, steps: b.steps, worstPaper: b.worstSoFar, b,
     simRef: simDd != null ? { value: simDd, label: `${fmtPct(simDd, 0)} caduta tipica simulata a 3 anni` } : null,
-    lanes: [day ? { label: 'Ultime 24 ore', sub: 'P&L mobile', value: num(nav.pnl_day_pct) ?? num(day.value), limit: num(day.limit), action: 'esposizione dimezzata' } : null,
-      week ? { label: 'Ultimi 7 giorni', sub: 'P&L mobile', value: num(week.value), limit: num(week.limit), action: 'un quarto, nessun aumento' } : null].filter(Boolean),
+    lanes: b.lanes.map((l) => ({ label: l.label, sub: 'finestra mobile', value: l.value, limit: l.limit, action: l.action })),
     worst,
   };
 }
@@ -119,10 +110,11 @@ export function mount(root, api) {
   function paintNav() {
     const { snap, ccy } = ctxNow;
     const nav = obj(snap.nav);
-    const eq = num(nav.equity);
+    const tn = totalNav(snap, tb);
+    const eq = tb === undefined ? null : tn.total;          // la cifra eroe aspetta il libro dei trade: mai un totale parziale
     const prov = provOf(snap.meta);
     pNav.setProv(provTag(prov));
-    if (eq == null) { heroNum.textContent = 'n.d.'; heroDec.textContent = ''; heroCur.textContent = ''; } else {
+    if (eq == null) { heroNum.textContent = tb === undefined ? '…' : 'n.d.'; heroDec.textContent = ''; heroCur.textContent = ''; } else {
       const [int, dec] = fmtNum(Math.abs(eq), 2).split(',');
       rollNumber(heroNum, `${eq < 0 ? '−' : ''}${int}`);
       rollNumber(heroDec, `,${dec || '00'}`);
@@ -132,12 +124,12 @@ export function mount(root, api) {
     const dayPct = num(nav.pnl_day_pct);
     delta.className = `delta delta--${day > 0 ? 'pos' : day < 0 ? 'neg' : 'flat'}`;
     delta.replaceChildren(...(day == null ? [document.createTextNode('variazione di oggi n.d.')] : [day === 0 ? null : icon(day > 0 ? 'up' : 'down', 'icon--solid'), h('span', { text: fmtMoney(day, ccy, { signed: true }) }), h('i', { text: fmtPctSigned(dayPct, 2) })].filter(Boolean)));
-    const vol = num(obj(snap.risk).vol_realized_30d);
-    const z = dayPct != null && vol ? dayPct / (vol / Math.sqrt(365)) : null;
-    ctxLine.textContent = z == null ? 'oggi' : `oggi · ${fmtSigned(z, 1)} σ: ${sigmaWord(z)}`;
-    const tbEq = tb ? num(tb.equity) : null;
-    books.textContent = tb === undefined ? 'Libro dei trade: in lettura…' : tbEq == null ? `Libro giornaliero ${fmtMoney(eq, ccy)} · libro dei trade n.d.`
-      : `Libro giornaliero ${fmtMoney(eq, ccy)} · libro dei trade ${fmtMoney(tbEq, ccy)}${tb.example ? ' (esempio)' : ''}, conto separato a margine isolato`;
+    const sg = sigmaDay(snap);
+    ctxLine.textContent = sg == null ? 'oggi · σ n.d. (manca la volatilità obiettivo)' : `oggi · ${fmtSigned(sg.z, 1)} σ sulla volatilità obiettivo (${fmtPct(sg.target, 0)}): ${sg.word}`;
+    const tbDay = tb ? parseTs(str(tb.asof)) : null;
+    books.textContent = tb === undefined ? 'Libro dei trade: in lettura…'
+      : !tn.complete ? `Libro giornaliero ${fmtMoney(tn.daily, ccy)} · contributo dei trade n.d. (libro non disponibile): il totale è solo il libro giornaliero`
+        : `Libro giornaliero ${fmtMoney(tn.daily, ccy)} · contributo dei trade ${fmtMoney(tn.tradeGain, ccy, { signed: true })}${tbDay == null ? '' : ` (libro del ${fmtDayMonth(tbDay, true)})`}${tb.example ? ' · esempio' : ''}`;
     const start = num(nav.start_equity);
     const well = (k, v, sub) => h('div', { class: 'mini' }, h('dt', { text: k }), h('dd', { class: v > 0 ? 'pos' : v < 0 ? 'neg' : '' }, v == null ? 'n.d.' : [v === 0 ? null : icon(v > 0 ? 'up' : 'down', 'icon--solid'), fmtPctSigned(v, 2)]), h('small', { class: 'not-terminale' }, sub));
     side.replaceChildren(well('Mese', num(nav.pnl_mtd_pct), 'dal primo del mese'), well('Anno', num(nav.pnl_ytd_pct), 'dal 1° gennaio'), well('Dall\'avvio', num(nav.pnl_total_pct), start == null ? '' : `da ${fmtMoney(start, ccy, { digits: 0 })}`));
@@ -167,17 +159,20 @@ export function mount(root, api) {
   function paintBrake() {
     const { snap, ccy, fresh } = ctxNow;
     const d = ladderData(ctxNow, tb);
-    const first = d.steps[0];
-    if (!first || d.dd == null) {
+    const b = d.b;
+    if (!b.steps.length || b.dd == null) {
       brakeBig.replaceChildren('soglia non letta');
       pBrake.setAsk('La fotografia non riporta gli scalini della caduta: nessun valore predefinito viene usato al loro posto.');
     } else if (!fresh) {
       brakeBig.replaceChildren('sconosciuta');
       pBrake.setAsk('I dati sono fermi: la distanza dai freni non si può dire. Mai una barra verde su dati vecchi.');
+    } else if (!b.next) {
+      brakeBig.replaceChildren('ultimo scalino superato');
+      pBrake.setAsk(`La caduta ha passato anche l'ultimo scalino (${fmtPct(b.last.level, 0)}): ${b.last.action}.`);
     } else {
-      const dist = d.dd - first.level;
-      brakeBig.replaceChildren(`${fmtNum(dist * 100, 1)} punti`, h('small', { class: 'bignum__sub', text: d.peak == null ? '' : `= ${fmtMoney(dist * d.peak, ccy, { digits: 0 })} · scatta a ${fmtMoney(d.peak * (1 + first.level), ccy, { digits: 0 })}` }));
-      pBrake.setAsk(`Siamo a ${fmtNum(dist * 100, 1)} punti dal livello in cui il motore: ${first.action || 'riduce l\'esposizione'}.`);
+      brakeBig.replaceChildren(`${fmtNum(b.distNext * 100, 1)} punti`, h('small', { class: 'bignum__sub', text: `${b.hit ? `al prossimo scalino (${fmtPct(b.next.level, 0)}) · ` : ''}${b.peak == null ? '' : `= ${fmtMoney(b.distNext * b.peak, ccy, { digits: 0 })} · scatta a ${fmtMoney(b.peak * (1 + b.next.level), ccy, { digits: 0 })}`}` }));
+      pBrake.setAsk(b.hit ? `Lo scalino ${fmtPct(b.last.level, 0)} è già scattato (${b.last.action}). Mancano ${fmtNum(b.distNext * 100, 1)} punti al successivo; si torna indietro quando la caduta rientra sotto ${fmtPct(b.reentry, 0)}.`
+        : `Siamo a ${fmtNum(b.distNext * 100, 1)} punti dal livello in cui il motore: ${b.next.action || 'riduce l\'esposizione'}.`);
     }
     pBrake.setProv(provTag(provOf(snap.meta)));
     ladder.update(d);
@@ -186,7 +181,7 @@ export function mount(root, api) {
     const atRisk = open.reduce((a, t) => a + (num(t.risk) || 0), 0);
     brakeKv.replaceChildren(
       h('div', null, h('span', { class: 'k', text: 'Limite più vicino' }), h('span', { class: 'v', title: lims.length ? str(lims[0].l.name) : null, text: lims.length ? `${str(lims[0].l.name).replace(/^Esposizione sulla /i, '').replace(/^Peso massimo di uno strumento$/i, 'peso di uno strumento')} · ${fmtPct(lims[0].u, 0)}` : 'n.d.' })),
-      h('div', null, h('span', { class: 'k', text: 'A rischio nei trade' }), h('span', { class: 'v', text: tb === undefined ? '…' : !tb ? 'n.d.' : `${fmtMoney(atRisk, ccy)}${num(obj(snap.nav).equity) ? ` · ${fmtPct(atRisk / snap.nav.equity, 1)}` : ''}` })));
+      h('div', null, h('span', { class: 'k', text: 'A rischio nei trade' }), h('span', { class: 'v', title: 'Somma del rischio agli stop, in percentuale del patrimonio totale', text: tb === undefined ? '…' : !tb ? 'n.d.' : `${fmtMoney(atRisk, ccy)}${totalNav(snap, tb).total ? ` · ${fmtPct(atRisk / totalNav(snap, tb).total, 2)} del totale` : ''}` })));
   }
 
   function paintAttr() {
@@ -270,6 +265,10 @@ export function mount(root, api) {
       return;
     }
     const nodes = [];
+    const rules = obj(obj(ctxNow.health).rules);
+    const anomalies = [];
+    const tbFresh = freshness(parseTs(str(tb.asof)), ctxNow.now, 'crypto', rules);
+    if (tbFresh.stale) anomalies.push(`libro dei trade fermo al ${fmtDayMonth(tbFresh.day, true)}`);
     let risk = 0;
     for (const t of open) {
       const sym = str(t.symbol);
@@ -279,15 +278,18 @@ export function mount(root, api) {
       risk += num(t.risk) || 0;
       let entry = rulers.get(sym);
       if (!entry) { const host = h('div', { class: 'chart-host' }); entry = { host, ruler: tradeRuler(host, { label: `Livelli del trade su ${sym}` }) }; rulers.set(sym, entry); }
-      const opened = parseTs(t.opened);
-      const days = opened == null ? null : Math.max(1, Math.round((ctxNow.now - opened) / DAY));
+      const age = tradeAge(t, tb, rules);
+      const fr = freshness(last && last.t, ctxNow.now, 'crypto', rules);
+      if (age.over) anomalies.push(`${sym}: aperto da ${fmtNum(age.held, 0)} giorni, oltre la durata massima di ${fmtNum(age.maxHold, 0)}`);
+      if (fr.stale) anomalies.push(`${sym}: prezzo fermo alla chiusura del ${fmtDayMonth(fr.day, true)}`);
       nodes.push(h('div', { class: 'trade' },
         h('div', { class: 'trade__head' }, h('span', { class: `trade__r ${r > 0 ? 'pos' : r < 0 ? 'neg' : ''}`, text: r == null ? 'R n.d.' : `${fmtSigned(r, 2)} R` }),
-          h('span', { class: 'trade__meta', text: `${sym} ${num(t.side) === -1 ? 'al ribasso' : 'al rialzo'} · ${fmtNum(t.leverage, 1)}x${days == null ? '' : ` · giorno ${fmtNum(days, 0)}`}${last && last.t ? ` · prezzo: chiusura del ${fmtDayMonth(last.t, true)}` : ''}` })),
+          h('span', { class: 'trade__meta', text: `${sym} ${num(t.side) === -1 ? 'al ribasso' : 'al rialzo'} · ${fmtNum(t.leverage, 1)}x${age.held == null ? '' : ` · giorno ${fmtNum(age.held, 0)}${age.maxHold == null ? '' : ` di ${fmtNum(age.maxHold, 0)}`}`}${last && last.t ? ` · prezzo: chiusura del ${fmtDayMonth(last.t, true)}` : ''}` })),
         entry.host));
       requestAnimationFrame(() => entry.ruler.update({ trade: t, last: last && last.c }));
     }
-    tradesBox.replaceChildren(...nodes);
+    tradesBox.replaceChildren(...(anomalies.length ? [h('div', { class: 'verdict verdict--crit', role: 'alert' }, h('b', { text: 'Dati non attuali. ' }), `${anomalies.join('; ')}. R e distanze qui sotto valgono a quella data.`)] : []), ...nodes);
+    tradesBox.classList.toggle('is-stale', anomalies.length > 0);
     const one = open[0];
     pTrades.setAsk(open.length === 1 ? `C'è una scommessa aperta su ${str(one.symbol)}: al massimo può perdere ${fmtMoney(num(one.margin), ccy)} (il margine).` : `Ci sono ${fmtNum(open.length, 0)} scommesse aperte: insieme rischiano ${fmtMoney(risk, ccy)} agli stop.`);
     pTrades.setFoot(h('a', { class: 'linkrow', href: '#/mercati' }, 'Grafico e libro in Mercati', icon('arrow')));
@@ -408,11 +410,12 @@ export function mount(root, api) {
       const rs = riskState(snap.risk);
       if (!ctx.fresh) return 'Non so dirti com\'è adesso: i dati sono fermi. Qui sotto c\'è l\'ultima fotografia ricevuta.';
       const day = num(nav.pnl_day);
-      const vol = num(obj(snap.risk).vol_realized_30d);
-      const z = num(nav.pnl_day_pct) != null && vol ? nav.pnl_day_pct / (vol / Math.sqrt(365)) : null;
+      const sg = sigmaDay(snap);
+      const z = sg ? sg.z : null;
+      const sigmaWord = () => sg.word;
       const comps = arr(obj(snap.system).components);
       const bad = comps.filter((c) => !/^(ok|up|healthy)$/i.test(str(c.status)));
-      return `Il conto vale ${fmtMoney(nav.equity, ctx.ccy, { digits: 0 })}, oggi ha ${day == null ? 'un risultato non disponibile' : day >= 0 ? `guadagnato ${fmtMoney(day, ctx.ccy, { digits: 0 })}` : `perso ${fmtMoney(Math.abs(day), ctx.ccy, { digits: 0 })}`}${z == null ? '' : ` ed è ${sigmaWord(z)}`}. `
+      return `Il conto vale ${fmtMoney(totalNav(snap, tb).total, ctx.ccy, { digits: 0 })}, oggi ha ${day == null ? 'un risultato non disponibile' : day >= 0 ? `guadagnato ${fmtMoney(day, ctx.ccy, { digits: 0 })}` : `perso ${fmtMoney(Math.abs(day), ctx.ccy, { digits: 0 })}`}${z == null ? '' : ` ed è ${sigmaWord(z)}`}. `
         + `${bad.length ? `Da guardare: ${str(bad[0].name)}` : 'Il sistema gira'}, i dati sono di adesso e ${rs.code === 'NORMAL' ? 'nessun freno è tirato' : `il motore di rischio è in stato ${rs.label}`}.`;
     },
   };

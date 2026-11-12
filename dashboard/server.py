@@ -36,7 +36,7 @@ import os
 import re
 import tempfile
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -214,6 +214,7 @@ def load_snapshot() -> tuple[dict, str]:
     snap = _read_json(SAMPLE, attempts=1)
     meta = snap.get("meta") if isinstance(snap.get("meta"), dict) else {}
     snap = _shift_times(snap, meta.get("as_of"))          # l'esempio resta "di adesso": età e orari relativi non invecchiano
+    snap = _shift_dates(snap, _demo_shift_days())         # …e così le sue date senza ora: una sola storia, tutta alla data di oggi
     meta = snap["meta"] if isinstance(snap.get("meta"), dict) else {}
     meta["data_label"] = DEMO_LABEL                       # un esempio non deve mai sembrare un dato vero
     meta["as_of"] = _now_iso()
@@ -350,7 +351,7 @@ def get_learn():
     return _file_or_example(learn_path(), SAMPLE_LEARN, "X-Gerva-Learn-Source")
 
 
-def _file_or_example(path: Path, sample: Path, header: str = "X-Gerva-Source", missing: str = "ricerca non disponibile"):
+def _file_or_example(path: Path, sample: Path, header: str = "X-Gerva-Source", missing: str = "ricerca non disponibile", shift: bool = False):
     """Il file vero se c'è; in modalità demo l'esempio in dotazione, marcato `example: true`; altrimenti 404."""
     if path.is_file() or not is_demo() or not sample.is_file():
         return _research(path, missing)
@@ -359,7 +360,75 @@ def _file_or_example(path: Path, sample: Path, header: str = "X-Gerva-Source", m
     except SnapshotError as exc:
         return _error(503, str(exc).replace("snapshot", "file della ricerca"))
     data["example"] = True
+    if shift:
+        data = _shift_dates(data, _demo_shift_days())
     return JSONResponse(data, headers={header: "demo"})
+
+
+_DATE_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})$")
+
+
+def _demo_shift_days() -> int:
+    """Di quanti giorni va spostato l'insieme degli esempi perché il suo giorno di riferimento sia oggi.
+    Tutti gli esempi (fotografia, barre, libro dei trade, confronto) nascono dallo stesso generatore con la stessa data:
+    spostarli insieme li tiene coerenti e mai «vecchi di giorni» accanto a una fotografia «di adesso»."""
+    try:
+        as_of = str((_read_json(SAMPLE, attempts=1).get("meta") or {}).get("as_of") or "")[:10]
+        return (datetime.now(timezone.utc).date() - datetime.strptime(as_of, "%Y-%m-%d").date()).days
+    except (SnapshotError, ValueError):
+        return 0
+
+
+def _shift_dates(obj, days: int):
+    """Sposta di `days` giorni ogni stringa che è una data senza ora (AAAA-MM-GG); il resto non si tocca."""
+    if not days:
+        return obj
+    if isinstance(obj, str):
+        if _DATE_RE.match(obj):
+            try:
+                return (datetime.strptime(obj, "%Y-%m-%d") + timedelta(days=days)).strftime("%Y-%m-%d")
+            except (ValueError, OverflowError):
+                return obj
+        return obj
+    if isinstance(obj, dict):
+        return {k: _shift_dates(v, days) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_shift_dates(v, days) for v in obj]
+    return obj
+
+
+_rules_cache: dict = {}
+
+
+def _engine_rules() -> dict:
+    """Le regole che la pagina deve conoscere ma non deve mai scrivere: lette dai moduli del motore e dalla configurazione.
+    Se un pezzo non si può leggere manca dalla risposta, e la pagina scrive «n.d.» invece di un valore predefinito."""
+    if _rules_cache.get("t", 0) > time.time() - 600:
+        return _rules_cache["v"]
+    out: dict = {}
+    try:
+        from gerva import ensemble as E, gervasoni as G
+        from gerva.risk import isolated as I
+        from gerva.live import tradecycle as T
+        out.update(max_hold_days=int(T.MAX_HOLD), score_confirmed=float(I.SCORE_CONFIRMED), score_exceptional=float(I.SCORE_EXCEPTIONAL),
+                   conviction_tiers={k: [float(v[0]), float(v[1])] for k, v in E.THRESHOLDS.items()},
+                   gq_tiers={k: float(v) for k, v in G.THRESHOLDS.items()})
+    except Exception:
+        pass
+    try:
+        import yaml
+        cfg = yaml.safe_load((ROOT / "config" / "gerva.yaml").read_text(encoding="utf-8")) or {}
+        lim = cfg.get("limits") or {}
+        ages = lim.get("max_data_age_h") or {}
+        out["max_data_age_h"] = {str(k): float(v) for k, v in ages.items() if isinstance(v, (int, float))}
+        tr = cfg.get("trades") or {}
+        out["trade_risk"] = {k: float(v) for k, v in tr.items() if isinstance(v, (int, float))}
+        if isinstance(cfg.get("interval_s"), (int, float)):
+            out["interval_s"] = float(cfg["interval_s"])
+    except Exception:
+        pass
+    _rules_cache.update(t=time.time(), v=out)
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -420,7 +489,7 @@ def _sample_ohlc() -> dict | None:
     if not is_demo() or not SAMPLE_OHLC.is_file():
         return None
     try:
-        return _read_json(SAMPLE_OHLC, attempts=1)
+        return _shift_dates(_read_json(SAMPLE_OHLC, attempts=1), _demo_shift_days())
     except SnapshotError:
         return None
 
@@ -499,7 +568,7 @@ def get_ohlc(symbol: str = "", tf: str = "1d", limit: int = 1500):
 @app.get("/api/v1/tradebook")
 def get_tradebook():
     """Stato del libro dei trade (`$GERVA_HOME/tradebook.json`), compreso il registro in ombra dell'indicatore."""
-    return _file_or_example(home_dir() / "tradebook.json", SAMPLE_TRADEBOOK, missing="libro dei trade non disponibile")
+    return _file_or_example(home_dir() / "tradebook.json", SAMPLE_TRADEBOOK, missing="libro dei trade non disponibile", shift=True)
 
 
 TRADE_FIELDS = ("strategy_id", "symbol", "entry_time", "exit_time", "leverage", "R", "exit_reason", "mae", "mfe", "weekday", "tier",
@@ -564,7 +633,7 @@ def get_compare():
     """Confronto giornaliero con il conto GERVA Capital originale (`$GERVA_HOME/confronto_nav.csv`), se esiste."""
     path = home_dir() / "confronto_nav.csv"
     if not path.is_file():
-        return _file_or_example(path.with_suffix(".json"), SAMPLE_COMPARE, missing="confronto non disponibile")
+        return _file_or_example(path.with_suffix(".json"), SAMPLE_COMPARE, missing="confronto non disponibile", shift=True)
     try:
         if path.stat().st_size > MAX_SNAPSHOT_BYTES:
             return _error(503, "file del confronto troppo grande")
@@ -612,6 +681,7 @@ def get_health():
         "snapshot_source": source,
         "kill_enabled": bool(_token()),
         "kill_active": kill_path().exists(),
+        "rules": _engine_rules(),
     }
 
 

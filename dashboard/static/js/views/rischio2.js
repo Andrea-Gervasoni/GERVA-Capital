@@ -9,33 +9,11 @@ import { arr, fmtAgo, fmtDate, fmtDayTime, fmtMoney, fmtNum, fmtPct, fmtPctSigne
 import { getOhlc, getTradebook } from '../market.js';
 import { alertLevel, componentStatus, curveOf, limitStatus, riskState, utilization } from '../model.js';
 import { brakeLadder, emptyState, meterRow, panel, provOf, provTag } from '../panels.js';
+import { stressDays, worstCase } from '../derive.js';
 import { ladderData } from './oggi.js';
 
 const DAY = 86400000;
 const SCALE = { NORMAL: '1,0', REDUCED: '0,5', HALTED: '0,25', KILLED: '0' };
-/** Fondi europei dell'esempio → ETF americano equivalente nella tabella degli shock (dichiarato nel piede del riquadro). */
-const PROXY = { CSPX: 'SPY', EQQQ: 'QQQ', SGLN: 'GLD', IBTM: 'IEF', EXS1: 'EFA' };
-
-/** Una giornata storica applicata alle posizioni di oggi: { pnl (frazione del patrimonio), covered, missing[], proxies[] }. */
-export function applyStress(day, positions, equity) {
-  const shocks = obj(day && day.shocks);
-  let pnl = 0;
-  let covered = 0;
-  const missing = [];
-  const proxies = [];
-  for (const p of positions) {
-    const w = num(p.weight) ?? (num(p.value) != null && equity ? p.value / equity : null);
-    if (w == null) continue;
-    const sym = str(p.symbol).toUpperCase();
-    const key = shocks[sym] != null ? sym : PROXY[sym] && shocks[PROXY[sym]] != null ? PROXY[sym] : null;
-    if (!key) { missing.push(sym); continue; }
-    if (key !== sym) proxies.push(`${sym}→${key}`);
-    pnl += w * shocks[key];
-    covered += Math.abs(w);
-  }
-  return { pnl, covered, missing, proxies };
-}
-
 export function mount(root, api) {
   let ctxNow = null;
   let tb;
@@ -105,20 +83,7 @@ export function mount(root, api) {
 
   root.append(h('div', { class: 'ws' }, pBrake.el, pWorst.el, pCaps.el, pLev.el, pStress.el, pData.el, pAlerts.el, pKill.el, pStats.el));
 
-  // ---- calcoli condivisi ----
-  function tradesAtRisk() {
-    const open = Object.values(obj(obj(tb).open)).filter((t) => t && typeof t === 'object');
-    const stops = open.reduce((a, t) => a + (num(t.risk) || 0), 0);
-    const margins = open.reduce((a, t) => a + (num(t.margin) || 0), 0);
-    return { open, stops, beyond: Math.max(0, margins - stops) };
-  }
-  function stressDays() {
-    const { snap, quant4 } = ctxNow;
-    const days = arr(obj(obj(quant4).stress_days).days);
-    const eq = num(obj(snap.nav).equity);
-    return days.map((d) => ({ day: d, ...applyStress(d, arr(snap.positions), eq) }));
-  }
-
+  // ---- nessun calcolo qui: freni, stress e peggior caso arrivano da derive.js, gli stessi di Oggi ----
   function paintBrake() {
     const { snap, ccy, fresh } = ctxNow;
     const risk = obj(snap.risk);
@@ -126,70 +91,54 @@ export function mount(root, api) {
     const nav = obj(snap.nav);
     const prov = provOf(snap.meta);
     pBrake.setProv(provTag(prov), provTag('sim', 'Peggior caso: ipotesi'));
-    const worst = worstCase();
-    const d = ladderData(ctxNow, tb, worst && worst.loss > 0 ? { loss: worst.loss } : null);
-    stateLine.replaceChildren(
+    const worst = worstCase(snap, tb, ctxNow.quant4);
+    const d = ladderData(ctxNow, tb, worst && worst.total > 0 ? worst : null);
+    const b = d.b;
+    stateLine.replaceChildren(...[
       h('span', { class: `pill pill--lg pill--${!fresh ? 'unknown' : rs.code === 'KILLED' ? 'killed' : rs.kind}` }, icon(!fresh ? 'help' : rs.icon), h('span', { text: !fresh ? 'Sconosciuto' : rs.label })),
       h('span', null, 'scala ', h('b', { text: fresh ? SCALE[rs.code] || 'n.d.' : 'n.d.' })),
       h('span', { text: fresh ? str(risk.state_reason).trim() || rs.text : 'I dati sono fermi: lo stato qui sopra non si può confermare.' }),
-      h('span', null, 'caduta ', h('b', { text: num(nav.drawdown_pct) == null ? 'n.d.' : fmtPctSigned(nav.drawdown_pct, 2) }), num(nav.high_water) == null ? '' : ` dal massimo di ${fmtMoney(nav.high_water, ccy, { digits: 0 })}`));
-    if (!d.steps.length) { ladderHost.replaceChildren(emptyState('Soglia non letta', 'La fotografia non riporta gli scalini della caduta (risk.dd_ladder): nessun valore predefinito viene usato al loro posto.')); tableHost.replaceChildren(); return; }
+      h('span', null, 'caduta ', h('b', { text: b.dd == null ? 'n.d.' : fmtPctSigned(b.dd, 2) }), b.peak == null ? '' : ` dal massimo di ${fmtMoney(b.peak, ccy, { digits: 0 })}`),
+      fresh && b.next ? h('span', null, b.hit ? 'prossimo scalino ' : 'primo scalino ', h('b', { text: `${fmtPct(b.next.level, 0)} a ${fmtNum(b.distNext * 100, 1)} punti` })) : null,
+      fresh && b.hit ? h('span', null, 'rientro sotto ', h('b', { text: fmtPct(b.reentry, 0) })) : null].filter(Boolean));
+    if (!b.steps.length) { ladderHost.replaceChildren(emptyState('Soglia non letta', 'La fotografia non riporta gli scalini della caduta (risk.dd_ladder): nessun valore predefinito viene usato al loro posto.')); tableHost.replaceChildren(); return; }
     ladder.update(d);
-
-    // tabella dei tre freni: adesso, mancano, in euro, scatta a, giornate di ES, che cosa fa il motore
-    const es = Math.abs(num(risk.es_95_1d_pct) || 0);
-    const peak = num(nav.high_water);
-    const eq = num(nav.equity);
-    const rows = [];
-    const first = d.steps[0];
-    if (first && d.dd != null) rows.push({ name: `Caduta ${fmtPct(first.level, 0)}`, now: d.dd, dist: d.dd - first.level, base: peak, at: peak == null ? null : peak * (1 + first.level), action: first.action });
-    for (const l of d.lanes) if (l.value != null) rows.push({ name: `${l.label.replace('Ultime', 'Perdita in').replace('Ultimi', 'Perdita in')} ${fmtPct(l.limit, 0)}`, now: l.value, dist: l.value - l.limit, base: eq, at: eq == null ? null : eq * (1 + (l.limit - Math.min(l.value, 0))), action: l.action });
+    // tabella: sempre i tre scalini, più i due freni a finestra mobile
     tableHost.replaceChildren(h('table', { class: 'table table--dense' },
       h('caption', { class: 'sr-only', text: 'I freni automatici: distanza da ognuno' }),
       h('thead', null, h('tr', null, ['Freno', 'Adesso', 'Mancano', 'In euro', 'Scatta a', 'Giornate di ES', 'Che cosa fa il motore'].map((c, i) => h('th', { scope: 'col', class: i && i < 6 ? 'is-num' : '', text: c })))),
-      h('tbody', null, rows.map((r) => h('tr', null,
-        h('td', { text: r.name }), h('td', { class: 'is-num', text: fresh ? fmtPctSigned(r.now, 2) : 'n.d.' }), h('td', { class: 'is-num', text: fresh ? `${fmtNum(r.dist * 100, 1)} punti` : 'sconosciuta' }),
-        h('td', { class: 'is-num', text: fresh && r.base != null ? fmtMoney(r.dist * r.base, ccy, { digits: 0 }) : 'n.d.' }), h('td', { class: 'is-num', text: r.at == null ? 'n.d.' : fmtMoney(r.at, ccy, { digits: 0 }) }),
-        h('td', { class: 'is-num', text: fresh && es ? fmtNum(r.dist / es, 1) : 'n.d.' }), h('td', { class: 'is-action', text: r.action || 'n.d.' }))))));
-    pBrake.setFoot('Percentuali sul patrimonio del fondo. Scalini e freni letti dalla fotografia del motore. ', d.simRef ? 'Riferimento tratteggiato: caduta tipica nelle simulazioni del profilo del paper (SIMULATO). ' : '', 'Mancano nella fotografia: da quando lo stato è in vigore e la condizione di rientro (n.d.).');
-  }
-
-  /** Peggior caso di oggi: margini dei trade + peggiore giornata storica sul libro giornaliero. */
-  function worstCase() {
-    const { snap } = ctxNow;
-    const eq = num(obj(snap.nav).equity);
-    if (eq == null) return null;
-    const tr = tb ? tradesAtRisk() : null;
-    const days = stressDays();
-    const worstDay = days.length ? days.reduce((a, b) => (b.pnl < a.pnl ? b : a)) : null;
-    const gap = worstDay && worstDay.pnl < 0 ? -worstDay.pnl * eq : null;
-    const total = (tr ? tr.stops + tr.beyond : 0) + (gap || 0);
-    return { eq, tr, worstDay, gap, total, loss: total / eq };
+      h('tbody', null, b.rows.map((r) => h('tr', { class: r.hit ? 'is-marked' : '' },
+        h('td', { text: r.name }), h('td', { class: 'is-num', text: !fresh ? 'n.d.' : r.now == null ? 'non calcolabile' : fmtPctSigned(r.now, 2) }),
+        h('td', { class: 'is-num', text: !fresh ? 'sconosciuta' : r.dist == null ? 'n.d.' : r.hit ? 'scattato' : `${fmtNum(r.dist * 100, 1)} punti` }),
+        h('td', { class: 'is-num', text: fresh && r.eur != null && !r.hit ? fmtMoney(r.eur, ccy, { digits: 0 }) : r.hit ? '—' : 'n.d.' }), h('td', { class: 'is-num', text: r.at == null ? 'n.d.' : fmtMoney(r.at, ccy, { digits: 0 }) }),
+        h('td', { class: 'is-num', text: fresh && r.esDays != null && !r.hit ? fmtNum(r.esDays, 1) : r.hit ? '—' : 'n.d.' }), h('td', { class: 'is-action', text: r.action || 'n.d.' }))))));
+    void nav;
+    pBrake.setFoot('Percentuali sul patrimonio del libro giornaliero. Scalini e freni letti dalla fotografia del motore; le perdite a 24 ore e 7 giorni sono finestre mobili calcolate dalla curva giornaliera («Scatta a» = patrimonio di riferimento × (1 + soglia)). ',
+      d.simRef ? 'Riferimento tratteggiato: caduta tipica nelle simulazioni del profilo del paper (SIMULATO). ' : '', 'Rientro: il motore risale quando la caduta torna sotto metà della soglia scattata. Manca nella fotografia: da quando lo stato è in vigore (n.d.).');
   }
 
   function paintWorst() {
-    const { snap, ccy, quant4Status } = ctxNow;
-    const w = worstCase();
+    const { snap, ccy, quant4Status, fresh } = ctxNow;
+    const w = worstCase(snap, tb, ctxNow.quant4);
     pWorst.setProv(provTag('sim'));
-    if (!w) { worstKv.replaceChildren(); worstVerdict.hidden = true; pWorst.body.prepend(emptyState('Patrimonio non disponibile')); return; }
+    if (!w) { worstKv.replaceChildren(emptyState('Patrimonio non disponibile')); worstVerdict.hidden = true; return; }
     const row = (k, v, cls = '') => h('div', null, h('span', { class: 'k', text: k }), h('span', { class: `v ${cls}`.trim(), text: v }));
-    worstKv.replaceChildren(
-      row('Patrimonio di oggi', fmtMoney(w.eq, ccy, { digits: 0 })),
-      row('Perdite agli stop', tb === undefined ? '…' : !w.tr ? 'n.d. (libro dei trade assente)' : fmtMoney(-w.tr.stops, ccy), 'neg'),
-      row('Oltre lo stop, fino ai margini', tb === undefined ? '…' : !w.tr ? 'n.d.' : fmtMoney(-w.tr.beyond, ccy), 'neg'),
-      row(w.worstDay ? `Libro giornaliero: ${str(w.worstDay.day.name)}` : 'Gap del libro giornaliero', w.gap == null ? (quant4Status === 'loading' ? '…' : 'n.d. (manca la tabella degli shock)') : fmtMoney(-w.gap, ccy), 'neg'),
-      row('Patrimonio finale', fmtMoney(w.eq - w.total, ccy, { digits: 0 })));
-    const nav = obj(snap.nav);
-    const ddAfter = num(nav.high_water) ? (w.eq - w.total) / nav.high_water - 1 : null;
-    const steps = arr(obj(snap.risk).dd_ladder).filter((st) => num(st.level) != null).sort((a, b) => b.level - a.level);
-    const hit = ddAfter == null ? null : [...steps].reverse().find((st) => ddAfter <= st.level);
-    const day = arr(obj(snap.risk).limits).find((l) => /24 ore|giornata/i.test(str(l.name)));
-    const dayHit = day && num(day.limit) != null && -w.loss <= day.limit;
+    const least = w.atLeast ? 'almeno ' : '';
+    worstKv.replaceChildren(...[
+      row('Patrimonio di oggi (libro giornaliero)', fmtMoney(w.equity, ccy, { digits: 0 })),
+      row('Perdite agli stop', tb === undefined ? '…' : w.stops == null ? 'n.d. (libro dei trade assente)' : fmtMoney(-w.stops, ccy), 'neg'),
+      row('Oltre lo stop, fino ai margini', tb === undefined ? '…' : w.beyond == null ? 'n.d.' : fmtMoney(-w.beyond, ccy), 'neg'),
+      row(w.worstDay ? `Libro giornaliero: ${str(w.worstDay.day.name)}` : 'Gap del libro giornaliero', w.gap == null ? (quant4Status === 'loading' ? '…' : 'n.d. (manca la tabella degli shock)') : `${least}${fmtMoney(-w.gap, ccy)}`, 'neg'),
+      w.coverage != null ? row('Copertura degli shock', `${fmtPct(w.coverage, 0)} dell'esposizione${w.worstDay.missing.length ? ` · non coperti: ${w.worstDay.missing.join(', ')}` : ''}`) : null,
+      row('Patrimonio finale', `${w.atLeast ? 'al più ' : ''}${fmtMoney(w.final, ccy, { digits: 0 })}`)].filter(Boolean));
     worstVerdict.hidden = false;
-    worstVerdict.className = `verdict ${hit && /kill|chiud/i.test(str(hit.action)) ? 'verdict--crit' : !hit && !dayHit ? 'verdict--ok' : ''}`.trim();
-    worstVerdict.replaceChildren(h('b', { text: `${fmtPctSigned(-w.loss, 1)} in un giorno` }), ddAfter == null ? '' : ` · caduta dal massimo ${fmtPctSigned(ddAfter, 1)}. `,
-      hit ? `Scatterebbe lo scalino ${fmtPct(hit.level, 0)}: ${str(hit.action)}.` : dayHit ? `Scatterebbe il freno delle 24 ore (${fmtPct(day.limit, 0)}); nessuno scalino di caduta.` : 'Nessun freno scatterebbe.');
-    pWorst.setFoot('Ipotesi dichiarata: tutti i trade perdono il margine isolato; il libro giornaliero subisce la peggiore delle giornate storiche di stress. ', w.worstDay && w.worstDay.missing.length ? `Senza shock: ${w.worstDay.missing.join(', ')}.` : '');
+    const kill = w.stepHit && /kill|chiud/i.test(str(w.stepHit.action));
+    worstVerdict.className = `verdict ${!fresh ? '' : kill ? 'verdict--crit' : !w.stepHit && !w.dayHit && !w.atLeast ? 'verdict--ok' : ''}`.trim();
+    worstVerdict.replaceChildren(h('b', { text: `${least}${fmtPctSigned(-w.loss, 1)} in un giorno` }), w.ddAfter == null ? '' : ` · caduta dal massimo ${least}${fmtPctSigned(w.ddAfter, 1)}. `,
+      w.stepHit ? `Scatterebbe lo scalino ${fmtPct(w.stepHit.level, 0)}: ${str(w.stepHit.action)}.` : w.dayHit ? `Scatterebbe il freno delle 24 ore (${fmtPct(w.dayLimit, 0)}).` : w.atLeast ? '' : 'Nessun freno scatterebbe.',
+      w.atLeast && !kill ? ' La stima è un minimo: parte dell\'esposizione non ha uno shock o manca il libro dei trade, quindi non si può escludere uno scalino più profondo.' : '',
+      fresh ? '' : ' Calcolato sull\'ultima fotografia ricevuta: i dati sono fermi.');
+    pWorst.setFoot('Ipotesi dichiarata: tutti i trade perdono il margine isolato; il libro giornaliero subisce la peggiore delle giornate storiche di stress sulle posizioni coperte. Uno shock che manca non vale zero: la posizione resta «non coperta».');
   }
 
   function paintCaps() {
@@ -236,8 +185,8 @@ export function mount(root, api) {
 
   function paintStress() {
     const { snap, ccy, quant4Status } = ctxNow;
-    const days = stressDays();
-    pStress.setProv(provTag('sim'));
+    const days = stressDays(snap, ctxNow.quant4);
+    pStress.setProv(provTag('sim'), provOf(snap.meta) === 'demo' ? provTag('demo', 'Posizioni di esempio') : null);
     if (!days.length) {
       stressBox.replaceChildren(emptyState(quant4Status === 'loading' ? 'Ricerca in lettura…' : 'Non ancora calcolabile', 'Manca la tabella degli shock per strumento (research/v5/quant_v4.json, stress_days). Qui compariranno 12 mar 2020, 19 mag 2021, 5 ago 2024, 10 ott 2025 applicati al libro di oggi.'));
       pStress.setFoot();
@@ -270,13 +219,12 @@ export function mount(root, api) {
       bar.style.setProperty('--v', `${Math.min(100, (Math.abs(Math.min(0, d.pnl)) / scale) * 100).toFixed(1)}%`);
       if (lim) bar.style.setProperty('--t', `${Math.min(100, (Math.abs(lim) / scale) * 100).toFixed(1)}%`);
       const date = parseTs(str(d.day.date));
-      return h('div', { class: 'stressrow' }, h('div', null, str(d.day.name), h('small', { text: `${date == null ? str(d.day.date) : fmtDate(date, true)}${hitTxt ? ` · ${hitTxt}` : ''}` })), bar,
-        h('div', { class: `stressrow__val num ${d.pnl < 0 ? 'neg' : 'pos'}` }, fmtPctSigned(d.pnl, 1), eq ? h('small', { text: fmtMoney(d.pnl * eq, ccy, { digits: 0, signed: true }) }) : null));
+      return h('div', { class: 'stressrow' }, h('div', null, str(d.day.name), h('small', { text: `${date == null ? str(d.day.date) : fmtDate(date, true)}${d.coverage != null && d.coverage < 0.999 ? ` · copertura ${fmtPct(d.coverage, 0)}, non coperti: ${d.missing.join(', ')}` : ''}${hitTxt ? ` · ${hitTxt}` : ''}` })), bar,
+        h('div', { class: `stressrow__val num ${d.pnl < 0 ? 'neg' : 'pos'}` }, `${d.coverage != null && d.coverage < 0.999 ? 'almeno ' : ''}${fmtPctSigned(d.pnl, 1)}`, eq ? h('small', { text: fmtMoney(d.pnl * eq, ccy, { digits: 0, signed: true }) }) : null));
     });
     stressBox.replaceChildren(...rows);
     const miss = [...new Set(days.flatMap((d) => d.missing))];
-    const prox = [...new Set(days.flatMap((d) => d.proxies))];
-    pStress.setFoot('Rendimenti veri di chiusura per strumento, applicati ai pesi di oggi. ', prox.length ? `Equivalenti usati: ${prox.join(', ')}. ` : '', miss.length ? `Senza dato in almeno una giornata: ${miss.join(', ')}.` : '');
+    pStress.setFoot('Rendimenti veri di chiusura per strumento, applicati ai pesi di oggi. ', miss.length ? `Non coperti in almeno una giornata: ${miss.join(', ')} (lo strumento non esisteva o manca il dato): il totale di quella riga è un minimo.` : 'Tutte le posizioni hanno uno shock in tutte e quattro le giornate.');
   }
 
   function paintData() {
@@ -343,10 +291,11 @@ export function mount(root, api) {
     summary(ctx) {
       if (!ctx.fresh) return 'I dati sono fermi: lo stato del rischio è sconosciuto e nessuna distanza dai freni si può confermare.';
       const rs = riskState(ctx.snap.risk);
-      const d = ladderData(ctx, tb);
-      const first = d.steps[0];
+      const bk = ladderData(ctx, tb).b;
+      const first = bk.next;
+      const d = { dd: first ? bk.dd : null };
       const lims = arr(obj(ctx.snap.risk).limits).map((l) => ({ l, u: utilization(l.value, l.limit) })).filter((x) => x.u != null).sort((a, b) => b.u - a.u);
-      return `Lo stato è ${rs.label}${first && d.dd != null ? `: mancano ${fmtNum((d.dd - first.level) * 100, 1)} punti al primo freno (${fmtPct(first.level, 0)})` : ''}. ${lims.length ? `Il limite più vicino è «${str(lims[0].l.name)}», al ${fmtPct(lims[0].u, 0)} del tetto.` : ''}`;
+      return `Lo stato è ${rs.label}${first && d.dd != null ? `: mancano ${fmtNum((d.dd - first.level) * 100, 1)} punti al ${bk.hit ? 'prossimo' : 'primo'} freno (${fmtPct(first.level, 0)})` : ''}. ${lims.length ? `Il limite più vicino è «${str(lims[0].l.name)}», al ${fmtPct(lims[0].u, 0)} del tetto.` : ''}`;
     },
   };
 }

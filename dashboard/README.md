@@ -70,6 +70,23 @@ resta nel browser (`gerva.dash.glass`).
 pieni. Le mappe di calore usano la rampa blu ↔ arancio a nove passi con il numero in ogni cella; verde e rosso solo con segno e forma.
 Soglie e tetti arrivano sempre dalla fotografia (`risk.dd_ladder`, `risk.limits`): se mancano si legge «soglia non letta».
 
+## Una sola verità (giro 2, blocco A)
+
+- **`static/js/derive.js`**: ogni grandezza derivata si calcola qui una volta e gli spazi la riusano — patrimonio totale
+  (libro giornaliero + contributo dei trade, `equity − start_equity` del libro: stesso capitale), σ della giornata sulla
+  volatilità **obiettivo**, scalini e scalino **successivo** con la condizione di rientro, finestre mobili a 24 ore e 7 giorni
+  dalla curva (mai lo 0,00% di `min(pnl, 0)`; senza storico: «non calcolabile con i dati presenti»), stress con **copertura**
+  (uno shock che manca è «non coperto», mai zero), peggior caso di oggi (un solo calcolo: «almeno −x%» se la copertura è
+  parziale o manca il libro), età di un trade contata fino alla data del libro, freschezza per fonte, nomi dei livelli di
+  conviction (bassa / media / alta; trade confermato / eccezionale) e GQ. I test le eseguono con Node.
+- **Regole dal motore**: `/api/v1/health` porta `rules` (durata massima dei trade, soglie dei livelli, età massime dei dati),
+  lette da `gerva/*` e da `config/gerva.yaml`. Se mancano la pagina scrive «n.d.», non un valore predefinito.
+- **Freschezza per fonte**: libro dei trade e barre hanno la loro data; oltre l'età massima il riquadro lo dichiara
+  («Dati non attuali», R attenuato) anche se la fotografia è di adesso; un trade oltre la durata massima è un'anomalia.
+- **Esempi**: `python dashboard/tools/build_samples.py` rigenera fotografia, barre, libro dei trade e confronto come un solo
+  insieme (stesso giorno, un prezzo per strumento, un patrimonio, trade costruiti sulle barre con R × rischio = P&L, cancelli
+  di `gerva/live/gates.py`). In modalità demo il server li sposta tutti insieme alla data di oggi.
+
 ## Due livelli di lettura (pagine precedenti)
 
 In alto c'è un interruttore **Semplice / Esperto** (ricordato nel browser, parte da Semplice).

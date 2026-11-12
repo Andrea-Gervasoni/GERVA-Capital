@@ -852,8 +852,180 @@ def test_spazi_nuovi_e_tavolozza_in_sola_lettura():
         assert f"['{group}'" in cmd, group
     oggi = (js / "views" / "oggi.js").read_text(encoding="utf-8")
     rischio = (js / "views" / "rischio2.js").read_text(encoding="utf-8")
-    assert "risk.dd_ladder" in oggi and not re.search(r"-0\.[234]\b|0\.0[48]\b", oggi + rischio)   # soglie lette dalla fotografia, mai scritte nella pagina
+    derive = (js / "derive.js").read_text(encoding="utf-8")
+    assert "risk.dd_ladder" in derive and not re.search(r"-0\.[234]\b|0\.0[48]\b", oggi + rischio + derive)   # soglie lette dalla fotografia, mai scritte nella pagina
     assert "stress_days" in rischio and "paper_profile_cone" in oggi and "soglia non letta" in (oggi + rischio).lower()
+
+
+# ---------------------------------------------------------------------------
+# Una sola verità: grandezze derivate calcolate una volta (js/derive.js) ed esempi nati da un solo generatore
+# ---------------------------------------------------------------------------
+def _node_derive(snapshot: dict, tradebook, quant4: dict, tmp_path) -> dict:
+    """Esegue js/derive.js con Node sugli oggetti dati: sono le stesse funzioni che usano Oggi, Rischio e Mercati."""
+    import shutil
+    import subprocess
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("node non disponibile")
+    (tmp_path / "in.json").write_text(json.dumps(dict(snap=snapshot, tb=tradebook, q4=quant4)), encoding="utf-8")
+    script = tmp_path / "run.mjs"
+    script.write_text(
+        "import fs from 'node:fs';\n"
+        f"const D = await import({json.dumps((STATIC / 'js' / 'derive.js').as_uri())});\n"
+        f"const {{ snap, tb, q4 }} = JSON.parse(fs.readFileSync({json.dumps(str(tmp_path / 'in.json'))}, 'utf8'));\n"
+        "const b = D.brakes(snap); const w = D.worstCase(snap, tb, q4); const rules = { max_hold_days: 7, score_confirmed: 0.6, score_exceptional: 0.75,"
+        " conviction_tiers: { crypto: [0.3, 0.6], index: [0.55, 0.82] }, gq_tiers: { eccezionale: 1.42, alta: 0.53, bassa: -0.5 }, max_data_age_h: { crypto: 36, ibkr: 100 } };\n"
+        "const open = tb ? Object.values(tb.open) : [];\n"
+        "console.log(JSON.stringify({ nav: D.totalNav(snap, tb), sigma: D.sigmaDay(snap), b: { hit: b.hit, next: b.next, distNext: b.distNext, reentry: b.reentry, rows: b.rows, lanes: b.lanes.map((l) => ({ id: l.id, value: l.value, limit: l.limit, ref: l.ref })) },"
+        " w, days: D.stressDays(snap, q4).map((d) => ({ pnl: d.pnl, coverage: d.coverage, missing: d.missing })),"
+        " lv: [0.27, 0.45, 0.64, 0.8].map((v) => D.convLevel(v, 'crypto', rules)), gq: [-1.33, 0, 0.6, 1.5].map((v) => D.gqLevel(v, rules)), noRules: D.convLevel(0.7, 'crypto', {}),"
+        " age: open.map((t) => D.tradeAge(t, tb, rules)), old: D.tradeAge({ opened: '2026-01-01' }, { asof: '2026-01-21' }, rules),"
+        " fresh: [D.freshness(Date.UTC(2026, 0, 10), Date.UTC(2026, 0, 11, 12), 'crypto', rules), D.freshness(Date.UTC(2026, 0, 1), Date.UTC(2026, 0, 13), 'crypto', rules), D.freshness(Date.UTC(2026, 0, 1), Date.UTC(2026, 0, 13), 'crypto', {})] }));\n",
+        encoding="utf-8")
+    res = subprocess.run([node, str(script)], capture_output=True, text=True, timeout=60)
+    assert res.returncode == 0, res.stderr[-800:]
+    return json.loads(res.stdout)
+
+
+def _samples():
+    return (json.loads(server.SAMPLE.read_text(encoding="utf-8")), json.loads(server.SAMPLE_TRADEBOOK.read_text(encoding="utf-8")),
+            json.loads(server.SAMPLE_OHLC.read_text(encoding="utf-8")), json.loads(server.SAMPLE_COMPARE.read_text(encoding="utf-8")))
+
+
+STRESS = dict(stress_days=dict(days=[
+    dict(date="2020-03-12", name="Crollo", shocks=dict(BTC=-0.40, ETH=-0.45, SPY=-0.10, GLD=-0.03, IEF=0.01, EFA=-0.10, QQQ=-0.09)),      # SOL manca: non coperto
+    dict(date="2024-08-05", name="Lunedi nero", shocks=dict(BTC=-0.08, ETH=-0.10, SOL=-0.12, SPY=-0.03, GLD=-0.01, IEF=0.01, EFA=-0.02, QQQ=-0.03))]))
+
+
+def test_una_sola_verita_patrimonio_sigma_freni(tmp_path):
+    snap, tb, _, _ = _samples()
+    out = _node_derive(snap, tb, STRESS, tmp_path)
+    nav, risk = snap["nav"], snap["risk"]
+    # patrimonio in testa = libro giornaliero + contributo dei trade (stesso capitale, non un secondo conto)
+    assert out["nav"]["total"] == pytest.approx(nav["equity"] + tb["equity"] - tb["start_equity"]) and out["nav"]["complete"] is True
+    # σ della giornata sulla volatilità OBIETTIVO, non su quella realizzata
+    assert out["sigma"]["z"] == pytest.approx(nav["pnl_day_pct"] / (risk["vol_target"] / 365 ** 0.5)) and out["sigma"]["target"] == risk["vol_target"]
+    # freni: una riga per ogni scalino, distanze e «scatta a» da una sola formula
+    ladder = sorted((st["level"] for st in risk["dd_ladder"]), reverse=True)
+    rows = out["b"]["rows"]
+    assert [r["level"] for r in rows[:3]] == ladder and out["b"]["hit"] == 0 and out["b"]["next"]["level"] == ladder[0]
+    assert out["b"]["distNext"] == pytest.approx(nav["drawdown_pct"] - ladder[0])
+    for r in rows[:3]:
+        assert r["at"] == pytest.approx(nav["high_water"] * (1 + r["level"])) and r["eur"] == pytest.approx(r["dist"] * nav["high_water"])
+    # finestre mobili dalla curva: mai lo 0,00% di min(pnl, 0); «scatta a» = patrimonio di riferimento × (1 + soglia)
+    curve = [p["equity"] for p in snap["equity_curve"]]
+    d1, d7 = out["b"]["lanes"]
+    assert d1["value"] == pytest.approx(curve[-1] / curve[-2] - 1) and d7["value"] == pytest.approx(curve[-1] / curve[-8] - 1) and d7["value"] != 0
+    assert rows[3]["at"] == pytest.approx(curve[-2] * (1 + d1["limit"])) and rows[4]["at"] == pytest.approx(curve[-8] * (1 + d7["limit"]))
+
+
+def test_una_sola_verita_peggior_caso_stress_e_scalino_successivo(tmp_path):
+    snap, tb, _, _ = _samples()
+    out = _node_derive(snap, tb, STRESS, tmp_path)
+    w, nav = out["w"], snap["nav"]
+    # uno shock che manca non vale zero: SOL non è coperto, la stima è un minimo e non si dichiara «nessun freno»
+    sol = next(p["weight"] for p in snap["positions"] if p["symbol"] == "SOL")
+    gross = sum(abs(p["weight"]) for p in snap["positions"])
+    assert out["days"][0]["missing"] == ["SOL"] and out["days"][0]["coverage"] == pytest.approx(1 - abs(sol) / gross) and out["days"][1]["coverage"] == pytest.approx(1.0)
+    assert w["atLeast"] is True and w["coverage"] < 1
+    # stessa grandezza, un solo numero: perdita, patrimonio finale e caduta dal massimo tornano tra loro
+    margins = sum(t["margin"] for t in tb["open"].values())
+    assert w["total"] == pytest.approx(margins + w["gap"]) and w["final"] == pytest.approx(nav["equity"] - w["total"])
+    assert w["loss"] == pytest.approx(w["total"] / nav["equity"]) and w["ddAfter"] == pytest.approx(w["final"] / nav["high_water"] - 1)
+    # senza libro dei trade resta «almeno»
+    assert _node_derive(snap, None, STRESS, tmp_path)["w"]["atLeast"] is True
+    # superato uno scalino, la distanza è dal PROSSIMO e c'è la condizione di rientro (metà della soglia scattata)
+    red = json.loads(json.dumps(snap))
+    red["nav"]["drawdown_pct"] = -0.224
+    b = _node_derive(red, tb, STRESS, tmp_path)["b"]
+    ladder = sorted((st["level"] for st in snap["risk"]["dd_ladder"]), reverse=True)
+    assert b["hit"] == 1 and b["next"]["level"] == ladder[1] and b["distNext"] == pytest.approx(-0.224 - ladder[1]) and b["reentry"] == pytest.approx(ladder[0] / 2)
+    assert b["rows"][0]["hit"] is True and b["rows"][1]["hit"] is False
+    # livelli con i nomi del motore; senza regole nessun nome inventato
+    assert [(x["tier"], x["trade"]) for x in out["lv"]] == [("bassa", None), ("media", None), ("alta", "confermato"), ("alta", "eccezionale")]
+    assert out["gq"] == ["bassa", "media", "alta", "eccezionale"] and out["noRules"]["tier"] is None
+    # trade: giorni contati fino alla data del libro; oltre la durata massima è un'anomalia; freschezza contro il massimo
+    assert all(a["held"] is not None and a["held"] <= 7 and a["over"] is False for a in out["age"]) and out["old"] == dict(held=20, maxHold=7, over=True)
+    assert [f["stale"] for f in out["fresh"]] == [False, True, None]
+
+
+def test_spazi_usano_le_stesse_funzioni_derivate():
+    js = STATIC / "js"
+    oggi = (js / "views" / "oggi.js").read_text(encoding="utf-8")
+    rischio = (js / "views" / "rischio2.js").read_text(encoding="utf-8")
+    mercati = (js / "views" / "mercati.js").read_text(encoding="utf-8")
+    for name, text in (("oggi", oggi), ("rischio2", rischio), ("mercati", mercati)):
+        assert "from '../derive.js'" in text, name
+        for vietato in ("function worstCase", "function applyStress", "function stressDays", "function tradeR", "vol_realized_30d / ", "Math.sqrt(365)", "conto separato"):
+            assert vietato not in text, f"{name}: {vietato}"                                    # nessun secondo calcolo della stessa grandezza
+    assert "worstCase(snap, tb, ctxNow.quant4)" in rischio and "brakes(ctx.snap)" in oggi and "ladderData" in rischio
+    assert "totalNav(snap, tb)" in oggi and "sigmaDay(snap)" in oggi and "tradeAge(" in oggi and "tradeAge(" in mercati and "convLevel(" in mercati
+    derive = (js / "derive.js").read_text(encoding="utf-8")
+    assert not re.search(r"\bdocument\.|\bwindow\.", derive)                                   # funzioni pure: le esegue anche Node nei test
+
+
+def test_esempi_un_solo_insieme_coerente():
+    """Fotografia, barre, libro dei trade e confronto nascono da dashboard/tools/build_samples.py: una sola storia."""
+    snap, tb, ohlc, cmp_ = _samples()
+    day = snap["meta"]["as_of"][:10]
+    bars = ohlc["symbols"]
+    # stesso giorno di riferimento ovunque
+    assert tb["asof"] == day and cmp_["rows"][-1]["data"] == day and snap["equity_curve"][-1]["t"][:10] == day
+    assert all(bars[s]["t"][-1] == day for s in ("BTC", "ETH", "SOL"))
+    # un solo prezzo per strumento: le posizioni sono valorizzate all'ultima chiusura delle barre, il confronto riporta la stessa
+    for p in snap["positions"]:
+        if p["symbol"] in bars:
+            assert p["price"] == pytest.approx(bars[p["symbol"]]["c"][-1]), p["symbol"]
+    assert cmp_["rows"][-1]["btc"] == pytest.approx(bars["BTC"]["c"][-1])
+    # un solo patrimonio: il confronto è la curva della fotografia più il contributo dei trade
+    last = cmp_["rows"][-1]
+    assert last["nuovo_libro"] == pytest.approx(snap["nav"]["equity"]) and last["nuovo_trade"] == pytest.approx(tb["equity"] - tb["start_equity"], abs=0.01)
+    assert last["nuovo_totale"] == pytest.approx(last["nuovo_libro"] + last["nuovo_trade"], abs=0.01)
+    curve = {p["t"][:10]: p["equity"] for p in snap["equity_curve"]}
+    assert all(r["nuovo_libro"] == pytest.approx(curve[r["data"]]) for r in cmp_["rows"] if r["data"] in curve)
+    assert tb["start_equity"] == pytest.approx(cmp_["rows"][0]["nuovo_libro"])                     # il libro lavora sullo stesso capitale
+    # trade costruiti sulle barre: R × rischio = P&L, prezzi dentro la candela del giorno, durata entro il massimo, livelli coerenti con il rischio
+    dates = {s: {d: i for i, d in enumerate(bars[s]["t"])} for s in ("BTC", "ETH", "SOL")}
+    assert len(tb["closed"]) >= 10 and tb["open"]
+    for t in tb["closed"]:
+        b, i, j = bars[t["symbol"]], dates[t["symbol"]][t["opened"]], dates[t["symbol"]][t["closed"]]
+        assert t["pnl"] == pytest.approx(t["R"] * t["risk"], abs=0.02) and t["entry"] == pytest.approx(b["c"][i]) and b["l"][j] - 1e-6 <= t["exit"] <= b["h"][j] + 1e-6
+        assert 1 <= j - i <= 7 and t["tier"] == ("eccezionale" if b["conviction"][i] >= 0.75 else "confermato") and b["conviction"][i] >= 0.60
+    assert tb["equity"] == pytest.approx(tb["start_equity"] + sum(t["pnl"] for t in tb["closed"]), abs=0.05)
+    for sym, t in tb["open"].items():
+        i = dates[sym][t["opened"]]
+        assert t["entry"] == pytest.approx(bars[sym]["c"][i]) and len(bars[sym]["t"]) - 1 - i <= 7
+        assert t["liquidation"] < t["stop"] < t["entry"] and t["risk"] == pytest.approx(t["notional"] * t["initial_stop_distance"], rel=0.01)
+        assert t["margin"] == pytest.approx(t["notional"] / t["leverage"], rel=0.01)
+    # cancelli: nomi e soglie del motore (90 giorni), giorni di paper = lunghezza della storia della fotografia
+    from gerva.live import gates as G
+    gates = {g["name"]: g for g in snap["gates"]}
+    assert gates["Giorni di paper trading"]["target"] == G.MIN_DAYS == 90 and gates["Giorni di paper trading"]["value"] == snap["performance"]["days"]
+    assert "Sharpe in paper (minimo)" not in gates and gates["PSR (Sharpe vero > 0)"]["target"] == G.MIN_PSR
+    # livelli scritti con i nomi del motore
+    for row in tb["shadow"]:
+        for c in row["coins"].values():
+            assert c["conviction_tier"] in ("bassa", "media", "alta") and c["gq_tier"] in ("bassa", "media", "alta", "eccezionale")
+            assert c["conviction_tier"] == ("alta" if c["conviction"] > 0.60 else "media" if c["conviction"] > 0.30 else "bassa")
+    assert all(str(x.get("label", "")).startswith("ESEMPIO") for x in (tb, ohlc, cmp_))
+
+
+def test_demo_tutti_gli_esempi_alla_data_di_oggi_e_regole_dal_motore(client):
+    """In modalità demo gli esempi si spostano insieme a oggi: mai una fotografia «di adesso» accanto a un libro vecchio di giorni."""
+    today = datetime.now(timezone.utc).date().isoformat()
+    snap = client.get("/api/v1/snapshot").json()
+    tb = client.get("/api/v1/tradebook").json()
+    assert snap["meta"]["as_of"][:10] == today and snap["equity_curve"][-1]["t"][:10] == today and tb["asof"] == today and tb["example"] is True
+    assert client.get("/api/v1/market/ohlc?symbol=BTC").json()["t"][-1] == today
+    assert client.get("/api/v1/compare").json()["rows"][-1]["data"] == today
+    btc = tb["open"]["BTC"]
+    assert (datetime.fromisoformat(today) - datetime.fromisoformat(btc["opened"])).days <= 7
+    rules = client.get("/api/v1/health").json()["rules"]
+    assert rules["max_hold_days"] == 7 and rules["score_confirmed"] == 0.60 and rules["score_exceptional"] == 0.75
+    assert rules["conviction_tiers"]["crypto"] == [0.30, 0.60] and set(rules["gq_tiers"]) == {"eccezionale", "alta", "bassa"}
+    if "max_data_age_h" in rules:
+        assert rules["max_data_age_h"]["crypto"] == 36.0
 
 
 # ---------------------------------------------------------------------------

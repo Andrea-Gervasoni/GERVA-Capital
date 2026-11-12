@@ -1,6 +1,6 @@
 {
  "meta": {"fund": "GERVA Capital", "mode": "paper", "as_of": "2026-11-10T20:45:00Z", "base_ccy": "EUR", "version": "5.0.0", "data_label": "DEMO: dati di esempio", "stale_after_s": 120},
- "nav": {"equity": 12197.04, "cash": 2175.11, "start_equity": 10000.0, "high_water": 12339.19, "pnl_day": 42.4, "pnl_day_pct": 0.003488, "pnl_mtd_pct": 0.019804, "pnl_ytd_pct": 0.040431, "pnl_total_pct": 0.219704, "drawdown_pct": -0.01152, "max_drawdown_pct": -0.073208},
+ "nav": {"equity": 12197.04, "cash": 2353.84, "start_equity": 10000.0, "high_water": 12339.19, "pnl_day": 42.4, "pnl_day_pct": 0.003488, "pnl_mtd_pct": 0.019804, "pnl_ytd_pct": 0.040431, "pnl_total_pct": 0.219704, "drawdown_pct": -0.01152, "max_drawdown_pct": -0.073208},
  "equity_curve": [
    {"t": "2025-10-07", "equity": 11434.57, "benchmark": 113.91},
    {"t": "2025-10-08", "equity": 11424.75, "benchmark": 114.45},
@@ -439,33 +439,31 @@
  ],
  "performance": {"cagr": 0.078949, "vol": 0.081853, "sharpe": 0.969, "sortino": 1.4, "calmar": 1.078, "hit_rate_days": 0.520964, "best_month": 0.056703, "worst_month": -0.029943, "psr": 0.9403, "days": 954},
  "exposure": {
-  "gross": 0.895802,
-  "net": 0.821669,
-  "leverage": 0.896,
+  "gross": 0.920238,
+  "net": 0.807015,
+  "leverage": 0.92,
   "max_leverage": 2.0,
   "by_asset_class": [
-    {"name": "Crypto", "gross": 0.365003, "net": 0.365003},
-    {"name": "Azioni", "gross": 0.279742, "net": 0.205609},
-    {"name": "Oro", "gross": 0.144513, "net": 0.144513},
-    {"name": "Obbligazioni", "gross": 0.106544, "net": 0.106544}
+    {"name": "Crypto", "gross": 0.364998, "net": 0.364998},
+    {"name": "Azioni", "gross": 0.303844, "net": 0.190622},
+    {"name": "Oro", "gross": 0.142674, "net": 0.142674},
+    {"name": "Obbligazioni", "gross": 0.108721, "net": 0.108721}
   ],
   "by_venue": [
-    {"name": "IBKR", "gross": 0.530798, "net": 0.456666},
-    {"name": "KRAKEN", "gross": 0.229999, "net": 0.229999},
-    {"name": "BINANCE", "gross": 0.135004, "net": 0.135004}
+    {"name": "IBKR", "gross": 0.55524, "net": 0.442017},
+    {"name": "KRAKEN", "gross": 0.280002, "net": 0.280002},
+    {"name": "BINANCE", "gross": 0.084996, "net": 0.084996}
   ]
  },
  "positions": [
-   {"symbol": "BTC", "venue": "KRAKEN", "strategy": "CR-TREND", "qty": 0.029584, "price": 61842.5, "value": 1829.55, "weight": 0.15, "pnl_day": 14.42, "pnl_open": 153.68},
-   {"symbol": "ETH", "venue": "KRAKEN", "strategy": "CR-TREND", "qty": 0.420876, "price": 2318.4, "value": 975.76, "weight": 0.08, "pnl_day": 7.21, "pnl_open": 49.76},
-   {"symbol": "SOL", "venue": "BINANCE", "strategy": "CR-XSMOM", "qty": 4.747, "price": 141.32, "value": 670.85, "weight": 0.055001, "pnl_day": 5.09, "pnl_open": 75.14},
-   {"symbol": "BNB", "venue": "BINANCE", "strategy": "CR-XSMOM", "qty": 1.0, "price": 548.9, "value": 548.9, "weight": 0.045003, "pnl_day": -2.12, "pnl_open": -12.62},
-   {"symbol": "LINK", "venue": "BINANCE", "strategy": "CR-XSMOM", "qty": 33.16, "price": 12.874, "value": 426.9, "weight": 0.035, "pnl_day": 2.97, "pnl_open": 15.8},
-   {"symbol": "CSPX", "venue": "IBKR", "strategy": "MA-TREND", "qty": 4.0, "price": 571.26, "value": 2285.04, "weight": 0.187344, "pnl_day": 6.78, "pnl_open": 105.11},
-   {"symbol": "SGLN", "venue": "IBKR", "strategy": "MA-TREND", "qty": 38.0, "price": 46.385, "value": 1762.63, "weight": 0.144513, "pnl_day": 3.82, "pnl_open": 119.86},
-   {"symbol": "IBTM", "venue": "IBKR", "strategy": "MA-TREND", "qty": 8.0, "price": 162.44, "value": 1299.52, "weight": 0.106544, "pnl_day": -1.27, "pnl_open": -15.59},
-   {"symbol": "EXS1", "venue": "IBKR", "strategy": "EQ-MR", "qty": 4.0, "price": 168.72, "value": 674.88, "weight": 0.055331, "pnl_day": 3.39, "pnl_open": 12.82},
-   {"symbol": "EQQQ", "venue": "IBKR", "strategy": "EQ-MR", "qty": -1.0, "price": 452.1, "value": -452.1, "weight": -0.037066, "pnl_day": 2.11, "pnl_open": 3.62}
+   {"symbol": "BTC", "venue": "KRAKEN", "strategy": "CR-TREND", "qty": 0.026727, "price": 77582.0, "value": 2073.53, "weight": 0.170003, "pnl_day": 15.26, "pnl_open": 174.18},
+   {"symbol": "ETH", "venue": "KRAKEN", "strategy": "CR-TREND", "qty": 0.594802, "price": 2255.66, "value": 1341.67, "weight": 0.11, "pnl_day": 8.06, "pnl_open": 68.43},
+   {"symbol": "SOL", "venue": "BINANCE", "strategy": "CR-XSMOM", "qty": 10.851, "price": 95.54, "value": 1036.7, "weight": 0.084996, "pnl_day": 5.09, "pnl_open": 116.11},
+   {"symbol": "SPY", "venue": "IBKR", "strategy": "MA-TREND", "qty": 3.0, "price": 755.72, "value": 2267.16, "weight": 0.185878, "pnl_day": 6.78, "pnl_open": 104.29},
+   {"symbol": "GLD", "venue": "IBKR", "strategy": "MA-TREND", "qty": 7.0, "price": 248.6, "value": 1740.2, "weight": 0.142674, "pnl_day": 3.82, "pnl_open": 118.33},
+   {"symbol": "IEF", "venue": "IBKR", "strategy": "MA-TREND", "qty": 14.0, "price": 94.72, "value": 1326.08, "weight": 0.108721, "pnl_day": -1.27, "pnl_open": -15.91},
+   {"symbol": "EFA", "venue": "IBKR", "strategy": "EQ-MR", "qty": 9.0, "price": 83.15, "value": 748.35, "weight": 0.061355, "pnl_day": 3.39, "pnl_open": 14.22},
+   {"symbol": "QQQ", "venue": "IBKR", "strategy": "EQ-MR", "qty": -1.0, "price": 690.49, "value": -690.49, "weight": -0.056611, "pnl_day": 1.27, "pnl_open": 5.52}
  ],
  "risk": {
   "state": "NORMAL",
@@ -475,12 +473,12 @@
   "vol_target": 0.15,
   "vol_realized_30d": 0.082651,
   "limits": [
-    {"name": "Leva lorda", "value": 0.896, "limit": 2.0, "unit": "x", "status": "ok"},
+    {"name": "Leva lorda", "value": 0.92, "limit": 2.0, "unit": "x", "status": "ok"},
     {"name": "Caduta dal massimo", "value": -0.01152, "limit": -0.4, "unit": "%", "status": "ok"},
     {"name": "Perdita a 24 ore", "value": 0.0, "limit": -0.04, "unit": "%", "status": "ok"},
     {"name": "Perdita a 7 giorni", "value": 0.0, "limit": -0.08, "unit": "%", "status": "ok"},
-    {"name": "Peso massimo di uno strumento", "value": 0.187344, "limit": 0.35, "unit": "%", "status": "ok"},
-    {"name": "Esposizione sulla sede crypto", "value": 0.365003, "limit": 0.4, "unit": "%", "status": "warn"}
+    {"name": "Peso massimo di uno strumento", "value": 0.185878, "limit": 0.35, "unit": "%", "status": "ok"},
+    {"name": "Esposizione sulla sede crypto", "value": 0.364998, "limit": 0.4, "unit": "%", "status": "warn"}
   ],
   "dd_ladder": [
     {"level": -0.2, "action": "dimezza l'esposizione", "hit": false},
@@ -489,26 +487,24 @@
   ]
  },
  "strategies": [
-   {"id": "CR-TREND", "name": "Crypto trend BTC+ETH", "status": "active", "allocation": 0.3, "exposure": 0.229999, "pnl_day_pct": 0.0061, "pnl_mtd_pct": 0.0214, "pnl_total_pct": 0.312, "sharpe_live": 0.94, "sharpe_backtest": 1.18, "max_dd": -0.142, "last_signal": "2026-11-10T16:00:00Z", "spark": [101.1, 99.94, 99.32, 100.07, 101.09, 100.98, 99.74, 99.19, 98.71, 98.79, 99.52, 100.77, 98.6, 96.19, 98.12, 99.26, 100.54, 101.55, 100.73, 101.17, 100.6, 101.69, 101.12, 99.28, 98.78, 100.08, 99.95, 99.45, 100.21, 100.96]},
-   {"id": "CR-XSMOM", "name": "Crypto momentum trasversale", "status": "active", "allocation": 0.2, "exposure": 0.135004, "pnl_day_pct": 0.0027, "pnl_mtd_pct": -0.0048, "pnl_total_pct": 0.187, "sharpe_live": 0.71, "sharpe_backtest": 1.02, "max_dd": -0.176, "last_signal": "2026-11-10T00:05:00Z", "spark": [98.94, 98.68, 98.31, 100.0, 99.52, 97.64, 98.43, 99.68, 100.05, 100.72, 101.07, 98.72, 98.84, 98.19, 97.47, 96.3, 96.56, 97.42, 96.7, 98.09, 98.34, 97.7, 99.32, 97.23, 98.36, 98.03, 96.82, 99.74, 99.72, 100.87]},
-   {"id": "EQ-MR", "name": "Azioni ritorno alla media", "status": "paused", "allocation": 0.15, "exposure": 0.092398, "pnl_day_pct": 0.0009, "pnl_mtd_pct": 0.0031, "pnl_total_pct": 0.064, "sharpe_live": null, "sharpe_backtest": 0.86, "max_dd": -0.058, "last_signal": "2026-11-06T15:35:00Z", "spark": [100.16, 99.84, 100.24, 99.72, 100.0, 100.57, 100.4, 100.67, 100.18, 100.29, 100.49, 100.98, 100.3, 100.16, 100.29, 99.37, 99.24, 99.4, 99.34, 99.18, 99.46, 99.83, 99.57, 99.84, 100.17, 100.35, 100.58, 100.31, 99.92, 100.68]},
-   {"id": "MA-TREND", "name": "Trend multi-asset", "status": "active", "allocation": 0.35, "exposure": 0.438401, "pnl_day_pct": 0.0024, "pnl_mtd_pct": 0.0093, "pnl_total_pct": 0.141, "sharpe_live": 1.06, "sharpe_backtest": 0.97, "max_dd": -0.071, "last_signal": "2026-11-10T08:10:00Z", "spark": [99.63, 99.59, 99.88, 99.23, 98.68, 98.29, 98.5, 98.39, 98.65, 98.27, 98.0, 98.55, 98.13, 98.44, 98.55, 97.74, 97.72, 98.71, 98.98, 99.44, 99.64, 99.5, 100.5, 100.6, 101.21, 101.15, 101.75, 101.85, 101.99, 102.25]}
+   {"id": "CR-TREND", "name": "Crypto trend BTC+ETH", "status": "active", "allocation": 0.3, "exposure": 0.280002, "pnl_day_pct": 0.0061, "pnl_mtd_pct": 0.0214, "pnl_total_pct": 0.312, "sharpe_live": 0.94, "sharpe_backtest": 1.18, "max_dd": -0.142, "last_signal": "2026-11-10T16:00:00Z", "spark": [101.1, 99.94, 99.32, 100.07, 101.09, 100.98, 99.74, 99.19, 98.71, 98.79, 99.52, 100.77, 98.6, 96.19, 98.12, 99.26, 100.54, 101.55, 100.73, 101.17, 100.6, 101.69, 101.12, 99.28, 98.78, 100.08, 99.95, 99.45, 100.21, 100.96]},
+   {"id": "CR-XSMOM", "name": "Crypto momentum trasversale", "status": "active", "allocation": 0.2, "exposure": 0.084996, "pnl_day_pct": 0.0027, "pnl_mtd_pct": -0.0048, "pnl_total_pct": 0.187, "sharpe_live": 0.71, "sharpe_backtest": 1.02, "max_dd": -0.176, "last_signal": "2026-11-10T00:05:00Z", "spark": [98.94, 98.68, 98.31, 100.0, 99.52, 97.64, 98.43, 99.68, 100.05, 100.72, 101.07, 98.72, 98.84, 98.19, 97.47, 96.3, 96.56, 97.42, 96.7, 98.09, 98.34, 97.7, 99.32, 97.23, 98.36, 98.03, 96.82, 99.74, 99.72, 100.87]},
+   {"id": "EQ-MR", "name": "Azioni ritorno alla media", "status": "paused", "allocation": 0.15, "exposure": 0.117966, "pnl_day_pct": 0.0009, "pnl_mtd_pct": 0.0031, "pnl_total_pct": 0.064, "sharpe_live": null, "sharpe_backtest": 0.86, "max_dd": -0.058, "last_signal": "2026-11-06T15:35:00Z", "spark": [100.16, 99.84, 100.24, 99.72, 100.0, 100.57, 100.4, 100.67, 100.18, 100.29, 100.49, 100.98, 100.3, 100.16, 100.29, 99.37, 99.24, 99.4, 99.34, 99.18, 99.46, 99.83, 99.57, 99.84, 100.17, 100.35, 100.58, 100.31, 99.92, 100.68]},
+   {"id": "MA-TREND", "name": "Trend multi-asset", "status": "active", "allocation": 0.35, "exposure": 0.437273, "pnl_day_pct": 0.0024, "pnl_mtd_pct": 0.0093, "pnl_total_pct": 0.141, "sharpe_live": 1.06, "sharpe_backtest": 0.97, "max_dd": -0.071, "last_signal": "2026-11-10T08:10:00Z", "spark": [99.63, 99.59, 99.88, 99.23, 98.68, 98.29, 98.5, 98.39, 98.65, 98.27, 98.0, 98.55, 98.13, 98.44, 98.55, 97.74, 97.72, 98.71, 98.98, 99.44, 99.64, 99.5, 100.5, 100.6, 101.21, 101.15, 101.75, 101.85, 101.99, 102.25]}
  ],
  "orders": [
-   {"t": "2026-11-10T16:00:14Z", "symbol": "BTC", "side": "BUY", "qty": 0.00412, "price": 61790.0, "status": "filled", "strategy": "CR-TREND", "venue": "KRAKEN", "reason": ""},
-   {"t": "2026-11-10T16:00:09Z", "symbol": "ETH", "side": "BUY", "qty": 0.085, "price": 2316.75, "status": "filled", "strategy": "CR-TREND", "venue": "KRAKEN", "reason": ""},
-   {"t": "2026-11-10T14:31:52Z", "symbol": "CSPX", "side": "BUY", "qty": 1, "price": 570.88, "status": "pending", "strategy": "MA-TREND", "venue": "IBKR", "reason": ""},
-   {"t": "2026-11-10T08:10:41Z", "symbol": "SGLN", "side": "BUY", "qty": 12, "price": 46.31, "status": "filled", "strategy": "MA-TREND", "venue": "IBKR", "reason": ""},
-   {"t": "2026-11-10T08:10:37Z", "symbol": "IBTM", "side": "SELL", "qty": 2, "price": 162.58, "status": "filled", "strategy": "MA-TREND", "venue": "IBKR", "reason": ""},
-   {"t": "2026-11-10T00:05:33Z", "symbol": "SOL", "side": "BUY", "qty": 1.25, "price": 140.96, "status": "filled", "strategy": "CR-XSMOM", "venue": "BINANCE", "reason": ""},
+   {"t": "2026-11-10T16:00:14Z", "symbol": "BTC", "side": "BUY", "qty": 0.00412, "price": 77504.42, "status": "filled", "strategy": "CR-TREND", "venue": "KRAKEN", "reason": ""},
+   {"t": "2026-11-10T16:00:09Z", "symbol": "ETH", "side": "BUY", "qty": 0.085, "price": 2253.4, "status": "filled", "strategy": "CR-TREND", "venue": "KRAKEN", "reason": ""},
+   {"t": "2026-11-10T14:31:52Z", "symbol": "SPY", "side": "BUY", "qty": 1, "price": 754.96, "status": "pending", "strategy": "MA-TREND", "venue": "IBKR", "reason": ""},
+   {"t": "2026-11-10T08:10:41Z", "symbol": "GLD", "side": "BUY", "qty": 2, "price": 248.31, "status": "filled", "strategy": "MA-TREND", "venue": "IBKR", "reason": ""},
+   {"t": "2026-11-10T08:10:37Z", "symbol": "IEF", "side": "SELL", "qty": 2, "price": 94.8, "status": "filled", "strategy": "MA-TREND", "venue": "IBKR", "reason": ""},
+   {"t": "2026-11-10T00:05:33Z", "symbol": "SOL", "side": "BUY", "qty": 1.25, "price": 95.35, "status": "filled", "strategy": "CR-XSMOM", "venue": "BINANCE", "reason": ""},
    {"t": "2026-11-10T00:05:31Z", "symbol": "AVAX", "side": "BUY", "qty": 28.0, "price": 23.412, "status": "rejected", "strategy": "CR-XSMOM", "venue": "BINANCE", "reason": "Esposizione cripto oltre il limite dopo l'ordine (41,2% > 40%)"},
-   {"t": "2026-11-10T00:05:28Z", "symbol": "LINK", "side": "SELL", "qty": 9.5, "price": 12.902, "status": "filled", "strategy": "CR-XSMOM", "venue": "BINANCE", "reason": ""},
-   {"t": "2026-11-09T16:00:11Z", "symbol": "BTC", "side": "SELL", "qty": 0.0023, "price": 61105.0, "status": "filled", "strategy": "CR-TREND", "venue": "KRAKEN", "reason": ""},
-   {"t": "2026-11-07T08:10:22Z", "symbol": "CSPX", "side": "BUY", "qty": 1, "price": 566.42, "status": "cancelled", "strategy": "MA-TREND", "venue": "IBKR", "reason": "Non eseguito entro la chiusura: ordine limite ritirato"},
-   {"t": "2026-11-06T15:35:48Z", "symbol": "EQQQ", "side": "SELL", "qty": 1, "price": 453.8, "status": "filled", "strategy": "EQ-MR", "venue": "IBKR", "reason": ""},
-   {"t": "2026-11-06T15:35:44Z", "symbol": "EXS1", "side": "BUY", "qty": 4, "price": 167.94, "status": "filled", "strategy": "EQ-MR", "venue": "IBKR", "reason": ""},
-   {"t": "2026-11-06T00:05:19Z", "symbol": "BNB", "side": "BUY", "qty": 0.32, "price": 541.2, "status": "filled", "strategy": "CR-XSMOM", "venue": "BINANCE", "reason": ""},
-   {"t": "2026-11-05T16:00:07Z", "symbol": "ETH", "side": "SELL", "qty": 0.04, "price": 2287.1, "status": "filled", "strategy": "CR-TREND", "venue": "KRAKEN", "reason": ""}
+   {"t": "2026-11-09T16:00:11Z", "symbol": "BTC", "side": "SELL", "qty": 0.0023, "price": 77368.8, "status": "filled", "strategy": "CR-TREND", "venue": "KRAKEN", "reason": ""},
+   {"t": "2026-11-07T08:10:22Z", "symbol": "SPY", "side": "BUY", "qty": 1, "price": 772.31, "status": "cancelled", "strategy": "MA-TREND", "venue": "IBKR", "reason": "Non eseguito entro la chiusura: ordine limite ritirato"},
+   {"t": "2026-11-06T15:35:48Z", "symbol": "QQQ", "side": "SELL", "qty": 1, "price": 725.61, "status": "filled", "strategy": "EQ-MR", "venue": "IBKR", "reason": ""},
+   {"t": "2026-11-06T15:35:44Z", "symbol": "EFA", "side": "BUY", "qty": 4, "price": 82.94, "status": "filled", "strategy": "EQ-MR", "venue": "IBKR", "reason": ""},
+   {"t": "2026-11-05T16:00:07Z", "symbol": "ETH", "side": "SELL", "qty": 0.04, "price": 2324.55, "status": "filled", "strategy": "CR-TREND", "venue": "KRAKEN", "reason": ""}
  ],
  "system": {
   "heartbeat_age_s": 4,
@@ -534,13 +530,14 @@
    {"t": "2026-11-04T06:12:40Z", "level": "critical", "msg": "IBKR Gateway non raggiungibile per 7 minuti: riconnesso automaticamente"}
  ],
  "gates": [
-   {"name": "Giorni di paper trading (motore v5)", "value": 12, "target": 60, "unit": "giorni", "ok": false},
-   {"name": "Ordini eseguiti in paper", "value": 37, "target": 100, "unit": "ordini", "ok": false},
-   {"name": "Giorni senza errori critici", "value": 6, "target": 30, "unit": "giorni", "ok": false},
-   {"name": "Sharpe in paper (minimo)", "value": 0.92, "target": 0.5, "unit": "", "ok": true},
-   {"name": "Scostamento paper vs backtest (massimo)", "value": 0.021, "target": 0.05, "unit": "%", "ok": true},
-   {"name": "Drawdown massimo in paper (limite)", "value": 0.031, "target": 0.1, "unit": "%", "ok": true},
-   {"name": "Riconciliazioni con il broker riuscite", "value": 12, "target": 12, "unit": "giorni", "ok": true}
+   {"name": "Giorni di paper trading", "value": 954, "target": 90, "unit": "giorni", "ok": true},
+   {"name": "Disponibilita' del ciclo", "value": 0.996, "target": 0.99, "unit": "%", "ok": true},
+   {"name": "Ordini non riconciliati", "value": 0, "target": 0, "unit": "ordini", "ok": true},
+   {"name": "KILL scattati", "value": 0, "target": 0, "unit": "eventi", "ok": true},
+   {"name": "Caduta massima in paper", "value": -0.073208, "target": -0.2, "unit": "%", "ok": true},
+   {"name": "PSR (Sharpe vero > 0)", "value": 0.94, "target": 0.6, "unit": "", "ok": true},
+   {"name": "Scostamento dal backtest", "value": 0.021, "target": 0.03, "unit": "%", "ok": true},
+   {"name": "Costi reali / costi ipotizzati", "value": null, "target": 1.5, "unit": "x", "ok": false}
  ],
  "ai": {
   "overlay": {
@@ -555,10 +552,9 @@
   },
   "regime": {"stato": "teso", "punteggio": 2.0, "scala_esposizione": false},
   "conviction": [
-    {"asset": "BTC", "score": 0.72, "livello": "alta"},
-    {"asset": "ETH", "score": 0.45, "livello": "media"},
-    {"asset": "SPY", "score": 0.64, "livello": "media"},
-    {"asset": "QQQ", "score": 0.4, "livello": "bassa"}
+    {"asset": "BTC", "score": 0.545455, "livello": "media"},
+    {"asset": "ETH", "score": 0.363636, "livello": "media"},
+    {"asset": "SOL", "score": 0.454545, "livello": "media"}
   ]
  }
 }

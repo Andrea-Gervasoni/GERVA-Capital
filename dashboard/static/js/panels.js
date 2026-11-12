@@ -8,6 +8,7 @@
 // Nessun colore qui: classi CSS e token. Soglie e tetti arrivano sempre dai dati, mai scritti nella pagina.
 
 import { bindTip, onResize } from './charts.js';
+import { tradeR } from './derive.js';
 import { h, s, icon } from './dom.js';
 import { DASH, fmtMoney, fmtNum, fmtPct, fmtPctSigned, num, str } from './format.js';
 import { gloss } from './glossary.js';
@@ -118,7 +119,7 @@ export function brakeLadder(host, { compact = false, label = 'Scala dei freni' }
     if (!d) { svg.setAttribute('height', 0); return; }
     const steps = (d.steps || []).filter((st) => num(st.level) != null).sort((a, b) => b.level - a.level);
     const deepest = steps.length ? steps[steps.length - 1].level : -0.4;
-    const lo = Math.min(deepest * 1.15, (d.dd || 0) - 0.02, d.worst ? (d.dd || 0) - d.worst.loss - 0.03 : 0);
+    const lo = Math.min(deepest * 1.15, (d.dd || 0) - 0.02, d.worst && d.worst.ddAfter != null ? d.worst.ddAfter - 0.03 : 0);
     const hi = compact ? 0.012 : 0.04;                              // un po' di spazio a sinistra dello zero per i giorni in guadagno
     const narrow = w < 560;
     const labelW = compact || narrow ? 0 : 128;
@@ -160,7 +161,7 @@ export function brakeLadder(host, { compact = false, label = 'Scala dei freni' }
         const flip = x > right - (compact ? 30 : 120);
         svg.append(s('line', { class: `bl-tick bl-tick--${t.kind}`, x1: x, x2: x, y1: y - (compact ? 13 : 24), y2: y + laneH / 2 + 1 }),
           s('text', { class: 'bl-tick-label', x: flip ? x - 5 : x + 5, y: y - (compact ? 15 : 26), 'text-anchor': flip ? 'end' : null }, t.text),
-          !compact && t.action && !narrow ? s('text', { class: 'bl-tick-note', x: flip ? x - 5 : x + 5, y: y - 13, 'text-anchor': flip ? 'end' : null }, fit(t.action, flip ? 150 : (i + 1 < ticks.length ? xOf(ticks[i + 1].level) : right) - x - 12)) : null, hit);
+          !compact && t.action && !narrow && !flip ? s('text', { class: 'bl-tick-note', x: flip ? x - 5 : x + 5, y: y - 13, 'text-anchor': flip ? 'end' : null }, fit(t.action, flip ? 150 : (i + 1 < ticks.length ? xOf(ticks[i + 1].level) : right) - x - 12)) : null, hit);
       });
       if (value != null && !unknown) {
         const x = xOf(Math.max(lo, Math.min(hi, value)));
@@ -180,7 +181,7 @@ export function brakeLadder(host, { compact = false, label = 'Scala dei freni' }
     const y0 = top + laneH / 2;
     lane(y0, 'Caduta dal massimo', d.peak != null ? `dal picco di ${money(d.peak)}` : '', d.dd, zones,
       steps.map((st, i) => ({ level: st.level, text: fmtPct(st.level, 0), action: str(st.action), kind: kinds[Math.min(i, 2)] })),
-      d.worst && d.dd != null ? d.dd - d.worst.loss : null, d.fresh === false);
+      d.worst && d.worst.ddAfter != null ? d.worst.ddAfter : null, d.fresh === false);
     if (d.dd != null && d.fresh !== false) {
       const x = xOf(d.dd);
       svg.append(s('text', { class: 'bl-now-label', x: Math.max(left, x - 4).toFixed(1), y: y0 + 26 }, `adesso ${fmtPctSigned(d.dd, 1)}`));
@@ -194,15 +195,16 @@ export function brakeLadder(host, { compact = false, label = 'Scala dei freni' }
       svg.append(s('line', { class: 'bl-sim', x1: x, x2: x, y1: y0 - laneH / 2 - 2, y2: y0 + (compact ? 14 : 34) }),
         compact ? null : s('text', { class: 'bl-note', x: x + 5, y: y0 + 42 }, d.simRef.label));
     }
-    if (!compact && d.worst && d.dd != null) {
-      const xw = xOf(Math.max(lo, d.dd - d.worst.loss));
-      svg.append(s('text', { class: 'bl-worst-label', x: Math.min(xw, right - 4).toFixed(1), y: y0 + 60, 'text-anchor': xw > right - 180 ? 'end' : 'middle' }, `peggior caso di oggi ${fmtPctSigned(d.dd - d.worst.loss, 1)}`));
+    if (!compact && d.worst && d.worst.ddAfter != null) {
+      const xw = xOf(Math.max(lo, d.worst.ddAfter));
+      svg.append(s('text', { class: 'bl-worst-label', x: Math.min(xw, right - 4).toFixed(1), y: y0 + 60, 'text-anchor': xw > right - 180 ? 'end' : 'middle' }, `peggior caso di oggi ${d.worst.atLeast ? 'almeno ' : ''}${fmtPctSigned(d.worst.ddAfter, 1)}`));
     }
     lanes.forEach((l, i) => {
       const y = y0 + 66 + (i + 1) * gap - (narrow ? 0 : 20);
       lane(y, l.label, l.sub || '', l.value, [{ from: l.limit, to: lo, kind: 'warn' }], [{ level: l.limit, text: fmtPct(l.limit, 0), action: str(l.action), kind: 'warn' }],
         d.worst && l.value != null ? Math.min(l.value, 0) - d.worst.loss : null, d.fresh === false);
       if (l.value != null && d.fresh !== false) svg.append(s('text', { class: 'bl-now-label', x: Math.max(left, xOf(Math.min(hi, l.value)) - 4).toFixed(1), y: y + 24 }, fmtPctSigned(l.value, 2)));
+      else if (l.value == null) svg.append(s('text', { class: 'bl-note', x: left, y: y + 24 }, 'non calcolabile con i dati presenti'));
     });
     if (!compact) {
       const yA = H - 6;
@@ -218,16 +220,6 @@ export function brakeLadder(host, { compact = false, label = 'Scala dei freni' }
 // ---- righello del trade ---------------------------------------------------------------------------------------------------------
 
 const px = (v) => (v == null ? DASH : fmtNum(v, Math.abs(v) >= 1000 ? 0 : Math.abs(v) >= 10 ? 2 : 4));
-
-/** R corrente di un trade: (prezzo − entrata) / (entrata − stop iniziale), con il segno del lato. */
-export function tradeR(trade, last) {
-  const entry = num(trade.entry);
-  const stop = num(trade.stop);
-  const side = num(trade.side) === -1 ? -1 : 1;
-  const dist = num(trade.initial_stop_distance) != null && entry ? entry * trade.initial_stop_distance : entry != null && stop != null ? Math.abs(entry - stop) : null;
-  if (entry == null || last == null || !dist) return null;
-  return (side * (last - entry)) / dist;
-}
 
 /**
  * tradeRuler(host) → { update({ trade, last }) } — liquidazione, stop, entrata e ultima chiusura sulla stessa scala di prezzo.
@@ -291,3 +283,4 @@ export function tradeRuler(host, { label = 'Livelli del trade' } = {}) {
   return { update(next) { d = next; draw(host.clientWidth, true); } };
 }
 
+export { tradeR };

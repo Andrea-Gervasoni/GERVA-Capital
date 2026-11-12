@@ -565,3 +565,10 @@ body[data-level="terminale"] .brand__name { font-size: 11px; letter-spacing: 0.0
 .band__item[data-kind="crit"] b { background: var(--crit); color: var(--on-crit); }
 .nav__key { box-shadow: none; padding: 0; font-size: 11px; }
 .sources { color: var(--text-2); }
+.is-stale .trade__r, .is-stale .tr { opacity: 0.55; filter: saturate(0.3); }
+/* giro 2, blocco A: righe chiave-valore che vanno a capo invece di tagliare il numero; tabella dei freni senza scorrimento */
+.kv > div { flex-wrap: wrap; white-space: normal; }
+.kv .v { margin-left: auto; overflow: visible; text-align: right; }
+.panel .table th, .panel .table td { padding-left: 8px; padding-right: 8px; }
+.panel .table thead th { white-space: normal; }
+.table td.is-action { min-width: 0; }

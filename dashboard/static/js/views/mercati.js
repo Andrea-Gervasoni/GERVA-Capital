@@ -9,13 +9,13 @@ import { segmented } from '../components.js';
 import { h, icon } from '../dom.js';
 import { arr, fmtDate, fmtDayMonth, fmtMoney, fmtNum, fmtPct, fmtPctSigned, fmtSigned, num, obj, parseTs, str } from '../format.js';
 import { getOhlc, getSymbols, getTradebook } from '../market.js';
-import { emptyState, panel, provOf, provTag, tradeR } from '../panels.js';
+import { convLevel, freshness, gqLevel, tradeAge, tradeR } from '../derive.js';
+import { emptyState, panel, provOf, provTag } from '../panels.js';
 
 const DAY = 86400000;
 const RANGES = [{ value: 1, label: '1M' }, { value: 3, label: '3M' }, { value: 6, label: '6M' }, { value: 12, label: '1A' }, { value: 0, label: 'Tutto' }];
 const KIND = { crypto: 'crypto', etf: 'ETF', indice: 'indice' };
 const px = (v) => (v == null ? 'n.d.' : fmtNum(v, Math.abs(v) >= 1000 ? 0 : Math.abs(v) >= 10 ? 2 : 4));
-const tier = (v, th) => (v == null || !th ? '' : v >= th[1] ? 'eccezionale' : v >= th[0] ? 'alta' : 'media');
 
 export function mount(root, api) {
   let ctxNow = null;
@@ -100,16 +100,20 @@ export function mount(root, api) {
     if (!rows.length) { listBox.replaceChildren(emptyState('Nessuno strumento', 'La cache dei prezzi è vuota: il motore non ha ancora scaricato le barre giornaliere.')); return; }
     pList.setProv(example ? provTag('demo') : null);
     const lv = ctxNow.lv;
+    const rules = obj(obj(ctxNow.health).rules);
     const open = new Set(openTrades().map((t) => str(t.symbol)));
     listBox.replaceChildren(...rows.map((r) => {
       loadRow(r.symbol);
       const c = cache.get(r.symbol);
-      const t = c && !c.missing ? tier(c.conv, obj(c.th).conviction) : '';
+      const lvl = c && !c.missing ? convLevel(c.conv, r.kind === 'crypto' ? 'crypto' : 'index', rules) : null;
+      const fr = c && !c.missing ? freshness(c.t, ctxNow.now, r.kind === 'crypto' ? 'crypto' : 'ibkr', rules) : null;
+      const g = c && c.gq != null ? gqLevel(c.gq, rules) : null;
       const row = h('div', { class: 'wl__row', role: 'option', 'aria-selected': String(r.symbol === sel), dataset: { sym: r.symbol } },
         h('div', { class: 'wl__sym' }, h('b', { text: r.symbol }), h('small', { text: KIND[r.kind] || r.kind })),
         h('div', { class: 'wl__px num' }, !c ? '…' : c.missing ? 'n.d.' : px(c.last), c && c.chg != null ? h('small', { class: c.chg > 0 ? 'pos' : c.chg < 0 ? 'neg' : '' }, c.chg === 0 ? null : icon(c.chg > 0 ? 'up' : 'down', 'icon--solid'), fmtPctSigned(c.chg, 2)) : null),
-        h('div', { class: 'wl__sig' }, c && c.conv != null ? h('span', { class: `chip chip--xs ${t === 'media' ? '' : 'chip--accent'}`, title: 'Conviction del motore' }, lv === 'semplice' ? `conviction ${t}` : `conv ${fmtNum(c.conv, 2)}`) : c && !c.missing ? h('small', { text: 'conviction non calcolata' }) : null,
-          open.has(r.symbol) ? h('span', { class: 'tag tag--paper', text: 'trade aperto' }) : lv !== 'semplice' && c && c.gq != null ? h('small', { class: 'num', text: `GQ ${fmtSigned(c.gq, 2)}` }) : null));
+        h('div', { class: 'wl__sig' }, fr && fr.stale ? h('span', { class: 'chip chip--xs chip--warn', title: `Ultima barra oltre l'età massima (${fmtNum(fr.maxHours, 0)} ore)` }, `dati del ${fmtDayMonth(fr.day, true)}`)
+            : c && c.conv != null ? h('span', { class: `chip chip--xs ${lvl.trade ? 'chip--accent' : ''}`, title: 'Conviction del motore: bassa, media, alta; il libro dei trade apre da «confermato»' }, lv === 'semplice' ? `conviction ${lvl.text}` : `conv ${fmtNum(c.conv, 2)} · ${lvl.text}`) : c && !c.missing ? h('small', { text: 'conviction non calcolata' }) : null,
+          open.has(r.symbol) ? h('span', { class: 'tag tag--paper', text: 'trade aperto' }) : lv !== 'semplice' && c && c.gq != null ? h('small', { class: 'num', text: `GQ ${fmtSigned(c.gq, 2)}${g ? ` · ${g}` : ''}` }) : null));
       row.addEventListener('click', () => select(r.symbol));
       return row;
     }));
@@ -151,8 +155,10 @@ export function mount(root, api) {
     chart.setData({ ...bars, markers: tb ? markersFor(bars) : [] }, { keepView: !reset, months: months || 240 });
     if (reset && !months) chart.setRange(null);
     const noSig = !bars.conviction && !bars.gq;
-    pChart.setProv(provTag(bars.example ? 'demo' : 'real', bars.example ? 'Esempio' : 'Prezzi reali'), openTrades().some((t) => str(t.symbol) === sel) ? provTag(tb && tb.example ? 'demo' : 'paper', 'Trade') : null);
-    chartNote.replaceChildren(`${sel} · ultima barra chiusa: ${fmtDate(c.t, true)}.`, noSig ? ' Conviction e indicatore GQ non sono calcolati per questo strumento.' : bars.gq ? ' L\'indicatore GQ è in ombra: si osserva, non decide.' : '');
+    pChart.setProv(provTag(bars.example ? 'demo' : 'real', bars.example ? 'Esempio' : 'Prezzi reali'), openTrades().some((t) => str(t.symbol) === sel) ? provTag(tb && tb.example ? 'demo' : 'paper', tb && tb.example ? 'Trade · esempio' : 'Trade · paper') : null);
+    const kindSel = (arr(symbols).find((x) => str(x.symbol) === sel) || {}).kind;
+    const frSel = freshness(c.t, ctxNow.now, kindSel === 'crypto' ? 'crypto' : 'ibkr', obj(obj(ctxNow.health).rules));
+    chartNote.replaceChildren(frSel.stale ? h('b', { class: 'neg', text: `Dati fermi: l'ultima barra è del ${fmtDate(c.t, true)} (oltre ${fmtNum(frSel.maxHours, 0)} ore). ` }) : `${sel} · ultima barra chiusa: ${fmtDate(c.t, true)}.`, noSig ? ' Conviction e indicatore GQ non sono calcolati per questo strumento.' : bars.gq ? ' L\'indicatore GQ è in ombra: si osserva, non decide.' : '');
     chartNote.classList.remove('only-semplice');
   }
 
@@ -194,10 +200,10 @@ export function mount(root, api) {
           const c = cache.get(sym);
           const last = c && !c.missing ? c.last : null;
           const r = tradeR(t, last);
-          const opened = parseTs(str(t.opened));
+          const age = tradeAge(t, tb, obj(obj(ctxNow.health).rules));
           return { sym, trade: t, cells: [h('b', { text: sym }), num(t.side) === -1 ? 'ribasso' : 'rialzo', `${fmtNum(t.leverage, 1)}x`, px(num(t.entry)), px(num(t.stop)), px(num(t.liquidation)), last == null ? '…' : px(last),
             { v: r == null ? 'n.d.' : `${fmtSigned(r, 2)} R`, cls: r > 0 ? 'pos' : r < 0 ? 'neg' : '' }, last != null && num(t.stop) ? fmtPctSigned(t.stop / last - 1, 1) : 'n.d.', fmtMoney(num(t.margin), ccy), fmtMoney(num(t.risk), ccy),
-            opened == null ? 'n.d.' : fmtNum(Math.max(1, Math.round((now - opened) / DAY)), 0), ...(full ? [`${num(t.mae) == null ? 'n.d.' : fmtSigned(t.mae, 2)} / ${num(t.mfe) == null ? 'n.d.' : fmtSigned(t.mfe, 2)}`, str(t.tier) || 'n.d.'] : [])] };
+            { v: age.held == null ? 'n.d.' : `${fmtNum(age.held, 0)}${age.maxHold == null ? '' : ` di ${fmtNum(age.maxHold, 0)}`}${age.over ? ' · oltre il massimo' : ''}`, cls: age.over ? 'neg' : '' }, ...(full ? [`${num(t.mae) == null ? 'n.d.' : fmtSigned(t.mae, 2)} / ${num(t.mfe) == null ? 'n.d.' : fmtSigned(t.mfe, 2)}`, str(t.tier) || 'n.d.'] : [])] };
         }), (r) => { select(r.sym); focusTrade(r.trade); }));
       }
       const margin = open.reduce((a, t) => a + (num(t.margin) || 0), 0);
