@@ -20,7 +20,8 @@ for c in ("BTC", "ETH", "SOL"):
 print(pd.DataFrame(rows).set_index("coin").round(3).T.to_string())
 
 print("\n=== B) LEAD-LAG Binance perp -> Hyperliquid e -> Kraken Futures")
-LAT = {"0": 0, "200ms": 2, "500ms": 5, "1s": 10}
+LAT = {"0": 0, "200ms": 2, "500ms": 5, "700ms": 7, "1s": 10}
+ALL = []
 for c in ("BTC", "ETH", "SOL"):
     cc = {}; ev = []
     for s in SEGS:
@@ -44,14 +45,24 @@ for c in ("BTC", "ETH", "SOL"):
                     for hk, h in (("5s", 50), ("30s", 300)):
                         gross = sg * (m[keep + l + h] / m[keep + l] - 1) * 1e4
                         tk = np.where(sg > 0, b[keep + l + h] / a[keep + l] - 1, 1 - a[keep + l + h] / b[keep + l]) * 1e4
-                        ev.append(pd.DataFrame(dict(v=v, X=X, L=lk, h=hk, lead=np.abs(r5[keep - 100]), gia=sg * own[keep - 100], gross=gross, taker_no_fee=tk)))
+                        ev.append(pd.DataFrame(dict(seg=s, cl=keep // 30, v=v, X=X, L=lk, h=hk, lead=np.abs(r5[keep - 100]), gia=sg * own[keep - 100], gross=gross, taker_no_fee=tk)))
     C = pd.Series({k: np.nanmean(v) for k, v in cc.items()}).unstack(1)[["-1s", "-500ms", "0", "200ms", "500ms", "1s", "2s", "5s"]]
     print(f"\n{c}: corr( rend. 1s Binance fino a t , rend. 1s della sede da t+l a t+l+1s )  [l<0: finestre sovrapposte]"); print(C.round(3).to_string())
-    E = pd.concat(ev)
+    E = pd.concat(ev); ALL.append(E.assign(coin=c))
     print(f"{c}: evento = mid Binance mosso >= X bp in 500 ms. 'gia' = quanto la sede si e' gia' mossa; gross = mid->mid dopo latenza L; taker_no_fee = attraversando lo spread (commissioni: HL 9 bp a/r, Kraken ~10 bp a/r)")
     print(E.groupby(["v", "X", "h", "L"]).agg(n=("gross", "size"), lead=("lead", "mean"), gia=("gia", "mean"), gross=("gross", "mean"), taker_no_fee=("taker_no_fee", "mean"),
           t=("gross", lambda x: x.mean() / (x.std() / np.sqrt(len(x)) + 1e-12))).round(2).to_string())
 
+P = pd.concat(ALL); P["net_taker"] = P.taker_no_fee - np.where(P.v == "HL", 9.0, 10.0)
+print("\nTUTTE E TRE LE MONETE insieme: net_taker = dopo spread e commissioni (HL 9 bp, Kraken 10 bp a/r); win = quota di eventi con netto > 0")
+print(P[P.L.isin(["500ms", "700ms", "1s"])].groupby(["v", "X", "h", "L"]).agg(n=("gross", "size"), lead=("lead", "mean"), gross=("gross", "mean"), taker_no_fee=("taker_no_fee", "mean"),
+      net_taker=("net_taker", "mean"), mediana=("net_taker", "median"), t_net=("net_taker", lambda x: x.mean() / (x.std() / np.sqrt(len(x)) + 1e-12)), win=("net_taker", lambda x: (x > 0).mean())).round(2).to_string())
+print("\nStessi eventi raggruppati in grappoli indipendenti (le tre monete saltano insieme: un grappolo = 3 s). HL, uscita a 30 s e a 5 s:")
+for X in (4, 6, 8):
+    for hk in ("5s", "30s"):
+        for lk in ("500ms", "700ms", "1s"):
+            x = P[(P.v == "HL") & (P.X == X) & (P.h == hk) & (P.L == lk)]; g = x.groupby(["seg", "cl"]).net_taker.mean()
+            if len(g) > 1: print(f"  X>={X} bp, uscita {hk}, L={lk}: grappoli {len(g)} ({len(g)/hours:.1f}/ora), netto medio {g.mean():+.2f} bp, t {g.mean()/(g.std(ddof=1)/np.sqrt(len(g))):+.2f}, positivi {(g>0).mean():.0%}")
 print("\n=== C) PREVEDIBILITA' del mid Hyperliquid (campioni ogni 1 s; fit prima meta', verifica seconda meta')")
 HZ = {"1s": 10, "5s": 50, "30s": 300, "1m": 600, "5m": 3000}
 for c in ("BTC", "ETH", "SOL"):
