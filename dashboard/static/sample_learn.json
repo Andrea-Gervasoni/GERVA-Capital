@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-12 06:03:47.832645+00:00",
+ "generated": "2026-11-12 06:05:14.634073+00:00",
  "simulated": true,
  "note": "I trade 'sim' sono simulazioni storiche; i trade 'paper' sono del conto di prova. Nessuna regola e' attiva senza approvazione.",
  "evaluation": {
@@ -127,7 +127,152 @@
   }
  ],
  "improvement": {
-  "proposed": [],
+  "proposed": [
+   {
+    "id": "473a8ad162",
+    "rule": "se atr_pct > 0.07160833333333333: salta il trade",
+    "origin": "valutazione",
+    "state": "RESPINTA",
+    "checks": {
+     "numerosita": true,
+     "quota": true,
+     "in_campione": false,
+     "fuori_campione": false,
+     "walk_forward": false,
+     "soglie_vicine": true
+    },
+    "fails": [
+     "in scelta R medio 0.10988102182605687, t 0.7794567286353519: serve t <= -2.00 dopo 1 ipotesi",
+     "in verifica i trade colpiti rendono 0.4209522226667174 contro 0.15369760902917137 degli altri",
+     "regge nel 40% degli anni (5 anni utili): serve il 60%"
+    ],
+    "threshold_t": 2.0,
+    "k_tried": 1,
+    "selection": {
+     "n": 95,
+     "mean": 0.10988102182605687,
+     "rest": 0.4091740010458895,
+     "t0": 0.7794567286353519
+    },
+    "verification": {
+     "n": 36,
+     "mean": 0.4209522226667174,
+     "rest": 0.15369760902917137,
+     "t0": 1.8947216841971501
+    },
+    "walk_forward": 0.4,
+    "gain_R_selection": -10.438697073475403,
+    "gain_R_verification": -15.154280016001826
+   },
+   {
+    "id": "7d4b91c50a",
+    "rule": "se atr_pct > 0.07160833333333333: dimezza la taglia",
+    "origin": "valutazione",
+    "state": "RESPINTA",
+    "checks": {
+     "numerosita": true,
+     "quota": true,
+     "in_campione": false,
+     "fuori_campione": false,
+     "walk_forward": false,
+     "soglie_vicine": true
+    },
+    "fails": [
+     "in scelta R medio 0.10988102182605687, t 0.7794567286353519: serve t <= -2.00 dopo 2 ipotesi",
+     "in verifica i trade colpiti rendono 0.4209522226667174 contro 0.15369760902917137 degli altri",
+     "regge nel 40% degli anni (5 anni utili): serve il 60%"
+    ],
+    "threshold_t": 2.0,
+    "k_tried": 2,
+    "selection": {
+     "n": 95,
+     "mean": 0.10988102182605687,
+     "rest": 0.4091740010458895,
+     "t0": 0.7794567286353519
+    },
+    "verification": {
+     "n": 36,
+     "mean": 0.4209522226667174,
+     "rest": 0.15369760902917137,
+     "t0": 1.8947216841971501
+    },
+    "walk_forward": 0.4,
+    "gain_R_selection": -5.2193485367377015,
+    "gain_R_verification": -7.577140008000913
+   },
+   {
+    "id": "b4035ce4dd",
+    "rule": "se weekday == 1: salta il trade",
+    "origin": "valutazione",
+    "state": "RESPINTA",
+    "checks": {
+     "numerosita": true,
+     "quota": true,
+     "in_campione": false,
+     "fuori_campione": false,
+     "walk_forward": false,
+     "soglie_vicine": true
+    },
+    "fails": [
+     "in scelta R medio 0.0495688443814114, t 0.24496477522127025: serve t <= -2.00 dopo 3 ipotesi",
+     "in verifica i trade colpiti rendono 0.5009079775399236 contro 0.12573269361478218 degli altri",
+     "regge nel 57% degli anni (7 anni utili): serve il 60%"
+    ],
+    "threshold_t": 2.0,
+    "k_tried": 3,
+    "selection": {
+     "n": 44,
+     "mean": 0.0495688443814114,
+     "rest": 0.3568494942714204,
+     "t0": 0.24496477522127025
+    },
+    "verification": {
+     "n": 53,
+     "mean": 0.5009079775399236,
+     "rest": 0.12573269361478218,
+     "t0": 1.688043205805036
+    },
+    "walk_forward": 0.5714285714285714,
+    "gain_R_selection": -2.1810291527821017,
+    "gain_R_verification": -26.54812280961595
+   },
+   {
+    "id": "78c1611c9a",
+    "rule": "se weekday == 1: dimezza la taglia",
+    "origin": "valutazione",
+    "state": "RESPINTA",
+    "checks": {
+     "numerosita": true,
+     "quota": true,
+     "in_campione": false,
+     "fuori_campione": false,
+     "walk_forward": false,
+     "soglie_vicine": true
+    },
+    "fails": [
+     "in scelta R medio 0.0495688443814114, t 0.24496477522127025: serve t <= -2.00 dopo 4 ipotesi",
+     "in verifica i trade colpiti rendono 0.5009079775399236 contro 0.12573269361478218 degli altri",
+     "regge nel 57% degli anni (7 anni utili): serve il 60%"
+    ],
+    "threshold_t": 2.0,
+    "k_tried": 4,
+    "selection": {
+     "n": 44,
+     "mean": 0.0495688443814114,
+     "rest": 0.3568494942714204,
+     "t0": 0.24496477522127025
+    },
+    "verification": {
+     "n": 53,
+     "mean": 0.5009079775399236,
+     "rest": 0.12573269361478218,
+     "t0": 1.688043205805036
+    },
+    "walk_forward": 0.5714285714285714,
+    "gain_R_selection": -1.0905145763910509,
+    "gain_R_verification": -13.274061404807975
+   }
+  ],
   "shadow": [],
   "active": [],
   "tried": 4,
