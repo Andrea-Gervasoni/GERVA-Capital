@@ -1,0 +1,170 @@
+{
+ "label": "ESEMPIO: libro dei trade dimostrativo",
+ "asof": "2026-10-31",
+ "equity": 3084.2,
+ "start_equity": 3000.0,
+ "open": {
+  "BTC": {
+   "symbol": "BTC",
+   "side": 1,
+   "entry": 74120.0,
+   "stop": 71990.0,
+   "notional": 3210.0,
+   "margin": 286.6,
+   "leverage": 11.2,
+   "risk": 30.8,
+   "liquidation": 67870.0,
+   "tier": "confermato",
+   "best": 78804.01,
+   "initial_stop_distance": 0.038,
+   "trail": null,
+   "opened": "2026-10-24",
+   "mae": -0.31,
+   "mfe": 1.66,
+   "ctx": {
+    "conviction": 0.64,
+    "gq": 0.61,
+    "atr_pct": 0.031
+   }
+  }
+ },
+ "closed": [
+  {
+   "symbol": "ETH",
+   "opened": "2026-09-21",
+   "closed": "2026-09-26",
+   "entry": 2412.0,
+   "exit": 2338.5,
+   "leverage": 11.0,
+   "tier": "confermato",
+   "pnl": -31.4,
+   "R": -1.04,
+   "why": "stop"
+  },
+  {
+   "symbol": "BTC",
+   "opened": "2026-09-27",
+   "closed": "2026-10-07",
+   "entry": 70250.0,
+   "exit": 75810.0,
+   "leverage": 11.5,
+   "tier": "eccezionale",
+   "pnl": 131.2,
+   "R": 2.18,
+   "why": "durata massima"
+  },
+  {
+   "symbol": "SOL",
+   "opened": "2026-10-02",
+   "closed": "2026-10-04",
+   "entry": 148.2,
+   "exit": 143.9,
+   "leverage": 10.4,
+   "tier": "confermato",
+   "pnl": -30.1,
+   "R": -1.02,
+   "why": "stop"
+  },
+  {
+   "symbol": "SOL",
+   "opened": "2026-10-10",
+   "closed": "2026-10-17",
+   "entry": 139.6,
+   "exit": 146.3,
+   "leverage": 10.9,
+   "tier": "confermato",
+   "pnl": 38.9,
+   "R": 1.31,
+   "why": "conviction bassa"
+  },
+  {
+   "symbol": "ETH",
+   "opened": "2026-10-18",
+   "closed": "2026-10-20",
+   "entry": 2301.0,
+   "exit": 2237.0,
+   "leverage": 11.3,
+   "tier": "confermato",
+   "pnl": -24.6,
+   "R": -0.83,
+   "why": "stop"
+  }
+ ],
+ "log": [
+  {
+   "day": "2026-10-31",
+   "msg": "nessun nuovo trade: conviction media su ETH e SOL"
+  }
+ ],
+ "shadow": [
+  {
+   "day": "2026-10-29",
+   "coins": {
+    "BTC": {
+     "gq": -0.978596,
+     "gq_tier": "media",
+     "conviction": 0.636364,
+     "conviction_tier": "media"
+    },
+    "ETH": {
+     "gq": -1.17972,
+     "gq_tier": "media",
+     "conviction": 0.454545,
+     "conviction_tier": "media"
+    },
+    "SOL": {
+     "gq": -1.42527,
+     "gq_tier": "media",
+     "conviction": 0.454545,
+     "conviction_tier": "media"
+    }
+   }
+  },
+  {
+   "day": "2026-10-30",
+   "coins": {
+    "BTC": {
+     "gq": -1.22352,
+     "gq_tier": "media",
+     "conviction": 0.454545,
+     "conviction_tier": "media"
+    },
+    "ETH": {
+     "gq": -1.3747,
+     "gq_tier": "media",
+     "conviction": 0.363636,
+     "conviction_tier": "media"
+    },
+    "SOL": {
+     "gq": -1.43759,
+     "gq_tier": "media",
+     "conviction": 0.363636,
+     "conviction_tier": "media"
+    }
+   }
+  },
+  {
+   "day": "2026-10-31",
+   "coins": {
+    "BTC": {
+     "gq": -1.32745,
+     "gq_tier": "media",
+     "conviction": 0.545455,
+     "conviction_tier": "media"
+    },
+    "ETH": {
+     "gq": -1.46222,
+     "gq_tier": "media",
+     "conviction": 0.363636,
+     "conviction_tier": "media"
+    },
+    "SOL": {
+     "gq": -1.60926,
+     "gq_tier": "media",
+     "conviction": 0.454545,
+     "conviction_tier": "media"
+    }
+   }
+  }
+ ]
+}

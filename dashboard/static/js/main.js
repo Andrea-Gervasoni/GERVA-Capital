@@ -4,6 +4,7 @@ import { createStore } from './store.js';
 import { h, icon, fill, loadPref, savePref } from './dom.js';
 import { segmented } from './components.js';
 import { glossaryList } from './glossary.js';
+import { initCommandBar } from './cmd.js';
 import { hideTip } from './charts.js';
 import { initKill, lastKill } from './kill.js';
 import { arr, fmtAgo, fmtDate, fmtDateTime, fmtDuration, obj, parseTs, str } from './format.js';
@@ -20,6 +21,7 @@ import * as ricerca from './views/ricerca.js';
 import * as ai from './views/ai.js';
 import * as leva from './views/leva.js';
 import * as apprendimento from './views/apprendimento.js';
+import * as terminale from './views/terminale.js';
 
 const ROUTES = [
   { id: 'panoramica', label: 'Panoramica', icon: 'overview', view: panoramica },
@@ -34,6 +36,7 @@ const ROUTES = [
   { id: 'ricerca', label: 'Ricerca', icon: 'research', view: ricerca },
   { id: 'leva-trade', label: 'Leva per trade', icon: 'lever', view: leva },
   { id: 'come-funziona', label: 'Come funziona', icon: 'flow', view: comefunziona },
+  { id: 'terminale', label: 'Terminale', icon: 'terminal', view: terminale, group: true },
 ];
 const VIEW_REFRESH_MS = 30000;        // anche a dati invariati le età ("3 min fa") vanno aggiornate
 
@@ -48,7 +51,8 @@ const el = {
   summary: $('summary'), sources: $('sources'), levelHost: $('level-switch'),
   glossary: $('glossary'), glossaryBody: $('glossary-body'), glossaryBtn: $('glossary-btn'), glossaryClose: $('glossary-close'),
 };
-let level = loadPref('level', 'semplice') === 'esperto' ? 'esperto' : 'semplice';
+const LEVELS = ['semplice', 'esperto', 'terminale'];
+let level = LEVELS.includes(loadPref('level', 'semplice')) ? loadPref('level', 'semplice') : 'semplice';
 
 let mounted = null;          // { route, handle }
 let lastViewUpdate = 0;
@@ -87,11 +91,21 @@ function routeNow() {
   const m = /^#\/([a-z-]+)/.exec(window.location.hash || '');
   const found = ROUTES.find((r) => r.id === (m && m[1]));
   // un'ancora qualsiasi (es. #main) non è una sezione: si resta dove si è
-  return found || (mounted && !m ? mounted.route : ROUTES[0]);
+  return found || (mounted && !m ? mounted.route : defaultRoute());
 }
 
+/** In Terminale la pagina Terminale è la prima voce e la pagina di partenza; negli altri livelli resta in fondo. */
+function navOrder() {
+  const term = ROUTES.find((r) => r.id === 'terminale');
+  const rest = ROUTES.filter((r) => r !== term);
+  return level === 'terminale' ? [term, ...rest] : [...rest, term];
+}
+const defaultRoute = () => (level === 'terminale' ? ROUTES.find((r) => r.id === 'terminale') : ROUTES[0]);
+
 function buildNav() {
-  for (const r of ROUTES) {
+  el.nav.replaceChildren();
+  links.clear();
+  for (const r of navOrder()) {
     const flag = h('span', { class: 'nav__flag' });
     flag.hidden = true;
     const a = h('a', { class: `nav__link ${r.group ? 'nav__link--group' : ''}`.trim(), href: `#/${r.id}` }, icon(r.icon), h('span', { class: 'nav__label', text: r.label }), flag);
@@ -236,19 +250,27 @@ function syncSources() {
 
 // ---- livello di lettura e glossario ------------------------------------------------------------------------------------
 
+let levelSeg = null;
+function applyLevel(v) {
+  if (!LEVELS.includes(v)) return;
+  level = v;
+  document.body.dataset.level = v;
+  savePref('level', v);
+  if (levelSeg) levelSeg.set(v);
+  buildNav();
+  if (store.state.snap) syncFlags(store.state.snap);
+  syncView({ force: true });
+}
+
 function initLevel() {
   document.body.dataset.level = level;
   const seg = segmented({
     label: 'Livello di lettura',
-    options: [{ value: 'semplice', label: 'Semplice' }, { value: 'esperto', label: 'Esperto' }],
+    options: [{ value: 'semplice', label: 'Semplice' }, { value: 'esperto', label: 'Esperto' }, { value: 'terminale', label: 'Terminale' }],
     value: level,
-    onChange: (v) => {
-      level = v;
-      document.body.dataset.level = v;
-      savePref('level', v);
-      syncView({ force: true });
-    },
+    onChange: (v) => applyLevel(v),
   });
+  levelSeg = seg;
   el.levelHost.append(seg.el);
 }
 
@@ -324,6 +346,7 @@ function syncView({ force = false, focus = false } = {}) {
   const route = routeNow();
   setText(el.title, route.label);
   document.title = `${route.label} · GERVA Capital`;
+  document.body.dataset.route = route.id;
   markNav(route);
   if (!st.snap) {
     placeholder();
@@ -332,6 +355,9 @@ function syncView({ force = false, focus = false } = {}) {
   let fresh = false;
   if (!mounted || mounted.route !== route) {
     hideTip();
+    if (mounted && mounted.handle && typeof mounted.handle.destroy === 'function') {
+      try { mounted.handle.destroy(); } catch (err) { console.error(err); }
+    }
     fill(el.view);
     try {
       mounted = { route, handle: route.view.mount(el.view, api) };
@@ -370,6 +396,18 @@ buildNav();
 initTheme();
 initLevel();
 initGlossary();
+initCommandBar({
+  routes: navOrder,
+  go: (id) => { window.location.hash = `#/${id}`; },
+  openSymbol: (sym) => {
+    savePref('term.symbol', sym);                        // il terminale lo legge al montaggio
+    if (mounted && mounted.route.id === 'terminale' && mounted.handle && mounted.handle.openSymbol) mounted.handle.openSymbol(sym);
+    else window.location.hash = '#/terminale';
+  },
+  setLevel: applyLevel,
+  toggleTheme: () => el.themeBtn.click(),
+  openGlossary: () => openGlossary(null),
+});
 document.querySelector('.skip-link').addEventListener('click', (event) => {
   event.preventDefault();                     // niente cambio di hash: le sezioni vivono lì
   el.main.focus();
