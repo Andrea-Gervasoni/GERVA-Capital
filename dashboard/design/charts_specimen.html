@@ -8,38 +8,38 @@
      Rigenerato da uno script che copia tokens.glass.css cosi' com'e' (senza @font-face) e vi aggiunge solo i token --chart-* elencati in design_2_grafici.md. -->
 <style id="tokens-glass">
 
-/* GERVA Capital · Terminale — token «vetro liquido».
-   Sostituisce i VALORI di dashboard/static/css/tokens.css mantenendone i NOMI (mappa completa in design_1_sistema_visivo.md).
-   Tutto è proprietà personalizzata: nessuna regola di componente. Ricette dei materiali e misure di contrasto nella nota.
-   Ordine: caratteri · scale indipendenti dal tema · scuro (base) · chiaro · ripieghi (trasparenza, contrasto, movimento).
+/* GERVA Capital · Terminale — token «vetro liquido», seconda direzione: NERO, vetro spesso, colore brillante.
+   Sostituisce i VALORI di dashboard/static/css/tokens.css mantenendone i NOMI (mappa in design_1_sistema_visivo.md).
+   Solo proprietà personalizzate: nessuna regola di componente (le ricette sono in specimen.html e nella nota).
+   Ordine: caratteri · scale indipendenti dal tema · SCURO (base, è il tema del terminale) · chiaro (secondario) · ripieghi.
    Installazione: copiato in static/css/ il percorso dei font diventa "../fonts/…". */
 
 :root {
   /* ================= TIPOGRAFIA =================
-     Prima il sans di sistema (dove è ottimo); General Sans, locale, entra solo dove il sistema non ne offre uno all'altezza.
-     Le cifre NON usano General Sans: non ha i numeri tabellari (misurato: «1111» 53px, «0000» 96px). */
+     Sans di sistema per primo; General Sans (locale) solo dove il sistema non ne offre uno all'altezza.
+     Le cifre NON usano General Sans: non ha i numeri tabellari (misurato: «1111» 53 px, «0000» 96 px).
+     Le cifre grandi cercano prima il tondo di sistema. */
   --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", "Segoe UI", "General Sans", system-ui, "Helvetica Neue", Arial, sans-serif;
   --font-num: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", "Segoe UI", Roboto, system-ui, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif;
-  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter Display", "Inter", "Segoe UI", Roboto, system-ui, "Helvetica Neue", Arial, sans-serif;   /* nuovo: cifra eroe e titoli grandi */
+  --font-display: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter Display", "Inter", "Segoe UI", Roboto, system-ui, "Helvetica Neue", Arial, sans-serif;   /* nuovo: cifra eroe, cifre chiave, titoli */
   --font-brand: "Bodoni Moda", "Bodoni 72", Didot, "Times New Roman", serif;                       /* solo il marchio GERVA */
-  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, "Liberation Mono", monospace;   /* nuovo: comandi e codici */
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, "Liberation Mono", monospace;   /* nuovo */
 
-  --fs-micro: 11px;                                   /* micro-etichetta, maiuscoletto spaziato */
+  --fs-micro: 11px;                                   /* micro-etichetta, maiuscola spaziata */
   --fs-small: 12px;                                   /* didascalia, assi, celle fitte */
   --fs-body: 14px;                                    /* testo (era 13) */
-  --fs-lead: 15px;                                    /* frase guida, valori di riga (era 14) */
-  --fs-title: 17px;                                   /* titolo di scheda / sezione (era 16) */
-  --fs-stat: 22px;                                    /* cifra di una statistica (era 20) */
-  --fs-kpi: 28px;                                     /* cifra chiave secondaria (era 26) */
-  --fs-hero: clamp(44px, 2.4vw + 34px, 72px);         /* patrimonio: una sola cifra eroe per schermata (era 44) */
-  --fs-page: 26px;                                    /* nuovo: titolo di pagina */
+  --fs-lead: 15px;                                    /* frase guida (era 14) */
+  --fs-title: 17px;                                   /* titolo di scheda (era 16) */
+  --fs-stat: 24px;                                    /* cifra di una statistica (era 20) */
+  --fs-kpi: 32px;                                     /* cifra chiave secondaria (era 26) */
+  --fs-hero: clamp(48px, 3vw + 36px, 88px);           /* patrimonio: una sola cifra eroe per schermata (era 44) */
+  --fs-page: 28px;                                    /* nuovo: titolo di pagina */
 
-  --lh-tight: 1.04; --lh-snug: 1.25; --lh-body: 1.5;
-  --tr-hero: -0.035em; --tr-title: -0.018em; --tr-body: -0.003em; --tr-micro: 0.075em;
-  --fw-regular: 400; --fw-medium: 500; --fw-semibold: 600;
+  --lh-tight: 1; --lh-snug: 1.25; --lh-body: 1.5;
+  --tr-hero: -0.045em; --tr-title: -0.02em; --tr-body: -0.003em; --tr-micro: 0.08em;
+  --fw-regular: 400; --fw-medium: 500; --fw-semibold: 600; --fw-bold: 700;
   --num-variant: tabular-nums lining-nums;            /* font-variant-numeric di OGNI cifra */
 
-  /* stili composti (font: <peso> <corpo>/<interlinea> <famiglia>) */
   --type-hero: var(--fw-semibold) var(--fs-hero)/var(--lh-tight) var(--font-display);
   --type-page: var(--fw-semibold) var(--fs-page)/var(--lh-snug) var(--font-display);
   --type-section: var(--fw-semibold) var(--fs-title)/var(--lh-snug) var(--font-ui);
@@ -47,234 +47,304 @@
   --type-caption: var(--fw-regular) var(--fs-small)/1.45 var(--font-ui);
   --type-micro: var(--fw-semibold) var(--fs-micro)/1.3 var(--font-ui);
 
-  /* ================= SPAZIO (griglia da 4) ================= */
+  /* ================= SPAZIO: ritmo a 8 (4 solo dentro i controlli) ================= */
   --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px; --sp-8: 32px;
   --sp-10: 40px; --sp-12: 48px; --sp-16: 64px;        /* nuovi */
-  --pad-card: clamp(18px, 1.2vw + 10px, 28px);        /* nuovo: respiro interno di una scheda */
-  --pad-hero: clamp(22px, 2vw + 10px, 40px);
-  --gap-grid: clamp(14px, 1vw + 6px, 22px);           /* nuovo: tra schede */
-  --gap-section: clamp(32px, 3vw + 12px, 56px);       /* nuovo: tra sezioni */
-  --page-gutter: clamp(16px, 2vw, 32px);              /* nuovo: margine di pagina (16 al telefono) */
+  --pad-card: clamp(16px, 1vw + 10px, 24px);          /* nuovo: respiro interno di una scheda */
+  --pad-hero: clamp(24px, 2vw + 8px, 40px);
+  --gap-grid: clamp(12px, 0.6vw + 8px, 16px);         /* nuovo: tra schede */
+  --gap-section: clamp(40px, 3vw + 16px, 64px);       /* nuovo: tra sezioni */
+  --page-gutter: clamp(12px, 1.4vw, 24px);            /* nuovo: margine di pagina */
 
   /* ================= RAGGI ================= */
   --radius-xs: 6px;                                   /* nuovo: celle, tacche */
-  --radius-s: 10px;                                   /* campi, bottoni piccoli (era 4) */
-  --radius-m: 14px;                                   /* controlli, riquadri interni (era 6) */
-  --radius-l: 22px;                                   /* nuovo: schede */
-  --radius-xl: 30px;                                  /* nuovo: eroe, fogli, barra laterale */
-  --radius-pill: 999px;
-  --corner-shape: squircle;                           /* angolo continuo dove il browser lo conosce; altrove resta il cerchio */
+  --radius-s: 10px;                                   /* etichette di provenienza, campi (era 4) */
+  --radius-m: 16px;                                   /* riquadri interni, voci di menu (era 6) */
+  --radius-l: 24px;                                   /* nuovo: schede */
+  --radius-xl: 28px;                                  /* nuovo: eroe, fogli, barra laterale */
+  --radius-pill: 999px;                               /* ogni controllo è una capsula */
+  --corner-shape: squircle;                           /* angolo continuo dove il browser lo conosce; altrove cerchio */
 
   /* ================= MISURE DELL'IMPALCATURA ================= */
-  --rail-w: 236px; --modebar-h: 32px; --topbar-h: 60px;
-  --control-h: 36px; --control-h-sm: 30px; --control-h-lg: 44px;   /* nuovi: 44 = bersaglio tattile */
+  --rail-w: 232px; --modebar-h: 32px; --topbar-h: 64px; --dock-h: 68px;
+  --control-h: 40px; --control-h-sm: 32px; --control-h-lg: 48px;   /* nuovi */
   --z-chrome: 30; --z-sheet: 60; --z-toast: 80;
 
-  /* ================= VETRO: geometria (il colore è per tema) =================
-     Quattro spessori. Più il materiale sta «sopra», più sfoca e più è coprente. */
-  --blur-panel: 20px;  --sat-panel: 160%;
-  --blur-raised: 28px; --sat-raised: 170%;
-  --blur-chrome: 36px; --sat-chrome: 180%;
-  --blur-sheet: 48px;  --sat-sheet: 190%;
-  --glass-on: 1;       /* 1 = vetro vero; 0 = ripiego a superfici piene (letto dal JS, es. per i grafici) */
+  /* ================= VETRO: geometria (tinte e luci sono per tema) =================
+     Regola misurata: la sfocatura non deve superare il lato minore ÷ 3,5, altrimenti Chromium non sfoca affatto.
+     Per questo le capsule (64 px) hanno una sfocatura più corta dei pannelli. */
+  --blur-panel: 30px;  --sat-panel: 190%;             /* schede: lato minore ≥ 105 px */
+  --blur-raised: 36px; --sat-raised: 200%;            /* eroe: lato minore ≥ 126 px */
+  --blur-chrome: 24px; --sat-chrome: 200%;            /* capsula, dock, avvisi: con lo strato di fondo allungato (--blur-bleed) */
+  --blur-bleed: 72px;                                 /* nuovo: quanto lo strato di sfocatura di una capsula sporge sopra e sotto (3 × sfocatura) */
+  --blur-sheet: 28px;  --sat-sheet: 180%;             /* popover, finestre: lato minore ≥ 100 px */
+  --lens-w: 6px;                                      /* larghezza dello smusso che rifrange (solo cromature) */
+  --glass-on: 1;                                      /* 1 = vetro vero; 0 = ripiego a superfici piene (letto dal JS) */
 
   --glass-panel-filter: blur(var(--blur-panel)) saturate(var(--sat-panel));
   --glass-raised-filter: blur(var(--blur-raised)) saturate(var(--sat-raised));
   --glass-chrome-filter: blur(var(--blur-chrome)) saturate(var(--sat-chrome));
   --glass-sheet-filter: blur(var(--blur-sheet)) saturate(var(--sat-sheet));
+  --glass-lens-filter: url(#gerva-lens) saturate(190%) brightness(1.12);   /* smusso: rifrazione vera (solo Chromium) */
+  --glass-lens-fallback: blur(5px) saturate(190%) brightness(1.12);       /* smusso: altrove una sfocatura corta */
 
   --glass-panel-bg: var(--glass-panel-tint);
   --glass-raised-bg: var(--glass-raised-tint);
   --glass-chrome-bg: var(--glass-chrome-tint);
   --glass-sheet-bg: var(--glass-sheet-tint);
 
-  /* bordo ottico comune: filetto esterno + luce interna + spigolo speculare in alto */
-  --glass-edge: inset 0 1px 0 0 var(--glass-specular), inset 0 0 0 1px var(--glass-inner), 0 0 0 1px var(--glass-hairline);
-  --glass-panel-fx: var(--glass-edge), var(--elev-1);
-  --glass-raised-fx: var(--glass-edge), var(--elev-2);
-  --glass-chrome-fx: var(--glass-edge), var(--elev-2);
+  /* spessore: luce in alto, ombra in basso, tutte interne · poi il filetto esterno · poi l'ombra che fa galleggiare */
+  --glass-edge: var(--glass-depth), 0 0 0 1px var(--glass-hairline);
+  --glass-panel-fx: var(--glass-edge), var(--elev-2);
+  --glass-raised-fx: var(--glass-edge), var(--elev-3);
+  --glass-chrome-fx: var(--glass-edge), var(--elev-3);
   --glass-sheet-fx: var(--glass-edge), var(--elev-4);
 
   /* ================= MOVIMENTO ================= */
   --dur-instant: 90ms;                                /* pressione */
   --dur-fast: 160ms;                                  /* hover, colore, fuoco */
-  --dur-base: 260ms;                                  /* cursore del segmentato, sollevamento, righe */
-  --dur-slow: 420ms;                                  /* fogli, popover, toast */
-  --dur-slower: 720ms;                                /* rotolo delle cifre, tracciamento di una linea */
+  --dur-base: 280ms;                                  /* sollevamento, righe */
+  --dur-morph: 460ms;                                 /* cursore del segmentato che cambia posto e larghezza */
+  --dur-slow: 480ms;                                  /* fogli, popover, avvisi, ingresso dei pannelli */
+  --dur-slower: 760ms;                                /* rotolo delle cifre, tracciamento di una linea */
   --dur-shimmer: 1600ms;                              /* periodo del caricamento */
-  --dur-sweep: 1100ms;                                /* riflesso speculare, una volta sola */
+  --dur-sweep: 900ms;                                 /* riflesso speculare: una passata */
+  --dur-breathe: 2400ms;                              /* respiro dei valori vivi */
+  --dur-drift: 64s;                                   /* deriva del fondale (un ciclo) */
   --dur-fade: 140ms;                                  /* dissolvenza: l'unica che resta con «riduci movimento» */
-  --stagger: 45ms;                                    /* scarto tra elementi in sequenza (× indice, massimo 8) */
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);          /* entra deciso, si posa piano */
-  --ease-in: cubic-bezier(0.4, 0, 1, 1);              /* uscite: più brevi delle entrate */
-  --ease-standard: cubic-bezier(0.2, 0, 0, 1);        /* spostamenti sul piano */
-  --ease-spring: cubic-bezier(0.3, 1.3, 0.5, 1);      /* ripiego; sotto la molla vera */
+  --stagger: 55ms;                                    /* scarto tra elementi in sequenza (× indice, massimo 8) */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-spring: cubic-bezier(0.3, 1.3, 0.5, 1);      /* ripiego; sotto le molle vere */
   --ease-spring-soft: cubic-bezier(0.22, 1.08, 0.36, 1);
-  --lift: -2px;                                       /* sollevamento di una scheda al passaggio */
-  --press-scale: 0.975;
-  --sheet-from-scale: 0.955; --sheet-from-y: 10px;
-  --motion-on: 1;                                     /* 0 con «riduci movimento» (letto dal JS) */
+  --ease-spring-bouncy: cubic-bezier(0.3, 1.6, 0.5, 1);
+  --lift: -3px;                                       /* sollevamento di una scheda al passaggio */
+  --press-scale: 0.97;
+  --sheet-from-scale: 0.94; --sheet-from-y: 12px;
+  --enter-y: 18px; --enter-blur: 10px;                /* ingresso dei pannelli: da sfocato a nitido, salendo */
+  --parallax: 1;                                      /* 0 = niente parallasse del puntatore */
+  --motion-on: 1;                                     /* 0 con «riduci movimento» (letto dal JS e dai calc) */
 
   /* ================= GRAFICI: geometria (i colori rimandano ai ruoli) ================= */
   --chart-surface: var(--surface-solid); --chart-text: var(--text); --chart-text-muted: var(--text-3);
   --chart-grid: var(--grid); --chart-axis: var(--axis); --chart-crosshair: var(--text-3);
   --chart-up: var(--pos); --chart-down: var(--neg); --chart-accent: var(--accent); --chart-bench: var(--bench);
-  --chart-warn: var(--warn); --chart-crit: var(--crit);
+  --chart-warn: var(--warn); --chart-crit: var(--crit-mark);
   --chart-series-1: var(--s1); --chart-series-2: var(--s2); --chart-series-3: var(--s3); --chart-series-4: var(--s4); --chart-series-5: var(--s5);
   --chart-series-6: var(--s6); --chart-series-7: var(--s7); --chart-series-8: var(--s8);   /* nuovi */
   --chart-font: var(--font-num); --chart-font-size: 11px; --chart-label-font: var(--font-ui);
-  --chart-line-width: 2; --chart-line-width-thin: 1.5; --chart-grid-width: 1;
+  --chart-line-width: 2.25; --chart-line-width-thin: 1.5; --chart-grid-width: 1;
   --chart-dash-ref: 4 4; --chart-dash-mark: 2 3; --chart-dash-cross: 3 3;
   --chart-dash-sim: 7 5; --chart-dash-demo: 1 5;      /* nuovi: il tratto dice la provenienza (pieno = paper/reale) */
-  --chart-dot-radius: 4; --chart-dot-radius-small: 3.5; --chart-dot-ring: 2; --chart-bar-radius: 4; --chart-cell-radius: 6px;
+  --chart-dot-radius: 4.5; --chart-dot-radius-small: 3.5; --chart-dot-ring: 2; --chart-bar-radius: 4; --chart-cell-radius: 7px;
   --chart-bubble-min: 5; --chart-bubble-max: 20; --chart-candle-body: 0.7; --chart-candle-max: 14; --chart-gutter: 58;
-  --chart-area-opacity: 0.12; --chart-band-opacity: 0.12; --chart-band-opacity-strong: 0.22; --chart-volume-opacity: 0.5;
+  --chart-area-opacity: 0.30; --chart-band-opacity: 0.14; --chart-band-opacity-strong: 0.26; --chart-volume-opacity: 0.55;
   --chart-motion: var(--dur-fast); --chart-ease: var(--ease-out);
 }
 
 @supports (transition-timing-function: linear(0, 1)) {
   :root {
-    /* molle campionate (oscillatore smorzato): 4% di rimbalzo la prima, meno dell'1% la seconda */
+    /* molle campionate da un oscillatore smorzato: 4% di rimbalzo · meno dell'1% · 8% (solo per il cursore che si deforma) */
     --ease-spring: linear(0, 0.294, 0.523, 0.697, 0.823, 0.911, 0.97, 1.007, 1.028, 1.038, 1.041, 1.039, 1.035, 1.029, 1.024, 1.019, 1.014, 1.01, 1.007, 1.005, 1);
     --ease-spring-soft: linear(0, 0.257, 0.458, 0.614, 0.731, 0.817, 0.88, 0.925, 0.955, 0.976, 0.99, 0.998, 1.003, 1.006, 1.007, 1.007, 1.006, 1.005, 1.005, 1.004, 1);
+    --ease-spring-bouncy: linear(0, 0.305, 0.543, 0.723, 0.856, 0.949, 1.012, 1.051, 1.072, 1.081, 1.082, 1.077, 1.069, 1.059, 1.049, 1.04, 1.031, 1.024, 1.018, 1.013, 1.008, 1.005, 1);
   }
 }
 
 /* =====================================================================================================
-   SCURO (base)
+   SCURO — il terminale. Nero vero, campi di colore luminosi dietro al vetro.
    ===================================================================================================== */
 :root,
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  /* ---- fondale: una notte calma, tre aloni larghi. Mai rumore, mai forme nette. ---- */
-  --bg: #06080d;
-  --backdrop:
-    radial-gradient(62% 58% at 8% 0%, rgba(48, 78, 172, 0.50) 0%, rgba(48, 78, 172, 0) 72%),
-    radial-gradient(48% 46% at 94% 6%, rgba(98, 62, 160, 0.34) 0%, rgba(98, 62, 160, 0) 70%),
-    radial-gradient(58% 56% at 84% 100%, rgba(18, 104, 118, 0.38) 0%, rgba(18, 104, 118, 0) 72%),
-    radial-gradient(46% 44% at 0% 100%, rgba(34, 54, 122, 0.34) 0%, rgba(34, 54, 122, 0) 70%),
-    linear-gradient(180deg, #0a0d15 0%, #05070b 100%);
+  /* ---- fondale: nero; sei luci larghe e morbide che derivano piano ---- */
+  --bg: #000000;
+  --aurora-1: #1d5cff;   /* blu elettrico */
+  --aurora-2: #5a2bff;   /* indaco */
+  --aurora-3: #a02cff;   /* viola */
+  --aurora-4: #ff2590;   /* magenta */
+  --aurora-5: #00c9b4;   /* verde acqua */
+  --aurora-6: #ff7a1c;   /* arancio: un tocco */
+  --aurora-strength: 0.62;                       /* opacità delle luci: il nero deve restare padrone */
+  --aurora-blend: screen;
+  --backdrop:                                    /* versione ferma delle stesse luci (ripiego, stampa, «riduci movimento») */
+    radial-gradient(46% 52% at 12% 4%, rgba(29, 92, 255, 0.50) 0%, rgba(29, 92, 255, 0) 70%),
+    radial-gradient(40% 44% at 92% 10%, rgba(160, 44, 255, 0.40) 0%, rgba(160, 44, 255, 0) 70%),
+    radial-gradient(42% 46% at 74% 96%, rgba(0, 201, 180, 0.34) 0%, rgba(0, 201, 180, 0) 70%),
+    radial-gradient(38% 42% at 4% 92%, rgba(255, 37, 144, 0.34) 0%, rgba(255, 37, 144, 0) 70%),
+    radial-gradient(30% 30% at 52% 46%, rgba(90, 43, 255, 0.26) 0%, rgba(90, 43, 255, 0) 70%),
+    linear-gradient(180deg, #020308 0%, #000000 100%);
 
-  /* ---- vetro: tinta per spessore, e l'equivalente pieno per i ripieghi ---- */
-  --glass-panel-tint: rgba(27, 32, 46, 0.54);    --glass-panel-solid: #131822;
-  --glass-raised-tint: rgba(40, 47, 65, 0.60);   --glass-raised-solid: #1a2030;
-  --glass-chrome-tint: rgba(15, 19, 29, 0.68);   --glass-chrome-solid: #0e121b;
-  --glass-sheet-tint: rgba(30, 36, 52, 0.86);    --glass-sheet-solid: #1c2232;
-  --glass-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.055) 0%, rgba(255, 255, 255, 0) 42%);
-  --glass-rim: linear-gradient(145deg, rgba(255, 255, 255, 0.30) 0%, rgba(255, 255, 255, 0.09) 26%, rgba(255, 255, 255, 0.025) 58%, rgba(255, 255, 255, 0.14) 100%);
-  --glass-specular: rgba(255, 255, 255, 0.13);
-  --glass-inner: rgba(255, 255, 255, 0.055);
-  --glass-hairline: rgba(0, 0, 0, 0.42);
-  --sweep: linear-gradient(105deg, rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, 0.09) 50%, rgba(255, 255, 255, 0) 62%);
-  --shimmer: linear-gradient(100deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.10) 50%, rgba(255, 255, 255, 0) 70%);
+  /* ---- vetro: velo scuro dentro (tiene il testo in AA), luce sopra ---- */
+  --glass-panel-tint: rgba(13, 15, 26, 0.52);    --glass-panel-solid: #10131d;
+  --glass-raised-tint: rgba(17, 20, 34, 0.46);   --glass-raised-solid: #141826;
+  --glass-chrome-tint: rgba(9, 10, 18, 0.64);    --glass-chrome-solid: #0b0d15;
+  --glass-sheet-tint: rgba(18, 21, 34, 0.80);    --glass-sheet-solid: #171b29;
+  --glass-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.075) 0px, rgba(255, 255, 255, 0.02) 22px, rgba(255, 255, 255, 0) 96px);
+  --glass-rim: linear-gradient(140deg, rgba(255, 255, 255, 0.70) 0%, rgba(255, 255, 255, 0.24) 18%, rgba(255, 255, 255, 0.06) 44%, rgba(255, 255, 255, 0.05) 70%, rgba(255, 255, 255, 0.30) 100%);
+  --glass-depth: inset 0 1px 0 rgba(255, 255, 255, 0.20), inset 0 16px 22px -20px rgba(255, 255, 255, 0.30), inset 0 -1px 0 rgba(0, 0, 0, 0.50), inset 0 -22px 30px -24px rgba(0, 0, 0, 0.70);
+  --glass-hairline: rgba(0, 0, 0, 0.55);
+  --glass-lens-bg: linear-gradient(140deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.07) 30%, rgba(255, 255, 255, 0.02) 60%, rgba(255, 255, 255, 0.16) 100%);
+  --glass-lens-edge: inset 0 0 0 1px rgba(255, 255, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.50);
+  --sweep: linear-gradient(105deg, rgba(255, 255, 255, 0) 36%, rgba(255, 255, 255, 0.16) 50%, rgba(255, 255, 255, 0) 64%);
+  --shimmer: linear-gradient(100deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.14) 50%, rgba(255, 255, 255, 0) 70%);
 
-  /* ---- profondità: ombre a strati, larghe e basse ---- */
+  /* ---- comandi lucidi: capsule di vetro levigato ---- */
+  --gloss-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.20) 0%, rgba(255, 255, 255, 0.07) 46%, rgba(255, 255, 255, 0.10) 100%);
+  --gloss-edge: inset 0 1px 0 rgba(255, 255, 255, 0.50), inset 0 0 0 1px rgba(255, 255, 255, 0.10), inset 0 8px 9px -8px rgba(255, 255, 255, 0.30), inset 0 -8px 10px -8px rgba(255, 255, 255, 0.24);
+  --gloss-edge-pressed: inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.08), inset 0 7px 10px -4px rgba(0, 0, 0, 0.40), inset 0 -10px 12px -8px rgba(255, 255, 255, 0.38);
+  --gloss-shadow: 0 1px 1px rgba(0, 0, 0, 0.50), 0 8px 18px -6px rgba(0, 0, 0, 0.65);
+  --gloss-sweep: linear-gradient(105deg, rgba(255, 255, 255, 0) 34%, rgba(255, 255, 255, 0.36) 50%, rgba(255, 255, 255, 0) 66%);
+  --well-bg: rgba(0, 0, 0, 0.42);                /* incavo: binario del segmentato, tracce, campi */
+  --well-fx: inset 0 1px 3px rgba(0, 0, 0, 0.70), inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 1px 0 rgba(255, 255, 255, 0.09);
+  --thumb-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.30) 0%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.17) 100%);
+  --thumb-fx: inset 0 1px 0 rgba(255, 255, 255, 0.60), inset 0 0 0 1px rgba(255, 255, 255, 0.12), inset 0 -7px 9px -7px rgba(255, 255, 255, 0.30), 0 1px 2px rgba(0, 0, 0, 0.55), 0 6px 14px -4px rgba(0, 0, 0, 0.70);
+  --accent-grad: linear-gradient(180deg, #4a95ff 0%, #1b63ec 52%, #0a43cc 100%);
+  --accent-glow: 0 0 0 1px rgba(120, 175, 255, 0.30), 0 10px 28px -8px rgba(36, 112, 255, 0.85);
+  --kill-grad: linear-gradient(180deg, #ff4b55 0%, #cf1a2e 52%, #86081a 100%);
+  --kill-glow: 0 0 0 1px rgba(255, 120, 130, 0.30), 0 10px 28px -8px rgba(255, 40, 62, 0.80);
+  --kill-guard: repeating-linear-gradient(135deg, rgba(255, 70, 84, 0.95) 0 5px, rgba(255, 70, 84, 0.18) 5px 10px);   /* collare a strisce: «comando protetto» */
+
+  /* ---- bagliori: pochi, su cifra eroe, linea del fondo, valore vivo ---- */
+  --glow-hero: drop-shadow(0 0 1px rgba(255, 255, 255, 0.30)) drop-shadow(0 0 22px rgba(110, 165, 255, 0.36));   /* è un filter: sta sul contenitore della cifra */
+  --glow-pos: 0 0 16px rgba(46, 229, 154, 0.42);
+  --glow-neg: 0 0 16px rgba(255, 100, 112, 0.42);
+  --glow-line: drop-shadow(0 0 5px rgba(60, 150, 255, 0.85)) drop-shadow(0 0 14px rgba(60, 150, 255, 0.40));
+  --glow-dot: 0 0 0 4px rgba(46, 229, 154, 0.16), 0 0 12px rgba(46, 229, 154, 0.75);
+
+  /* ---- profondità ---- */
   --elev-0: 0 0 0 0 rgba(0, 0, 0, 0);
-  --elev-1: 0 1px 2px rgba(0, 0, 0, 0.30), 0 6px 16px -4px rgba(0, 0, 0, 0.30);
-  --elev-2: 0 1px 2px rgba(0, 0, 0, 0.32), 0 10px 26px -6px rgba(0, 0, 0, 0.40), 0 24px 48px -18px rgba(0, 0, 0, 0.40);
-  --elev-3: 0 2px 4px rgba(0, 0, 0, 0.34), 0 16px 36px -8px rgba(0, 0, 0, 0.48), 0 36px 72px -22px rgba(0, 0, 0, 0.50);
-  --elev-4: 0 4px 10px rgba(0, 0, 0, 0.36), 0 26px 52px -12px rgba(0, 0, 0, 0.56), 0 52px 104px -26px rgba(0, 0, 0, 0.60);
+  --elev-1: 0 1px 1px rgba(0, 0, 0, 0.40), 0 6px 14px -4px rgba(0, 0, 0, 0.50);
+  --elev-2: 0 1px 1px rgba(0, 0, 0, 0.45), 0 12px 28px -8px rgba(0, 0, 0, 0.60), 0 30px 60px -24px rgba(0, 0, 0, 0.65);
+  --elev-3: 0 2px 3px rgba(0, 0, 0, 0.50), 0 18px 40px -10px rgba(0, 0, 0, 0.70), 0 44px 88px -28px rgba(0, 0, 0, 0.75);
+  --elev-4: 0 4px 8px rgba(0, 0, 0, 0.55), 0 28px 56px -12px rgba(0, 0, 0, 0.80), 0 60px 120px -30px rgba(0, 0, 0, 0.85);
   --shadow: var(--elev-3);
 
   /* ---- superfici (nomi storici) ---- */
   --surface: var(--glass-panel-bg);              /* schede: ora è vetro (alfa) */
-  --surface-solid: #151a26;                      /* nuovo: l'equivalente opaco; anelli e stacchi dei grafici, intestazioni appiccicose */
-  --surface-2: rgba(255, 255, 255, 0.055);       /* hover, intestazioni di tabella, campi: velo sopra il vetro */
-  --surface-3: rgba(255, 255, 255, 0.10);        /* tracce delle barre, incavi */
-  --border: rgba(255, 255, 255, 0.085);          /* filetti tra righe */
-  --border-strong: rgba(255, 255, 255, 0.17);    /* bordi quieti, assi */
-  --border-control: rgba(255, 255, 255, 0.44);   /* nuovo: contorno dei campi, 3:1 sul vetro */
+  --surface-solid: #10131d;                      /* nuovo: l'equivalente opaco; anelli dei punti, intestazioni appiccicose */
+  --surface-2: rgba(255, 255, 255, 0.06);        /* hover, intestazioni, velo sopra il vetro */
+  --surface-3: rgba(255, 255, 255, 0.11);        /* selezione quieta */
+  --border: rgba(255, 255, 255, 0.09);           /* filetti tra righe (0.5–1 px, sempre alfa) */
+  --border-strong: rgba(255, 255, 255, 0.18);    /* bordi quieti, assi */
+  --border-control: rgba(255, 255, 255, 0.46);   /* nuovo: contorno dei campi, 3:1 sul vetro */
 
-  /* ---- inchiostro ---- */
-  --text: #f3f5f9;
-  --text-2: #c1c8d3;
-  --text-3: #99a2b1;                             /* etichette, assi: ≥ 4.5:1 sul vetro più chiaro */
-  --text-disabled: rgba(243, 245, 249, 0.38);    /* nuovo */
+  /* ---- inchiostro: bianco freddo, mai grigi fangosi ---- */
+  --text: #f5f7fb;
+  --text-2: #c5ccda;
+  --text-3: #9ea8bc;                             /* etichette, assi: ≥ 4.5:1 sul vetro più chiaro */
+  --text-disabled: rgba(245, 247, 251, 0.40);    /* nuovo */
 
-  /* ---- accento: uno solo ---- */
-  --accent: #4a93ee;                             /* segni, selezione, serie del fondo */
-  --accent-fill: #1f6bd6;                        /* nuovo: fondo del bottone primario (testo bianco ≥ 4.5:1) */
-  --accent-ink: #84b8ff;                         /* accento usato come testo */
-  --accent-soft: rgba(74, 147, 238, 0.17);
+  /* ---- accento: blu elettrico ---- */
+  --accent: #3b94ff;                             /* segni, selezione, linea del fondo */
+  --accent-fill: #1b63ec;                        /* nuovo: tono medio del bottone primario (testo bianco ≥ 4.5:1) */
+  --accent-ink: #86bdff;                         /* accento usato come testo */
+  --accent-soft: rgba(59, 148, 255, 0.18);
   --on-accent: #ffffff;
-  --focus: #8cc0ff;                              /* nuovo: anello di fuoco */
-  --focus-gap: #06080d;
+  --focus: #9ccaff;                              /* nuovo: anello di fuoco */
+  --focus-gap: #000000;
   --focus-ring: 0 0 0 2px var(--focus-gap), 0 0 0 4px var(--focus);
 
-  /* ---- P&L: sempre con segno e freccia ---- */
-  --pos: #5fd3a0;
-  --neg: #ff8078;
-  --pos-soft: rgba(95, 211, 160, 0.14);          /* nuovi: fondo delle pastiglie di variazione */
-  --neg-soft: rgba(255, 128, 120, 0.14);
-  --bench: #8792a3;                              /* serie di confronto, de-enfatizzata */
+  /* ---- P&L: verde e rosso brillanti, sempre con segno e freccia ---- */
+  --pos: #2ee59a;
+  --neg: #ff6b78;
+  --pos-soft: rgba(46, 229, 154, 0.15);          /* nuovi: fondo delle capsule di variazione */
+  --neg-soft: rgba(255, 107, 120, 0.16);
+  --bench: #8b96ab;                              /* serie di confronto, de-enfatizzata */
 
-  /* ---- serie categoriche: ordine fisso, mai ciclato (validato: vedi nota) ---- */
-  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #0e9a0e; --s7: #9085e9; --s8: #e66767;
+  /* ---- serie categoriche: ordine fisso, mai ciclato (validate: vedi nota) ---- */
+  --s1: #4794fd; --s2: #eb6701; --s3: #069375; --s4: #bc8c05; --s5: #f34a99; --s6: #07b332; --s7: #9a78fe; --s8: #fd4a55;
 
   /* ---- stati di rischio: sicuro / attenzione / violazione / arrestato (sempre icona + parola) ---- */
-  --safe: #2fb886;        --safe-ink: #74dfb3;    --safe-soft: rgba(47, 184, 134, 0.15);
-  --warn: #f5b62e;        --warn-ink: #f8c558;    --warn-soft: rgba(245, 182, 46, 0.14);
-  --serious: #ec835a;     --serious-ink: #f7a886; --serious-soft: rgba(236, 131, 90, 0.15);
-  --crit: #d63a36;        --crit-ink: #ff8f86;    --crit-soft: rgba(224, 69, 64, 0.17);
+  --safe: #1fd68a;        --safe-ink: #56efae;    --safe-soft: rgba(31, 214, 138, 0.16);
+  --warn: #ffc02e;        --warn-ink: #ffd062;    --warn-soft: rgba(255, 192, 46, 0.15);
+  --serious: #ff8a3d;     --serious-ink: #ffab74; --serious-soft: rgba(255, 138, 61, 0.16);
+  --crit: #e0263a;        --crit-ink: #ff8590;    --crit-soft: rgba(255, 59, 78, 0.18);
+  --crit-mark: #ff4d5e;                          /* nuovo: rosso per linee e segni (il pieno --crit è per i fondi) */
   --on-warn: #1c1400;     --on-crit: #ffffff;
-  --killed-bg: var(--crit); --killed-ink: var(--on-crit);       /* arrestato = pieno, l'unico stato a fondo pieno */
-  --unknown-ink: var(--text-2); --unknown-border: var(--border-control);   /* dati fermi: né sicuro né altro */
+  --killed-bg: var(--kill-grad); --killed-ink: var(--on-crit);            /* arrestato = pieno e lucido, l'unico stato a fondo pieno */
+  --unknown-ink: var(--text-2); --unknown-border: var(--border-control);  /* dati fermi: né sicuro né altro */
 
   /* ---- provenienza: il peso cresce con la realtà (punteggiato → tratteggiato → filetto → pieno) ---- */
-  --prov-demo-ink: #c1c8d3;  --prov-demo-bg: rgba(255, 255, 255, 0.05);   --prov-demo-border: rgba(255, 255, 255, 0.44);
-  --prov-sim-ink: #b9b0ff;   --prov-sim-bg: rgba(144, 133, 233, 0.15);    --prov-sim-border: rgba(170, 160, 245, 0.70);
-  --prov-paper-ink: #84b8ff; --prov-paper-bg: rgba(74, 147, 238, 0.15);   --prov-paper-border: rgba(110, 170, 250, 0.60);
-  --prov-real-ink: #0b0e14;  --prov-real-bg: #f3f5f9;                     --prov-real-border: #f3f5f9;
-  --hatch: rgba(255, 255, 255, 0.07);            /* tratteggio diagonale: ESEMPIO e SIMULATO a tutta fascia */
+  --prov-demo-ink: #c5ccda;  --prov-demo-bg: rgba(255, 255, 255, 0.05);   --prov-demo-border: rgba(255, 255, 255, 0.46);
+  --prov-sim-ink: #c2b6ff;   --prov-sim-bg: rgba(154, 120, 254, 0.17);    --prov-sim-border: rgba(180, 160, 255, 0.75);
+  --prov-paper-ink: #86bdff; --prov-paper-bg: rgba(59, 148, 255, 0.17);   --prov-paper-border: rgba(110, 175, 255, 0.65);
+  --prov-real-ink: #05070c;  --prov-real-bg: #f5f7fb;                     --prov-real-border: #f5f7fb;
+  --hatch: rgba(255, 255, 255, 0.08);
 
-  /* ---- rampe per mappe di calore (testo in cella: il token -ink accanto) ---- */
-  --seq-1: #1d2f47; --seq-1-ink: #ffffff;  --seq-2: #22426b; --seq-2-ink: #ffffff;
-  --seq-3: #295792; --seq-3-ink: #ffffff;  --seq-4: #3270c0; --seq-4-ink: #ffffff;
-  --seq-5: #498de5; --seq-5-ink: #0d1117;  --seq-6: #75adf8; --seq-6-ink: #0d1117;
-  --seq-7: #abcfff; --seq-7-ink: #0d1117;
-  --div-1: #93c1fe; --div-1-ink: #0d1117;  --div-2: #5296ef; --div-2-ink: #0d1117;
-  --div-3: #3972bc; --div-3-ink: #ffffff;  --div-4: #31517b; --div-4-ink: #ffffff;
-  --div-5: #2f3339; --div-5-ink: #ffffff;  --div-6: #734126; --div-6-ink: #ffffff;
-  --div-7: #ad5622; --div-7-ink: #ffffff;  --div-8: #dd7438; --div-8-ink: #0d1117;
-  --div-9: #fda578; --div-9-ink: #0d1117;
-  --pnl-1: #fa8880; --pnl-1-ink: #0d1117;  --pnl-2: #cd605a; --pnl-2-ink: #0d1117;
-  --pnl-3: #85413c; --pnl-3-ink: #ffffff;  --pnl-4: #2f3339; --pnl-4-ink: #ffffff;
-  --pnl-5: #26664a; --pnl-5-ink: #ffffff;  --pnl-6: #31986e; --pnl-6-ink: #0d1117;
-  --pnl-7: #52c794; --pnl-7-ink: #0d1117;
+  /* ---- rampe per mappe di calore: toni gioiello sul nero (testo in cella: il token -ink accanto) ---- */
+  --seq-1: #092142; --seq-1-ink: #ffffff;  --seq-2: #0c3164; --seq-2-ink: #ffffff;
+  --seq-3: #11458c; --seq-3-ink: #ffffff;  --seq-4: #1659b5; --seq-4-ink: #ffffff;
+  --seq-5: #2273e1; --seq-5-ink: #ffffff;  --seq-6: #4b92fa; --seq-6-ink: #05070c;
+  --seq-7: #85b6ff; --seq-7-ink: #05070c;
+  --div-1: #3783f0; --div-1-ink: #05070c;  --div-2: #1862c5; --div-2-ink: #ffffff;
+  --div-3: #14488f; --div-3-ink: #ffffff;  --div-4: #143463; --div-4-ink: #ffffff;
+  --div-5: #202329; --div-5-ink: #ffffff;  --div-6: #512910; --div-6-ink: #ffffff;
+  --div-7: #763502; --div-7-ink: #ffffff;  --div-8: #a04a05; --div-8-ink: #ffffff;
+  --div-9: #cf630d; --div-9-ink: #05070c;
+  --pnl-1: #c30b2d; --pnl-1-ink: #ffffff;  --pnl-2: #941424; --pnl-2-ink: #ffffff;
+  --pnl-3: #67191e; --pnl-3-ink: #ffffff;  --pnl-4: #202329; --pnl-4-ink: #ffffff;
+  --pnl-5: #144425; --pnl-5-ink: #ffffff;  --pnl-6: #116031; --pnl-6-ink: #ffffff;
+  --pnl-7: #067e3f; --pnl-7-ink: #ffffff;
 
   /* ---- grafici ---- */
-  --grid: rgba(255, 255, 255, 0.07);
-  --axis: rgba(255, 255, 255, 0.20);
-  --scrim: rgba(3, 5, 9, 0.58);
+  --grid: rgba(255, 255, 255, 0.075);
+  --axis: rgba(255, 255, 255, 0.22);
+  --scrim: rgba(0, 0, 0, 0.62);
 }
 
 /* =====================================================================================================
-   CHIARO
+   CHIARO — tema secondario: funziona, non è il volto del terminale.
    ===================================================================================================== */
 :root[data-theme="light"] {
   color-scheme: light;
 
-  /* ---- fondale: perla, con quattro aloni tenui (cielo, lilla, pesca, menta) ---- */
-  --bg: #eef1f6;
+  --bg: #eef1f7;
+  --aurora-1: #86aeff; --aurora-2: #a996ff; --aurora-3: #d6a2ff; --aurora-4: #ffa6cf; --aurora-5: #86e3d5; --aurora-6: #ffc79a;
+  --aurora-strength: 0.75;
+  --aurora-blend: normal;
   --backdrop:
-    radial-gradient(62% 58% at 8% 0%, rgba(176, 204, 255, 0.78) 0%, rgba(176, 204, 255, 0) 72%),
-    radial-gradient(48% 46% at 94% 6%, rgba(214, 200, 255, 0.60) 0%, rgba(214, 200, 255, 0) 70%),
-    radial-gradient(58% 56% at 84% 100%, rgba(255, 220, 198, 0.66) 0%, rgba(255, 220, 198, 0) 72%),
-    radial-gradient(46% 44% at 0% 100%, rgba(190, 236, 222, 0.66) 0%, rgba(190, 236, 222, 0) 70%),
+    radial-gradient(46% 52% at 12% 4%, rgba(134, 174, 255, 0.75) 0%, rgba(134, 174, 255, 0) 70%),
+    radial-gradient(40% 44% at 92% 10%, rgba(214, 162, 255, 0.60) 0%, rgba(214, 162, 255, 0) 70%),
+    radial-gradient(42% 46% at 74% 96%, rgba(134, 227, 213, 0.60) 0%, rgba(134, 227, 213, 0) 70%),
+    radial-gradient(38% 42% at 4% 92%, rgba(255, 166, 207, 0.55) 0%, rgba(255, 166, 207, 0) 70%),
     linear-gradient(180deg, #f5f7fb 0%, #e9edf4 100%);
 
-  --glass-panel-tint: rgba(255, 255, 255, 0.56);   --glass-panel-solid: #f8f9fc;
-  --glass-raised-tint: rgba(255, 255, 255, 0.72);  --glass-raised-solid: #ffffff;
-  --glass-chrome-tint: rgba(250, 251, 254, 0.68);  --glass-chrome-solid: #f4f6fa;
+  --glass-panel-tint: rgba(255, 255, 255, 0.62);   --glass-panel-solid: #f8f9fc;
+  --glass-raised-tint: rgba(255, 255, 255, 0.70);  --glass-raised-solid: #ffffff;
+  --glass-chrome-tint: rgba(250, 251, 254, 0.72);  --glass-chrome-solid: #f4f6fa;
   --glass-sheet-tint: rgba(255, 255, 255, 0.88);   --glass-sheet-solid: #ffffff;
-  --glass-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.50) 0%, rgba(255, 255, 255, 0) 42%);
-  --glass-rim: linear-gradient(145deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.55) 26%, rgba(255, 255, 255, 0.18) 58%, rgba(255, 255, 255, 0.75) 100%);
-  --glass-specular: rgba(255, 255, 255, 0.95);
-  --glass-inner: rgba(255, 255, 255, 0.50);
-  --glass-hairline: rgba(15, 23, 42, 0.065);
-  --sweep: linear-gradient(105deg, rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, 0.70) 50%, rgba(255, 255, 255, 0) 62%);
-  --shimmer: linear-gradient(100deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.75) 50%, rgba(255, 255, 255, 0) 70%);
+  --glass-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0px, rgba(255, 255, 255, 0.15) 22px, rgba(255, 255, 255, 0) 96px);
+  --glass-rim: linear-gradient(140deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.60) 18%, rgba(255, 255, 255, 0.20) 44%, rgba(255, 255, 255, 0.20) 70%, rgba(255, 255, 255, 0.85) 100%);
+  --glass-depth: inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 16px 22px -20px rgba(255, 255, 255, 0.90), inset 0 -1px 0 rgba(16, 24, 40, 0.05), inset 0 -22px 30px -24px rgba(16, 24, 40, 0.10);
+  --glass-hairline: rgba(15, 23, 42, 0.07);
+  --glass-lens-bg: linear-gradient(140deg, rgba(255, 255, 255, 0.90) 0%, rgba(255, 255, 255, 0.40) 30%, rgba(255, 255, 255, 0.20) 60%, rgba(255, 255, 255, 0.70) 100%);
+  --glass-lens-edge: inset 0 0 0 1px rgba(255, 255, 255, 0.70), inset 0 1px 0 rgba(255, 255, 255, 1);
+  --sweep: linear-gradient(105deg, rgba(255, 255, 255, 0) 36%, rgba(255, 255, 255, 0.75) 50%, rgba(255, 255, 255, 0) 64%);
+  --shimmer: linear-gradient(100deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.80) 50%, rgba(255, 255, 255, 0) 70%);
+
+  --gloss-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.55) 46%, rgba(255, 255, 255, 0.72) 100%);
+  --gloss-edge: inset 0 1px 0 rgba(255, 255, 255, 1), inset 0 0 0 1px rgba(15, 23, 42, 0.10), inset 0 -8px 10px -8px rgba(15, 23, 42, 0.10);
+  --gloss-edge-pressed: inset 0 0 0 1px rgba(15, 23, 42, 0.14), inset 0 6px 10px -4px rgba(15, 23, 42, 0.22);
+  --gloss-shadow: 0 1px 1px rgba(16, 24, 40, 0.10), 0 8px 18px -6px rgba(16, 24, 40, 0.22);
+  --gloss-sweep: linear-gradient(105deg, rgba(255, 255, 255, 0) 34%, rgba(255, 255, 255, 0.90) 50%, rgba(255, 255, 255, 0) 66%);
+  --well-bg: rgba(15, 23, 42, 0.07);
+  --well-fx: inset 0 1px 3px rgba(15, 23, 42, 0.16), inset 0 0 0 1px rgba(15, 23, 42, 0.05), 0 1px 0 rgba(255, 255, 255, 0.90);
+  --thumb-bg: linear-gradient(180deg, #ffffff 0%, #f3f5f9 100%);
+  --thumb-fx: inset 0 1px 0 rgba(255, 255, 255, 1), inset 0 0 0 1px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(16, 24, 40, 0.14), 0 6px 14px -4px rgba(16, 24, 40, 0.22);
+  --accent-grad: linear-gradient(180deg, #3f8cff 0%, #1b63ec 52%, #0d4bd4 100%);
+  --accent-glow: 0 0 0 1px rgba(27, 99, 236, 0.20), 0 10px 24px -8px rgba(27, 99, 236, 0.60);
+  --kill-grad: linear-gradient(180deg, #f2414c 0%, #cf1a2e 52%, #9a0d20 100%);
+  --kill-glow: 0 0 0 1px rgba(207, 26, 46, 0.25), 0 10px 24px -8px rgba(207, 26, 46, 0.60);
+  --kill-guard: repeating-linear-gradient(135deg, rgba(207, 26, 46, 0.95) 0 5px, rgba(207, 26, 46, 0.16) 5px 10px);
+
+  --glow-hero: none;
+  --glow-pos: 0 0 0 rgba(0, 0, 0, 0);
+  --glow-neg: 0 0 0 rgba(0, 0, 0, 0);
+  --glow-line: drop-shadow(0 4px 6px rgba(42, 120, 214, 0.28));
+  --glow-dot: 0 0 0 4px rgba(23, 153, 107, 0.16);
 
   --elev-0: 0 0 0 0 rgba(16, 24, 40, 0);
   --elev-1: 0 1px 2px rgba(16, 24, 40, 0.04), 0 6px 16px -4px rgba(16, 24, 40, 0.06);
@@ -293,19 +363,19 @@
 
   --text: #0d1117;
   --text-2: #3b434f;
-  --text-3: #596270;
+  --text-3: #566070;
   --text-disabled: rgba(13, 17, 23, 0.36);
 
   --accent: #2a78d6;
-  --accent-fill: #1f68c8;
+  --accent-fill: #1b63ec;
   --accent-ink: #1757b0;
   --accent-soft: rgba(42, 120, 214, 0.11);
   --on-accent: #ffffff;
-  --focus: #1f68c8;
+  --focus: #1b63ec;
   --focus-gap: #ffffff;
   --focus-ring: 0 0 0 2px var(--focus-gap), 0 0 0 4px var(--focus);
 
-  --pos: #0b6e4f;
+  --pos: #0a6b4c;
   --neg: #bd1f2b;
   --pos-soft: rgba(11, 110, 79, 0.10);
   --neg-soft: rgba(189, 31, 43, 0.085);
@@ -316,9 +386,10 @@
   --safe: #17996b;        --safe-ink: #0a6648;    --safe-soft: rgba(23, 153, 107, 0.12);
   --warn: #f2a80a;        --warn-ink: #7a5000;    --warn-soft: rgba(242, 168, 10, 0.17);
   --serious: #e8763f;     --serious-ink: #973c10; --serious-soft: rgba(232, 118, 63, 0.14);
-  --crit: #d2332f;        --crit-ink: #ad1d1d;    --crit-soft: rgba(210, 51, 47, 0.09);
+  --crit: #cf1a2e;        --crit-ink: #ad1d1d;    --crit-soft: rgba(210, 51, 47, 0.09);
+  --crit-mark: #d2332f;
   --on-warn: #1c1400;     --on-crit: #ffffff;
-  --killed-bg: var(--crit); --killed-ink: var(--on-crit);
+  --killed-bg: var(--kill-grad); --killed-ink: var(--on-crit);
   --unknown-ink: var(--text-2); --unknown-border: var(--border-control);
 
   --prov-demo-ink: #3b434f;  --prov-demo-bg: rgba(15, 23, 42, 0.035);     --prov-demo-border: rgba(15, 23, 42, 0.50);
@@ -327,18 +398,18 @@
   --prov-real-ink: #ffffff;  --prov-real-bg: #0d1117;                     --prov-real-border: #0d1117;
   --hatch: rgba(15, 23, 42, 0.055);
 
-  --seq-1: #e2eeff; --seq-1-ink: #0d1117;  --seq-2: #bbd7fc; --seq-2-ink: #0d1117;
-  --seq-3: #8dbaf7; --seq-3-ink: #0d1117;  --seq-4: #5f9bec; --seq-4-ink: #0d1117;
-  --seq-5: #3980da; --seq-5-ink: #0d1117;  --seq-6: #1b5daf; --seq-6-ink: #ffffff;
+  --seq-1: #e2eeff; --seq-1-ink: #05070c;  --seq-2: #bbd7fc; --seq-2-ink: #05070c;
+  --seq-3: #8dbaf7; --seq-3-ink: #05070c;  --seq-4: #5f9bec; --seq-4-ink: #05070c;
+  --seq-5: #3980da; --seq-5-ink: #05070c;  --seq-6: #1b5daf; --seq-6-ink: #ffffff;
   --seq-7: #054083; --seq-7-ink: #ffffff;
   --div-1: #094d9a; --div-1-ink: #ffffff;  --div-2: #3074ca; --div-2-ink: #ffffff;
-  --div-3: #6d9edf; --div-3-ink: #0d1117;  --div-4: #abc6eb; --div-4-ink: #0d1117;
-  --div-5: #e5e6e9; --div-5-ink: #0d1117;  --div-6: #e6b9a3; --div-6-ink: #0d1117;
-  --div-7: #d3865d; --div-7-ink: #0d1117;  --div-8: #b85207; --div-8-ink: #ffffff;
+  --div-3: #6d9edf; --div-3-ink: #05070c;  --div-4: #abc6eb; --div-4-ink: #05070c;
+  --div-5: #e5e6e9; --div-5-ink: #05070c;  --div-6: #e6b9a3; --div-6-ink: #05070c;
+  --div-7: #d3865d; --div-7-ink: #05070c;  --div-8: #b85207; --div-8-ink: #ffffff;
   --div-9: #803805; --div-9-ink: #ffffff;
-  --pnl-1: #b02a2d; --pnl-1-ink: #ffffff;  --pnl-2: #d67069; --pnl-2-ink: #0d1117;
-  --pnl-3: #efb8b2; --pnl-3-ink: #0d1117;  --pnl-4: #e5e6e9; --pnl-4-ink: #0d1117;
-  --pnl-5: #a2d5bb; --pnl-5-ink: #0d1117;  --pnl-6: #49a77d; --pnl-6-ink: #0d1117;
+  --pnl-1: #b02a2d; --pnl-1-ink: #ffffff;  --pnl-2: #d67069; --pnl-2-ink: #05070c;
+  --pnl-3: #efb8b2; --pnl-3-ink: #05070c;  --pnl-4: #e5e6e9; --pnl-4-ink: #05070c;
+  --pnl-5: #a2d5bb; --pnl-5-ink: #05070c;  --pnl-6: #49a77d; --pnl-6-ink: #05070c;
   --pnl-7: #007650; --pnl-7-ink: #ffffff;
 
   --grid: rgba(15, 23, 42, 0.07);
@@ -351,14 +422,14 @@
    ===================================================================================================== */
 
 /* 1 · Niente sfocatura (browser vecchi) o «riduci trasparenza»: superfici piene, pensate così —
-       stessa gerarchia fatta di tono, filetto e ombra; il fondale resta, più quieto. */
+       stessa gerarchia fatta di tono, filetto, luce interna e ombra; le luci del fondale si spengono quasi del tutto. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   :root, :root[data-theme] {
     --glass-on: 0;
     --glass-panel-bg: var(--glass-panel-solid); --glass-raised-bg: var(--glass-raised-solid);
     --glass-chrome-bg: var(--glass-chrome-solid); --glass-sheet-bg: var(--glass-sheet-solid);
     --glass-panel-filter: none; --glass-raised-filter: none; --glass-chrome-filter: none; --glass-sheet-filter: none;
-    --glass-sheen: none;
+    --glass-lens-filter: none; --glass-lens-fallback: none;
   }
 }
 @media (prefers-reduced-transparency: reduce) {
@@ -367,29 +438,31 @@
     --glass-panel-bg: var(--glass-panel-solid); --glass-raised-bg: var(--glass-raised-solid);
     --glass-chrome-bg: var(--glass-chrome-solid); --glass-sheet-bg: var(--glass-sheet-solid);
     --glass-panel-filter: none; --glass-raised-filter: none; --glass-chrome-filter: none; --glass-sheet-filter: none;
-    --glass-sheen: none;
-    --backdrop: linear-gradient(180deg, var(--bg), var(--bg));
+    --glass-lens-filter: none; --glass-lens-fallback: none;
+    --aurora-strength: 0.16;
   }
 }
 
-/* 2 · «Aumenta contrasto»: filetti veri, niente testo terziario */
+/* 2 · «Aumenta contrasto»: superfici piene, filetti veri, niente testo terziario, niente bagliori */
 @media (prefers-contrast: more) {
   :root, :root[data-theme] {
     --glass-panel-bg: var(--glass-panel-solid); --glass-raised-bg: var(--glass-raised-solid);
     --glass-chrome-bg: var(--glass-chrome-solid); --glass-sheet-bg: var(--glass-sheet-solid);
     --text-3: var(--text-2);
     --border: var(--border-strong); --border-strong: var(--border-control); --glass-hairline: var(--border-control);
+    --glow-hero: none; --glow-pos: 0 0 0 transparent; --glow-neg: 0 0 0 transparent; --aurora-strength: 0.2;
   }
 }
 
-/* 3 · «Riduci movimento»: restano solo le dissolvenze; niente spostamenti, rotoli, riflessi, caricamenti animati */
+/* 3 · «Riduci movimento»: restano solo le dissolvenze. Fermi: deriva del fondale, parallasse, rotoli, riflessi,
+       respiro, ingresso sfocato, caricamento animato. */
 @media (prefers-reduced-motion: reduce) {
   :root, :root[data-theme] {
-    --motion-on: 0;
-    --dur-instant: 0.01ms; --dur-fast: 0.01ms; --dur-base: 0.01ms; --dur-slow: 0.01ms; --dur-slower: 0.01ms;
-    --dur-shimmer: 0.01ms; --dur-sweep: 0.01ms; --stagger: 0ms;
-    --lift: 0px; --press-scale: 1; --sheet-from-scale: 1; --sheet-from-y: 0px;
-    --ease-spring: linear; --ease-spring-soft: linear;
+    --motion-on: 0; --parallax: 0;
+    --dur-instant: 0.01ms; --dur-fast: 0.01ms; --dur-base: 0.01ms; --dur-morph: 0.01ms; --dur-slow: 0.01ms; --dur-slower: 0.01ms;
+    --dur-shimmer: 0.01ms; --dur-sweep: 0.01ms; --dur-breathe: 0.01ms; --dur-drift: 0.01ms; --stagger: 0ms;
+    --lift: 0px; --press-scale: 1; --sheet-from-scale: 1; --sheet-from-y: 0px; --enter-y: 0px; --enter-blur: 0px;
+    --ease-spring: linear; --ease-spring-soft: linear; --ease-spring-bouncy: linear;
   }
 }
 
@@ -408,7 +481,7 @@
   --chart-pane-gap: 14px;
   --chart-tag-h: 18px;
   --chart-draw: var(--dur-slower);               /* tracciamento iniziale */
-  --chart-morph: var(--dur-slow);                /* valore che cambia */
+  --chart-morph: var(--dur-morph, var(--dur-slow));                /* valore che cambia */
   --chart-range: var(--dur-slow);                /* cambio di intervallo */
   --chart-cross: var(--dur-instant);             /* mirino e scheda dei valori */
   --chart-dim: 0.42;                             /* opacità dei segni non puntati */
@@ -417,27 +490,27 @@
 /* RUOLI DI COLORE DEI GRAFICI — scuro per primo (nero, colori luminosi); il chiaro è secondario.
    Coppie misurate per deuteranopia / protanopia (OKLab ΔE ×100, simulazione Machado): vedi design_2_grafici.md. */
 :root, :root[data-theme="dark"] {
-  --chart-up: #2ee6a0; --chart-down: #ff453a; --chart-up-soft: rgba(46, 230, 160, 0.16); --chart-down-soft: rgba(255, 69, 58, 0.17);
-  --chart-fund: #3d8bff; --chart-orig: #ff9a3d; --chart-bench: #8e96a6;
-  --chart-c1: #3d8bff; --chart-c2: #ff5fa8; --chart-c3: #ffd23f; --chart-c4: #4cc9ff; --chart-c5: #e9edf5;
+  --chart-up: var(--pos, #2ee59a); --chart-down: var(--neg, #ff6b78); --chart-up-soft: rgba(46, 229, 154, 0.16); --chart-down-soft: rgba(255, 107, 120, 0.17);
+  --chart-fund: var(--accent, #3b94ff); --chart-orig: #ff9a3d; --chart-bench: #8e96a6;
+  --chart-c1: var(--accent, #3b94ff); --chart-c2: #ff5fa8; --chart-c3: #ffd23f; --chart-c4: #4cc9ff; --chart-c5: #e9edf5;
   --chart-neutral: #8e96a6; --chart-neutral-soft: rgba(255, 255, 255, 0.10);
   --chart-glow-a: 62%; --chart-glow-r: 7px;                     /* alone del tratto primario: uno solo per grafico */
   --chart-area-top: 0.34; --chart-area-bottom: 0;               /* area sfumata: dal colore al trasparente */
   --chart-slab: rgba(255, 255, 255, 0.055); --chart-slab-edge: rgba(255, 255, 255, 0.20);   /* lastra di vetro: fasce e selezioni */
-  --chart-cross-line: rgba(255, 255, 255, 0.78);
-  --chart-div-1: #b9d8ff; --chart-div-1-ink: #0b0e14; --chart-div-2: #62a4ff; --chart-div-2-ink: #0b0e14; --chart-div-3: #3a7be0; --chart-div-3-ink: #ffffff; --chart-div-4: #33558f; --chart-div-4-ink: #ffffff;
+  --chart-cross-line: rgba(255, 255, 255, 0.78); --chart-on-fill: #0b0e14; --chart-block-opacity: 0.92;
+  --chart-div-1: #b9d8ff; --chart-div-1-ink: #0b0e14; --chart-div-2: #62a4ff; --chart-div-2-ink: #0b0e14; --chart-div-3: #3069cf; --chart-div-3-ink: #ffffff; --chart-div-4: #33558f; --chart-div-4-ink: #ffffff;
   --chart-div-5: #3a404d; --chart-div-5-ink: #ffffff;
   --chart-div-6: #8a5326; --chart-div-6-ink: #ffffff; --chart-div-7: #cf7526; --chart-div-7-ink: #0b0e14; --chart-div-8: #ff9a3d; --chart-div-8-ink: #0b0e14; --chart-div-9: #ffd2a6; --chart-div-9-ink: #0b0e14;
 }
 :root[data-theme="light"] {
   --chart-up: #0a9a6e; --chart-down: #e0352b; --chart-up-soft: rgba(10, 154, 110, 0.13); --chart-down-soft: rgba(224, 53, 43, 0.12);
-  --chart-fund: #1f6fe0; --chart-orig: #c26a00; --chart-bench: #6f7888;
-  --chart-c1: #1f6fe0; --chart-c2: #d6408f; --chart-c3: #b08400; --chart-c4: #0e8fb3; --chart-c5: #0d1117;
+  --chart-fund: var(--accent, #2a78d6); --chart-orig: #c26a00; --chart-bench: #6f7888;
+  --chart-c1: var(--accent, #2a78d6); --chart-c2: #c2439a; --chart-c3: #bd8600; --chart-c4: #2f6d3a; --chart-c5: #0d1117;
   --chart-neutral: #6f7888; --chart-neutral-soft: rgba(15, 23, 42, 0.07);
   --chart-glow-a: 0%; --chart-glow-r: 0px;
   --chart-area-top: 0.20; --chart-area-bottom: 0;
   --chart-slab: rgba(15, 23, 42, 0.035); --chart-slab-edge: rgba(15, 23, 42, 0.14);
-  --chart-cross-line: rgba(13, 17, 23, 0.62);
+  --chart-cross-line: rgba(13, 17, 23, 0.62); --chart-on-fill: #0d1117; --chart-block-opacity: 0.78;
   --chart-div-1: #0b4f9e; --chart-div-1-ink: #ffffff; --chart-div-2: #3277cf; --chart-div-2-ink: #ffffff; --chart-div-3: #73a5e6; --chart-div-3-ink: #0d1117; --chart-div-4: #b3cdf0; --chart-div-4-ink: #0d1117;
   --chart-div-5: #dfe2e8; --chart-div-5-ink: #0d1117;
   --chart-div-6: #f0c4a4; --chart-div-6-ink: #0d1117; --chart-div-7: #e09355; --chart-div-7-ink: #0d1117; --chart-div-8: #bd5a0a; --chart-div-8-ink: #ffffff; --chart-div-9: #833a05; --chart-div-9-ink: #ffffff;
@@ -510,6 +583,7 @@ button { font: inherit; color: inherit; letter-spacing: inherit; cursor: pointer
 .dv-legend span { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
 .dv-legend b { font-weight: 600; color: var(--text); font-family: var(--font-num); font-variant-numeric: var(--num-variant); }
 .dv-legend svg { flex: none; overflow: visible; }
+@media (max-width: 560px) { .dv-legend span { white-space: normal; flex-wrap: wrap; } .chip { white-space: normal; height: auto; min-height: 24px; padding: 4px 10px; } }
 .dv-plot { position: relative; min-width: 0; border-radius: var(--radius-s); }
 .dv-plot svg { display: block; overflow: visible; touch-action: pan-y; -webkit-user-select: none; user-select: none; }
 .dv-plot:focus-visible { outline-offset: 6px; }
@@ -652,7 +726,7 @@ button { font: inherit; color: inherit; letter-spacing: inherit; cursor: pointer
   .dv-card.is-in:not(.is-settled) .grow.g-pop { transform-origin: 50% 50%; animation-name: dv-pop; animation-duration: var(--dur-slow); }
   .dv-card.is-in:not(.is-settled) .fade { animation: dv-fade var(--dur-slow) var(--ease-out) both; animation-delay: calc(var(--dur-base) + var(--i, 0) * 30ms); }
   .pulse { transform-box: fill-box; transform-origin: 50% 50%; animation: dv-pulse 900ms var(--ease-out) 1 both; }
-  .breathe { animation: dv-breathe 2600ms var(--ease-out) infinite; }
+  .breathe { animation: dv-breathe var(--dur-breathe, 2600ms) var(--ease-out) infinite; }
   .dv-card.is-in:not(.is-settled) .grow { animation-timing-function: var(--ease-spring-soft); }
 }
 @keyframes dv-grow-y { from { transform: scaleY(0); opacity: 0.2; } to { transform: scaleY(1); opacity: 1; } }
@@ -817,7 +891,7 @@ function mount(def, host) {
       const seg = h('div', { class: 'seg', role: 'group', 'aria-label': c.label }, cw);
       for (const [v, l] of c.options) {
         const b = h('button', { type: 'button', 'aria-pressed': String(def.state[c.key] === v) }, seg, l);
-        b.addEventListener('click', () => { if (def.state[c.key] === v) return; const prev = def.state[c.key]; def.state[c.key] = v; for (const o of seg.children) o.setAttribute('aria-pressed', String(o === b)); (def.onControl || (() => render(def)))(c.key, v, prev); });
+        b.addEventListener('click', () => { if (def.state[c.key] === v) return; const prev = def.state[c.key]; def.state[c.key] = v; for (const o of seg.children) o.setAttribute('aria-pressed', String(o === b)); if (def.onControl) def.onControl(c.key, v, prev); else render(def); });
       }
     }
   }
@@ -826,7 +900,7 @@ function mount(def, host) {
   def.tip = h('div', { class: 'dv-tip', role: 'status', 'aria-live': 'polite' }, def.plot);
   const foot = h('footer', { class: 'dv-foot' }, card);
   for (const p of def.prov) h('span', { class: 'tag tag--' + p }, foot, PROV[p]);
-  h('span', { class: 'dv-note' }, foot, def.note);
+  h('span', { class: 'dv-note' }, foot, typeof def.note === 'function' ? def.note() : def.note);
   if (def.table) {
     const det = h('details', { class: 'dv-table' }, card); h('summary', null, det, 'Tabella dei dati');
     det.addEventListener('toggle', () => { if (det.open && !det._built) { det._built = true; buildTable(det, def.table(def)); } });
@@ -996,7 +1070,7 @@ chart({
     const def = ctx.def, { W, mobile, k } = ctx;
     if (!def.dom) def.dom = domA(ctx.state.range);
     const [a, b] = def.dom, i0 = Math.max(0, Math.floor(a)), i1 = Math.min(NB, Math.ceil(b));
-    const G = mobile ? 66 : 122, PW = W - G, gap = mobile ? 24 : 28;
+    const G = mobile ? 82 : 122, PW = W - G, gap = mobile ? 24 : 28;
     const hP = mobile ? 236 : 336, hV = mobile ? 40 : 54, hC = mobile ? 60 : 76, hG = mobile ? 54 : 64, hA = mobile ? 40 : 46;
     const yP = 20, yV = yP + hP + gap, yC = yV + hV + gap, yG = yC + hC + gap, yA = yG + hG + gap, H = yA + hA + 24;
     const bw = PW / (b - a), X = (i) => (i - a + 0.5) * bw, cw = clamp(bw * 0.66, 1, 16);
@@ -1137,6 +1211,621 @@ chart({
         if (t) { const st = stopAt(t, i); rows.push(null, ['Nel trade', i === t.i1 ? 'uscita: ' + t.why + ' · ' + sR(t.R) : sR((cl[i] - t.entry) / (t.entry * t.sd), 2)], ['Dallo stop', spct(st / cl[i] - 1, 1)], ['Dalla liquidazione', spct(t.liq / cl[i] - 1, 1)]); }
         return { title: dwk(OH.t[i]), tag: 'demo', rows };
       } });
+  },
+});
+
+/* =====================================================================================================
+   b · PATRIMONIO contro benchmark e sistema originale, con la caduta sotto, sullo stesso asse del tempo
+   ===================================================================================================== */
+const EQ = (() => {
+  const E = DATA.equity, st = E.sim.t.map(ms), pt = E.paper.t.map(ms);
+  const sf = E.sim.fund.map((v) => 100 * v / E.sim.fund[0]), so = E.sim.orig.map((v) => 100 * v / E.sim.orig[0]);
+  const fb = sf[sf.length - 1], ob = so[so.length - 1];
+  const pf = E.paper.fund.map((v) => fb * v / E.paper.fund[0]), po = E.paper.orig.map((v) => ob * v / E.paper.orig[0]), sp = E.paper.spy.map((v) => fb * v / E.paper.spy[0]);
+  const dd = (a) => { let pk = -1e9; return a.map((v) => { pk = Math.max(pk, v); return v / pk - 1; }); };
+  return { st, pt, sf, so, pf, po, sp, ddS: dd(sf), ddP: dd(pf), t0: st[0], tp: pt[0], t1: pt[pt.length - 1], split: ms(E.split), E };
+})();
+const DAY = 864e5;
+const domB = (k) => (k === 'all' ? [EQ.t0, EQ.t1] : k === '23' ? [EQ.split - 150 * DAY, EQ.t1] : k === '1A' ? [EQ.t1 - 365 * DAY, EQ.t1] : [EQ.tp - 8 * DAY, EQ.t1]);
+const atT = (ts, vs, t) => { if (t <= ts[0]) return vs[0]; for (let i = 1; i < ts.length; i++) if (ts[i] >= t) return lerp(vs[i - 1], vs[i], (t - ts[i - 1]) / (ts[i] - ts[i - 1])); return vs[vs.length - 1]; };
+
+chart({
+  id: 'patrimonio', span: 'span-12', eyebrow: 'b · Confronto nel tempo', init: { range: 'all' },
+  title: 'Il nuovo sistema cresce più dell’originale e del mercato, e a prezzo di quali cadute?',
+  aid: 'Tutte le linee partono da 100 all’inizio dell’intervallo: chi sta più in alto ha reso di più. Il tratto tratteggiato è una simulazione sul passato; quello pieno, dopo la riga «avvio del paper», è il conto di prova. Sotto, quanto si è stati sotto il massimo: più in basso, peggio.',
+  note: 'Base 100 al primo giorno dell’intervallo; scala logaritmica (pendenze uguali = rendimenti uguali). Simulato: settimanale, profilo C1 (il profilo esatto del paper non ha ancora una curva) e originale con leva 150%, netti dei costi ipotizzati. Paper: giornaliero, riparte dal livello simulato e la sua caduta riparte da zero. S&P 500 solo dal primo giorno comune. Scelta | verifica al 1° gen 2023. Fonti: quant_v4.json (fund_curves), sample_compare.json.',
+  prov: ['demo', 'sim', 'paper'],
+  controls: [{ key: 'range', label: 'Intervallo', options: [['all', 'Tutto'], ['23', 'Dal 2023'], ['1A', '1A'], ['P', 'Paper']] }],
+  onControl(key, v, prev) { const def = this, from = def.dom || domB(prev), to = domB(v); if (def._tw) def._tw.stop(); def._tw = tween(cssMs('--chart-range', 420), (t) => { def.dom = [lerp(from[0], to[0], t), lerp(from[1], to[1], t)]; render(def); }, easeStd); },
+  table() {
+    const rows = []; let y = '';
+    EQ.st.forEach((t, i) => { const yr = iso(t).slice(0, 4), last = i === EQ.st.length - 1 || iso(EQ.st[i + 1]).slice(0, 4) !== yr; if (last) rows.push([dlong(iso(t)), 'SIMULATO', num(EQ.sf[i], 0), num(EQ.so[i], 0), 'n.d.', pct(EQ.ddS[i], 1)]); });
+    const n = EQ.pt.length - 1; rows.push([dlong(iso(EQ.pt[0])), 'PAPER', num(EQ.pf[0], 0), num(EQ.po[0], 0), num(EQ.sp[0], 0), pct(0, 1)], [dlong(iso(EQ.pt[n])), 'PAPER', num(EQ.pf[n], 0), num(EQ.po[n], 0), num(EQ.sp[n], 0), pct(EQ.ddP[n], 1)]);
+    return { caption: 'Indice a base 100 al 1 apr 2018, fine di ogni anno · simulato e paper su righe separate, mai sommati', head: ['Data', 'Provenienza', 'Nuovo sistema', 'Originale', 'S&P 500', 'Caduta del nuovo'], rows };
+  },
+  render(ctx) {
+    const def = ctx.def, { W, mobile } = ctx;
+    if (!def.dom) def.dom = domB(ctx.state.range);
+    const [d0, d1] = def.dom, G = mobile ? 8 : 156, PW = W - G, yM = 22, hM = mobile ? 230 : 330, gap = 34, yU = yM + hM + gap, hU = mobile ? 76 : 100, H = yU + hU + 24;
+    const X = lin(d0, d1, 0, PW), svg = ctx.svg(H, 'Nuovo sistema, sistema originale e S&P 500 a base 100, con la caduta dal massimo sotto');
+    const reb = d0 > EQ.t0 + DAY, kf = reb ? 100 / (d0 < EQ.tp ? atT(EQ.st, EQ.sf, d0) : atT(EQ.pt, EQ.pf, d0)) : 1, ko = reb ? 100 / (d0 < EQ.tp ? atT(EQ.st, EQ.so, d0) : atT(EQ.pt, EQ.po, d0)) : 1;
+    const inR = (ts) => { let a = 0, b = ts.length; while (a < ts.length && ts[a] < d0) a++; while (b > 0 && ts[b - 1] > d1) b--; return [Math.max(0, a - 1), Math.min(ts.length, b + 1)]; };
+    const [s0, s1] = inR(EQ.st), [p0, p1] = inR(EQ.pt);
+    let lo = Infinity, hi = -Infinity; const see = (v) => { lo = Math.min(lo, v); hi = Math.max(hi, v); };
+    for (let i = s0; i < s1; i++) { see(EQ.sf[i] * kf); see(EQ.so[i] * ko); } for (let i = p0; i < p1; i++) { see(EQ.pf[i] * kf); see(EQ.po[i] * ko); see(EQ.sp[i] * kf); }
+    const padk = Math.pow(hi / lo, 0.07); lo /= padk; hi *= padk;
+    const Y = logS(lo, hi, yM + hM, yM), YU = lin(0, -0.45, yU, yU + hU);
+    const xp = X(EQ.tp), xsplit = X(EQ.split);
+    // --- lastra del tratto paper (selezione più chiara) e nastro di provenienza ---
+    const gz = s('g', null, svg);
+    if (xp < PW) { slab(gz, Math.max(0, xp), yM, PW - Math.max(0, xp), hM, 'slab', 0); slab(gz, Math.max(0, xp), yU, PW - Math.max(0, xp), hU, 'slab', 0); }
+    if (xp > 0) s('rect', { x: 0, y: yM - 9, width: f1(Math.min(PW, xp) - 2), height: 4, rx: 2, class: 'z-sim', style: 'stroke: var(--prov-sim-border); stroke-dasharray: 3 2' }, gz);
+    if (xp < PW) s('rect', { x: f1(Math.max(0, xp) + 1), y: yM - 9, width: f1(PW - Math.max(0, xp) - 1), height: 4, rx: 2, style: 'fill: var(--prov-paper-border)' }, gz);
+    // --- griglia ---
+    const gg = s('g', null, svg), tk = hi / lo > 1.7 ? logTicks(lo, hi) : ticks(lo, hi, 5);
+    for (const v of tk) { const y = f1(Y(v)); if (y < yM + 8) continue; s('line', { x1: 0, x2: PW, y1: y, y2: y, class: Math.abs(v - 100) < 1e-6 ? 'axis-l' : 'grid-l' }, gg); if (y > yM + 36) s('text', { x: 4, y: y - 5, class: 'halo' }, gg, num(v, 0)); }
+    const span = (d1 - d0) / DAY; let lastX = -99;
+    for (let t = Date.UTC(new Date(d0).getUTCFullYear(), new Date(d0).getUTCMonth(), 1); t <= d1; ) {
+      const dt = new Date(t), m = dt.getUTCMonth(), yr = dt.getUTCFullYear(), x = X(t), show = span > 900 ? m === 0 : span > 200 ? m % 3 === 0 : true;
+      if (show && x >= 0 && x - lastX > (mobile ? 44 : 56)) { s('line', { x1: f1(x), x2: f1(x), y1: yU + hU, y2: yU + hU + 4, class: 'axis-l' }, gg); s('text', { x: f1(x) + 3, y: H - 6, class: 'lb' }, gg, span > 900 ? String(yr) : MESI[m] + (m === 0 || lastX < 0 ? ' ' + yr : '')); lastX = x; }
+      t = Date.UTC(yr, m + 1, 1);
+    }
+    s('line', { x1: 0, x2: PW, y1: yM + hM + 0.5, y2: yM + hM + 0.5, class: 'axis-l' }, gg); s('line', { x1: 0, x2: PW, y1: yU + 0.5, y2: yU + 0.5, class: 'axis-l' }, gg);
+    for (const st of DATA.risk.steps) { const y = f1(YU(st.v)); s('line', { x1: 0, x2: PW, y1: y, y2: y, class: 'rule' }, gg); s('text', mobile ? { x: PW - 4, y: y - 4, class: 't-end halo' } : { x: PW + 8, y: y + 4 }, gg, mobile ? pct(st.v, 0) : pct(st.v, 0) + ' · ' + ['dimezza', 'un quarto', 'chiude tutto'][DATA.risk.steps.indexOf(st)]); }
+    // --- serie ---
+    const cp = ctx.clip(0, 0, PW + 12, H), g = s('g', { 'clip-path': cp }, svg), gm = s('g', { 'clip-path': ctx.clip(0, yM, PW + 12, hM, false) }, g), gu = s('g', { 'clip-path': ctx.clip(0, yU, PW + 12, hU + 1, false) }, g);
+    const sx = EQ.st.slice(s0, s1).map(X), px = EQ.pt.slice(p0, p1).map(X), yv = (a, k, i0, i1) => a.slice(i0, i1).map((v) => Y(v * k));
+    if (s1 > s0) {
+      s('path', { d: pArea(sx, yv(EQ.sf, kf, s0, s1), yM + hM), fill: grad(ctx, '--chart-fund', 0.13, 0) }, gm);
+      s('path', { d: pLine(sx, yv(EQ.so, ko, s0, s1)), class: 'ln c-orig is-sim' }, gm);
+      s('path', { d: pLine(sx, yv(EQ.sf, kf, s0, s1)), class: 'ln c-fund is-sim' }, gm);
+      const ux = sx, uy = EQ.ddS.slice(s0, s1).map(YU);
+      s('path', { d: pArea(ux, uy, yU), fill: grad(ctx, '--chart-fund', 0, 0.22) }, gu); s('path', { d: pLine(ux, uy), class: 'ln c-fund is-sim' }, gu);
+    }
+    const ends = [];
+    if (p1 > p0) {
+      s('path', { d: pArea(px, yv(EQ.pf, kf, p0, p1), yM + hM), fill: grad(ctx, '--chart-fund') }, gm);
+      s('path', { d: pLine(px, yv(EQ.sp, kf, p0, p1)), class: 'ln-thin c-bench', 'stroke-width': 1.5 }, gm);
+      s('path', { d: pLine(px, yv(EQ.po, ko, p0, p1)), class: 'ln c-orig' }, gm);
+      s('path', { d: pLine(px, yv(EQ.pf, kf, p0, p1)), class: 'ln ln-live c-fund glow' }, gm);
+      const uy = EQ.ddP.slice(p0, p1).map(YU); s('path', { d: pArea(px, uy, yU), fill: grad(ctx, '--chart-fund', 0, 0.3) }, gu); s('path', { d: pLine(px, uy), class: 'ln c-fund' }, gu);
+      const n = EQ.pt.length - 1, xe = X(EQ.pt[n]);
+      if (xe <= PW + 1) {
+        ringDot(svg, xe, Y(EQ.sp[n] * kf), 'c-bench fade', 3.5); ringDot(svg, xe, Y(EQ.po[n] * ko), 'c-orig fade', 4);
+        const ld = liveDot(svg, xe, Y(EQ.pf[n] * kf), 'f-fund', '--chart-fund'); ld.lastChild.setAttribute('class', 'f-halo c-fund glow'); ld.lastChild.setAttribute('stroke-width', 2.25);
+        const val = (v) => (reb ? spct(v / 100 - 1, 1) : '×' + num(v / 100, 1));
+        ends.push({ y: Y(EQ.pf[n] * kf), t: 'Nuovo sistema', v: val(EQ.pf[n] * kf), c: 'f-fund' }, { y: Y(EQ.po[n] * ko), t: 'Originale', v: val(EQ.po[n] * ko), c: 'f-orig' }, { y: Y(EQ.sp[n] * kf), t: 'S&P 500', v: reb && d0 >= EQ.tp - 9 * DAY ? val(EQ.sp[n] * kf) : spct(EQ.sp[n] / EQ.sp[0] - 1, 1) + ' dal paper', c: 'f-bench' });
+      }
+    }
+    // --- confini: scelta | verifica, avvio del paper ---
+    const gb = s('g', { class: 'fade' }, svg);
+    if (xsplit > 0 && xsplit < PW) { s('line', { x1: f1(xsplit), x2: f1(xsplit), y1: yM, y2: yU + hU, class: 'bound' }, gb); s('text', { x: f1(xsplit - 6), y: yM + hM - 8, class: 'lb halo t-end' }, gb, '◂ scelta'); s('text', { x: f1(xsplit + 6), y: yM + hM - 8, class: 'lb halo' }, gb, 'verifica ▸'); }
+    if (xp > 0 && xp < PW) { s('line', { x1: f1(xp), x2: f1(xp), y1: yM - 9, y2: yU + hU, class: 'bound' }, gb); const lr = xp < 130, lx = f1(xp + (lr ? 6 : -6)), lc = lr ? '' : ' t-end'; s('text', { x: lx, y: yM + hM - 42, class: 'lb-s halo' + lc }, gb, 'avvio del paper'); s('text', { x: lx, y: yM + hM - 27, class: 'lb halo' + lc }, gb, dlong(iso(EQ.tp))); }
+    if (xp > 110) ptag(gb, 6, yM + 6, 'sim', 'Simulato');
+    if (xp < PW) { const pw = PW - Math.max(0, xp); ptag(gb, pw > 60 ? Math.max(0, xp) + 6 : PW - 4, yM + 6, 'paper', 'Paper', pw > 60 ? 'start' : 'end'); }
+    s('text', { x: 1, y: yM - 14, class: 'pane' }, svg, 'Indice · base 100'); s('text', { x: 1, y: yU - 8, class: 'pane' }, svg, 'Caduta dal massimo · nuovo sistema');
+    if (!mobile) for (const e of spread(ends, 32, yM + 14, yM + hM - 14)) { const ge = s('g', { class: 'fade' }, svg); s('circle', { cx: PW + 14, cy: f1(e.y - 9), r: 3.5, class: e.c }, ge); s('text', { x: PW + 23, y: f1(e.y - 5), class: 'lb' }, ge, e.t); s('text', { x: PW + 23, y: f1(e.y + 9), class: 'val' }, ge, e.v); }
+    const n = EQ.pt.length - 1, lv = (v) => (reb ? spct(v / 100 - 1, 1) : '×' + num(v / 100, 1));
+    ctx.legend([{ key: keyLine('c-fund', 'ln-live glow'), label: 'Nuovo sistema', value: lv(EQ.pf[n] * kf) }, { key: keyLine('c-orig'), label: 'Sistema originale', value: lv(EQ.po[n] * ko) }, { key: keyLine('c-bench', 'ln-thin'), label: 'S&P 500, dal paper', value: spct(EQ.sp[n] / EQ.sp[0] - 1, 1) },
+      { key: keyLine('c-ink2', 'is-sim'), label: 'tratteggiato = simulato' }, { key: keyLine('c-ink2'), label: 'pieno = paper' }, { label: 'Caduta del paper', value: pct(EQ.ddP[n], 1) }]);
+    // --- mirino: una riga per i due riquadri ---
+    const pts = []; for (let i = s0; i < s1; i++) if (EQ.st[i] >= d0 && EQ.st[i] <= d1) pts.push(['s', i]); for (let i = p0; i < p1; i++) if (EQ.pt[i] >= d0 && EQ.pt[i] <= d1) pts.push(['p', i]);
+    const T = (q) => (q[0] === 's' ? EQ.st[q[1]] : EQ.pt[q[1]]);
+    crosshair(ctx, { n: pts.length, xOf: (i) => X(T(pts[i])), x0: 0, x1: PW, y0: yM, y1: yU + hU,
+      dots: [{ cls: 'f-fund', y: (i) => Y((pts[i][0] === 's' ? EQ.sf : EQ.pf)[pts[i][1]] * kf) }, { cls: 'f-orig', y: (i) => Y((pts[i][0] === 's' ? EQ.so : EQ.po)[pts[i][1]] * ko) }, { cls: 'f-fund', y: (i) => YU((pts[i][0] === 's' ? EQ.ddS : EQ.ddP)[pts[i][1]]) }],
+      spec(i) { const [kd, j] = pts[i], sim = kd === 's';
+        const rows = [['Nuovo sistema', num((sim ? EQ.sf : EQ.pf)[j] * kf, 1), 'var(--chart-fund)'], ['Sistema originale', num((sim ? EQ.so : EQ.po)[j] * ko, 1), 'var(--chart-orig)']];
+        if (!sim) rows.push(['S&P 500', num(EQ.sp[j] * kf, 1), 'var(--chart-bench)']);
+        rows.push(null, ['Caduta dal massimo', pct((sim ? EQ.ddS : EQ.ddP)[j], 1)], ['Frequenza', sim ? 'settimanale' : 'giornaliera']);
+        return { title: dlong(iso(T(pts[i]))), tag: sim ? 'sim' : 'paper', rows }; } });
+  },
+});
+
+/* =====================================================================================================
+   c · SCALA DEI FRENI: un solo asse per caduta, scalini, freni a 24 ore e 7 giorni, e il peggior caso di oggi
+   ===================================================================================================== */
+chart({
+  id: 'freni', span: 'span-12', eyebrow: 'c · Rischio', demo: true,
+  title: 'Quanto manca a ogni freno, e fin dove arriverebbe il peggior caso di oggi?',
+  aid: 'Lo zero è a sinistra: più un segno va a destra, più si è perso. Le tacche sono i freni automatici del motore, con scritto che cosa fanno. Il rombo tratteggiato è il peggio che può succedere oggi, proiettato sulla stessa scala: si vede subito quale freno scatterebbe.',
+  note: 'Percentuali sul patrimonio del fondo. Scalini letti da config/gerva.yaml (−20 / −30 / −40% dal massimo; −4% in 24 ore mobili; −8% in 7 giorni mobili); rientro a metà soglia. Peggior caso di oggi = perdite agli stop + eccedenza fino ai margini isolati + scenario di gap sul libro giornaliero (crypto −20%, azioni −7%, oro −3%, obbligazioni −2%: ipotesi dichiarata, SIMULATO). Fonti: sample_snapshot.json, sample_tradebook.json.',
+  prov: ['demo', 'sim'],
+  table(def) {
+    const r = DATA.risk, w = r.worst, wt = w.stops + w.margins + w.gap, e = r.equity;
+    return { caption: 'Freni del motore e distanza da ciascuno · ESEMPIO · il peggior caso è un’ipotesi dichiarata (SIMULATO)', head: ['Voce', 'Valore', 'Soglia', 'Mancano (punti)', 'Mancano (€)', 'Che cosa fa'], rows: [
+      ...r.steps.map((s_) => ['Caduta dal massimo', pct(r.dd), pct(s_.v, 0), num((r.dd - s_.v) * 100, 1), eur((r.dd - s_.v) * r.hwm, 0), s_.name + ': ' + s_.act]),
+      ['Ultime 24 ore', spct(r.day), pct(r.dayBrake, 0), num((r.day - r.dayBrake) * 100, 1), eur((r.day - r.dayBrake) * e, 0), 'esposizione dimezzata'], ['Ultimi 7 giorni', spct(r.week), pct(r.weekBrake, 0), num((r.week - r.weekBrake) * 100, 1), eur((r.week - r.weekBrake) * e, 0), 'come lo scalino −30%'],
+      ['Peggior caso di oggi', pct(wt, 1), '—', '—', eur(wt * e, 0), 'stop ' + pct(w.stops, 2) + ' · margini ' + pct(w.margins, 2) + ' · gap ' + pct(w.gap, 2)]] };
+  },
+  render(ctx) {
+    const { W, mobile, k } = ctx, r = DATA.risk, w = r.worst;
+    const dd = lerp(r.dd, -0.052, k), day = lerp(r.day, -0.021, k), week = lerp(r.week, -0.034, k), wt = w.stops + w.margins + w.gap, ddW = (1 + dd) * (1 + wt) - 1;
+    const LW = mobile ? 0 : 150, x0 = LW + 8, x1 = W - (mobile ? 10 : 24), X = lin(0.04, -0.46, x0, x1);
+    const y1 = mobile ? 124 : 84, th = 16, y2 = y1 + (mobile ? 150 : 128), y3 = y2 + (mobile ? 86 : 62), H = y3 + 54;
+    const svg = ctx.svg(H, 'Scala dei freni: caduta attuale, scalini, freni a 24 ore e 7 giorni, peggior caso di oggi');
+    const g = s('g', null, svg), lab = (y, a, b, up = 34) => { if (mobile) { const t = s('text', { x: x0, y: y - up, class: 'lb-s' }, g, a); s('text', { x: x0 + t.getComputedTextLength() + 8, y: y - up, class: 'lb' }, g, '· ' + b); } else { s('text', { x: 0, y: y + 5, class: 'lb-s' }, g, a); s('text', { x: 0, y: y + 21, class: 'lb' }, g, b); } };
+    // --- asse comune ---
+    for (let v = 0; v >= -0.45; v -= 0.05) { const x = f1(X(v)), major = Math.round(v * 100) % 10 === 0; s('line', { x1: x, x2: x, y1: y1 - 6, y2: y3 + 18, class: 'grid-l' }, g); if (major && (!mobile || Math.round(v * 100) % 20 === 0)) s('text', { x: x, y: H - 8, class: 't-mid' }, g, v === 0 ? '0' : pct(v, 0)); }
+    s('line', { x1: f1(X(0)), x2: f1(X(0)), y1: y1 - 14, y2: y3 + 18, class: 'axis-l' }, g);
+    s('text', { x: x1, y: H - 26, class: 'lb t-end' }, g, 'perdita →');
+    // --- corsia 1: caduta dal massimo, zone a scalini (lastre) ---
+    lab(y1, 'Caduta dal massimo', 'dal picco di ' + eur(r.hwm, 0), 70);
+    const zc = ['z-safe', 'z-warn', 'z-serious', 'z-crit'], zb = [0, -0.2, -0.3, -0.4, -0.46];
+    zb.slice(0, 4).forEach((v, i) => slab(g, X(v) + (i ? 1 : 0), y1, X(zb[i + 1]) - X(v) - (i ? 1 : 0), th, zc[i], i === 0 || i === 3 ? 4 : 0));
+    s('rect', { x: f1(X(0.04)), y: y1, width: f1(X(0) - X(0.04)), height: th, rx: 4, class: 'track' }, g);
+    r.steps.forEach((st, i) => {
+      const x = f1(X(st.v)), gf = s('g', { class: 'mark fade', style: '--i:' + i, 'data-tip': ctx.tipOf({ title: 'Scalino ' + pct(st.v, 0) + ' · ' + st.name, rows: [['Che cosa fa', st.act], ['Mancano', num((dd - st.v) * 100, 1) + ' punti'], ['In euro', eur((dd - st.v) * r.hwm, 0)], ['Scatta a', eur(r.hwm * (1 + st.v), 0)], ['In giornate di ES', num((dd - st.v) / -r.es, 0)], ['Rientro', st.back ? 'sotto ' + pct(st.back, 0) : 'solo a mano']] }), 'data-solo': '' }, g);
+      s('line', { x1: x, x2: x, y1: y1 - 30, y2: y1 + th + 4, class: 'rule-strong' }, gf); s('rect', { x: x - 14, y: y1 - 40, width: 28, height: 50, class: 'hit' }, gf);
+      s('text', { x: x + 5, y: y1 - (mobile ? 36 : 22), class: 'val' }, gf, pct(st.v, 0) + (mobile ? '' : ' · ' + st.name));
+      s('text', { x: x + 5, y: y1 - (mobile ? 22 : 8), class: 'lb' }, gf, mobile ? ['dimezza', 'un quarto', 'chiude'][i] : st.act);
+      s('text', { x: x + 5, y: y1 + th + 17, class: 'lb' }, gf, st.back ? (mobile ? '↩ ' : '↩ rientra sotto ') + pct(st.back, 0) : (mobile ? '↩ a mano' : '↩ riparte solo a mano'));
+    });
+    const xs_ = f1(X(r.simMaxDD)); s('line', { x1: xs_, x2: xs_, y1: y1 - 4, y2: y1 + th + 4, class: 'ln c-ink2 is-sim' }, g);
+    s('text', { x: xs_ + 5, y: y1 + th + 34, class: 'lb' }, g, (mobile ? 'max sim. ' : 'caduta massima simulata ') + pct(r.simMaxDD, 0)); s('line', { x1: xs_, x2: xs_, y1: y1 + th + 4, y2: y1 + th + 36, class: 'rule' }, g);
+    // peggior caso: segmenti tratteggiati (ipotesi) dalla caduta di adesso
+    const segs = [['agli stop dei trade', w.stops, 'f-warn'], ['eccedenza fino ai margini', w.margins, 'f-warn'], ['gap del libro giornaliero', w.gap, 'f-down']]; let acc = dd;
+    const gw = s('g', null, g);
+    segs.forEach(([n, v, c], i) => { const a = acc, b = (1 + acc) * (1 + v) - 1; acc = b; const xa = X(a), wd = Math.max(2, X(b) - xa - 2);
+      s('rect', { x: f1(xa + 1), y: y1 + 3, width: f1(wd), height: th - 6, rx: 2, class: c + ' mark grow g-right', 'fill-opacity': i === 1 ? 0.55 : 0.85, style: '--i:' + (i * 6), 'data-tip': ctx.tipOf({ title: 'Peggior caso: ' + n, tag: 'sim', rows: [['Perdita', pct(v, 2)], ['In euro', eur(v * r.equity, 0)], ['Caduta dopo', pct(b, 1)]] }) }, gw); });
+    diamond(gw, X(ddW), y1 + th / 2, 7.5, 'f-halo c-down fade').setAttribute('style', 'stroke-width: 2; stroke-dasharray: 3 2');
+    const txw = X(ddW) + 12, nextStep = r.steps.find((st) => ddW > st.v);
+    s('text', { x: f1(mobile ? X(ddW) : txw), y: y1 + th + (mobile ? 62 : 54), class: 'val ' + (mobile ? 't-mid' : '') }, g, 'peggior caso oggi ' + pct(ddW, 1));
+    if (!mobile) s('text', { x: f1(txw), y: y1 + th + 69, class: 'lb' }, g, 'stop ' + num(-w.stops * 100, 1) + ' + margini ' + num(-w.margins * 100, 1) + ' + gap ' + num(-w.gap * 100, 1) + ' punti' + (nextStep ? ' · a ' + num((ddW - nextStep.v) * 100, 1) + ' dallo scalino ' + pct(nextStep.v, 0) : ''));
+    s('line', { x1: f1(X(ddW)), x2: f1(X(ddW)), y1: y1 + th / 2 + 8, y2: y1 + th + (mobile ? 50 : 58), class: 'rule' }, g);
+    // adesso e punto peggiore in paper
+    const pin = (v, y, lbl, cls, up) => { const x = f1(X(v)); s('line', { x1: x, x2: x, y1: up ? y - 12 : y + th, y2: up ? y : y + th + 12, class: 'rule-strong' }, g); return s('text', { x: x, y: up ? y - 17 : y + th + 24, class: cls + ' t-mid halo' }, g, lbl); };
+    ringDot(g, X(r.ddWorst), y1 + th / 2, 'c-ink2', 4.5); pin(r.ddWorst, y1, (mobile ? '' : 'peggiore in paper ') + pct(r.ddWorst, 1), 'lb', false);
+    liveDot(g, X(dd), y1 + th / 2, 'f-ink'); pin(dd, y1, 'adesso ' + pct(dd, 2), 'val', true);
+    // --- corsie 2 e 3: perdita mobile a 24 ore e a 7 giorni ---
+    const lane = (y, name, sub, val, brake, act, valW) => {
+      lab(y, name, sub);
+      s('rect', { x: f1(X(0.04)), y: y, width: f1(X(-0.46) - X(0.04)), height: 10, rx: 5, class: 'track' }, g);
+      slab(g, X(brake), y, X(-0.46) - X(brake), 10, 'z-warn', 5);
+      const xb = f1(X(brake)), tip = ctx.tipOf({ title: name + ': freno a ' + pct(brake, 0), rows: [['Che cosa fa', act], ['Adesso', spct(val)], ['Mancano', num((val - brake) * 100, 1) + ' punti'], ['In euro', eur((val - brake) * r.equity, 0)], ['Nel peggior caso', spct(valW, 1)]] });
+      const gf = s('g', { class: 'mark', 'data-tip': tip, 'data-solo': '' }, g); s('rect', { x: xb - 12, y: y - 26, width: 24, height: 44, class: 'hit' }, gf);
+      s('line', { x1: xb, x2: xb, y1: y - 18, y2: y + 14, class: 'rule-strong' }, gf); s('text', { x: xb + 5, y: y - 9, class: 'val' }, gf, pct(brake, 0)); if (!mobile) s('text', { x: xb + 38, y: y - 9, class: 'lb' }, gf, act);
+      const a = Math.min(0, val), xv = X(val); if (val < 0) s('rect', { x: f1(X(0)), y: y + 2, width: f1(xv - X(0)), height: 6, rx: 3, class: 'f-ink2' }, g);
+      liveDot(g, xv, y + 5, 'f-ink'); s('text', { x: f1(xv), y: mobile ? y - 9 : y + 26, class: 'val t-mid halo' }, g, spct(val));
+      diamond(g, X(valW), y + 5, 6.5, 'f-halo c-down fade').setAttribute('style', 'stroke-width: 2; stroke-dasharray: 3 2');
+      s('text', { x: f1(X(valW)), y: y + 26, class: 'lb t-mid' }, g, (mobile ? '' : 'peggior caso ') + pct(valW, 1) + (valW < brake ? ' · scatta' : ''));
+    };
+    lane(y2, 'Ultime 24 ore', 'P&L mobile', day, r.dayBrake, 'esposizione dimezzata', (1 + day) * (1 + wt) - 1);
+    lane(y3, 'Ultimi 7 giorni', 'P&L mobile', week, r.weekBrake, 'come lo scalino −30%', (1 + week) * (1 + wt) - 1);
+    ptag(g, x1, mobile ? 4 : y1 - 62, 'sim', mobile ? 'Peggior caso: simulato' : 'Peggior caso: ipotesi simulata', 'end');
+    ctx.legend([{ label: 'Caduta adesso', value: pct(dd, 2) }, { label: 'Al primo scalino mancano', value: num((dd + 0.2) * 100, 1) + ' punti · ' + eur((dd + 0.2) * r.hwm, 0) + ' · ' + num((dd + 0.2) / -r.es, 0) + ' giornate di ES' }, { label: 'Peggior caso di oggi', value: pct(ddW, 1) }]);
+    const chip = h('span', { class: 'chip chip--safe' }, ctx.def.legendEl, 'Stato: ' + r.state + ' · nessun freno tirato'); ctx.def.legendEl.insertBefore(chip, ctx.def.legendEl.firstChild);
+  },
+});
+
+/* =====================================================================================================
+   d · CASCATA di attribuzione per strategia (oggi / mese), con la riga «non attribuito»
+   ===================================================================================================== */
+chart({
+  id: 'attribuzione', span: 'span-6', eyebrow: 'd · Attribuzione', init: { period: 'day' }, demo: true,
+  title: 'Da dove viene il risultato di oggi e del mese?',
+  aid: 'Si parte da ieri (lo zero) e ogni barra aggiunge o toglie il contributo di una regola; l’ultima riga è il totale. Se la somma non torna con il totale, la differenza è scritta in «non attribuito», non nascosta.',
+  note: 'Contributi in € e in punti base (pb) sul patrimonio di partenza. Oggi: somma del P&L delle posizioni per strategia. Mese: quota × rendimento della strategia (ipotesi da confermare: lo snapshot non dice su quale capitale è calcolato `pnl_mtd_pct`; per questo resta uno scarto). Fonte: sample_snapshot.json.',
+  prov: ['demo'],
+  controls: [{ key: 'period', label: 'Periodo', options: [['day', 'Oggi'], ['month', 'Mese']] }],
+  onControl(key, v) { const def = this, from = def.m || 0, to = v === 'month' ? 1 : 0; if (def._tw) def._tw.stop(); def._tw = tween(cssMs('--chart-morph', 420) * 1.3, (t) => { def.m = lerp(from, to, t); render(def); }, easeStd); },
+  table(def) { const A = DATA.attrib, rows = []; for (const [p, lbl] of [['day', 'Oggi'], ['month', 'Mese']]) { let sum = 0; for (const it of A[p].items) { sum += it.v; rows.push([lbl, it.id, seur(it.v), sgn(it.v / A[p].start * 1e4, 1)]); } rows.push([lbl, 'Libro dei trade', 'n.d.', 'n.d.'], [lbl, 'Non attribuito', seur(A[p].total - sum), sgn((A[p].total - sum) / A[p].start * 1e4, 1)], [lbl, 'Totale', seur(A[p].total), sgn(A[p].total / A[p].start * 1e4, 1)]); }
+    return { caption: 'Contributo al P&L per strategia · ESEMPIO · sample_snapshot.json', head: ['Periodo', 'Voce', 'Contributo (€)', 'Punti base'], rows }; },
+  render(ctx) {
+    const { W, mobile, k } = ctx, def = ctx.def, m = def.m == null ? (def.m = ctx.state.period === 'month' ? 1 : 0) : def.m, A = DATA.attrib, dk = 1 + 0.42 * k;
+    const items = A.day.items.map((it, i) => ({ id: it.id, name: it.name, v: lerp(it.v * dk, A.month.items[i].v, m) }));
+    const total = lerp(A.day.total * dk, A.month.total, m), start = lerp(A.day.start, A.month.start, m), una = total - items.reduce((a, b) => a + b.v, 0);
+    const rows = [...items.map((it) => ({ ...it, kind: 'bar' })), { id: 'Libro dei trade', name: 'a margine isolato', kind: 'nd' }, { id: 'Non attribuito', name: 'totale − somma delle voci', v: una, kind: 'una' }, { id: 'Totale', name: m > 0.5 ? 'mese in corso' : 'oggi', v: total, kind: 'tot' }];
+    const LW = mobile ? 0 : 168, rh = mobile ? 50 : 40, top = 24, H = top + rows.length * rh + 30, bx = (i) => top + i * rh + (mobile ? 24 : 9), bh = 16;
+    let cum = 0, lo = 0, hi = 0; for (const r_ of rows) { if (r_.kind === 'bar' || r_.kind === 'una') { r_.a = cum; cum += r_.v; r_.b = cum; lo = Math.min(lo, cum); hi = Math.max(hi, cum); } if (r_.kind === 'tot') { r_.a = 0; r_.b = total; } if (r_.kind === 'nd') r_.a = r_.b = cum; }
+    hi = Math.max(hi, total); const padR = mobile ? 96 : 150, X = lin(lo, hi, LW + 6 + (lo < 0 ? 40 : 0), W - padR);
+    const svg = ctx.svg(H, 'Cascata dei contributi al P&L per strategia'), g = s('g', null, svg);
+    const pid = 'ht-' + def.id + (def._n = (def._n || 0) + 1), pt = s('pattern', { id: pid, width: 6, height: 6, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' }, ctx.defs); s('rect', { width: 6, height: 6, class: 'f-neutral-soft' }, pt); s('line', { x1: 0, y1: 0, x2: 0, y2: 6, class: 'hatch-l', 'stroke-width': 2 }, pt);
+    for (const v of ticks(lo, hi, mobile ? 3 : 4)) { const x = f1(X(v)); s('line', { x1: x, x2: x, y1: top, y2: H - 24, class: v === 0 ? 'axis-l' : 'grid-l' }, g); s('text', { x: x, y: H - 8, class: 't-mid' }, g, v === 0 ? '0' : seur(v, 0)); }
+    s('text', { x: f1(X(0)), y: top - 10, class: 'lb' }, g, (m > 0.5 ? 'inizio mese ' : 'ieri ') + eur(start, 0));
+    rows.forEach((r_, i) => {
+      const y = bx(i), gy = s('g', null, g);
+      if (mobile) { s('text', { x: 0, y: y - 8, class: 'lb-s' }, gy, r_.id); s('text', { x: 6 + r_.id.length * 6.6, y: y - 8, class: 'lb' }, gy, r_.name); } else { s('text', { x: 0, y: y + 6, class: 'lb-s' }, gy, r_.id); s('text', { x: 0, y: y + 20, class: 'lb' }, gy, r_.name); }
+      if (r_.kind === 'nd') { const x = X(Math.max(0, lo)) + 2; s('rect', { x: f1(x - 1), y: y, width: 54, height: bh, rx: 4, class: 'f-none c-ink3', 'stroke-dasharray': '1 3' }, gy); s('text', { x: f1(x + 26), y: y + 12, class: 't-mid lb' }, gy, 'n.d.'); s('text', { x: f1(x + 62), y: y + 12, class: 'lb' }, gy, mobile ? 'non nello snapshot' : 'lo snapshot non lo riporta'); return; }
+      const xa = X(Math.min(r_.a, r_.b)), xb = X(Math.max(r_.a, r_.b)), wd = Math.max(r_.kind === 'una' ? 3 : 2, xb - xa), pos = r_.b >= r_.a, pb = r_.v / start * 1e4;
+      const cls = r_.kind === 'tot' ? 'f-ink2' : r_.kind === 'una' ? '' : pos ? 'f-up' : 'f-down';
+      const bar = s('rect', { x: f1(xa), y: y, width: f1(wd), height: bh, rx: 4, class: cls + ' mark grow ' + (pos ? 'g-right' : 'g-left'), style: '--i:' + i * 5, 'data-tip': ctx.tipOf({ title: r_.id, tag: 'demo', rows: [['Contributo', seur(r_.v)], ['Sul patrimonio', sgn(pb, 1) + ' pb'], ['Quota del totale', total ? pct(r_.v / total, 0) : '—'], ['Da → a', seur(r_.a, 0) + ' → ' + seur(r_.b, 0)]] }) }, gy);
+      if (r_.kind === 'una') { bar.setAttribute('fill', `url(#${pid})`); bar.setAttribute('style', bar.getAttribute('style') + '; stroke: var(--text-3); stroke-dasharray: 3 2'); }
+      if (i < rows.length - 1 && r_.kind !== 'tot') s('line', { x1: f1(X(r_.b)), x2: f1(X(r_.b)), y1: y + bh, y2: bx(i + 1) + (rows[i + 1].kind === 'tot' ? 0 : 0), class: 'rule' }, gy);
+      const warn = r_.kind === 'una' && Math.abs(pb) > 1, lbl = seur(r_.v) + ' · ' + sgn(pb, Math.abs(pb) < 10 ? 1 : 0) + ' pb';
+      const tx = s('text', { x: f1(xb + 7), y: y + 12, class: 'val fade', style: '--i:' + i }, gy, lbl);
+      if (r_.kind === 'una') s('text', { x: f1(xb + 7), y: y + 27, class: 'lb fade', style: warn ? 'fill: var(--warn-ink)' : null }, gy, warn ? '▲ scarto oltre 1 pb: da spiegare' : '✓ la somma torna');
+    });
+    ctx.legend([{ key: keyBox('f-up'), label: 'aggiunge' }, { key: keyBox('f-down'), label: 'toglie' }, { key: (() => { const v = keyBox('f-neutral-soft'); v.firstChild.setAttribute('style', 'stroke: var(--text-3); stroke-dasharray: 2 1.5'); return v; })(), label: 'non attribuito' }, { label: m > 0.5 ? 'Mese' : 'Oggi', value: seur(total) + ' · ' + spct(total / start) }]);
+  },
+});
+
+/* =====================================================================================================
+   e · MAPPE DI CALORE: rendimenti mese × anno e correlazioni, una sola rampa divergente blu ↔ arancio
+   ===================================================================================================== */
+const divStep = (t) => { const a = Math.abs(t); if (a < 0.08) return 5; const st = a < 0.3 ? 1 : a < 0.55 ? 2 : a < 0.8 ? 3 : 4; return t > 0 ? 5 - st : 5 + st; };
+function cell(parent, x, y, w, hh, step, label, tip, i, strong) {
+  const g = s('g', { class: 'mark grow g-pop', style: '--i:' + i, 'data-tip': tip }, parent);
+  s('rect', { x: f1(x + 1), y: f1(y + 1), width: f1(w - 2), height: f1(hh - 2), rx: 6, style: `fill: var(--chart-div-${step})` }, g);
+  if (label != null) s('text', { x: f1(x + w / 2), y: f1(y + hh / 2 + 4), class: 't-mid', style: `fill: var(--chart-div-${step}-ink); font-weight: ${strong ? 700 : 500}; font-size: ${w < 30 ? 9.5 : 11}px` }, g, label);
+  return g;
+}
+function rampKey(ctx, lo, mid, hi) {
+  const el = ctx.def.legendEl, sp = h('span', null, el); sp.appendChild(document.createTextNode(lo));
+  const v = s('svg', { width: 9 * 15, height: 12, 'aria-hidden': 'true' }); for (let i = 9; i >= 1; i--) s('rect', { x: (9 - i) * 15, y: 0, width: 13, height: 12, rx: 3, style: `fill: var(--chart-div-${i})` }, v); sp.appendChild(v); sp.appendChild(document.createTextNode(hi));
+  h('span', null, el, mid);
+}
+chart({
+  id: 'mesi', span: 'span-6', eyebrow: 'e · Rendimenti per mese',
+  title: 'Quali mesi hanno fatto l’anno, e quanto sono stati regolari?',
+  aid: 'Ogni casella è un mese: blu se ha guadagnato, arancio se ha perso, più intenso se il numero è grande. L’ultima colonna è l’anno intero. Il segno davanti al numero dice la stessa cosa del colore.',
+  note: 'Rendimento mensile in %, netto; totale dell’anno composto dai mesi mostrati (2024 da aprile; novembre 2026 in corso). Rampa divergente blu ↔ arancio a nove passi, centro neutro, tetto a ±6%. Fonte: sample_snapshot.json (monthly_returns), 32 mesi.',
+  prov: ['demo'],
+  table() { return { caption: 'Rendimenti mensili · ESEMPIO · 32 mesi', head: ['Mese', 'Rendimento'], rows: DATA.monthly.map(([ym, v]) => [MESI[+ym.slice(5) - 1] + ' ' + ym.slice(0, 4), spct(v)]) }; },
+  render(ctx) {
+    const { W, mobile } = ctx, M = DATA.monthly, years = [...new Set(M.map((x) => x[0].slice(0, 4)))], by = Object.fromEntries(M), cur = M[M.length - 1][0];
+    const tot = years.map((y) => M.filter((x) => x[0].startsWith(y)).reduce((a, x) => a * (1 + x[1]), 1) - 1);
+    const mk = (g, x, y, w, hh, ym, i) => { const v = by[ym]; if (v == null) { s('rect', { x: f1(x + 1.5), y: f1(y + 1.5), width: f1(w - 3), height: f1(hh - 3), rx: 6, class: 'f-none c-ink3 fade', 'stroke-dasharray': '1 3', 'stroke-opacity': 0.7 }, g); return; }
+      const c = cell(g, x, y, w, hh, divStep(v / 0.06), sgn(v * 100, 1), ctx.tipOf({ title: MESI[+ym.slice(5) - 1] + ' ' + ym.slice(0, 4) + (ym === cur ? ' · in corso' : ''), tag: 'demo', rows: [['Rendimento', spct(v)]] }), i);
+      if (ym === cur) s('rect', { x: f1(x + 1), y: f1(y + 1), width: f1(w - 2), height: f1(hh - 2), rx: 6, class: 'f-none c-ink', 'stroke-width': 1.5, 'stroke-dasharray': '4 3' }, c); };
+    if (!mobile) {
+      const LW = 44, TW = 78, cw = (W - LW - TW - 10) / 12, ch = 40, top = 22, H = top + years.length * ch + 6, svg = ctx.svg(H, 'Rendimenti mensili per anno'), g = s('g', null, svg);
+      MESI.forEach((mn, j) => s('text', { x: f1(LW + j * cw + cw / 2), y: 13, class: 'lb t-mid' }, g, mn)); s('text', { x: f1(W - TW / 2), y: 13, class: 'lb-s t-mid' }, g, 'Anno');
+      years.forEach((y, i) => { s('text', { x: 0, y: top + i * ch + ch / 2 + 4, class: 'lb-s' }, g, y); for (let j = 0; j < 12; j++) mk(g, LW + j * cw, top + i * ch, cw, ch, y + '-' + String(j + 1).padStart(2, '0'), i * 2 + j);
+        cell(g, W - TW, top + i * ch, TW, ch, divStep(tot[i] / 0.2), sgn(tot[i] * 100, 1) + '%', ctx.tipOf({ title: 'Anno ' + y, tag: 'demo', rows: [['Rendimento composto', spct(tot[i])], ['Mesi', String(M.filter((x) => x[0].startsWith(y)).length)]] }), i * 2 + 14, true); });
+    } else {
+      const LW = 38, cw = (W - LW) / years.length, ch = 30, top = 22, H = top + 13 * ch + 8, svg = ctx.svg(H, 'Rendimenti mensili per anno'), g = s('g', null, svg);
+      years.forEach((y, i) => s('text', { x: f1(LW + i * cw + cw / 2), y: 13, class: 'lb-s t-mid' }, g, y));
+      MESI.forEach((mn, j) => { s('text', { x: 0, y: top + j * ch + ch / 2 + 4, class: 'lb' }, g, mn); years.forEach((y, i) => mk(g, LW + i * cw, top + j * ch, cw, ch, y + '-' + String(j + 1).padStart(2, '0'), i + j)); });
+      s('text', { x: 0, y: top + 12 * ch + ch / 2 + 8, class: 'lb-s' }, g, 'Anno'); years.forEach((y, i) => cell(g, LW + i * cw, top + 12 * ch + 4, cw, ch, divStep(tot[i] / 0.2), sgn(tot[i] * 100, 1) + '%', ctx.tipOf({ title: 'Anno ' + y, rows: [['Rendimento composto', spct(tot[i])]] }), 14 + i, true));
+    }
+    rampKey(ctx, 'perde −6%', 'tratteggio = mese in corso · puntinato = nessun dato', '+6% guadagna');
+  },
+});
+chart({
+  id: 'correlazioni', span: 'span-4', eyebrow: 'e · Correlazioni',
+  title: 'Le strategie si muovono insieme o si compensano?',
+  aid: 'Ogni casella confronta due strategie: vicino a +1 (blu) salgono e scendono insieme, vicino a 0 (grigio) vanno ognuna per conto suo, sotto zero (arancio) una compensa l’altra. Più grigio c’è, più il portafoglio è diversificato.',
+  note: 'Correlazione dei rendimenti giornalieri, intero periodo 2018–2026 (crypto 7 giorni su 7 e azioni in chiusura non sono sincrone: la giornaliera sottostima). A 90 giorni l’errore è circa ±0,2. Stessa rampa della mappa dei mesi, da −1 a +1. Fonte: quant.json (correlation).',
+  prov: ['sim'],
+  table() { const C = DATA.corr; return { caption: 'Matrice di correlazione · SIMULATO · intero periodo', head: ['', ...C.labels], rows: C.labels.map((l, i) => [l, ...C.matrix[i].map((v) => sgn(v, 2))]) }; },
+  render(ctx) {
+    const { W } = ctx, C = DATA.corr, n = C.labels.length, LW = 76, cw = Math.min(88, (W - LW) / n), ch = Math.min(58, cw * 0.78), top = 24, H = top + n * ch + 6, svg = ctx.svg(H, 'Matrice di correlazione tra le quattro strategie'), g = s('g', null, svg);
+    let sum = 0, cnt = 0;
+    C.labels.forEach((l, j) => s('text', { x: f1(LW + j * cw + cw / 2), y: 14, class: 'lb t-mid', 'font-size': cw < 64 ? 9.5 : 11 }, g, cw < 64 ? l.replace('-TREND', '-TR').replace('XSMOM', 'XS') : l));
+    C.labels.forEach((l, i) => { s('text', { x: 0, y: top + i * ch + ch / 2 + 4, class: 'lb-s' }, g, l);
+      C.matrix[i].forEach((v, j) => { if (i === j) { s('rect', { x: f1(LW + j * cw + 1.5), y: f1(top + i * ch + 1.5), width: f1(cw - 3), height: f1(ch - 3), rx: 6, class: 'f-none c-ink3 fade', 'stroke-opacity': 0.5 }, g); s('text', { x: f1(LW + j * cw + cw / 2), y: f1(top + i * ch + ch / 2 + 4), class: 't-mid' }, g, '1'); return; }
+        if (j > i) { sum += v; cnt++; }
+        cell(g, LW + j * cw, top + i * ch, cw, ch, divStep(v / 0.9), sgn(v, 2), ctx.tipOf({ title: l + ' × ' + C.labels[j], tag: 'sim', rows: [['Correlazione', sgn(v, 3)], ['Lettura', Math.abs(v) < 0.15 ? 'indipendenti' : v > 0.45 ? 'si muovono insieme' : v > 0 ? 'legame debole' : 'si compensano']] }), i + j); }); });
+    ptag(g, 0, 2, 'sim', 'Simulato');
+    ctx.legend([{ label: 'Media fuori diagonale', value: sgn(sum / cnt, 2) }]); rampKey(ctx, '−1', '', '+1');
+  },
+});
+
+/* =====================================================================================================
+   f · VENTAGLIO dell'atteso con il percorso vero sopra, e distribuzione della caduta con gli scalini
+   ===================================================================================================== */
+const FAN = DATA.fan, FN = FAN.p50.length;
+const fanAt = (k, d) => { const x = d / FAN.step, i = Math.min(FN - 2, Math.floor(x)); return lerp(FAN[k][i], FAN[k][i + 1], x - i); };
+chart({
+  id: 'ventaglio', span: 'span-8', eyebrow: 'f · Atteso contro reale', init: { range: 12 },
+  title: 'Il conto di prova sta andando come le simulazioni dicevano?',
+  aid: 'La fascia larga contiene 9 percorsi simulati su 10, quella stretta la metà centrale, la linea tratteggiata è il caso tipico. La linea bianca piena è il conto di prova: finché resta dentro la fascia, sta andando come previsto.',
+  note: 'Patrimonio a base 100 all’avvio, scala logaritmica; percentili 5–95 e 25–75 e mediana di un Monte Carlo a passi di 15 giorni sul libro giornaliero a leva 2 (il profilo esatto del paper non ha ancora i suoi percorsi). Si rimescolano 8,6 anni di una sola storia: ciò che non è nel campione non è nel ventaglio. Fonti: quant.json (leverage_fan), sample_compare.json.',
+  prov: ['demo', 'sim', 'paper'],
+  controls: [{ key: 'range', label: 'Orizzonte', options: [[6, '6 mesi'], [12, '1 anno'], [36, '3 anni']] }],
+  onControl(key, v, prev) { const def = this, from = def.dom || prev * 30.4, to = v * 30.4; if (def._tw) def._tw.stop(); def._tw = tween(cssMs('--chart-range', 420), (t) => { def.dom = lerp(from, to, t); render(def); }, easeStd); },
+  table() { const rows = []; for (let i = 0; i < FN; i += 4) rows.push([String(i * FAN.step), ...['p5', 'p25', 'p50', 'p75', 'p95'].map((k) => num(FAN[k][i] * 100, 1)), i * FAN.step < FAN.live.length ? num(FAN.live[i * FAN.step] * 100, 1) : '—']); return { caption: 'Percentili simulati (base 100) e conto di prova · il paper non entra mai nei percentili', head: ['Giorno', '5°', '25°', 'Mediana', '75°', '95°', 'Paper'], rows }; },
+  render(ctx) {
+    const def = ctx.def, { W, mobile } = ctx; if (!def.dom) def.dom = ctx.state.range * 30.4;
+    const D = def.dom, G = mobile ? 46 : 104, PW = W - G, y0 = 10, hh = mobile ? 250 : 330, H = y0 + hh + 40, X = lin(0, D, 0, PW);
+    const i1 = Math.min(FN, Math.ceil(D / FAN.step) + 2), xs = [], id = []; for (let i = 0; i < i1; i++) { xs.push(X(i * FAN.step)); id.push(i); }
+    const nl = FAN.live.length, hiV = Math.max(fanAt('p95', Math.min(D, (FN - 1) * FAN.step)), ...FAN.live) * 1.03, loV = Math.min(...id.map((i) => FAN.p5[i]), ...FAN.live) * 0.985, Y = logS(loV * 100, hiV * 100, y0 + hh, y0);
+    const svg = ctx.svg(H, 'Ventaglio dei percorsi simulati con il percorso del conto di prova'), gg = s('g', null, svg);
+    for (const v of ticks(loV * 100, hiV * 100, 5)) { const y = f1(Y(v)); s('line', { x1: 0, x2: PW, y1: y, y2: y, class: v === 100 ? 'axis-l' : 'grid-l' }, gg); if (y > y0 + 34) s('text', { x: 4, y: y - 5, class: 'halo' }, gg, num(v, 0)); }
+    const mstep = D > 700 ? 6 : D > 250 ? 2 : 1; for (let m = 0; m * 30.4 <= D + 1; m += mstep) { const x = f1(X(m * 30.4)); s('line', { x1: x, x2: x, y1: y0 + hh, y2: y0 + hh + 4, class: 'axis-l' }, gg); s('text', { x: x, y: y0 + hh + 17, class: 't-mid' }, gg, String(m)); }
+    s('text', { x: PW, y: H - 4, class: 'lb t-end' }, gg, 'mesi dall’avvio del paper'); s('line', { x1: 0, x2: PW, y1: y0 + hh + 0.5, y2: y0 + hh + 0.5, class: 'axis-l' }, gg);
+    const g = s('g', { 'clip-path': ctx.clip(0, 0, PW, y0 + hh) }, svg), yy = (k) => id.map((i) => Y(FAN[k][i] * 100));
+    s('path', { d: pArea(xs, yy('p95'), yy('p5')), class: 'band' }, g); s('path', { d: pArea(xs, yy('p75'), yy('p25')), class: 'band-strong' }, g);
+    for (const k of ['p95', 'p5']) s('path', { d: pLine(xs, yy(k)), class: 'ln-thin c-fund', 'stroke-opacity': 0.45 }, g);
+    s('path', { d: pLine(xs, yy('p50')), class: 'ln c-fund is-sim' }, g);
+    const lx = FAN.live.map((_, i) => X(i)), ly = FAN.live.map((v) => Y(v * 100));
+    s('path', { d: pLine(lx, ly), class: 'ln ln-live c-ink glow', style: '--g: var(--text)' }, g);
+    const ld = liveDot(svg, lx[nl - 1], ly[nl - 1], 'f-ink', '--text'); ld.lastChild.setAttribute('class', 'f-halo c-ink glow'); ld.lastChild.setAttribute('stroke-width', 2.25);
+    const d = nl - 1, v = FAN.live[d], ks = ['p5', 'p25', 'p50', 'p75', 'p95'], nm = ['5°', '25°', '50°', '75°', '95°'], bi = ks.findIndex((k) => v < fanAt(k, d));
+    const where = bi === 0 ? 'sotto il 5° percentile' : bi < 0 ? 'sopra il 95° percentile' : `tra il ${nm[bi - 1]} e il ${nm[bi]} percentile`;
+    s('text', { x: f1(lx[nl - 1] + 10), y: f1(ly[nl - 1] + (mobile ? 22 : 4)), class: 'val halo fade' }, svg, mobile ? 'paper ' + num(v * 100, 1) : 'paper, giorno ' + d + ': ' + num(v * 100, 1));
+    const dEnd = Math.min(D, (FN - 1) * FAN.step), gl = s('g', { class: 'fade' }, svg);
+    for (const e of spread(ks.map((k, i) => ({ y: Y(fanAt(k, dEnd) * 100), t: (k === 'p50' ? (mobile ? '50°' : 'mediana') : nm[i]), v: num(fanAt(k, dEnd) * 100, 0) })), 14, y0 + 8, y0 + hh - 4)) { s('text', { x: PW + 7, y: f1(e.y + 4), class: 'lb' }, gl, e.t); if (!mobile) s('text', { x: W, y: f1(e.y + 4), class: 'val-2 t-end' }, gl, e.v); }
+    const t1 = ptag(svg, 6, y0 + 4, 'sim', mobile ? 'Simulato' : 'Simulato · fascia e mediana'); ptag(svg, 12 + t1.w, y0 + 4, 'paper', mobile ? 'Paper' : 'Paper · linea piena');
+    ctx.legend([{ key: keyLine('c-ink', 'ln-live'), label: 'Conto di prova', value: spct(v - 1) + ' in ' + d + ' giorni' }, { label: 'Posizione oggi', value: where }, { key: keyLine('c-fund', 'is-sim'), label: 'mediana simulata', value: spct(fanAt('p50', d) - 1) }, { key: keyBox('band-strong'), label: '25°–75°' }, { key: keyBox('band'), label: '5°–95°' }]);
+    crosshair(ctx, { n: i1, xOf: (i) => X(i * FAN.step), x0: 0, x1: PW, y0, y1: y0 + hh, dots: [{ cls: 'f-fund', y: (i) => Y(FAN.p50[i] * 100) }, { cls: 'f-ink', y: (i) => (i * FAN.step < nl ? ly[i * FAN.step] : null) }],
+      spec(i) { const dd = i * FAN.step, rows = [['95° percentile', num(FAN.p95[i] * 100, 1)], ['75°', num(FAN.p75[i] * 100, 1)], ['Mediana', num(FAN.p50[i] * 100, 1), 'var(--chart-fund)'], ['25°', num(FAN.p25[i] * 100, 1)], ['5° percentile', num(FAN.p5[i] * 100, 1)]];
+        if (dd < nl) rows.push(null, ['Conto di prova', num(FAN.live[dd] * 100, 1), 'var(--text)']); return { title: 'Giorno ' + dd + ' · mese ' + num(dd / 30.4, 1), tag: dd < nl ? 'paper' : 'sim', rows }; } });
+  },
+});
+chart({
+  id: 'funnel', span: 'span-7', eyebrow: 'g · Confronto con l’originale', init: { range: 180 },
+  title: 'Il nuovo sistema batte davvero l’originale, o è ancora il caso?',
+  aid: 'La linea somma, giorno per giorno, il vantaggio del nuovo sistema sull’originale a parità di rischio. L’imbuto grigio è quanto può allontanarsi dallo zero per puro caso: finché la linea resta dentro, nessuno dei due ha battuto l’altro.',
+  note: 'Asse y: somma delle differenze giornaliere dei rendimenti, ciascuno diviso per la propria volatilità (unità di σ giornaliere). Fascia = ±1,3 errori standard × √giorni; z a pari volatilità come in confronto.py. z > 1,3 esce da solo circa una volta su dieci: è una regola di decisione, non una prova. Soli giorni comuni, valute locali. Fonte: sample_compare.json.',
+  prov: ['demo', 'paper'],
+  controls: [{ key: 'range', label: 'Orizzonte', options: [[180, '180 giorni'], [365, '1 anno']] }],
+  onControl(key, v, prev) { const def = this, from = def.dom || prev, to = v; if (def._tw) def._tw.stop(); def._tw = tween(cssMs('--chart-range', 420), (t) => { def.dom = lerp(from, to, t); render(def); }, easeStd); },
+  table() { const F = DATA.funnel, rows = []; for (let i = 0; i < F.cum.length; i += 7) rows.push([String(i), dlong(F.t[i]), sgn(F.cum[i], 2), i ? sgn(F.cum[i] / (F.su * Math.sqrt(i)), 2) : '—', '±' + num(1.3 * F.su * Math.sqrt(i), 2)]); return { caption: 'Distacco cumulato a pari volatilità · PAPER (esempio) · un punto ogni 7 giorni', head: ['Giorno comune', 'Data', 'Distacco cumulato', 'z', 'Fascia ±1,3 e.s.'], rows }; },
+  render(ctx) {
+    const def = ctx.def, { W, mobile } = ctx, F = DATA.funnel; if (!def.dom) def.dom = ctx.state.range;
+    const D = def.dom, G = mobile ? 6 : 128, PW = W - G, y0 = 12, hh = mobile ? 230 : 290, H = y0 + hh + 66, X = lin(0, D, 0, PW), B = (n) => 1.3 * F.su * Math.sqrt(n), ym = B(D) * 1.12, Y = lin(-ym, ym, y0 + hh, y0);
+    const svg = ctx.svg(H, 'Distacco cumulato dal sistema originale dentro l’imbuto del caso'), gg = s('g', null, svg);
+    for (const v of ticks(-ym, ym, 4)) { const y = f1(Y(v)); s('line', { x1: 0, x2: PW, y1: y, y2: y, class: v === 0 ? 'axis-l' : 'grid-l' }, gg); s('text', { x: 4, y: y - 5, class: 'halo' }, gg, v === 0 ? '0' : sgn(v, 0)); }
+    const g = s('g', { 'clip-path': ctx.clip(0, 0, PW, H) }, svg), xs = [], up = [], dn = []; for (let n = 0; n <= D + 2; n += 2) { xs.push(X(n)); up.push(Y(B(n))); dn.push(Y(-B(n))); }
+    s('path', { d: pArea(xs, up, dn), class: 'band-n' }, g); s('path', { d: pLine(xs, up), class: 'ln-thin c-ink3' }, g); s('path', { d: pLine(xs, dn), class: 'ln-thin c-ink3' }, g);
+    for (const [d, t] of [[90, 'minimo per un esito'], [180, ''], [365, '']]) if (d <= D + 1) { const x = f1(X(d)); s('line', { x1: x, x2: x, y1: y0, y2: y0 + hh + 5, class: 'bound', 'stroke-opacity': 0.45 }, gg); s('text', { x: x, y: y0 + hh + 18, class: 'val-2 t-mid' }, gg, String(d)); if (t && !mobile) s('text', { x: x + 6, y: y0 + 12, class: 'lb halo' }, gg, t); }
+    s('text', { x: 0, y: y0 + hh + 18 }, gg, '0'); s('text', { x: PW, y: y0 + hh + 18, class: 'lb t-end' }, gg, D < 300 ? '' : ''); s('text', { x: f1(X(45)), y: y0 + hh + 18, class: 'lb t-mid' }, gg, 'giorni comuni');
+    const lx = F.cum.map((_, i) => X(i)), ly = F.cum.map(Y), n = F.n;
+    s('path', { d: pArea(lx, ly, Y(0)), fill: grad(ctx, '--chart-fund', 0.22, 0.02) }, g); s('path', { d: pLine(lx, ly), class: 'ln ln-live c-fund glow' }, g);
+    const ld = liveDot(svg, lx[n], ly[n], 'f-fund', '--chart-fund'); ld.lastChild.setAttribute('class', 'f-halo c-fund glow'); ld.lastChild.setAttribute('stroke-width', 2.25);
+    s('text', { x: f1(lx[n] + 10), y: f1(ly[n] - 8), class: 'val halo fade' }, svg, 'oggi z = ' + sgn(F.z, 2));
+    const ge = s('g', { class: 'fade' }, svg), ex = mobile ? PW - 4 : PW + 8, an = mobile ? 't-end halo' : '';
+    s('text', { x: ex, y: f1(Y(B(D)) + (mobile ? 14 : 0)), class: 'val-2 ' + an }, ge, '+1,3 e.s.'); if (!mobile) s('text', { x: ex, y: f1(Y(B(D)) + 14), class: 'lb' }, ge, 'sopra: batte');
+    s('text', { x: ex, y: f1(Y(-B(D)) - (mobile ? 6 : 6)), class: 'val-2 ' + an }, ge, '−1,3 e.s.'); if (!mobile) s('text', { x: ex, y: f1(Y(-B(D)) + 8), class: 'lb' }, ge, 'sotto: battuto');
+    s('text', { x: f1(X(D * 0.72)), y: f1(Y(0) + 26), class: 'lb t-mid' }, ge, mobile ? 'dentro: non si può dire' : 'dentro la fascia: nessuno dei due batte l’altro');
+    // avanzamento: giorni osservati su quelli che servono per una prova
+    const py = y0 + hh + 40, pw = Math.min(PW, 420); s('rect', { x: 0, y: py, width: pw, height: 6, rx: 3, class: 'track' }, gg); s('rect', { x: 0, y: py, width: f1(Math.max(4, pw * n / F.need10)), height: 6, rx: 3, class: 'f-fund grow g-right' }, gg);
+    s('text', { x: 0, y: py + 22, class: 'lb' }, gg, mobile ? `${n} giorni su ~${num(F.need10, 0)} necessari per una prova` : `${n} giorni osservati su ~${num(F.need10, 0)} necessari per vedere una differenza di Sharpe di 1,0 (${num(F.need05, 0)} per 0,5)`);
+    ptag(svg, 6, y0 + 4, 'paper', 'Paper');
+    const verdict = Math.abs(F.z) < 1.3 ? (n >= 90 ? 'NON SMENTITO' : 'IN CORSO') : F.z > 0 ? 'BATTE' : 'BATTUTO';
+    ctx.legend([{ label: 'z a pari volatilità', value: sgn(F.z, 2) + ' (soglie ±1,3)' }, { label: 'Giorni comuni', value: n + ' su 90 minimi' }, { label: 'Rendimento', value: spct(F.retN, 1) + ' contro ' + spct(F.retO, 1) }, { label: 'Correlazione', value: num(F.rho, 2) }]);
+    const chip = h('span', { class: 'chip' }, def.legendEl, 'Esito: ' + verdict); def.legendEl.insertBefore(chip, def.legendEl.firstChild);
+    crosshair(ctx, { n: n + 1, first: 1, xOf: (i) => lx[i], x0: 0, x1: Math.min(PW, lx[n] + 12), y0, y1: y0 + hh, dots: [{ cls: 'f-fund', y: (i) => ly[i] }],
+      spec: (i) => ({ title: 'Giorno comune ' + i + ' · ' + dshort(F.t[i]), tag: 'paper', rows: [['Distacco cumulato', sgn(F.cum[i], 2), 'var(--chart-fund)'], ['z a pari volatilità', sgn(F.cum[i] / (F.su * Math.sqrt(i)), 2)], ['Fascia del caso', '±' + num(B(i), 2)]] }) });
+  },
+});
+const DDD = DATA.ddDist;
+chart({
+  id: 'cadute', span: 'span-5', eyebrow: 'f · Distribuzione della caduta',
+  title: 'Quanto in basso può scendere in tre anni, rispetto agli scalini?',
+  aid: 'Ogni barra conta quanti percorsi simulati hanno toccato, nel loro momento peggiore, quella caduta. Le righe verticali sono gli scalini del motore: quel che sta alla loro destra è la quota di percorsi in cui il freno sarebbe scattato.',
+  note: 'Caduta massima su 3 anni, 4.000 percorsi: ricampionamento a blocchi di 8 settimane dei 448 rendimenti settimanali simulati di «B2. Libro giornaliero 2x», calcolato per questo specimen. Su dati settimanali: su dati giornalieri le cadute sono più profonde. Il Monte Carlo ufficiale (fund_mc, mensile) dà mediana −7% e 95° −14%. Fonte: quant_v4.json.',
+  prov: ['sim'],
+  table() { return { caption: 'Distribuzione della caduta massima a 3 anni · SIMULATO · 4.000 percorsi', head: ['Caduta', 'Percorsi', 'Quota'], rows: DDD.counts.map((c, i) => [`da ${pct(-i * DDD.bin, 0)} a ${pct(-(i + 1) * DDD.bin, 0)}`, num(c, 0), pct(c / DDD.n, 1)]).filter((r, i) => DDD.counts[i] > 0) }; },
+  render(ctx) {
+    const { W, mobile } = ctx, y0 = 46, hh = mobile ? 190 : 250, H = y0 + hh + 26, X = lin(0, -0.46, 0, W - 4), mx = Math.max(...DDD.counts) / DDD.n, Y = lin(0, mx * 1.08, y0 + hh, y0);
+    const svg = ctx.svg(H, 'Istogramma della caduta massima simulata a tre anni con gli scalini del motore'), g = s('g', null, svg);
+    const zb = [0, -0.2, -0.3, -0.4, -0.46], zc = ['z-safe', 'z-warn', 'z-serious', 'z-crit']; zb.slice(1, 4).forEach((v, i) => slab(g, X(v), y0, X(zb[i + 2]) - X(v), hh, zc[i + 1], 0));
+    for (const v of ticks(0, mx, 3)) { const y = f1(Y(v)); s('line', { x1: 0, x2: W - 4, y1: y, y2: y, class: v === 0 ? 'axis-l' : 'grid-l' }, g); if (v) s('text', { x: 2, y: y - 5, class: 'halo' }, g, pct(v, 0)); }
+    for (let v = 0; v >= -0.45; v -= 0.1) s('text', { x: f1(X(v)), y: H - 8, class: v ? 't-mid' : '' }, g, v ? pct(v, 0) : '0');
+    DDD.counts.forEach((c, i) => { if (!c || i * DDD.bin > 0.45) return; const xa = X(-i * DDD.bin), xb = X(-(i + 1) * DDD.bin), y = Y(c / DDD.n);
+      const gb = s('g', { class: 'mark', 'data-tip': ctx.tipOf({ title: `Caduta tra ${pct(-i * DDD.bin, 0)} e ${pct(-(i + 1) * DDD.bin, 0)}`, tag: 'sim', rows: [['Percorsi', num(c, 0) + ' su ' + num(DDD.n, 0)], ['Quota', pct(c / DDD.n, 1)]] }) }, g);
+      s('rect', { x: f1(xa + 1), y: y0, width: f1(xb - xa - 2), height: hh, class: 'hit' }, gb);
+      s('path', { d: `M${f1(xa + 1)} ${y0 + hh}V${f1(y + 3)}q0 -3 3 -3H${f1(xb - 4)}q3 0 3 3V${y0 + hh}Z`, class: 'f-fund c-fund grow g-up', 'fill-opacity': 0.34, 'stroke-width': 1.2, style: '--i:' + i * 3 }, gb); });
+    [[-0.2, DDD.pLe20], [-0.3, DDD.pLe30], [-0.4, DDD.pLe40]].forEach(([v, p], i) => { const x = f1(X(v)); s('line', { x1: x, x2: x, y1: y0 - 30, y2: y0 + hh, class: 'rule-strong' }, g); s('text', { x: x + 5, y: y0 - 20, class: 'val' }, g, pct(v, 0)); s('text', { x: x + 5, y: y0 - 6, class: 'lb' }, g, (p < 0.0005 ? '0' : pct(p, p < 0.01 ? 2 : 1)) + (mobile ? '' : ' oltre')); });
+    for (const [v, t, dy] of [[DDD.p50, 'mediana ', 0], [DDD.p95, '1 su 20 oltre ', 15]]) { const x = f1(X(v)); s('line', { x1: x, x2: x, y1: y0 - 24 + dy, y2: y0 + hh, class: 'ln-thin c-ink is-sim' }, g); s('text', { x: x - 5, y: y0 - 14 + dy, class: 'lb halo t-end' }, g, (mobile ? '' : t) + pct(v, 1)); }
+    ptag(svg, W - 6, y0 + hh - 24, 'sim', 'Simulato · n = 4.000', 'end');
+    ctx.legend([{ key: (() => { const v = keyBox('f-fund c-fund'); v.firstChild.setAttribute('fill-opacity', 0.34); return v; })(), label: 'quota dei percorsi (barre velate = simulato)' }, { label: 'Caduta tipica', value: pct(DDD.p50, 1) }, { label: 'Oltre −20%', value: pct(DDD.pLe20, 1) + ' dei percorsi' }]);
+  },
+});
+
+/* =====================================================================================================
+   h · ANALISI DEI TRADE: distribuzione di R, R per fetta con baffi e n, MAE contro MFE, R cumulato
+   ===================================================================================================== */
+const TRD = DATA.trades.rows.slice().sort((a, b) => (a.t1 < b.t1 ? -1 : 1)), TN = TRD.length;
+const mean = (a) => a.reduce((x, y) => x + y, 0) / a.length, sd = (a) => { const m = mean(a); return Math.sqrt(a.reduce((x, y) => x + (y - m) ** 2, 0) / (a.length - 1)); };
+const RS = TRD.map((t) => t.R), RMEAN = mean(RS), RMED = RS.slice().sort((a, b) => a - b)[TN >> 1];
+chart({
+  id: 'r-dist', span: 'span-6', eyebrow: 'h · Trade a leva: distribuzione',
+  title: 'Come sono fatti i risultati dei trade: tante piccole perdite e pochi grandi guadagni?',
+  aid: 'R è il risultato di un trade misurato in «rischi»: −1 R vuol dire che ha perso esattamente quanto messo a rischio (lo stop). Le barre contano i trade per risultato: il mucchio a sinistra sono gli stop, la coda a destra sono i pochi trade che fanno la media.',
+  note: 'R = P&L del trade / rischio iniziale, netto di commissioni e funding; classi da 0,25 R, l’ultima raccoglie tutto ciò che supera +6 R. Simulato e paper non si sommano mai: il paper, quando esisterà, comparirà come barre piene sovrapposte e normalizzate. Fonte: sample_trades.json (estratto di 160 dei 652 trade simulati).',
+  prov: ['demo', 'sim'],
+  table() { const rows = []; for (let b = -1.25; b < 6; b += 0.25) { const c = RS.filter((r) => r >= b && r < b + 0.25).length; if (c) rows.push([`da ${sgn(b, 2)} a ${sgn(b + 0.25, 2)} R`, String(c), pct(c / TN, 1)]); } rows.push(['oltre +6 R', String(RS.filter((r) => r >= 6).length), pct(RS.filter((r) => r >= 6).length / TN, 1)]); return { caption: 'Distribuzione di R · SIMULATO · n = 160 · paper: 0 trade', head: ['Classe', 'Trade', 'Quota'], rows }; },
+  render(ctx) {
+    const { W, mobile } = ctx, y0 = 54, hh = mobile ? 200 : 240, H = y0 + hh + 40, lo = -1.5, hiB = 6, nb = (hiB - lo) / 0.25, bins = new Array(nb + 1).fill(0);
+    for (const r of RS) bins[r >= hiB ? nb : Math.max(0, Math.floor((r - lo) / 0.25))]++;
+    const X = lin(lo, hiB + 0.6, 0, W - 2), mx = Math.max(...bins), Y = lin(0, mx * 1.06, y0 + hh, y0), svg = ctx.svg(H, 'Istogramma dei risultati dei trade in R'), g = s('g', null, svg);
+    slab(g, X(lo), y0, X(0) - X(lo), hh, 'f-down-soft', 0);
+    for (const v of ticks(0, mx, 4)) { const y = f1(Y(v)); s('line', { x1: 0, x2: W - 2, y1: y, y2: y, class: v === 0 ? 'axis-l' : 'grid-l' }, g); if (v) s('text', { x: W - 4, y: y - 5, class: 't-end halo' }, g, String(v)); }
+    for (let v = -1; v <= 6; v++) if (!mobile || v % 2 === 0 || v === -1) s('text', { x: f1(X(v)), y: y0 + hh + 16, class: 't-mid' }, g, v === 0 ? '0' : sgn(v, 0));
+    s('text', { x: W - 2, y: H - 6, class: 'lb t-end' }, g, 'risultato del trade, in R →'); s('text', { x: f1(X(hiB + 0.3)), y: y0 + hh + 16, class: 't-mid' }, g, '>6');
+    bins.forEach((c, i) => { if (!c) return; const a = lo + i * 0.25, xa = X(i === nb ? hiB + 0.05 : a), xb = X(i === nb ? hiB + 0.55 : a + 0.25), y = Y(c), rr = Math.min(3, (y0 + hh - y) / 2);
+      const gb = s('g', { class: 'mark', 'data-tip': ctx.tipOf({ title: i === nb ? 'Oltre +6 R' : `Da ${sgn(a, 2)} a ${sgn(a + 0.25, 2)} R`, tag: 'sim', rows: [['Trade', c + ' su ' + TN], ['Quota', pct(c / TN, 1)]] }) }, g);
+      s('rect', { x: f1(xa), y: y0, width: f1(xb - xa), height: hh, class: 'hit' }, gb);
+      s('path', { d: `M${f1(xa + 1)} ${y0 + hh}V${f1(y + rr)}q0 ${-rr} ${rr} ${-rr}H${f1(xb - 1 - rr)}q${rr} 0 ${rr} ${rr}V${y0 + hh}Z`, class: (a >= 0 || i === nb ? 'f-up c-up' : 'f-down c-down') + ' grow g-up', 'fill-opacity': 0.34, 'stroke-width': 1.2, style: '--i:' + i }, gb); });
+    const vl = (v, t, row, cls) => { const x = f1(X(v)); s('line', { x1: x, x2: x, y1: y0 - 48 + row * 15, y2: y0 + hh, class: cls }, g); s('text', { x: x + 5, y: y0 - 38 + row * 15, class: 'lb halo' }, g, t); };
+    vl(-1, mobile ? '−1 R' : '−1 R: lo stop', 2, 'rule'); s('line', { x1: f1(X(0)), x2: f1(X(0)), y1: y0, y2: y0 + hh, class: 'axis-l' }, g);
+    vl(RMEAN, 'media ' + sR(RMEAN), 0, 'rule-strong'); vl(RMED, 'mediana ' + sR(RMED), 1, 'rule');
+    ptag(svg, W - 6, y0 + 6, 'sim', 'Simulato · n = ' + TN, 'end');
+    const wins = RS.filter((r) => r > 0), no5 = mean(RS.slice().sort((a, b) => b - a).slice(5));
+    ctx.legend([{ label: 'R medio', value: sR(RMEAN) }, { label: 'Vincenti', value: pct(wins.length / TN, 0) }, { label: 'Senza i 5 trade migliori', value: sR(no5) }, { label: 'Paper', value: '0 trade', tag: 'paper' }]);
+  },
+});
+chart({
+  id: 'r-fette', span: 'span-6', eyebrow: 'h · Trade a leva: da che cosa dipende',
+  title: 'Il risultato cambia per motivo d’uscita, moneta o anno, oppure è rumore?',
+  aid: 'Ogni barra è il risultato medio di un gruppo di trade; il baffo nero dice quanto quella media è incerta (9 volte su 10 il valore vero sta lì dentro). Se il baffo attraversa la linea della media generale, quel gruppo non è distinguibile dagli altri.',
+  note: 'R medio per gruppo con intervallo al 90% (±1,645 errori standard) e numero di trade n. Gruppi con n < 30 attenuati. Con tante fette qualcuna sembra diversa per caso: vale la soglia corretta per il numero di confronti. Fonte: sample_trades.json, 160 trade simulati.',
+  prov: ['demo', 'sim'],
+  _groups() { const mk = (name, key, vals, lab) => ({ name, rows: vals.map((v) => { const a = TRD.filter((t) => key(t) === v).map((t) => t.R); return a.length > 1 ? { l: lab ? lab(v) : v, n: a.length, m: mean(a), ci: 1.645 * sd(a) / Math.sqrt(a.length) } : null; }).filter(Boolean) });
+    return [mk('Uscita', (t) => t.why, ['stop', 'tempo'], (v) => (v === 'stop' ? 'allo stop' : 'a tempo (giorno 7)')), mk('Moneta', (t) => t.s, ['BTC', 'ETH', 'SOL']), mk('Anno', (t) => t.t1.slice(0, 4), ['2024', '2025', '2026'])]; },
+  table(def) { const rows = []; for (const gp of def._groups()) for (const r of gp.rows) rows.push([gp.name + ': ' + r.l, String(r.n), sR(r.m), sR(r.m - r.ci) + ' … ' + sR(r.m + r.ci)]); return { caption: 'R medio per gruppo · SIMULATO · intervallo al 90%', head: ['Gruppo', 'n', 'R medio', 'Intervallo 90%'], rows }; },
+  render(ctx) {
+    const { W, mobile } = ctx, G = ctx.def._groups(), LW = mobile ? 96 : 150, NW = mobile ? 50 : 64, rh = 30, top = 26; let nrows = 0; for (const gp of G) nrows += gp.rows.length;
+    const H = top + nrows * rh + G.length * 12 + 30; let lo = 0, hi = 0; for (const gp of G) for (const r of gp.rows) { lo = Math.min(lo, r.m - r.ci); hi = Math.max(hi, r.m + r.ci); }
+    const X = lin(lo - 0.1, hi + 0.15, LW, W - NW), svg = ctx.svg(H, 'R medio per gruppo con intervallo di confidenza e numero di trade'), g = s('g', null, svg);
+    for (const v of ticks(lo, hi, mobile ? 3 : 5)) { const x = f1(X(v)); s('line', { x1: x, x2: x, y1: top - 4, y2: H - 26, class: v === 0 ? 'axis-l' : 'grid-l' }, g); s('text', { x: x, y: H - 10, class: 't-mid' }, g, v === 0 ? '0' : sR(v, 1)); }
+    const xm = f1(X(RMEAN)); s('line', { x1: xm, x2: xm, y1: top - 12, y2: H - 26, class: 'rule-strong' }, g); s('text', { x: xm + 5, y: top - 6, class: 'lb halo' }, g, 'media generale ' + sR(RMEAN));
+    s('text', { x: W, y: top - 6, class: 'lb t-end' }, g, 'n');
+    let y = top + 6, i = 0;
+    for (const gp of G) { for (const r of gp.rows) { const small = r.n < 30, yc = y + rh / 2, xa = X(Math.min(0, r.m)), xb = X(Math.max(0, r.m));
+        const gr = s('g', { class: 'mark', opacity: small ? 0.5 : 1, 'data-tip': ctx.tipOf({ title: gp.name + ': ' + r.l, tag: 'sim', rows: [['R medio', sR(r.m)], ['Intervallo al 90%', sR(r.m - r.ci) + ' … ' + sR(r.m + r.ci)], ['Trade', 'n = ' + r.n + (small ? ' · campione piccolo' : '')], ['Contro la media', sR(r.m - RMEAN)]] }) }, g);
+        s('rect', { x: LW, y: y, width: W - LW, height: rh, class: 'hit' }, gr);
+        s('text', { x: 0, y: yc + 4, class: 'lb' }, gr, (mobile ? '' : gp.name + ' · ') + r.l);
+        s('rect', { x: f1(xa), y: yc - 5, width: f1(Math.max(2, xb - xa)), height: 10, rx: 3, class: (r.m >= 0 ? 'f-up g-right' : 'f-down g-left') + ' grow', 'fill-opacity': 0.34, style: '--i:' + i * 4 + '; stroke: var(' + (r.m >= 0 ? '--chart-up' : '--chart-down') + '); stroke-width: 1.2' }, gr);
+        s('path', { d: `M${f1(X(r.m - r.ci))} ${yc}H${f1(X(r.m + r.ci))}M${f1(X(r.m - r.ci))} ${yc - 5}v10M${f1(X(r.m + r.ci))} ${yc - 5}v10`, class: 'ln-thin c-ink fade', 'stroke-width': 1.5 }, gr);
+        s('circle', { cx: f1(X(r.m)), cy: yc, r: 3.5, class: 'f-ink ring' }, gr);
+        s('text', { x: W, y: yc + 4, class: 'val-2 t-end' }, gr, String(r.n) + (small ? ' *' : '')); y += rh; i++; }
+      y += 12; s('line', { x1: 0, x2: W, y1: y - 6.5, y2: y - 6.5, class: 'grid-l' }, g); }
+    ptag(svg, 0, H - 22, 'sim', 'Simulato');
+    ctx.legend([{ key: (() => { const v = s('svg', { width: 34, height: 12 }); s('rect', { x: 1, y: 2, width: 16, height: 8, rx: 3, class: 'f-up', 'fill-opacity': 0.34, style: 'stroke: var(--chart-up); stroke-width: 1.2' }, v); s('path', { d: 'M10 6H32M10 2v8M32 2v8', class: 'ln-thin c-ink', 'stroke-width': 1.5 }, v); s('circle', { cx: 21, cy: 6, r: 3, class: 'f-ink' }, v); return v; })(), label: 'R medio con intervallo al 90%' }, { label: '* n < 30: attenuato' }]);
+  },
+});
+const MM = TRD.filter((t) => t.mae != null);
+chart({
+  id: 'mae-mfe', span: 'span-6', eyebrow: 'h · Trade a leva: il percorso',
+  title: 'Quanto è andato contro, e quanto a favore, ogni trade prima di chiudersi?',
+  aid: 'Ogni punto è un trade: più è a sinistra, più il prezzo gli è andato contro; più è in alto, più gli è andato a favore. I punti pieni hanno chiuso in guadagno, quelli vuoti in perdita. Chi arriva alla riga dello stop (−1 R) quasi sempre chiude lì.',
+  note: 'MAE = escursione massima contraria, MFE = a favore, in R, misurate su massimi e minimi giornalieri (il percorso dentro la barra non si conosce). Lo storico simulato non le registra: sono ricostruite dalle barre d’esempio per i soli 57 trade che cadono nella finestra delle barre. Fonti: sample_trades.json, sample_ohlc.json.',
+  prov: ['demo', 'sim'],
+  table() { return { caption: 'MAE, MFE e risultato · SIMULATO, ricostruito · 57 di 160 trade', head: ['Moneta', 'Entrata', 'Uscita', 'MAE (R)', 'MFE (R)', 'R finale', 'Motivo'], rows: MM.map((t) => [t.s, dlong(t.t0), dlong(t.t1), sgn(t.mae, 2), sgn(t.mfe, 2), sR(t.R), t.why]) }; },
+  render(ctx) {
+    const { W, mobile } = ctx, y0 = 14, hh = mobile ? 230 : 262, H = y0 + hh + 38, L = 34, xlo = Math.min(-2.2, ...MM.map((t) => t.mae)) - 0.2, yhi = Math.max(...MM.map((t) => t.mfe)) + 0.5;
+    const X = lin(xlo, 0.15, L, W - 6), Y = lin(0, yhi, y0 + hh, y0), svg = ctx.svg(H, 'Dispersione di escursione contraria e favorevole dei trade'), g = s('g', null, svg);
+    slab(g, X(xlo), y0, X(-1) - X(xlo), hh, 'f-down-soft', 0);
+    for (const v of ticks(0, yhi, 5)) { const y = f1(Y(v)); s('line', { x1: L, x2: W - 6, y1: y, y2: y, class: v === 0 ? 'axis-l' : 'grid-l' }, g); s('text', { x: L - 6, y: y + 4, class: 't-end' }, g, v === 0 ? '0' : sgn(v, 0)); }
+    for (const v of ticks(xlo, 0, mobile ? 4 : 6)) { const x = f1(X(v)); s('line', { x1: x, x2: x, y1: y0, y2: y0 + hh, class: v === 0 ? 'axis-l' : 'grid-l' }, g); s('text', { x: x, y: y0 + hh + 16, class: 't-mid' }, g, v === 0 ? '0' : sgn(v, 0)); }
+    s('text', { x: W - 6, y: H - 5, class: 'lb t-end' }, g, '← andato contro (MAE, in R)'); s('text', { x: L + 4, y: y0 + 10, class: 'lb halo' }, g, '↑ andato a favore (MFE, in R)');
+    const xs_ = f1(X(-1)); s('line', { x1: xs_, x2: xs_, y1: y0, y2: y0 + hh, class: 'rule-strong' }, g); s('text', { x: xs_ - 6, y: y0 + 30, class: 'lb halo t-end' }, g, 'oltre lo stop'); s('text', { x: xs_ - 6, y: y0 + 44, class: 'val-2 halo t-end' }, g, '−1 R');
+    MM.forEach((t, i) => { const win = t.R > 0, gp = s('g', { class: 'mark grow g-pop', style: '--i:' + (i % 30), transform: `translate(${f1(X(t.mae))} ${f1(Y(t.mfe))})`, 'data-tip': ctx.tipOf({ title: t.s + ' · ' + dshort(t.t0) + ' → ' + dlong(t.t1), tag: 'sim', rows: [['R finale', sR(t.R), win ? 'var(--chart-up)' : 'var(--chart-down)'], ['Massimo contro (MAE)', sR(t.mae)], ['Massimo a favore (MFE)', sR(t.mfe)], ['Uscita', t.why === 'tempo' ? 'a tempo' : 'allo stop'], ['Leva', num(t.lev, 1) + '×']] }) }, g);
+      s('circle', { r: 12, class: 'hit' }, gp); s('circle', win ? { r: 4.5, class: 'f-up ring' } : { r: 4, class: 'f-halo c-down', 'stroke-width': 1.75 }, gp); });
+    ptag(svg, L + 8, y0 + 26, 'sim', 'Simulato · n = ' + MM.length + ' di ' + TN);
+    ctx.legend([{ key: (() => { const v = s('svg', { width: 12, height: 12 }); s('circle', { cx: 6, cy: 6, r: 4.5, class: 'f-up' }, v); return v; })(), label: 'chiuso in guadagno (pieno)', value: String(MM.filter((t) => t.R > 0).length) }, { key: (() => { const v = s('svg', { width: 12, height: 12 }); s('circle', { cx: 6, cy: 6, r: 4, class: 'f-none c-down', 'stroke-width': 1.75 }, v); return v; })(), label: 'in perdita (vuoto)', value: String(MM.filter((t) => t.R <= 0).length) }]);
+  },
+});
+chart({
+  id: 'r-cum', span: 'span-6', eyebrow: 'h · Trade a leva: nel tempo',
+  title: 'Il vantaggio dei trade si accumula con regolarità o a strappi?',
+  aid: 'La linea sale di un gradino a ogni trade chiuso in guadagno e scende a ogni perdita. Una salita a strappi, con lunghi tratti piatti o in discesa, è normale per questo tipo di trade: guadagnano raramente, ma molto.',
+  note: 'R cumulato in ordine di data d’uscita, un gradino per trade (asse x = numero d’ordine del trade, non il tempo). Serie perdente più lunga e caduta in R calcolate su questo estratto. Fonte: sample_trades.json, 160 trade simulati, nov 2024 – ott 2026.',
+  prov: ['demo', 'sim'],
+  table() { let c = 0; return { caption: 'R cumulato · SIMULATO · un trade su 8', head: ['N.', 'Uscita', 'Moneta', 'R', 'R cumulato'], rows: TRD.map((t, i) => { c += t.R; return [String(i + 1), dlong(t.t1), t.s, sR(t.R), sR(c)]; }).filter((_, i) => i % 8 === 7) }; },
+  render(ctx) {
+    const { W, mobile } = ctx, y0 = 14, hh = mobile ? 230 : 262, H = y0 + hh + 38, G = mobile ? 6 : 84, PW = W - G, cum = [0]; let pk = 0, mdd = 0, streak = 0, ms_ = 0;
+    for (const t of TRD) { const c = cum[cum.length - 1] + t.R; cum.push(c); pk = Math.max(pk, c); mdd = Math.min(mdd, c - pk); streak = t.R <= 0 ? streak + 1 : 0; ms_ = Math.max(ms_, streak); }
+    const L = 40, X = lin(0, TN, L, PW), lo = Math.min(...cum), hi = Math.max(...cum), Y = lin(lo - 2, hi + 3, y0 + hh, y0), svg = ctx.svg(H, 'R cumulato dei trade simulati'), gg = s('g', null, svg);
+    for (const v of ticks(lo, hi, 5)) { const y = f1(Y(v)); s('line', { x1: L, x2: PW, y1: y, y2: y, class: v === 0 ? 'axis-l' : 'grid-l' }, gg); s('text', { x: L - 6, y: y + 4, class: 't-end' }, gg, v === 0 ? '0' : sgn(v, 0)); }
+    s('text', { x: 0, y: y0 + 2, class: 'lb' }, gg, 'R');
+    let ly = ''; TRD.forEach((t, i) => { const yr = t.t1.slice(0, 4); if (yr !== ly) { const x = f1(X(i)); if (i) s('line', { x1: x, x2: x, y1: y0, y2: y0 + hh + 5, class: 'grid-l' }, gg); s('text', { x: x + 4, y: y0 + hh + 16, class: 'lb' }, gg, yr); ly = yr; } });
+    s('text', { x: PW, y: H - 5, class: 'lb t-end' }, gg, 'trade chiusi, in ordine →');
+    const g = s('g', { 'clip-path': ctx.clip(0, 0, PW + 2, H) }, svg), xs = cum.map((_, i) => X(i)), ys = cum.map(Y), hw = (X(1) - X(0)) / 2, d = pStep(xs.slice(1), ys.slice(1), hw);
+    s('path', { d: d + `V${f1(Y(lo - 2))}H${f1(X(1) - hw)}Z`, fill: grad(ctx, '--chart-fund', 0.2, 0) }, g); s('path', { d, class: 'ln c-fund is-sim', 'stroke-linejoin': 'miter' }, g);
+    ringDot(svg, X(TN) + hw, ys[TN], 'c-fund fade', 4);
+    if (!mobile) { s('text', { x: PW + 10, y: f1(ys[TN] - 2), class: 'val fade' }, svg, sR(cum[TN], 1)); s('text', { x: PW + 10, y: f1(ys[TN] + 12), class: 'lb fade' }, svg, 'dopo ' + TN + ' trade'); }
+    ptag(svg, L + 6, y0 + 4, 'sim', 'Simulato · n = ' + TN);
+    ctx.legend([{ key: keyLine('c-fund', 'is-sim'), label: 'R cumulato', value: sR(cum[TN], 1) }, { label: 'Caduta peggiore', value: sR(mdd, 1) }, { label: 'Serie perdente più lunga', value: ms_ + ' trade' }]);
+    crosshair(ctx, { n: TN + 1, first: 1, xOf: (i) => xs[i], x0: L, x1: PW, y0, y1: y0 + hh, dots: [{ cls: 'f-fund', y: (i) => ys[i] }],
+      spec: (i) => { const t = TRD[i - 1]; return { title: 'Trade ' + i + ' · ' + t.s + ' · ' + dlong(t.t1), tag: 'sim', rows: [['Risultato', sR(t.R)], ['R cumulato', sR(cum[i]), 'var(--chart-fund)'], ['Uscita', t.why === 'tempo' ? 'a tempo' : 'allo stop']] }; } });
+  },
+});
+
+/* =====================================================================================================
+   i · PICCOLI MULTIPLI: una scheda per strategia, andamento recente + Sharpe mobile con la sua banda
+   ===================================================================================================== */
+const STR = DATA.strategies;
+chart({
+  id: 'strategie', span: 'span-12', eyebrow: 'i · Strategie, una accanto all’altra',
+  title: 'Quale strategia sta tenendo, e quale sta perdendo il suo vantaggio?',
+  aid: 'Una scheda per regola, tutte con la stessa scala: in alto l’ultimo mese del conto di prova, sotto la «qualità» del rendimento nel tempo (Sharpe: sopra zero guadagna più di quanto rischia). La fascia intorno alla linea è l’incertezza: se contiene lo zero, non si può dire che funzioni ancora.',
+  note: 'Sharpe mobile a 52 settimane, annualizzato con √52, tasso privo di rischio 0; fascia = ±1,96 errori standard (circa ±2 a un anno: passare da 1,5 a 0,5 non è una prova); stessa scala y in tutte le schede; riga orizzontale = Sharpe dell’intero periodo; riga verticale = 1° gen 2023 (scelta | verifica). Andamento a 30 giorni: base 100. Fonti: quant.json (sleeve_curves, sleeves), sample_snapshot.json.',
+  prov: ['demo', 'sim', 'paper'],
+  table() { return { caption: 'Strategie · Sharpe SIMULATO per periodo e mese in corso (ESEMPIO)', head: ['Strategia', 'Stato', 'Quota', 'Mese', 'Sharpe scelta', 'Sharpe verifica', 'Sharpe intero', 'Sharpe 52 sett.'], rows: STR.map((t) => [t.id, t.status === 'active' ? 'attiva' : 'in pausa', pct(t.alloc, 0), spct(t.mtd), num(t.sh.scelta, 2), num(t.sh.verifica, 2), num(t.sh.tutto, 2), sgn(t.roll[t.roll.length - 1][1], 2)]) }; },
+  render(ctx) {
+    const wrap = h('div', { class: 'sm-grid' }); ctx.plot.insertBefore(wrap, ctx.def.tip);
+    const tA = ms(STR[0].roll[0][0]), tB = ms(STR[0].roll[STR[0].roll.length - 1][0]);
+    for (const st of STR) {
+      const c = h('div', { class: 'sm', tabindex: '0' }, wrap), hd = h('div', { class: 'sm__h' }, c); h('span', { class: 'sm__id' }, hd, st.id); h('span', { class: 'chip ' + (st.status === 'active' ? 'chip--safe' : 'chip--warn') }, hd, st.status === 'active' ? 'Attiva' : 'In pausa');
+      h('p', { class: 'sm__n' }, c, st.name + ' · quota ' + pct(st.alloc, 0));
+      const tr1 = h('div', { class: 'sm__tagrow' }, c); h('span', { class: 'tag tag--paper' }, tr1, 'Paper'); tr1.appendChild(document.createTextNode('ultimi 30 giorni'));
+      const w = Math.floor(c.clientWidth - 32), sv = s('svg', { width: w, height: 46, viewBox: `0 0 ${w} 46` }, c), sp = st.spark, slo = Math.min(...sp), shi = Math.max(...sp), SX = lin(0, sp.length - 1, 2, w - 8), SY = lin(slo, shi, 40, 6), up = sp[sp.length - 1] >= sp[0];
+      const gid = 'sg-' + st.id + (ctx.def._n = (ctx.def._n || 0) + 1), lg = s('linearGradient', { id: gid, x1: 0, y1: 0, x2: 0, y2: 1 }, s('defs', null, sv)); s('stop', { offset: 0, style: `stop-color: var(--chart-${up ? 'up' : 'down'}); stop-opacity: 0.28` }, lg); s('stop', { offset: 1, style: `stop-color: var(--chart-${up ? 'up' : 'down'}); stop-opacity: 0` }, lg);
+      const cpid = 'sc-' + gid, cr = s('rect', { x: 0, y: 0, width: ctx.def.card.classList.contains('is-in') ? w : 0, height: 46 }, s('clipPath', { id: cpid }, sv.firstChild)); ctx.def.wipes.push({ r: cr, w });
+      const gs_ = s('g', { 'clip-path': `url(#${cpid})` }, sv), xx = sp.map((_, i) => SX(i)), yy = sp.map(SY);
+      s('line', { x1: 0, x2: w, y1: f1(SY(sp[0])), y2: f1(SY(sp[0])), class: 'grid-l' }, gs_); s('path', { d: pArea(xx, yy, 44), fill: `url(#${gid})` }, gs_); s('path', { d: pLine(xx, yy), class: 'ln ' + (up ? 'c-up' : 'c-down') }, gs_);
+      ringDot(sv, xx[xx.length - 1], yy[yy.length - 1], (up ? 'c-up' : 'c-down') + ' fade', 3.5);
+      const r1 = h('div', { class: 'sm__row' }, c); h('span', null, r1, '30 giorni'); h('b', { class: up ? 'pos' : 'neg' }, r1, (up ? '▲ ' : '▼ ') + spct(sp[sp.length - 1] / sp[0] - 1));
+      const tr2 = h('div', { class: 'sm__tagrow' }, c); h('span', { class: 'tag tag--sim' }, tr2, 'Simulato'); tr2.appendChild(document.createTextNode('Sharpe mobile, 52 settimane'));
+      const Hh = 104, rv = s('svg', { width: w, height: Hh, viewBox: `0 0 ${w} ${Hh}` }, c), RX = lin(tA, tB, 0, w - 26), RY = lin(-4, 6.5, Hh - 16, 4), rd = s('defs', null, rv), cp2 = 'rc-' + gid, cr2 = s('rect', { x: 0, y: 0, width: ctx.def.card.classList.contains('is-in') ? w : 0, height: Hh }, s('clipPath', { id: cp2 }, rd)); ctx.def.wipes.push({ r: cr2, w });
+      for (const v of [-2, 0, 2, 4]) { s('line', { x1: 0, x2: w - 26, y1: f1(RY(v)), y2: f1(RY(v)), class: v === 0 ? 'axis-l' : 'grid-l' }, rv); s('text', { x: w, y: f1(RY(v) + 4), class: 't-end' }, rv, v === 0 ? '0' : sgn(v, 0)); }
+      const xsp = f1(RX(ms('2023-01-01'))); s('line', { x1: xsp, x2: xsp, y1: 4, y2: Hh - 16, class: 'bound', 'stroke-opacity': 0.5 }, rv);
+      for (const yr of [2020, 2023, 2026]) s('text', { x: f1(RX(Date.UTC(yr, 0, 1))), y: Hh - 3, class: 't-mid' }, rv, String(yr));
+      const gr = s('g', { 'clip-path': `url(#${cp2})` }, rv), rx = st.roll.map((p) => RX(ms(p[0])));
+      s('path', { d: pArea(rx, st.roll.map((p) => RY(Math.min(6.5, p[1] + 1.96 * p[2]))), st.roll.map((p) => RY(Math.max(-4, p[1] - 1.96 * p[2])))), class: 'band' }, gr);
+      s('line', { x1: 0, x2: w - 26, y1: f1(RY(st.sh.tutto)), y2: f1(RY(st.sh.tutto)), class: 'rule' }, gr);
+      s('path', { d: pLine(rx, st.roll.map((p) => RY(p[1]))), class: 'ln c-fund is-sim' }, gr);
+      const last = st.roll[st.roll.length - 1]; ringDot(rv, rx[rx.length - 1], RY(last[1]), 'c-fund fade', 3.5);
+      const kr = h('div', { class: 'sm__k' }, c); for (const [l, v] of [['ora', sgn(last[1], 2)], ['scelta', num(st.sh.scelta, 2)], ['verifica', num(st.sh.verifica, 2)]]) { const sp_ = h('span', null, kr, l + ' '); h('b', null, sp_, v); }
+    }
+  },
+});
+
+/* =====================================================================================================
+   j · ESPOSIZIONE: pesi nel tempo (area impilata) e blocchi per sede → strategia → strumento con i tetti
+   ===================================================================================================== */
+const WT = DATA.weights, SID = ['CR-TREND', 'CR-XSMOM', 'EQ-MR', 'MA-TREND'], SCL = ['s1', 's2', 's3', 's4'];
+chart({
+  id: 'pesi', span: 'span-6', eyebrow: 'j · Esposizione nel tempo',
+  title: 'Come si è spostato il peso tra le quattro strategie?',
+  aid: 'L’altezza di ogni fascia colorata è la quota di rischio data a una strategia in quel momento; insieme fanno sempre 100%. Quando una fascia si assottiglia, il sistema si sta fidando meno di quella regola perché è diventata più volatile.',
+  note: 'Quote a parità di rischio, in % del libro giornaliero (somma 100%), ribilanciate ogni mese; ordine delle fasce fisso. Non è l’esposizione lorda: quella dipende anche dalla leva. Fonte: quant.json (weights), 105 mesi, apr 2018 – ott 2026.',
+  prov: ['sim'],
+  table() { return { caption: 'Quote per strategia · SIMULATO · una riga ogni 6 mesi', head: ['Mese', ...SID], rows: WT.filter((_, i) => i % 6 === 0).map((w) => [MESI[+w[0].slice(5, 7) - 1] + ' ' + w[0].slice(0, 4), ...w.slice(1).map((v) => pct(v, 1))]) }; },
+  render(ctx) {
+    const { W, mobile } = ctx, G = mobile ? 6 : 118, PW = W - G, y0 = 10, hh = mobile ? 230 : 280, H = y0 + hh + 24, ts = WT.map((w) => ms(w[0])), X = lin(ts[0], ts[ts.length - 1], 0, PW), Y = lin(0, 1, y0 + hh, y0);
+    const svg = ctx.svg(H, 'Quote delle quattro strategie nel tempo, area impilata al 100%'), gg = s('g', null, svg), xs = ts.map(X);
+    const g = s('g', { 'clip-path': ctx.clip(0, 0, PW, H) }, svg); let base = WT.map(() => 0);
+    SID.forEach((id, k) => { const topv = base.map((b, i) => b + WT[i][k + 1]); s('path', { d: pArea(xs, topv.map(Y), base.map(Y)), class: 'f-' + SCL[k] + ' gapped', 'fill-opacity': 0.82 }, g); base = topv; });
+    for (const v of [0.25, 0.5, 0.75]) { const y = f1(Y(v)); s('line', { x1: 0, x2: PW, y1: y, y2: y, class: 'grid-l', style: 'stroke: var(--chart-halo); stroke-opacity: 0.35' }, gg.parentNode); s('text', { x: 4, y: y - 4, class: 'halo val-2' }, svg, pct(v, 0)); }
+    for (let yr = 2019; yr <= 2026; yr += mobile ? 2 : 1) { const x = f1(X(Date.UTC(yr, 0, 1))); s('line', { x1: x, x2: x, y1: y0 + hh, y2: y0 + hh + 4, class: 'axis-l' }, gg); s('text', { x: x + 3, y: H - 6, class: 'lb' }, gg, String(yr)); }
+    const last = WT[WT.length - 1]; let acc = 0; const ends = SID.map((id, k) => { const e = { y: Y(acc + last[k + 1] / 2), t: id, v: pct(last[k + 1], 0), c: 'f-' + SCL[k] }; acc += last[k + 1]; return e; });
+    if (!mobile) for (const e of spread(ends, 30, y0 + 12, y0 + hh - 12)) { const ge = s('g', { class: 'fade' }, svg); s('rect', { x: PW + 10, y: f1(e.y - 13), width: 8, height: 8, rx: 2, class: e.c }, ge); s('text', { x: PW + 23, y: f1(e.y - 5), class: 'lb' }, ge, e.t); s('text', { x: PW + 23, y: f1(e.y + 9), class: 'val' }, ge, e.v); }
+    ptag(svg, 6, y0 + 6, 'sim', 'Simulato');
+    ctx.legend(SID.map((id, k) => ({ key: keyBox('f-' + SCL[k]), label: id, value: pct(last[k + 1], 0) })));
+    crosshair(ctx, { n: WT.length, xOf: (i) => xs[i], x0: 0, x1: PW, y0, y1: y0 + hh, spec: (i) => ({ title: MESI[+WT[i][0].slice(5, 7) - 1] + ' ' + WT[i][0].slice(0, 4), tag: 'sim', rows: SID.map((id, k) => [id, pct(WT[i][k + 1], 1), `var(--chart-c${k + 1})`]).reverse() }) });
+  },
+});
+chart({
+  id: 'blocchi', span: 'span-6', eyebrow: 'j · Esposizione adesso',
+  title: 'Dove sono i soldi adesso, e quanto manca ai tetti?',
+  aid: 'Ogni riga è una sede; i blocchi sono gli strumenti, colorati per strategia e lunghi quanto il loro peso sul patrimonio. La tacca verticale è il tetto della sede: se i blocchi la raggiungono, il motore smette di aggiungere. Un blocco vuoto e tratteggiato è una posizione al ribasso.',
+  note: () => `Pesi in % del patrimonio (valore assoluto), stessa scala per ogni riga. Tetti da config/gerva.yaml: 40% per sede crypto, 35% per singolo strumento; IBKR non ha un tetto di sede. Lordo ${pct(DATA.caps.gross, 0)}, netto ${pct(DATA.caps.net, 0)}, leva ${num(DATA.caps.lev, 2)}× su ${num(DATA.caps.maxLev, 0)}× di tetto operativo. Fonte: sample_snapshot.json (positions), ${DATA.positions.length} posizioni.`,
+  prov: ['demo'],
+  table() { return { caption: 'Posizioni per sede e strategia · ESEMPIO', head: ['Sede', 'Strategia', 'Strumento', 'Peso', 'Valore (€)'], rows: DATA.positions.map((p) => [p.venue, p.strat, p.s, spct(p.w, 1), num(p.v, 0)]) }; },
+  render(ctx) {
+    const { W, mobile } = ctx, P = DATA.positions, C = DATA.caps, venues = ['KRAKEN', 'BINANCE', 'IBKR'], LW = mobile ? 0 : 92, rh = mobile ? 86 : 76, top = 30, H = top + venues.length * rh + 28, bh = 30;
+    const XM = Math.max(0.5, Math.ceil(Math.max(...venues.map((vn) => P.filter((p) => p.venue === vn).reduce((a, p) => a + Math.abs(p.w), 0))) * 10 + 0.6) / 10), X = lin(0, XM, LW, W - 8);
+    const svg = ctx.svg(H, 'Posizioni per sede, strategia e strumento con i tetti'), g = s('g', null, svg);
+    for (let v = 0; v <= XM + 1e-9; v += 0.1) { const x = f1(X(v)); s('line', { x1: x, x2: x, y1: top - 6, y2: H - 24, class: v === 0 ? 'axis-l' : 'grid-l' }, g); s('text', { x: x, y: H - 8, class: 't-mid' }, g, pct(v, 0)); }
+    const xi = f1(X(C.instrument)); s('line', { x1: xi, x2: xi, y1: top - 12, y2: H - 24, class: 'rule' }, g); s('text', { x: xi - 5, y: top - 6, class: 'lb t-end' }, g, (mobile ? 'strumento ' : 'tetto per strumento ') + pct(C.instrument, 0));
+    venues.forEach((vn, r) => {
+      const y = top + r * rh + (mobile ? 30 : 16), ps = P.filter((p) => p.venue === vn).sort((a, b) => SID.indexOf(a.strat) - SID.indexOf(b.strat) || Math.abs(b.w) - Math.abs(a.w)), gross = ps.reduce((a, p) => a + Math.abs(p.w), 0), crypto = C.cryptoVenues.includes(vn);
+      if (mobile) { s('text', { x: 0, y: y - 12, class: 'lb-s' }, g, vn); s('text', { x: 70, y: y - 12, class: 'lb' }, g, crypto ? 'sede crypto' : 'azioni, ETF'); } else { s('text', { x: 0, y: y + 13, class: 'lb-s' }, g, vn); s('text', { x: 0, y: y + 28, class: 'lb' }, g, crypto ? 'sede crypto' : 'azioni, ETF'); }
+      s('rect', { x: f1(X(0)), y: y, width: f1(X(XM) - X(0)), height: bh, rx: 6, class: 'track', 'fill-opacity': 0.5 }, g);
+      let acc = 0; ps.forEach((p, i) => { const a = Math.abs(p.w), xa = X(acc), wd = X(acc + a) - xa - 2, k = SID.indexOf(p.strat), short = p.w < 0; acc += a;
+        const gb = s('g', { class: 'mark grow g-right', style: '--i:' + (r * 4 + i * 3), 'data-tip': ctx.tipOf({ title: p.s + ' · ' + vn, tag: 'demo', rows: [['Strategia', p.strat, `var(--chart-c${k + 1})`], ['Peso', spct(p.w, 1) + (short ? ' · al ribasso' : '')], ['Valore', eur(p.v, 0)], ['Del tetto per strumento', pct(a / C.instrument, 0)]] }) }, g);
+        s('rect', short ? { x: f1(xa + 1), y: y + 1, width: f1(wd), height: bh - 2, rx: 5, class: 'f-none c-' + SCL[k], 'stroke-width': 1.5, 'stroke-dasharray': '4 3' } : { x: f1(xa + 1), y: y, width: f1(wd), height: bh, rx: 5, class: 'f-' + SCL[k], style: 'fill-opacity: var(--chart-block-opacity)' }, gb);
+        const lbl = p.s + ' ' + num(a * 100, 0) + '%'; if (wd > lbl.length * 6.4 + 8) s('text', { x: f1(xa + 8), y: y + bh / 2 + 4, class: short ? 'val' : 'on-fill-dark', style: short ? null : 'fill: var(--chart-on-fill)' }, gb, lbl); else if (wd > p.s.length * 6.6 + 6) s('text', { x: f1(xa + 6), y: y + bh / 2 + 4, class: short ? 'val' : 'on-fill-dark', style: short ? null : 'fill: var(--chart-on-fill)', 'font-size': 10 }, gb, p.s); });
+      if (crypto) { const xc = f1(X(C.venueCrypto)); s('line', { x1: xc, x2: xc, y1: y - 7, y2: y + bh + 7, class: 'rule-strong', 'stroke-width': 2 }, g); s('text', { x: xc + 6, y: y + bh + 16, class: 'lb' }, g, 'tetto di sede ' + pct(C.venueCrypto, 0)); }
+      s('text', { x: f1(Math.min(X(acc) + 8, W - 34)), y: y + bh / 2 + 4, class: 'val halo fade' }, g, pct(gross, 0)); s('text', { x: f1(X(0) + 2), y: y + bh + 16, class: 'lb' }, g, crypto ? 'usa il ' + pct(gross / C.venueCrypto, 0) + ' del tetto' : 'nessun tetto di sede');
+    });
+    ctx.legend([...SID.map((id, k) => ({ key: keyBox('f-' + SCL[k]), label: id })), { key: (() => { const v = keyBox('f-none c-ink2'); v.firstChild.setAttribute('stroke-dasharray', '3 2'); return v; })(), label: 'al ribasso' }]);
+  },
+});
+
+/* =====================================================================================================
+   STATI: vuoto e dati fermi. Mai un grafico finto, mai l'ultimo valore spacciato per fresco.
+   ===================================================================================================== */
+chart({
+  id: 'stati', span: 'span-12', eyebrow: 'Stati', title: 'Che cosa mostra un grafico quando il dato non c’è, o è fermo?',
+  aid: 'Se il dato non esiste ancora, il riquadro lo dice e dice che cosa manca perché compaia. Se il dato è fermo, l’ultimo disegno resta, attenuato, con scritto da quanto: non sparisce e non finge di essere di adesso.',
+  note: 'Stato vuoto: assi in filigrana, una frase, il conteggio che manca; nessuna curva d’esempio. Dati fermi: il grafico trattiene l’ultimo fotogramma al 45% e senza saturazione, l’etichetta dice l’età; al ritorno dei dati riprende senza salti.',
+  prov: ['paper'],
+  render(ctx) {
+    const wrap = h('div', { style: 'display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: var(--gap-grid)' }); ctx.plot.insertBefore(wrap, ctx.def.tip);
+    const e = h('div', { class: 'dv-empty' }, wrap), ic = s('svg', { width: 44, height: 44, viewBox: '0 0 44 44', fill: 'none', stroke: 'currentColor', 'stroke-width': 1.6, 'stroke-linecap': 'round' }); e.appendChild(ic);
+    s('path', { d: 'M6 36H38M10 36V26M18 36V18M26 36V22M34 36V12', 'stroke-dasharray': '1.5 4.5' }, ic); s('circle', { cx: 34, cy: 9, r: 3 }, ic);
+    h('b', null, e, 'Ancora nessun trade in paper'); h('p', null, e, 'La distribuzione dei risultati compare dopo il primo trade chiuso. Oggi: 0 su 40 necessari per il cancello.'); h('span', { class: 'tag tag--paper' }, e, 'Paper');
+    const st = h('div', { class: 'dv-stale' }, wrap), pl = h('div', { class: 'dv-plot' }, st), w = Math.max(240, Math.floor(wrap.clientWidth / (ctx.mobile ? 1 : 2) - 24)), sv = s('svg', { width: w, height: 200, viewBox: `0 0 ${w} 200` }, pl);
+    const sp = DATA.fan.live, X = lin(0, sp.length - 1, 0, w - 4), Y = lin(Math.min(...sp), Math.max(...sp), 180, 16); for (const y of [40, 88, 136, 184]) s('line', { x1: 0, x2: w, y1: y + 0.5, y2: y + 0.5, class: 'grid-l' }, sv);
+    s('path', { d: pLine(sp.map((_, i) => X(i)), sp.map(Y)), class: 'ln c-fund' }, sv);
+    h('div', { class: 'dv-stale__msg' }, st, '▲ Dati fermi da 14 min · ultimo valore valido alle 20:45');
   },
 });
 
