@@ -5,7 +5,7 @@
 /** Token letti dal JavaScript e valore usato se il CSS non li definisce. */
 export const CHART_TOKENS = {
   // colori
-  surface: ['--chart-surface', '#121519'], text: ['--chart-text', '#e9ecf0'], textMuted: ['--chart-text-muted', '#7f8792'],
+  surface: ['--chart-surface', '#121519'], text: ['--chart-text', '#e9ecf0'], textSoft: ['--chart-text-soft', '#b3bac4'], textMuted: ['--chart-text-muted', '#7f8792'],
   grid: ['--chart-grid', '#20252b'], axis: ['--chart-axis', '#343a43'], crosshair: ['--chart-crosshair', '#7f8792'],
   up: ['--chart-up', '#61d19a'], down: ['--chart-down', '#f05f5a'], accent: ['--chart-accent', '#3987e5'], bench: ['--chart-bench', '#666e7a'],
   warn: ['--chart-warn', '#fab219'], crit: ['--chart-crit', '#d03b3b'],

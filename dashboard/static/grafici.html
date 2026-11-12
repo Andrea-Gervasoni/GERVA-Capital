@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<meta name="robots" content="noindex">
+<title>GERVA Capital · Galleria tecnica dei grafici</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/app.css">
+<script src="js/theme-init.js"></script>
+<script type="module" src="js/gallery.js"></script>
+</head>
+<body data-level="esperto">
+<main class="gallery" id="gallery">
+  <header class="gallery__head">
+    <h1 class="gallery__title">Galleria tecnica dei grafici</h1>
+    <p class="gallery__note">Banco di prova del motore dei grafici: non è una pagina del prodotto. Tutti i dati sono ESEMPI o SIMULATI. Lo stile arriva solo dai token <code>--chart-*</code>.</p>
+    <button class="btn btn--sm btn--ghost" type="button" id="gallery-theme">Cambia tema</button>
+    <a class="btn btn--sm btn--ghost" href="./">Torna alla dashboard</a>
+  </header>
+  <div id="gallery-body"></div>
+</main>
+<div class="tooltip" id="tooltip" role="presentation" hidden></div>
+</body>
+</html>

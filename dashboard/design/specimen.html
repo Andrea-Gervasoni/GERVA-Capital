@@ -1,0 +1,692 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<title>GERVA Capital · Sistema visivo «vetro liquido»</title>
+<style>
+@import url("tokens.glass.css");
+
+/* ============ base ============ */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); font: var(--type-body); letter-spacing: var(--tr-body); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; overflow-x: hidden; }
+/* il fondale è un piano fisso dietro tutto: il vetro lo rifrange mentre la pagina scorre */
+.backdrop { position: fixed; inset: 0; z-index: -1; background: var(--backdrop), var(--bg); pointer-events: none; }
+h1, h2, h3, p, dl, dd, ul, figure { margin: 0; } ul { padding: 0; list-style: none; }
+button, input { font: inherit; color: inherit; letter-spacing: inherit; } button { cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+.num { font-family: var(--font-num); font-variant-numeric: var(--num-variant); }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.icon { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.icon--sm { width: 14px; height: 14px; stroke-width: 1.9; } .icon--solid { fill: currentColor; stroke: none; }
+.sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+:focus-visible, .is-focus { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* ============ materiali ============ */
+.glass { position: relative; isolation: isolate; border-radius: var(--radius-l); corner-shape: var(--corner-shape);
+  background: var(--glass-sheen), var(--glass-panel-bg);
+  -webkit-backdrop-filter: var(--glass-panel-filter); backdrop-filter: var(--glass-panel-filter);
+  box-shadow: var(--glass-panel-fx); }
+.glass--raised { background: var(--glass-sheen), var(--glass-raised-bg); -webkit-backdrop-filter: var(--glass-raised-filter); backdrop-filter: var(--glass-raised-filter); box-shadow: var(--glass-raised-fx); }
+.glass--chrome { background: var(--glass-chrome-bg); -webkit-backdrop-filter: var(--glass-chrome-filter); backdrop-filter: var(--glass-chrome-filter); box-shadow: var(--glass-chrome-fx); }
+.glass--sheet { background: var(--glass-sheen), var(--glass-sheet-bg); -webkit-backdrop-filter: var(--glass-sheet-filter); backdrop-filter: var(--glass-sheet-filter); box-shadow: var(--glass-sheet-fx); }
+/* orlo di luce: più vivo in alto a sinistra, quasi spento a metà, di nuovo acceso in basso a destra */
+.glass::before { content: ""; position: absolute; inset: 0; z-index: 2; padding: 1px; border-radius: inherit; corner-shape: inherit; background: var(--glass-rim); pointer-events: none;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+.lift { transition: transform var(--dur-base) var(--ease-spring-soft), box-shadow var(--dur-base) var(--ease-out); }
+.lift:hover, .lift.is-hover { transform: translateY(var(--lift)); box-shadow: var(--glass-edge), var(--elev-2); }
+
+/* ============ impalcatura ============ */
+.app { display: grid; grid-template-columns: var(--rail-w) minmax(0, 1fr); gap: var(--gap-grid); padding: 14px var(--page-gutter) 0 14px; max-width: 1560px; margin: 0 auto; }
+.rail { position: sticky; top: 14px; align-self: start; height: calc(100vh - 28px); display: flex; flex-direction: column; gap: var(--sp-6); padding: var(--sp-5) var(--sp-3) var(--sp-4); border-radius: var(--radius-xl); z-index: var(--z-chrome); }
+.brand { display: flex; align-items: baseline; gap: 8px; padding: 4px 12px 0; }
+.brand__name { font: 600 24px/1 var(--font-brand); letter-spacing: 0.05em; }
+.brand__sub { font: var(--type-micro); letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-3); }
+.nav { display: flex; flex-direction: column; gap: 2px; }
+.nav__label { padding: var(--sp-4) 12px 6px; font: var(--type-micro); letter-spacing: var(--tr-micro); text-transform: uppercase; color: var(--text-3); }
+.nav__link { position: relative; display: flex; align-items: center; gap: 11px; height: 38px; padding: 0 12px; border-radius: var(--radius-m); corner-shape: var(--corner-shape); color: var(--text-2); font-weight: 500; transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out); }
+.nav__link .icon { color: var(--text-3); transition: color var(--dur-fast) var(--ease-out); }
+.nav__link:hover { background: var(--surface-2); color: var(--text); }
+.nav__link[aria-current="page"] { background: var(--surface-3); color: var(--text); box-shadow: inset 0 1px 0 var(--glass-specular), inset 0 0 0 1px var(--glass-inner); }
+.nav__link[aria-current="page"] .icon { color: var(--accent-ink); }
+.nav__flag { width: 7px; height: 7px; margin-left: auto; border-radius: 50%; background: var(--warn); box-shadow: 0 0 0 3px var(--warn-soft); }
+.rail__foot { margin-top: auto; padding: 12px; border-radius: var(--radius-m); background: var(--surface-2); font: var(--type-caption); color: var(--text-2); display: grid; gap: 4px; }
+.rail__foot b { font-weight: 600; color: var(--text); font-family: var(--font-num); font-variant-numeric: var(--num-variant); }
+.rail__foot div { display: flex; justify-content: space-between; }
+
+.col { min-width: 0; padding-bottom: 96px; }
+.chrome { position: sticky; top: 14px; z-index: var(--z-chrome); display: flex; align-items: center; gap: var(--sp-4); height: var(--topbar-h); padding: 0 12px 0 var(--sp-6); border-radius: var(--radius-xl); }
+.chrome__title { font: var(--fw-semibold) var(--fs-title)/1.2 var(--font-display); letter-spacing: var(--tr-title); }
+.chrome__meta { font: var(--type-caption); color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.chrome__right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.main { display: grid; gap: var(--gap-section); padding-top: var(--sp-8); }
+.block { display: grid; gap: var(--gap-grid); }
+.block__head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; padding: 0 6px; }
+.block__title { font: var(--type-page); letter-spacing: var(--tr-title); }
+.block__note { font: var(--type-body); color: var(--text-2); max-width: 68ch; }
+.grid { display: grid; gap: var(--gap-grid); }
+.grid--stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.grid--2-1 { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); align-items: start; }
+.grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+.grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
+.grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+/* ============ testo ============ */
+.micro { font: var(--type-micro); letter-spacing: var(--tr-micro); text-transform: uppercase; color: var(--text-3); }
+.caption { font: var(--type-caption); color: var(--text-3); }
+.card { padding: var(--pad-card); }
+.card__head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: var(--sp-4); }
+.card__title { font: var(--type-section); letter-spacing: var(--tr-title); }
+.card__tools { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+/* ============ eroe ============ */
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: var(--sp-8); padding: var(--pad-hero); border-radius: var(--radius-xl); overflow: hidden; }
+.eyebrow { display: flex; align-items: center; gap: 10px; }
+.hero__num { display: flex; align-items: baseline; margin-top: 10px; font: var(--type-hero); letter-spacing: var(--tr-hero); font-variant-numeric: var(--num-variant); }
+.hero__dec { color: var(--text-2); font-size: 0.5em; font-weight: 500; letter-spacing: -0.02em; display: inline-flex; align-items: baseline; }
+.hero__cur { margin-left: 0.22em; color: var(--text-3); font-size: 0.5em; font-weight: 500; letter-spacing: 0; }
+.hero__delta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: var(--sp-4); }
+.hero__ctx { color: var(--text-2); }
+.hero__books { margin-top: 8px; color: var(--text-3); font: var(--type-caption); }
+.hero__side { display: flex; gap: 0; }
+.hero__side > div { padding: 2px var(--sp-6); border-left: 1px solid var(--border); min-width: 132px; }
+.hero__side dt { font: var(--type-micro); letter-spacing: var(--tr-micro); text-transform: uppercase; color: var(--text-3); }
+.hero__side dd { margin-top: 8px; font: 600 var(--fs-stat)/1.1 var(--font-num); letter-spacing: var(--tr-title); font-variant-numeric: var(--num-variant); }
+.hero__side small { display: block; margin-top: 6px; font: var(--type-caption); color: var(--text-3); }
+
+/* variazione: segno + freccia + colore, mai il colore da solo */
+.delta { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px 0 10px; border-radius: var(--radius-pill); font: 600 var(--fs-lead)/1 var(--font-num); font-variant-numeric: var(--num-variant); }
+.delta .icon { width: 10px; height: 10px; }
+.delta i { font-style: normal; font-weight: 500; opacity: 0.9; padding-left: 8px; margin-left: 2px; border-left: 1px solid currentColor; border-color: color-mix(in srgb, currentColor 30%, transparent); }
+.delta--pos { background: var(--pos-soft); color: var(--pos); } .delta--neg { background: var(--neg-soft); color: var(--neg); }
+.pos { color: var(--pos); } .neg { color: var(--neg); }
+.chg { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-num); font-variant-numeric: var(--num-variant); font-weight: 500; }
+.chg .icon { width: 8px; height: 8px; }
+
+/* rotolo delle cifre */
+.roll { display: inline-flex; }
+.roll__d { display: inline-block; height: 1.04em; overflow: hidden; -webkit-mask: linear-gradient(#0000, #000 12%, #000 88%, #0000); mask: linear-gradient(#0000, #000 12%, #000 88%, #0000); }
+.roll__col { display: flex; flex-direction: column; transform: translateY(calc(var(--d) * -10%)); transition: transform var(--dur-slower) var(--ease-spring-soft); transition-delay: calc(var(--i) * 28ms * var(--motion-on)); }
+.roll__col > span { height: 1.04em; line-height: 1.04em; display: block; }
+
+/* riflesso speculare: una passata, quando arrivano dati nuovi */
+.sweep::after { content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; background: var(--sweep) no-repeat; background-size: 240% 100%; background-position: 170% 0; pointer-events: none; }
+.sweep.is-sweeping::after { animation: sweep var(--dur-sweep) var(--ease-standard) 1; }
+@keyframes sweep { from { background-position: 170% 0; } to { background-position: -70% 0; } }
+
+/* ============ statistiche ============ */
+.stat { padding: var(--sp-5) var(--pad-card); display: grid; gap: 6px; align-content: start; }
+.stat__val { font: 600 var(--fs-stat)/1.15 var(--font-num); letter-spacing: var(--tr-title); font-variant-numeric: var(--num-variant); }
+.stat__val small { font-size: var(--fs-body); font-weight: 500; color: var(--text-3); letter-spacing: 0; }
+.meter { position: relative; height: 6px; margin-top: 6px; border-radius: 3px; background: var(--surface-3); }
+.meter > i { position: absolute; inset: 0 auto 0 0; width: var(--v); border-radius: 3px; background: var(--accent); }
+.meter > b { position: absolute; top: -3px; bottom: -3px; left: var(--t); width: 2px; border-radius: 1px; background: var(--text-2); }
+.meter[data-state="watch"] > i { background: var(--warn); }
+
+/* ============ pastiglie ============ */
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 11px 0 8px; border-radius: var(--radius-pill); font: 600 var(--fs-small)/1 var(--font-ui); letter-spacing: 0.01em; white-space: nowrap; background: var(--surface-2); color: var(--text-2); box-shadow: inset 0 0 0 1px var(--border-strong); }
+.chip--safe { background: var(--safe-soft); color: var(--safe-ink); box-shadow: none; }
+.chip--watch { background: var(--warn-soft); color: var(--warn-ink); box-shadow: none; }
+.chip--serious { background: var(--serious-soft); color: var(--serious-ink); box-shadow: none; }
+.chip--breach { background: var(--crit-soft); color: var(--crit-ink); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--crit) 55%, transparent); }
+.chip--killed { background: var(--killed-bg); color: var(--killed-ink); box-shadow: none; letter-spacing: 0.06em; }
+.chip--unknown { background: transparent; color: var(--unknown-ink); box-shadow: none; border: 1px dashed var(--unknown-border); }
+.chip--accent { background: var(--accent-soft); color: var(--accent-ink); box-shadow: none; }
+/* provenienza: forma e peso, non solo colore */
+.tag { display: inline-flex; align-items: center; height: 20px; padding: 0 7px; border-radius: var(--radius-xs); font: 600 10.5px/1 var(--font-ui); letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; border: 1px solid transparent; }
+.tag--demo { color: var(--prov-demo-ink); border: 1px dotted var(--prov-demo-border); background: repeating-linear-gradient(135deg, var(--hatch) 0 4px, transparent 4px 8px), var(--prov-demo-bg); }
+.tag--sim { color: var(--prov-sim-ink); border: 1px dashed var(--prov-sim-border); background: var(--prov-sim-bg); }
+.tag--paper { color: var(--prov-paper-ink); border: 1px solid var(--prov-paper-border); background: var(--prov-paper-bg); }
+.tag--real { color: var(--prov-real-ink); border-color: var(--prov-real-border); background: var(--prov-real-bg); }
+
+/* ============ bottoni ============ */
+.btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: var(--control-h); padding: 0 16px; border: 0; border-radius: var(--radius-pill); font-weight: 600; white-space: nowrap; background: var(--surface-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--border-strong);
+  transition: transform var(--dur-instant) var(--ease-out), background-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out), filter var(--dur-fast) var(--ease-out); }
+.btn:hover { background: var(--surface-3); } .btn:active { transform: scale(var(--press-scale)); }
+.btn:disabled { color: var(--text-disabled); cursor: not-allowed; transform: none; }
+.btn--primary { background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0) 60%), var(--accent-fill); color: var(--on-accent); box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), 0 1px 2px rgba(16,24,40,0.18), 0 6px 14px -4px color-mix(in srgb, var(--accent-fill) 55%, transparent); }
+.btn--primary:hover { background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0) 60%), var(--accent-fill); filter: brightness(1.08); }
+.btn--quiet { background: transparent; box-shadow: none; color: var(--text-2); } .btn--quiet:hover { background: var(--surface-2); color: var(--text); }
+.btn--danger { background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0) 60%), var(--crit); color: var(--on-crit); box-shadow: inset 0 1px 0 rgba(255,255,255,0.24), 0 6px 14px -4px color-mix(in srgb, var(--crit) 50%, transparent); }
+.btn--danger:hover { background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0) 60%), var(--crit); filter: brightness(1.07); }
+.btn--danger:disabled { background: var(--surface-3); color: var(--text-disabled); box-shadow: inset 0 0 0 1px var(--border); filter: none; }
+/* KILL: sempre visibile, sempre in due passi. Il bordo tratteggiato è il «coperchio»: apre la conferma, non invia. */
+.btn--kill { background: var(--crit-soft); color: var(--crit-ink); box-shadow: none; border: 1.5px dashed color-mix(in srgb, var(--crit) 70%, transparent); letter-spacing: 0.06em; padding: 0 14px 0 11px; }
+.btn--kill:hover { background: color-mix(in srgb, var(--crit) 22%, transparent); }
+.btn--kill:disabled { background: transparent; color: var(--text-3); border-color: var(--border-strong); letter-spacing: 0; }
+.btn--sm { height: var(--control-h-sm); padding: 0 12px; font-size: var(--fs-small); }
+.icon-btn { display: inline-grid; place-items: center; width: var(--control-h); height: var(--control-h); padding: 0; border: 0; border-radius: 50%; background: var(--surface-2); color: var(--text-2); box-shadow: inset 0 0 0 1px var(--border); transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), transform var(--dur-instant) var(--ease-out); }
+.icon-btn:hover { background: var(--surface-3); color: var(--text); } .icon-btn:active { transform: scale(var(--press-scale)); }
+
+/* ============ segmentato ============ */
+.seg { position: relative; display: inline-grid; grid-auto-flow: column; grid-auto-columns: 1fr; height: var(--control-h); padding: 3px; border-radius: var(--radius-pill); background: var(--surface-3); box-shadow: inset 0 1px 2px rgba(0,0,0,0.06); }
+.seg__thumb { position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc((100% - 6px) / var(--n)); border-radius: var(--radius-pill); background: var(--glass-raised-solid); box-shadow: inset 0 1px 0 var(--glass-specular), 0 0 0 1px var(--glass-hairline), 0 1px 2px rgba(0,0,0,0.10), 0 4px 10px -3px rgba(0,0,0,0.16); transform: translateX(calc(var(--i) * 100%)); transition: transform var(--dur-base) var(--ease-spring); }
+.seg__opt { position: relative; z-index: 1; display: grid; place-items: center; padding: 0 16px; border: 0; background: none; border-radius: var(--radius-pill); font-weight: 500; color: var(--text-2); white-space: nowrap; transition: color var(--dur-fast) var(--ease-out); }
+.seg__opt[aria-checked="true"] { color: var(--text); font-weight: 600; }
+.seg--sm { height: var(--control-h-sm); } .seg--sm .seg__opt { padding: 0 11px; font-size: var(--fs-small); }
+
+/* ============ grafico ============ */
+.chartwrap { position: relative; }
+.chart { display: block; width: 100%; height: auto; overflow: visible; }
+.c-grid { stroke: var(--chart-grid); stroke-width: 1; } .c-axis { stroke: var(--chart-axis); stroke-width: 1; }
+.c-tick { fill: var(--chart-text-muted); font: 11px var(--font-num); font-variant-numeric: var(--num-variant); }
+.c-line { fill: none; stroke: var(--chart-accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.c-line--sim { stroke-dasharray: 7 5; stroke-width: 1.5; } .c-line--bench { stroke: var(--chart-bench); stroke-width: 1.5; }
+.c-band { fill: var(--chart-accent); opacity: var(--chart-band-opacity); } .c-area { fill: url(#g-area); }
+.c-ref { stroke: var(--chart-text-muted); stroke-width: 1; stroke-dasharray: 2 3; }
+.c-dot { fill: var(--chart-accent); stroke: var(--chart-surface); stroke-width: 2; }
+.c-note { fill: var(--chart-text-muted); font: 500 11px var(--font-ui); }
+.c-draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw var(--dur-slower) var(--ease-standard) 240ms forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-bottom: 10px; font: var(--type-caption); color: var(--text-2); }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.key { width: 18px; height: 0; border-top: 2px solid var(--accent); flex: none; } .key--sim { border-top-style: dashed; } .key--bench { border-color: var(--bench); }
+.key--band { height: 8px; border: 0; border-radius: 2px; background: var(--accent); opacity: 0.25; }
+.swatch { width: 10px; height: 10px; border-radius: 3px; flex: none; background: var(--c); }
+
+/* ============ popover / toast ============ */
+.popover { position: absolute; z-index: var(--z-sheet); min-width: 216px; padding: 14px 16px; border-radius: var(--radius-m); transform-origin: 20% 100%; }
+.popover.is-in { animation: sheet-in var(--dur-slow) var(--ease-spring) both; }
+@keyframes sheet-in { from { opacity: 0; transform: translateY(var(--sheet-from-y)) scale(var(--sheet-from-scale)); } }
+.popover__date { font: var(--type-micro); letter-spacing: var(--tr-micro); text-transform: uppercase; color: var(--text-2); }
+.popover dl { display: grid; grid-template-columns: auto auto; gap: 7px 18px; margin-top: 10px; font-size: var(--fs-small); }
+.popover dt { display: flex; align-items: center; gap: 7px; color: var(--text-2); } .popover dd { text-align: right; font-weight: 600; font-family: var(--font-num); font-variant-numeric: var(--num-variant); }
+.toast { position: fixed; right: 20px; bottom: 20px; z-index: var(--z-toast); display: flex; align-items: center; gap: 12px; max-width: min(420px, calc(100vw - 24px)); padding: 12px 12px 12px 16px; border-radius: var(--radius-l); }
+.toast.is-in { animation: toast-in var(--dur-slow) var(--ease-spring) 900ms both; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(calc(16px * var(--motion-on))) scale(var(--sheet-from-scale)); } }
+.toast__ico { color: var(--safe-ink); } .toast__txt { font-weight: 500; } .toast__txt small { display: block; font: var(--type-caption); color: var(--text-2); }
+
+/* ============ mappa di calore ============ */
+.hm { display: grid; grid-template-columns: 38px repeat(12, minmax(0, 1fr)); gap: 3px; align-items: center; }
+.hm__h { text-align: center; font: var(--type-micro); color: var(--text-3); letter-spacing: 0.02em; } .hm__y { font: var(--type-caption); font-family: var(--font-num); color: var(--text-2); }
+.hm__c { display: grid; place-items: center; height: 30px; border-radius: var(--chart-cell-radius); background: var(--b); color: var(--k); font: 600 10.5px/1 var(--font-num); font-variant-numeric: var(--num-variant); transition: transform var(--dur-fast) var(--ease-out); }
+.hm__c:hover { transform: scale(1.08); box-shadow: 0 0 0 1.5px var(--text); }
+.hm__c--empty { background: none; box-shadow: inset 0 0 0 1px var(--border); color: var(--text-3); }
+.ramp { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 2px; }
+.ramp > i { height: 22px; border-radius: 4px; background: var(--b); color: var(--k); display: grid; place-items: center; font: 600 10px/1 var(--font-num); font-style: normal; }
+.ramps { display: grid; gap: 10px; margin-top: var(--sp-5); } .ramps > div { display: grid; grid-template-columns: 96px minmax(0, 1fr); align-items: center; gap: 10px; }
+
+/* ============ tabella ============ */
+.tablewrap { margin: 0 calc(var(--pad-card) * -1) calc(var(--pad-card) * -1 + 8px); overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: var(--fs-body); }
+.table th { padding: 0 14px 10px; text-align: left; font: var(--type-micro); letter-spacing: var(--tr-micro); text-transform: uppercase; color: var(--text-3); white-space: nowrap; }
+.table td { padding: 13px 14px; border-top: 1px solid var(--border); white-space: nowrap; }
+.table th:first-child, .table td:first-child { padding-left: var(--pad-card); } .table th:last-child, .table td:last-child { padding-right: var(--pad-card); }
+.table .r { text-align: right; } .table td.r { font-family: var(--font-num); font-variant-numeric: var(--num-variant); }
+.table tbody tr { transition: background-color var(--dur-fast) var(--ease-out); }
+.table tbody tr:hover, .table tbody tr.is-hover { background: var(--surface-2); }
+.table tbody tr.is-focus { outline-offset: -2px; border-radius: var(--radius-s); }
+.sym { font: 600 var(--fs-body)/1.2 var(--font-num); } .sym small { display: block; margin-top: 3px; font: var(--type-caption); color: var(--text-3); }
+.strat { display: inline-flex; align-items: center; gap: 8px; color: var(--text-2); }
+
+/* ============ caricamento ============ */
+.skel { position: relative; overflow: hidden; border-radius: 8px; background: var(--surface-3); }
+.skel::after { content: ""; position: absolute; inset: 0; background: var(--shimmer) no-repeat; background-size: 220% 100%; animation: shimmer var(--dur-shimmer) linear infinite; }
+@keyframes shimmer { from { background-position: 160% 0; } to { background-position: -60% 0; } }
+
+/* ============ campioni ============ */
+.stage { position: relative; border-radius: var(--radius-xl); padding: clamp(16px, 3vw, 44px); overflow: hidden; }
+.stage__busy { position: absolute; inset: 0; width: 100%; height: 100%; }
+.stage__grid { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(12px, 2vw, 28px); }
+.mat { padding: var(--sp-5); min-height: 196px; display: grid; align-content: start; gap: 6px; }
+.mat h3 { font: var(--type-section); } .mat p { font: var(--type-caption); color: var(--text-2); } .mat .t3 { color: var(--text-3); }
+.mat__nums { margin-top: auto; padding-top: 10px; display: flex; gap: 12px; align-items: baseline; font-family: var(--font-num); font-variant-numeric: var(--num-variant); font-weight: 600; }
+.probe { display: block; height: 34px; margin-top: 8px; border-radius: 8px; }
+.type-row { display: grid; grid-template-columns: 150px minmax(0, 1fr); align-items: baseline; gap: var(--sp-5); padding: 14px 0; border-top: 1px solid var(--border); }
+.type-row:first-child { border-top: 0; padding-top: 0; } .type-row > .caption { font-family: var(--font-num); }
+.sw-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
+.sw { display: grid; gap: 6px; font: var(--type-caption); color: var(--text-2); } .sw > i { height: 40px; border-radius: var(--radius-s); background: var(--c); box-shadow: inset 0 0 0 1px var(--border); }
+.sw code { font: 11px var(--font-mono); color: var(--text-3); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; } .row + .row { margin-top: var(--sp-4); }
+.sub { margin: var(--sp-5) 0 10px; } .sub:first-child { margin-top: 0; }
+.demo { min-height: 150px; display: grid; align-content: space-between; gap: var(--sp-4); }
+.demo p { color: var(--text-2); font: var(--type-caption); }
+.field { display: grid; gap: 6px; } .field input { height: var(--control-h); padding: 0 12px; border: 1px solid var(--border-control); border-radius: var(--radius-s); background: var(--surface-2); }
+.series-line { display: flex; align-items: center; gap: 10px; font: var(--type-caption); color: var(--text-2); } .series-line svg { width: 64px; height: 10px; flex: none; }
+
+/* entrata della pagina: le schede salgono in sequenza, una volta */
+.rise { animation: rise var(--dur-slow) var(--ease-out) both; animation-delay: calc(var(--i, 0) * var(--stagger)); }
+@keyframes rise { from { opacity: 0; transform: translateY(calc(14px * var(--motion-on))); } }
+
+.tabbar { display: none; }
+
+/* ============ adattamento ============ */
+@media (max-width: 1180px) { .grid--stats, .grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .grid--2-1, .grid--3 { grid-template-columns: minmax(0, 1fr); } .stage__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .hero { grid-template-columns: minmax(0, 1fr); align-items: start; } .hero__side > div:first-child { border-left: 0; padding-left: 0; } }
+@media (max-width: 860px) {
+  .app { grid-template-columns: minmax(0, 1fr); padding: 10px var(--page-gutter) 0; }
+  .rail { display: none; }
+  .chrome { top: 10px; padding: 0 8px 0 16px; gap: 10px; } .chrome__meta, .chrome .seg, .chrome .btn--kill span { display: none; } .chrome .btn--kill { padding: 0; width: var(--control-h); }
+  .grid--2 { grid-template-columns: minmax(0, 1fr); }
+  .hero__side { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); } .hero__side > div { min-width: 0; padding: 0 0 0 12px; } .hero__side > div:first-child { padding-left: 0; } .hero__side dd { font-size: 18px; }
+  .hide-sm { display: none; }
+  .type-row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .hm { grid-template-columns: 30px repeat(12, minmax(0, 1fr)); gap: 2px; } .hm__c { height: 24px; font-size: 0; border-radius: 4px; } .hm__c--empty { font-size: 0; }
+  .toast { left: 12px; right: 12px; bottom: calc(84px + env(safe-area-inset-bottom)); max-width: none; }
+  .col { padding-bottom: 150px; }
+  .tabbar { position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: var(--z-chrome); display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; height: 62px; padding: 6px; border-radius: var(--radius-xl); }
+  .tabbar a { display: grid; place-items: center; align-content: center; gap: 3px; border-radius: 22px; font: 500 10.5px/1 var(--font-ui); color: var(--text-2); }
+  .tabbar a[aria-current="page"] { background: var(--surface-3); color: var(--text); } .tabbar a[aria-current="page"] .icon { color: var(--accent-ink); }
+}
+@media (max-width: 520px) { .grid--stats, .grid--4, .stage__grid { grid-template-columns: minmax(0, 1fr); } .grid--stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .stat { padding: 16px; } .stat__val { font-size: 19px; } .mat { min-height: 0; } }
+@media (prefers-reduced-motion: reduce) { .skel::after, .sweep.is-sweeping::after { animation: none; } .c-draw { animation: none; stroke-dashoffset: 0; } }
+@media (forced-colors: active) { .glass { border: 1px solid CanvasText; } .glass::before { display: none; } }
+</style>
+</head>
+<body>
+<div class="backdrop" aria-hidden="true"></div>
+
+<svg xmlns="http://www.w3.org/2000/svg" class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-overview" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="9" rx="2"/><rect x="13.5" y="3.5" width="7" height="5" rx="2"/><rect x="13.5" y="11.5" width="7" height="9" rx="2"/><rect x="3.5" y="15.5" width="7" height="5" rx="2"/></symbol>
+  <symbol id="i-performance" viewBox="0 0 24 24"><path d="M3.5 17.5 9 11.5l4 3.5 7.5-8.500"/><path d="M15.500 6.500h5v5"/></symbol>
+  <symbol id="i-risk" viewBox="0 0 24 24"><path d="M12 3.500 19.500 6.300v5.400c0 4.400-3 7.600-7.500 8.800-4.500-1.200-7.500-4.400-7.500-8.800V6.300z"/><path d="M12 8.500V13M12 16v.2"/></symbol>
+  <symbol id="i-trade" viewBox="0 0 24 24"><path d="M7 4v4M7 15v5M17 4v3M17 16v4"/><rect x="4.500" y="8" width="5" height="7" rx="1.500"/><rect x="14.500" y="7" width="5" height="9" rx="1.500"/></symbol>
+  <symbol id="i-strategies" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.200"/><circle cx="6" cy="18" r="2.200"/><circle cx="18" cy="12" r="2.200"/><path d="M8.200 6h3.300c2 0 3 1 3.600 2.600l.9 1.600M8.200 18h3.300c2 0 3-1 3.600-2.600l.9-1.600"/></symbol>
+  <symbol id="i-orders" viewBox="0 0 24 24"><path d="M8.500 6.500h11M8.500 12h11M8.500 17.500h11M4.300 6.500h.4M4.300 12h.4M4.300 17.500h.4"/></symbol>
+  <symbol id="i-research" viewBox="0 0 24 24"><path d="M9.500 3.500h5M10.500 3.500v6L5 18.200a1.500 1.500 0 0 0 1.300 2.300h11.400a1.500 1.500 0 0 0 1.300-2.300L13.500 9.500v-6M7.600 14.500h8.800"/></symbol>
+  <symbol id="i-system" viewBox="0 0 24 24"><path d="M3 12h4l2.500-6.500 5 13L17 12h4"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.500"/><path d="M8 12.300l2.800 2.800L16 9.600"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 4.200 20.600 19.200H3.400z"/><path d="M12 10v4.400M12 17v.2"/></symbol>
+  <symbol id="i-crit" viewBox="0 0 24 24"><path d="M8.300 3.500h7.400l4.800 4.800v7.400l-4.800 4.800H8.300l-4.800-4.800V8.300z"/><path d="M12 8v5M12 16v.2"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.500"/><path d="M10 9v6M14 9v6"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.500"/><path d="M12 7.500V12l3 2"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.500"/><path d="M9.700 9.600a2.400 2.400 0 1 1 3.500 2.100c-.8.500-1.200 1-1.200 1.900M12 16.600v.2"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="m6.500 6.500 11 11M17.500 6.500l-11 11"/></symbol>
+  <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 3.500v8M7 6.600a7.500 7.500 0 1 0 10 0"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.500V5M12 19v2.500M2.500 12H5M19 12h2.500M5.300 5.300l1.800 1.800M16.900 16.900l1.800 1.800M5.300 18.700l1.800-1.800M16.900 7.100l1.800-1.800"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.500A8.500 8.500 0 0 1 9.500 4 8.500 8.500 0 1 0 20 14.500z"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 4 21 20H3z"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 20 3 4h18z"/></symbol>
+  <symbol id="i-shadow" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.500" stroke-dasharray="3 3"/><circle cx="12" cy="12" r="2.500"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.500v13l10.500-6.500z"/></symbol>
+</svg>
+
+<div class="app">
+  <!-- ============ barra laterale: materiale «cromatura» ============ -->
+  <aside class="rail glass glass--chrome" aria-label="Navigazione">
+    <a class="brand" href="#"><span class="brand__name">GERVA</span><span class="brand__sub">Capital</span></a>
+    <nav class="nav" aria-label="Sezioni">
+      <a class="nav__link" href="#" aria-current="page"><svg class="icon"><use href="#i-overview"/></svg>Panoramica</a>
+      <a class="nav__link" href="#"><svg class="icon"><use href="#i-performance"/></svg>Performance</a>
+      <a class="nav__link" href="#"><svg class="icon"><use href="#i-risk"/></svg>Rischio<span class="nav__flag" title="Un limite è in attenzione"></span></a>
+      <a class="nav__link" href="#"><svg class="icon"><use href="#i-trade"/></svg>Trade</a>
+      <a class="nav__link" href="#"><svg class="icon"><use href="#i-strategies"/></svg>Strategie</a>
+      <a class="nav__link" href="#"><svg class="icon"><use href="#i-orders"/></svg>Ordini</a>
+      <div class="nav__label">Capire</div>
+      <a class="nav__link" href="#"><svg class="icon"><use href="#i-research"/></svg>Ricerca</a>
+      <a class="nav__link" href="#"><svg class="icon"><use href="#i-system"/></svg>Sistema</a>
+    </nav>
+    <div class="rail__foot" aria-label="Giorni per provenienza">
+      <div><span>Giorni simulati</span><b>3.142</b></div>
+      <div><span>Giorni paper</span><b>12</b></div>
+      <div><span>Giorni reali</span><b>0</b></div>
+    </div>
+  </aside>
+
+  <div class="col">
+    <!-- ============ barra superiore: materiale «cromatura» ============ -->
+    <header class="chrome glass glass--chrome">
+      <h1 class="chrome__title">Panoramica</h1>
+      <span class="tag tag--demo">Esempio</span>
+      <span class="chrome__meta">Specimen del sistema visivo · tutte le cifre sono dati di esempio</span>
+      <div class="chrome__right">
+        <div class="seg" role="radiogroup" aria-label="Livello di lettura" style="--n:3;--i:0">
+          <span class="seg__thumb" aria-hidden="true"></span>
+          <button class="seg__opt" role="radio" aria-checked="true">Semplice</button>
+          <button class="seg__opt" role="radio" aria-checked="false" tabindex="-1">Esperto</button>
+          <button class="seg__opt" role="radio" aria-checked="false" tabindex="-1">Terminale</button>
+        </div>
+        <span class="chip chip--safe"><svg class="icon icon--sm"><use href="#i-check"/></svg>Normale</span>
+        <button class="btn btn--kill" type="button" aria-label="Arresto di emergenza: apre la conferma, non invia"><svg class="icon icon--sm"><use href="#i-power"/></svg><span>KILL</span></button>
+        <button class="icon-btn" id="theme" type="button" aria-label="Cambia tema"><svg class="icon"><use id="theme-ico" href="#i-sun"/></svg></button>
+      </div>
+    </header>
+
+    <main class="main">
+      <!-- ============ 1 · il sistema al lavoro ============ -->
+      <section class="block" aria-label="Il sistema al lavoro">
+        <div class="hero glass glass--raised sweep rise" id="hero" style="--i:0">
+          <div>
+            <div class="eyebrow"><span class="micro">Patrimonio netto</span><span class="tag tag--demo">Esempio</span></div>
+            <div class="hero__num" id="nav-num" role="text"></div>
+            <div class="hero__delta">
+              <span class="delta delta--pos" id="nav-delta"><svg class="icon icon--solid"><use href="#i-up"/></svg><span id="nav-eur">+42,40 €</span><i id="nav-pct">+0,35%</i></span>
+              <span class="hero__ctx">oggi · +0,4 σ: una giornata normale</span>
+            </div>
+            <p class="hero__books num">Libro giornaliero 11.412,04 € · libro dei trade 785,00 €</p>
+          </div>
+          <dl class="hero__side">
+            <div><dt>Mese</dt><dd class="pos">+1,98%</dd><small>atteso +1,4% <span class="tag tag--sim">Simulato</span></small></div>
+            <div><dt>Anno</dt><dd class="pos">+4,04%</dd><small>dal 1° gennaio</small></div>
+            <div><dt>Dall'avvio</dt><dd class="pos">+21,97%</dd><small>da 10.000 €</small></div>
+          </dl>
+        </div>
+
+        <div class="grid grid--stats">
+          <div class="stat glass lift rise" style="--i:1"><span class="micro">Caduta dal massimo</span><span class="stat__val">−1,15%</span><div class="meter" style="--v:5.75%;--t:50%"><i></i><b></b></div><span class="caption">18,9 punti al primo scalino (−20%)</span></div>
+          <div class="stat glass lift rise" style="--i:2"><span class="micro">Leva del conto</span><span class="stat__val">1,24x <small>su 2x</small></span><div class="meter" style="--v:41%;--t:66.6%"><i></i><b></b></div><span class="caption">tetto operativo 2x, invalicabile 3x</span></div>
+          <div class="stat glass lift rise" style="--i:3"><span class="micro">Esposizione crypto</span><span class="stat__val">35,2% <small>su 40%</small></span><div class="meter" data-state="watch" style="--v:88%;--t:100%"><i></i></div><span class="caption"><span class="chip chip--watch" style="height:20px;padding:0 8px 0 6px;font-size:11px"><svg class="icon icon--sm"><use href="#i-warn"/></svg>88% del tetto</span></span></div>
+          <div class="stat glass lift rise" style="--i:4"><span class="micro">VaR 95% a 1 giorno</span><span class="stat__val">0,68% <small>83 €</small></span><span class="caption" style="margin-top:12px">volatilità 30 g 8,3% su obiettivo 15%</span></div>
+        </div>
+
+        <div class="grid grid--2-1">
+          <div class="chartwrap">
+            <div class="card glass rise" style="--i:5">
+              <div class="card__head">
+                <h2 class="card__title">Andamento del patrimonio</h2><span class="tag tag--demo">Esempio</span>
+                <div class="card__tools">
+                  <div class="seg seg--sm" role="radiogroup" aria-label="Intervallo" style="--n:4;--i:2">
+                    <span class="seg__thumb" aria-hidden="true"></span>
+                    <button class="seg__opt" role="radio" aria-checked="false" tabindex="-1">1M</button><button class="seg__opt" role="radio" aria-checked="false" tabindex="-1">3M</button><button class="seg__opt" role="radio" aria-checked="true">1A</button><button class="seg__opt" role="radio" aria-checked="false" tabindex="-1">Tutto</button>
+                  </div>
+                </div>
+              </div>
+              <div class="legend">
+                <span><i class="key"></i>GERVA Capital · paper</span>
+                <span><i class="key key--sim"></i>Backtest e mediana attesa · simulato</span>
+                <span><i class="key key--band"></i>Fascia 5°–95° percentile</span>
+                <span><i class="key key--bench"></i>S&amp;P 500</span>
+              </div>
+              <svg class="chart" id="chart" viewBox="0 0 720 270" role="img" aria-label="Patrimonio nell'ultimo anno: backtest tratteggiato fino all'avvio del paper, poi linea piena dentro la fascia attesa"></svg>
+            </div>
+            <div class="popover glass glass--sheet is-in" id="pop" role="tooltip" style="left:54%;top:118px">
+              <div class="popover__date">14 ottobre 2026</div>
+              <dl>
+                <dt><i class="swatch" style="--c:var(--accent)"></i>GERVA Capital</dt><dd>12.064 €</dd>
+                <dt><i class="swatch" style="--c:var(--bench)"></i>S&amp;P 500</dt><dd>11.310 €</dd>
+                <dt>Percentile nel ventaglio</dt><dd>61°</dd>
+              </dl>
+            </div>
+          </div>
+
+          <div class="card glass rise" style="--i:6">
+            <div class="card__head"><h2 class="card__title">Rendimenti mensili</h2><span class="tag tag--demo">Esempio</span></div>
+            <div class="hm" id="hm" role="table" aria-label="Rendimenti mensili in percentuale"></div>
+            <div class="ramps" aria-label="Rampe di colore">
+              <div><span class="caption">P&amp;L</span><div class="ramp" data-ramp="pnl" data-n="7"></div></div>
+              <div><span class="caption">Sequenziale</span><div class="ramp" data-ramp="seq" data-n="7"></div></div>
+              <div><span class="caption">Divergente</span><div class="ramp" data-ramp="div" data-n="9"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card glass rise" style="--i:7">
+          <div class="card__head"><h2 class="card__title">Posizioni</h2><span class="tag tag--demo">Esempio</span><div class="card__tools"><button class="btn btn--quiet btn--sm" type="button">Tutte le 14</button></div></div>
+          <div class="tablewrap">
+            <table class="table">
+              <thead><tr><th>Strumento</th><th class="hide-sm">Strategia</th><th class="r">Peso</th><th class="r">Oggi</th><th class="r hide-sm">Dall'apertura</th><th>Stato</th></tr></thead>
+              <tbody>
+                <tr><td><span class="sym">BTC<small>Bitcoin · Kraken</small></span></td><td class="hide-sm"><span class="strat"><i class="swatch" style="--c:var(--s1)"></i>CR-TREND</span></td><td class="r">18,4%</td><td class="r"><span class="chg pos"><svg class="icon icon--solid"><use href="#i-up"/></svg>+0,61%</span></td><td class="r hide-sm pos">+6,20%</td><td><span class="chip chip--safe"><svg class="icon icon--sm"><use href="#i-check"/></svg>Attiva</span></td></tr>
+                <tr class="is-hover"><td><span class="sym">ETH<small>Ether · Kraken</small></span></td><td class="hide-sm"><span class="strat"><i class="swatch" style="--c:var(--s1)"></i>CR-TREND</span></td><td class="r">11,6%</td><td class="r"><span class="chg pos"><svg class="icon icon--solid"><use href="#i-up"/></svg>+0,27%</span></td><td class="r hide-sm pos">+2,85%</td><td><span class="chip chip--safe"><svg class="icon icon--sm"><use href="#i-check"/></svg>Attiva</span></td></tr>
+                <tr><td><span class="sym">SOL<small>Solana · libro dei trade</small></span></td><td class="hide-sm"><span class="strat"><i class="swatch" style="--c:var(--s5)"></i>Trade a leva 11x</span></td><td class="r">5,2%</td><td class="r"><span class="chg neg"><svg class="icon icon--solid"><use href="#i-down"/></svg>−0,48%</span></td><td class="r hide-sm neg">−0,35 R</td><td><span class="chip chip--watch"><svg class="icon icon--sm"><use href="#i-warn"/></svg>0,4 ATR dallo stop</span></td></tr>
+                <tr class="is-focus" tabindex="0"><td><span class="sym">SPY<small>S&amp;P 500 · IBKR</small></span></td><td class="hide-sm"><span class="strat"><i class="swatch" style="--c:var(--s3)"></i>EQ-MR</span></td><td class="r">15,0%</td><td class="r"><span class="chg pos"><svg class="icon icon--solid"><use href="#i-up"/></svg>+0,09%</span></td><td class="r hide-sm pos">+0,31%</td><td><span class="chip"><svg class="icon icon--sm"><use href="#i-pause"/></svg>In pausa</span></td></tr>
+                <tr><td><span class="sym">GLD<small>Oro · IBKR</small></span></td><td class="hide-sm"><span class="strat"><i class="swatch" style="--c:var(--s4)"></i>MA-TREND</span></td><td class="r">9,8%</td><td class="r"><span class="chg pos"><svg class="icon icon--solid"><use href="#i-up"/></svg>+0,24%</span></td><td class="r hide-sm pos">+0,93%</td><td><span class="chip chip--safe"><svg class="icon icon--sm"><use href="#i-check"/></svg>Attiva</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 2 · materiali ============ -->
+      <section class="block" aria-label="Materiali">
+        <div class="block__head"><h2 class="block__title">Quattro spessori di vetro</h2><p class="block__note">Sopra il fondale e sopra un grafico affollato: il testo deve restare leggibile in entrambi i casi. Più un materiale sta in alto, più sfoca e più copre.</p></div>
+        <div class="stage">
+          <svg class="stage__busy" id="busy" viewBox="0 0 1000 300" preserveAspectRatio="none" aria-hidden="true"></svg>
+          <div class="stage__grid">
+            <div class="mat glass" data-mat="panel"><h3>Pannello</h3><p>Schede e riquadri. Sta sul fondale.</p><p class="t3">Testo terziario: etichette e assi.</p><span class="probe"></span><div class="mat__nums"><span>12.197,04</span><span class="pos">+0,35%</span><span class="neg">−0,48%</span></div></div>
+            <div class="mat glass glass--raised" data-mat="raised"><h3>Rialzato</h3><p>Eroe, scheda sotto il puntatore, cursori.</p><p class="t3">Testo terziario: etichette e assi.</p><span class="probe"></span><div class="mat__nums"><span>12.197,04</span><span class="pos">+0,35%</span><span class="neg">−0,48%</span></div></div>
+            <div class="mat glass glass--chrome" data-mat="chrome"><h3>Cromatura</h3><p>Barre di navigazione: il contenuto ci scorre sotto.</p><p class="t3">Testo terziario: da evitare qui.</p><span class="probe"></span><div class="mat__nums"><span>12.197,04</span><span class="pos">+0,35%</span><span class="neg">−0,48%</span></div></div>
+            <div class="mat glass glass--sheet" data-mat="sheet"><h3>Foglio</h3><p>Popover, finestre, avvisi: sopra qualunque cosa.</p><p class="t3">Testo terziario: etichette e assi.</p><span class="probe"></span><div class="mat__nums"><span>12.197,04</span><span class="pos">+0,35%</span><span class="neg">−0,48%</span></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 3 · tipografia ============ -->
+      <section class="block" aria-label="Tipografia">
+        <div class="block__head"><h2 class="block__title">Scala tipografica</h2><p class="block__note">Sans di sistema, cifre sempre tabellari. Una sola cifra eroe per schermata.</p></div>
+        <div class="card glass">
+          <div class="type-row"><span class="caption">Eroe · 44–72 / 600</span><span style="font:var(--type-hero);letter-spacing:var(--tr-hero);font-variant-numeric:var(--num-variant)">12.197,04</span></div>
+          <div class="type-row"><span class="caption">Pagina · 26 / 600</span><span style="font:var(--type-page);letter-spacing:var(--tr-title)">Stiamo guadagnando?</span></div>
+          <div class="type-row"><span class="caption">Cifra chiave · 28 / 600</span><span class="num" style="font-size:var(--fs-kpi);font-weight:600;letter-spacing:var(--tr-title)">+21,97% <span style="font-size:var(--fs-stat);color:var(--text-2)">1,24x · 0,68%</span></span></div>
+          <div class="type-row"><span class="caption">Sezione · 17 / 600</span><span style="font:var(--type-section);letter-spacing:var(--tr-title)">Andamento del patrimonio</span></div>
+          <div class="type-row"><span class="caption">Testo · 14 / 400</span><span>Il conto vale tanto; oggi ha guadagnato o perso tanto, ed è una giornata normale oppure insolita.</span></div>
+          <div class="type-row"><span class="caption">Didascalia · 12 / 400</span><span class="caption" style="color:var(--text-2)">18,9 punti al primo scalino · aggiornato 12 secondi fa</span></div>
+          <div class="type-row"><span class="caption">Micro-etichetta · 11 / 600</span><span class="micro">Patrimonio netto · caduta dal massimo</span></div>
+          <div class="type-row"><span class="caption">Marchio</span><span><span class="brand__name">GERVA</span> <span class="brand__sub">Capital</span></span></div>
+        </div>
+      </section>
+
+      <!-- ============ 4 · colore ============ -->
+      <section class="block" aria-label="Colore">
+        <div class="block__head"><h2 class="block__title">Colore per ruolo</h2><p class="block__note">Inchiostro neutro, un accento, e colore solo dove porta un significato: segno del P&amp;L, stato del rischio, provenienza del dato, identità della serie.</p></div>
+        <div class="grid grid--2">
+          <div class="card glass">
+            <div class="micro sub">Inchiostro e accento</div>
+            <div class="sw-grid">
+              <div class="sw"><i style="--c:var(--text)"></i>Testo<code>--text</code></div>
+              <div class="sw"><i style="--c:var(--text-2)"></i>Secondario<code>--text-2</code></div>
+              <div class="sw"><i style="--c:var(--text-3)"></i>Terziario<code>--text-3</code></div>
+              <div class="sw"><i style="--c:var(--accent)"></i>Accento<code>--accent</code></div>
+              <div class="sw"><i style="--c:var(--accent-fill)"></i>Accento pieno<code>--accent-fill</code></div>
+              <div class="sw"><i style="--c:var(--accent-soft)"></i>Accento tenue<code>--accent-soft</code></div>
+            </div>
+            <div class="micro sub">P&amp;L: segno, freccia, colore</div>
+            <div class="row"><span class="delta delta--pos"><svg class="icon icon--solid"><use href="#i-up"/></svg>+42,40 €<i>+0,35%</i></span><span class="delta delta--neg"><svg class="icon icon--solid"><use href="#i-down"/></svg>−58,10 €<i>−0,48%</i></span><span class="chg pos"><svg class="icon icon--solid"><use href="#i-up"/></svg>+1,98%</span><span class="chg neg"><svg class="icon icon--solid"><use href="#i-down"/></svg>−0,48%</span></div>
+            <div class="micro sub">Stati di rischio: icona, parola, colore</div>
+            <div class="row">
+              <span class="chip chip--safe"><svg class="icon icon--sm"><use href="#i-check"/></svg>Normale</span>
+              <span class="chip chip--watch"><svg class="icon icon--sm"><use href="#i-warn"/></svg>Ridotto</span>
+              <span class="chip chip--breach"><svg class="icon icon--sm"><use href="#i-crit"/></svg>Fermo</span>
+              <span class="chip chip--killed"><svg class="icon icon--sm"><use href="#i-power"/></svg>KILLED</span>
+              <span class="chip chip--unknown"><svg class="icon icon--sm"><use href="#i-help"/></svg>Sconosciuto</span>
+            </div>
+            <div class="micro sub">Verdetti</div>
+            <div class="row">
+              <span class="chip chip--safe"><svg class="icon icon--sm"><use href="#i-check"/></svg>Batte</span>
+              <span class="chip chip--accent"><svg class="icon icon--sm"><use href="#i-clock"/></svg>Non smentito</span>
+              <span class="chip"><svg class="icon icon--sm"><use href="#i-clock"/></svg>In corso</span>
+              <span class="chip chip--breach"><svg class="icon icon--sm"><use href="#i-x"/></svg>Battuto</span>
+              <span class="chip"><svg class="icon icon--sm"><use href="#i-shadow"/></svg>In ombra</span>
+              <span class="chip chip--serious"><svg class="icon icon--sm"><use href="#i-warn"/></svg>Debole in verifica</span>
+            </div>
+          </div>
+          <div class="card glass">
+            <div class="micro sub">Provenienza: il peso cresce con la realtà</div>
+            <div class="row"><span class="tag tag--demo">Esempio</span><span class="tag tag--sim">Simulato</span><span class="tag tag--paper">Paper</span><span class="tag tag--real">Reale</span></div>
+            <div class="row" style="gap:20px">
+              <span class="series-line"><svg viewBox="0 0 64 10"><path d="M2 5h60" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="1 5" stroke-linecap="round"/></svg>esempio</span>
+              <span class="series-line"><svg viewBox="0 0 64 10"><path d="M2 5h60" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="7 5"/></svg>simulato</span>
+              <span class="series-line"><svg viewBox="0 0 64 10"><path d="M2 5h60" fill="none" stroke="var(--accent)" stroke-width="2"/></svg>paper</span>
+              <span class="series-line"><svg viewBox="0 0 64 10"><path d="M2 5h60" fill="none" stroke="var(--accent)" stroke-width="3.500"/></svg>reale</span>
+            </div>
+            <div class="micro sub">Serie categoriche: ordine fisso</div>
+            <div class="sw-grid" id="series"></div>
+            <div class="micro sub">Rampe</div>
+            <div class="ramps" style="margin-top:0">
+              <div><span class="caption">Sequenziale</span><div class="ramp" data-ramp="seq" data-n="7" data-lab="1"></div></div>
+              <div><span class="caption">Divergente</span><div class="ramp" data-ramp="div" data-n="9" data-lab="1"></div></div>
+              <div><span class="caption">P&amp;L</span><div class="ramp" data-ramp="pnl" data-n="7" data-lab="1"></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 5 · componenti ============ -->
+      <section class="block" aria-label="Componenti">
+        <div class="block__head"><h2 class="block__title">Controlli</h2><p class="block__note">Bottoni a pillola, un solo primario per vista. Il KILL è sempre in due passi: il primo controllo apre la conferma e non invia mai.</p></div>
+        <div class="grid grid--2">
+          <div class="card glass">
+            <div class="micro sub">Bottoni</div>
+            <div class="row"><button class="btn btn--primary" type="button">Apri il grafico</button><button class="btn" type="button">Esporta CSV</button><button class="btn btn--quiet" type="button">Annulla</button><button class="icon-btn" type="button" aria-label="Aiuto"><svg class="icon"><use href="#i-help"/></svg></button></div>
+            <div class="micro sub">Arresto di emergenza</div>
+            <div class="row"><button class="btn btn--kill" type="button"><svg class="icon icon--sm"><use href="#i-power"/></svg>KILL</button><button class="btn btn--kill" type="button" disabled><svg class="icon icon--sm"><use href="#i-power"/></svg>KILL spento su questo server</button></div>
+            <div class="row"><button class="btn btn--danger" type="button" disabled>Attiva KILL</button><button class="btn btn--danger" type="button">Attiva KILL</button><span class="caption">a sinistra: finché token e parola non sono scritti</span></div>
+            <div class="micro sub">Segmentato</div>
+            <div class="row">
+              <div class="seg" role="radiogroup" aria-label="Livello di lettura (campione)" style="--n:3;--i:1">
+                <span class="seg__thumb" aria-hidden="true"></span>
+                <button class="seg__opt" role="radio" aria-checked="false" tabindex="-1">Semplice</button><button class="seg__opt" role="radio" aria-checked="true">Esperto</button><button class="seg__opt" role="radio" aria-checked="false" tabindex="-1">Terminale</button>
+              </div>
+            </div>
+          </div>
+          <div class="card glass">
+            <div class="micro sub">Fuoco da tastiera: anello a 2 px, staccato di 2</div>
+            <div class="row" style="gap:18px"><button class="btn btn--primary is-focus" type="button">Primario</button><button class="btn is-focus" type="button">Secondario</button><span class="chip chip--safe is-focus" tabindex="0"><svg class="icon icon--sm"><use href="#i-check"/></svg>Normale</span><button class="icon-btn is-focus" type="button" aria-label="Tema"><svg class="icon"><use href="#i-moon"/></svg></button></div>
+            <div class="micro sub">Campo</div>
+            <label class="field"><span class="caption" style="color:var(--text-2)">Per confermare scrivi KILL</span><input type="text" placeholder="" autocomplete="off" aria-label="Campione di campo"></label>
+            <div class="micro sub">Caricamento</div>
+            <div style="display:grid;gap:8px"><div class="skel" style="height:14px;width:42%"></div><div class="skel" style="height:34px;width:70%"></div><div class="skel" style="height:14px;width:56%"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 6 · movimento ============ -->
+      <section class="block" aria-label="Movimento">
+        <div class="block__head"><h2 class="block__title">Movimento</h2><p class="block__note">Ogni animazione dice una cosa sola e si spegne con «riduci movimento». Le cifre non lampeggiano mai.</p></div>
+        <div class="grid grid--4">
+          <div class="card glass demo"><div><div class="micro">Rotolo delle cifre</div><p style="margin-top:6px">Il valore è cambiato: le cifre scorrono al nuovo, da destra. 720 ms.</p></div><button class="btn btn--sm" id="b-roll" type="button"><svg class="icon icon--sm icon--solid"><use href="#i-play"/></svg>Nuovo ciclo</button></div>
+          <div class="card glass demo lift"><div><div class="micro">Sollevamento</div><p style="margin-top:6px">La scheda sotto il puntatore sale di 2 px e l'ombra si allunga. 260 ms.</p></div><span class="caption">passa sopra questa scheda</span></div>
+          <div class="card glass demo"><div><div class="micro">Foglio a molla</div><p style="margin-top:6px">Popover e avvisi nascono dal punto che li ha chiamati. 420 ms, 4% di rimbalzo.</p></div><button class="btn btn--sm" id="b-sheet" type="button"><svg class="icon icon--sm icon--solid"><use href="#i-play"/></svg>Riapri popover e avviso</button></div>
+          <div class="card glass demo sweep" id="d-sweep"><div><div class="micro">Riflesso</div><p style="margin-top:6px">Una passata di luce sull'eroe quando arriva una fotografia nuova. Mai in ciclo.</p></div><button class="btn btn--sm" id="b-sweep" type="button"><svg class="icon icon--sm icon--solid"><use href="#i-play"/></svg>Riproduci</button></div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<!-- avviso: materiale «foglio» -->
+<div class="toast glass glass--sheet is-in" id="toast" role="status">
+  <svg class="icon toast__ico"><use href="#i-check"/></svg>
+  <div class="toast__txt">Ribilanciamento completato<small>MA-TREND · 2 ordini · 14:30 · esempio</small></div>
+  <button class="icon-btn" type="button" aria-label="Chiudi" style="width:30px;height:30px;margin-left:auto"><svg class="icon icon--sm"><use href="#i-x"/></svg></button>
+</div>
+
+<!-- telefono: la barra laterale diventa una barra in basso -->
+<nav class="tabbar glass glass--chrome" aria-label="Sezioni">
+  <a href="#" aria-current="page"><svg class="icon"><use href="#i-overview"/></svg>Panoramica</a>
+  <a href="#"><svg class="icon"><use href="#i-risk"/></svg>Rischio</a>
+  <a href="#"><svg class="icon"><use href="#i-trade"/></svg>Trade</a>
+  <a href="#"><svg class="icon"><use href="#i-research"/></svg>Ricerca</a>
+  <a href="#"><svg class="icon"><use href="#i-system"/></svg>Sistema</a>
+</nav>
+
+<script>
+(function () {
+  'use strict';
+  var root = document.documentElement, $ = function (s, el) { return (el || document).querySelector(s); }, $$ = function (s, el) { return Array.prototype.slice.call((el || document).querySelectorAll(s)); };
+  var NS = 'http://www.w3.org/2000/svg';
+  function svg(tag, attrs, parent) { var e = document.createElementNS(NS, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+  function rng(seed) { return function () { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; }; }
+
+  /* ---- tema ---- */
+  var q = /[?&#]theme=(light|dark)/.exec(location.href);
+  var theme = q ? q[1] : (window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  function setTheme(t) { theme = t; root.setAttribute('data-theme', t); $('#theme-ico').setAttribute('href', t === 'dark' ? '#i-sun' : '#i-moon'); }
+  setTheme(theme);
+  $('#theme').addEventListener('click', function () { setTheme(theme === 'dark' ? 'light' : 'dark'); });
+
+  /* ---- segmentati: cursore che scorre, frecce da tastiera ---- */
+  $$('.seg').forEach(function (seg) {
+    var opts = $$('.seg__opt', seg);
+    function pick(i) { seg.style.setProperty('--i', i); opts.forEach(function (o, j) { o.setAttribute('aria-checked', j === i ? 'true' : 'false'); o.tabIndex = j === i ? 0 : -1; }); }
+    opts.forEach(function (o, i) {
+      o.addEventListener('click', function () { pick(i); });
+      o.addEventListener('keydown', function (e) { var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (!d) return; var n = (i + d + opts.length) % opts.length; pick(n); opts[n].focus(); e.preventDefault(); });
+    });
+  });
+
+  /* ---- rotolo delle cifre ---- */
+  function roll(el, text) {
+    var digits = text.replace(/\D/g, '').length, old = $$('.roll__d', el), di = 0;
+    if (old.length !== digits || el.dataset.shape !== text.replace(/\d/g, '0')) {
+      el.textContent = ''; el.dataset.shape = text.replace(/\d/g, '0');
+      text.split('').forEach(function (ch) {
+        if (/\d/.test(ch)) { var d = document.createElement('span'); d.className = 'roll__d'; var c = document.createElement('span'); c.className = 'roll__col'; for (var k = 0; k < 10; k++) { var s = document.createElement('span'); s.textContent = k; c.appendChild(s); } d.appendChild(c); el.appendChild(d); }
+        else { var p = document.createElement('span'); p.textContent = ch; el.appendChild(p); }
+      });
+      old = $$('.roll__d', el);
+    }
+    text.replace(/\D/g, '').split('').forEach(function (ch, i) { var c = old[i].firstChild; c.style.setProperty('--i', digits - 1 - i); c.style.setProperty('--d', ch); di++; });
+  }
+  var navEl = $('#nav-num');
+  navEl.innerHTML = '<span class="roll" id="r-int" aria-hidden="true"></span><span class="hero__dec" aria-hidden="true">,<span class="roll" id="r-dec"></span></span><span class="hero__cur" aria-hidden="true">€</span><span class="sr-only" id="r-sr"></span>';
+  var fmt = function (v) { return v.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true }); };
+  function setNav(v, d) {
+    var s = fmt(v).split(','); if (s[0].length === 5 && s[0].indexOf('.') < 0) s[0] = s[0].slice(0, 2) + '.' + s[0].slice(2);
+    roll($('#r-int'), s[0]); roll($('#r-dec'), s[1]); $('#r-sr').textContent = s.join(',') + ' euro';
+    var up = d >= 0, delta = $('#nav-delta');
+    delta.className = 'delta ' + (up ? 'delta--pos' : 'delta--neg'); $('use', delta).setAttribute('href', up ? '#i-up' : '#i-down');
+    $('#nav-eur').textContent = (up ? '+' : '−') + fmt(Math.abs(d)) + ' €'; $('#nav-pct').textContent = (up ? '+' : '−') + fmt(Math.abs(d) / (v - d) * 100) + '%';
+  }
+  setNav(12154.64, 0); requestAnimationFrame(function () { requestAnimationFrame(function () { setNav(12197.04, 42.40); }); });
+  var seq = [[12231.18, 76.54], [12138.94, -15.70], [12197.04, 42.40]], si = 0;
+  function sweep(el) { el.classList.remove('is-sweeping'); void el.offsetWidth; el.classList.add('is-sweeping'); }
+  $('#b-roll').addEventListener('click', function () { var s = seq[si++ % seq.length]; setNav(s[0], s[1]); sweep($('#hero')); $('#hero').scrollIntoView({ block: 'center', behavior: 'auto' }); });
+  $('#b-sweep').addEventListener('click', function () { sweep($('#d-sweep')); sweep($('#hero')); });
+  $('#b-sheet').addEventListener('click', function () { [$('#pop'), $('#toast')].forEach(function (el) { el.classList.remove('is-in'); void el.offsetWidth; el.classList.add('is-in'); }); $('#pop').scrollIntoView({ block: 'center', behavior: 'auto' }); });
+  setTimeout(function () { sweep($('#hero')); }, 500);
+
+  /* ---- grafico: backtest tratteggiato → avvio del paper → linea piena dentro la fascia attesa ---- */
+  (function () {
+    var el = $('#chart'), W = 720, H = 270, L = 6, R = 52, T = 14, B = 26, N = 130, P0 = 78, r = rng(11);
+    var fund = [10000], bench = [10000];
+    for (var i = 1; i < N; i++) { fund.push(fund[i - 1] * (1 + 0.0016 + (r() - 0.5) * 0.019)); bench.push(bench[i - 1] * (1 + 0.0009 + (r() - 0.5) * 0.016)); }
+    var k = 12197.04 / fund[N - 1]; fund = fund.map(function (v, i) { return 10000 + (v * k - 10000) * (i / (N - 1)) + (v - fund[0] * (1 + (fund[N - 1] / fund[0] - 1) * i / (N - 1))) * 0.9; });
+    fund[N - 1] = 12197.04;
+    var med = [], lo = [], hi = [];
+    for (i = P0; i < N; i++) { var t = i - P0, m = fund[P0] * Math.pow(1.0011, t), s = fund[P0] * 0.0105 * Math.sqrt(t); med.push(m); lo.push(m - 1.645 * s); hi.push(m + 1.645 * s); }
+    var all = fund.concat(bench, lo, hi), mn = Math.min.apply(null, all), mx = Math.max.apply(null, all); mn = Math.floor(mn / 500) * 500; mx = Math.ceil(mx / 500) * 500;
+    var x = function (i) { return L + (W - L - R) * i / (N - 1); }, y = function (v) { return T + (H - T - B) * (1 - (v - mn) / (mx - mn)); };
+    var path = function (arr, off) { return arr.map(function (v, i) { return (i ? 'L' : 'M') + x(i + (off || 0)).toFixed(1) + ' ' + y(v).toFixed(1); }).join(''); };
+    var defs = svg('defs', {}, el), g = svg('linearGradient', { id: 'g-area', x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
+    svg('stop', { offset: '0', 'stop-color': 'var(--chart-accent)', 'stop-opacity': '0.20' }, g); svg('stop', { offset: '1', 'stop-color': 'var(--chart-accent)', 'stop-opacity': '0' }, g);
+    for (var v = mn; v <= mx; v += 500) { svg('line', { class: 'c-grid', x1: L, x2: W - R, y1: y(v), y2: y(v) }, el); var tx = svg('text', { class: 'c-tick', x: W - R + 10, y: y(v) + 4 }, el); tx.textContent = (v / 1000).toLocaleString('it-IT', { minimumFractionDigits: 1 }) + ' k'; }
+    ['nov', 'gen', 'mar', 'mag', 'lug', 'set', 'nov'].forEach(function (m, j) { var tt = svg('text', { class: 'c-tick', x: x(j * (N - 1) / 6), y: H - 6, 'text-anchor': j === 0 ? 'start' : j === 6 ? 'end' : 'middle' }, el); tt.textContent = m; });
+    svg('line', { class: 'c-axis', x1: L, x2: W - R, y1: H - B, y2: H - B }, el);
+    svg('path', { class: 'c-band', d: path(hi, P0) + lo.slice().reverse().map(function (v, i) { return 'L' + x(N - 1 - i).toFixed(1) + ' ' + y(v).toFixed(1); }).join('') + 'Z' }, el);
+    svg('path', { class: 'c-area', d: path(fund.slice(P0), P0) + 'L' + x(N - 1) + ' ' + (H - B) + 'L' + x(P0) + ' ' + (H - B) + 'Z' }, el);
+    svg('path', { class: 'c-line c-line--bench', d: path(bench) }, el);
+    svg('path', { class: 'c-line c-line--sim', d: path(med, P0), opacity: 0.75 }, el);
+    svg('path', { class: 'c-line c-line--sim', d: path(fund.slice(0, P0 + 1)) }, el);
+    svg('path', { class: 'c-line c-draw', d: path(fund.slice(P0), P0), pathLength: 1 }, el);
+    svg('line', { class: 'c-ref', x1: x(P0), x2: x(P0), y1: T, y2: H - B }, el);
+    var n1 = svg('text', { class: 'c-note', x: x(P0) + 8, y: T + 10 }, el); n1.textContent = 'avvio del paper →';
+    var n2 = svg('text', { class: 'c-note', x: x(P0) - 8, y: T + 10, 'text-anchor': 'end' }, el); n2.textContent = '← simulato';
+    var n3 = svg('text', { class: 'c-note', x: L + 2, y: H - B - 8, 'letter-spacing': '0.08em' }, el); n3.textContent = 'ESEMPIO';
+    var ci = 104; svg('line', { class: 'c-ref', x1: x(ci), x2: x(ci), y1: T + 18, y2: H - B, 'stroke-dasharray': '3 3' }, el);
+    svg('circle', { class: 'c-dot', cx: x(ci), cy: y(fund[ci]), r: 4.500 }, el);
+    svg('circle', { class: 'c-dot', cx: x(N - 1), cy: y(fund[N - 1]), r: 4.500 }, el);
+    var pop = $('#pop'); pop.style.left = 'calc(' + (x(ci) / W * 100).toFixed(1) + '% + 4px)';
+  })();
+
+  /* ---- mappa di calore: il numero sta sempre nella cella ---- */
+  (function () {
+    var el = $('#hm'), r = rng(5), months = 'GFMAMGLASOND'.split(''), html = '<span></span>';
+    months.forEach(function (m) { html += '<span class="hm__h">' + m + '</span>'; });
+    [2024, 2025, 2026].forEach(function (yr) {
+      html += '<span class="hm__y">' + yr + '</span>';
+      for (var m = 0; m < 12; m++) {
+        if (yr === 2026 && m > 10) { html += '<span class="hm__c hm__c--empty">—</span>'; continue; }
+        var v = (r() - 0.36) * 11, st = v <= -3 ? 1 : v <= -1.2 ? 2 : v < -0.25 ? 3 : v < 0.25 ? 4 : v < 1.8 ? 5 : v < 4 ? 6 : 7;
+        html += '<span class="hm__c" style="--b:var(--pnl-' + st + ');--k:var(--pnl-' + st + '-ink)" title="' + months[m] + ' ' + yr + '">' + (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1).replace('.', ',') + '</span>';
+      }
+    });
+    el.innerHTML = html;
+    $$('.ramp').forEach(function (rp) { var n = +rp.dataset.n, h = ''; for (var i = 1; i <= n; i++) h += '<i style="--b:var(--' + rp.dataset.ramp + '-' + i + ');--k:var(--' + rp.dataset.ramp + '-' + i + '-ink)">' + (rp.dataset.lab ? i : '') + '</i>'; rp.innerHTML = h; });
+    var names = ['CR-TREND', 'CR-XSMOM', 'EQ-MR', 'MA-TREND', 'Libro dei trade', 'Sistema originale', 'Serie 7', 'Serie 8'], sh = '';
+    names.forEach(function (n, i) { sh += '<div class="sw"><i style="--c:var(--s' + (i + 1) + ')"></i>' + n + '<code>--s' + (i + 1) + '</code></div>'; });
+    $('#series').innerHTML = sh;
+  })();
+
+  /* ---- prova di leggibilità: otto serie, barre e scritte dietro il vetro ---- */
+  (function () {
+    var el = $('#busy'), r = rng(23), W = 1000, H = 300;
+    for (var b = 0; b < 50; b++) { var h = 30 + r() * 150; svg('rect', { x: b * 20 + 3, y: H - h, width: 14, height: h, rx: 3, fill: 'var(--s' + (1 + b % 8) + ')', opacity: 0.55 }, el); }
+    for (var s = 1; s <= 8; s++) { var d = '', v = 40 + s * 22; for (var i = 0; i <= 100; i++) { v += (r() - 0.5) * 34; v = Math.max(12, Math.min(H - 12, v)); d += (i ? 'L' : 'M') + (i * 10) + ' ' + v.toFixed(1); } svg('path', { d: d, fill: 'none', stroke: 'var(--s' + s + ')', 'stroke-width': 3, 'vector-effect': 'non-scaling-stroke' }, el); }
+    for (var k = 0; k < 4; k++) { svg('rect', { x: 60 + k * 250, y: 96, width: 120, height: 56, rx: 6, fill: k % 2 ? 'var(--seq-7)' : 'var(--text)' }, el); }
+  })();
+})();
+</script>
+</body>
+</html>

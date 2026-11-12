@@ -31,7 +31,7 @@
   --sp-8: 32px;
 
   /* ---- grafici: ogni parametro di stile del motore dei grafici è un token (js/chart-theme.js li legge) ---- */
-  --chart-surface: var(--surface); --chart-text: var(--text); --chart-text-muted: var(--text-3);
+  --chart-surface: var(--surface); --chart-text: var(--text); --chart-text-soft: var(--text-2); --chart-text-muted: var(--text-3);
   --chart-grid: var(--grid); --chart-axis: var(--axis); --chart-crosshair: var(--text-3);
   --chart-up: var(--pos); --chart-down: var(--neg); --chart-accent: var(--accent); --chart-bench: var(--bench);
   --chart-warn: var(--warn); --chart-crit: var(--crit);

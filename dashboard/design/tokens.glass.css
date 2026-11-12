@@ -1,0 +1,389 @@
+/* GERVA Capital · Terminale — token «vetro liquido».
+   Sostituisce i VALORI di dashboard/static/css/tokens.css mantenendone i NOMI (mappa completa in design_1_sistema_visivo.md).
+   Tutto è proprietà personalizzata: nessuna regola di componente. Ricette dei materiali e misure di contrasto nella nota.
+   Ordine: caratteri · scale indipendenti dal tema · scuro (base) · chiaro · ripieghi (trasparenza, contrasto, movimento).
+   Installazione: copiato in static/css/ il percorso dei font diventa "../fonts/…". */
+
+@font-face { font-family: "General Sans"; src: url("../static/fonts/general-sans-400.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "General Sans"; src: url("../static/fonts/general-sans-500.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "General Sans"; src: url("../static/fonts/general-sans-600.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Bodoni Moda"; src: url("../static/fonts/bodoni-moda-roman.woff2") format("woff2"); font-weight: 400 900; font-style: normal; font-display: swap; }
+
+:root {
+  /* ================= TIPOGRAFIA =================
+     Prima il sans di sistema (dove è ottimo); General Sans, locale, entra solo dove il sistema non ne offre uno all'altezza.
+     Le cifre NON usano General Sans: non ha i numeri tabellari (misurato: «1111» 53px, «0000» 96px). */
+  --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", "Segoe UI", "General Sans", system-ui, "Helvetica Neue", Arial, sans-serif;
+  --font-num: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", "Segoe UI", Roboto, system-ui, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter Display", "Inter", "Segoe UI", Roboto, system-ui, "Helvetica Neue", Arial, sans-serif;   /* nuovo: cifra eroe e titoli grandi */
+  --font-brand: "Bodoni Moda", "Bodoni 72", Didot, "Times New Roman", serif;                       /* solo il marchio GERVA */
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, "Liberation Mono", monospace;   /* nuovo: comandi e codici */
+
+  --fs-micro: 11px;                                   /* micro-etichetta, maiuscoletto spaziato */
+  --fs-small: 12px;                                   /* didascalia, assi, celle fitte */
+  --fs-body: 14px;                                    /* testo (era 13) */
+  --fs-lead: 15px;                                    /* frase guida, valori di riga (era 14) */
+  --fs-title: 17px;                                   /* titolo di scheda / sezione (era 16) */
+  --fs-stat: 22px;                                    /* cifra di una statistica (era 20) */
+  --fs-kpi: 28px;                                     /* cifra chiave secondaria (era 26) */
+  --fs-hero: clamp(44px, 2.4vw + 34px, 72px);         /* patrimonio: una sola cifra eroe per schermata (era 44) */
+  --fs-page: 26px;                                    /* nuovo: titolo di pagina */
+
+  --lh-tight: 1.04; --lh-snug: 1.25; --lh-body: 1.5;
+  --tr-hero: -0.035em; --tr-title: -0.018em; --tr-body: -0.003em; --tr-micro: 0.075em;
+  --fw-regular: 400; --fw-medium: 500; --fw-semibold: 600;
+  --num-variant: tabular-nums lining-nums;            /* font-variant-numeric di OGNI cifra */
+
+  /* stili composti (font: <peso> <corpo>/<interlinea> <famiglia>) */
+  --type-hero: var(--fw-semibold) var(--fs-hero)/var(--lh-tight) var(--font-display);
+  --type-page: var(--fw-semibold) var(--fs-page)/var(--lh-snug) var(--font-display);
+  --type-section: var(--fw-semibold) var(--fs-title)/var(--lh-snug) var(--font-ui);
+  --type-body: var(--fw-regular) var(--fs-body)/var(--lh-body) var(--font-ui);
+  --type-caption: var(--fw-regular) var(--fs-small)/1.45 var(--font-ui);
+  --type-micro: var(--fw-semibold) var(--fs-micro)/1.3 var(--font-ui);
+
+  /* ================= SPAZIO (griglia da 4) ================= */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px; --sp-8: 32px;
+  --sp-10: 40px; --sp-12: 48px; --sp-16: 64px;        /* nuovi */
+  --pad-card: clamp(18px, 1.2vw + 10px, 28px);        /* nuovo: respiro interno di una scheda */
+  --pad-hero: clamp(22px, 2vw + 10px, 40px);
+  --gap-grid: clamp(14px, 1vw + 6px, 22px);           /* nuovo: tra schede */
+  --gap-section: clamp(32px, 3vw + 12px, 56px);       /* nuovo: tra sezioni */
+  --page-gutter: clamp(16px, 2vw, 32px);              /* nuovo: margine di pagina (16 al telefono) */
+
+  /* ================= RAGGI ================= */
+  --radius-xs: 6px;                                   /* nuovo: celle, tacche */
+  --radius-s: 10px;                                   /* campi, bottoni piccoli (era 4) */
+  --radius-m: 14px;                                   /* controlli, riquadri interni (era 6) */
+  --radius-l: 22px;                                   /* nuovo: schede */
+  --radius-xl: 30px;                                  /* nuovo: eroe, fogli, barra laterale */
+  --radius-pill: 999px;
+  --corner-shape: squircle;                           /* angolo continuo dove il browser lo conosce; altrove resta il cerchio */
+
+  /* ================= MISURE DELL'IMPALCATURA ================= */
+  --rail-w: 236px; --modebar-h: 32px; --topbar-h: 60px;
+  --control-h: 36px; --control-h-sm: 30px; --control-h-lg: 44px;   /* nuovi: 44 = bersaglio tattile */
+  --z-chrome: 30; --z-sheet: 60; --z-toast: 80;
+
+  /* ================= VETRO: geometria (il colore è per tema) =================
+     Quattro spessori. Più il materiale sta «sopra», più sfoca e più è coprente. */
+  --blur-panel: 20px;  --sat-panel: 160%;
+  --blur-raised: 28px; --sat-raised: 170%;
+  --blur-chrome: 36px; --sat-chrome: 180%;
+  --blur-sheet: 48px;  --sat-sheet: 190%;
+  --glass-on: 1;       /* 1 = vetro vero; 0 = ripiego a superfici piene (letto dal JS, es. per i grafici) */
+
+  --glass-panel-filter: blur(var(--blur-panel)) saturate(var(--sat-panel));
+  --glass-raised-filter: blur(var(--blur-raised)) saturate(var(--sat-raised));
+  --glass-chrome-filter: blur(var(--blur-chrome)) saturate(var(--sat-chrome));
+  --glass-sheet-filter: blur(var(--blur-sheet)) saturate(var(--sat-sheet));
+
+  --glass-panel-bg: var(--glass-panel-tint);
+  --glass-raised-bg: var(--glass-raised-tint);
+  --glass-chrome-bg: var(--glass-chrome-tint);
+  --glass-sheet-bg: var(--glass-sheet-tint);
+
+  /* bordo ottico comune: filetto esterno + luce interna + spigolo speculare in alto */
+  --glass-edge: inset 0 1px 0 0 var(--glass-specular), inset 0 0 0 1px var(--glass-inner), 0 0 0 1px var(--glass-hairline);
+  --glass-panel-fx: var(--glass-edge), var(--elev-1);
+  --glass-raised-fx: var(--glass-edge), var(--elev-2);
+  --glass-chrome-fx: var(--glass-edge), var(--elev-2);
+  --glass-sheet-fx: var(--glass-edge), var(--elev-4);
+
+  /* ================= MOVIMENTO ================= */
+  --dur-instant: 90ms;                                /* pressione */
+  --dur-fast: 160ms;                                  /* hover, colore, fuoco */
+  --dur-base: 260ms;                                  /* cursore del segmentato, sollevamento, righe */
+  --dur-slow: 420ms;                                  /* fogli, popover, toast */
+  --dur-slower: 720ms;                                /* rotolo delle cifre, tracciamento di una linea */
+  --dur-shimmer: 1600ms;                              /* periodo del caricamento */
+  --dur-sweep: 1100ms;                                /* riflesso speculare, una volta sola */
+  --dur-fade: 140ms;                                  /* dissolvenza: l'unica che resta con «riduci movimento» */
+  --stagger: 45ms;                                    /* scarto tra elementi in sequenza (× indice, massimo 8) */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);          /* entra deciso, si posa piano */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);              /* uscite: più brevi delle entrate */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);        /* spostamenti sul piano */
+  --ease-spring: cubic-bezier(0.3, 1.3, 0.5, 1);      /* ripiego; sotto la molla vera */
+  --ease-spring-soft: cubic-bezier(0.22, 1.08, 0.36, 1);
+  --lift: -2px;                                       /* sollevamento di una scheda al passaggio */
+  --press-scale: 0.975;
+  --sheet-from-scale: 0.955; --sheet-from-y: 10px;
+  --motion-on: 1;                                     /* 0 con «riduci movimento» (letto dal JS) */
+
+  /* ================= GRAFICI: geometria (i colori rimandano ai ruoli) ================= */
+  --chart-surface: var(--surface-solid); --chart-text: var(--text); --chart-text-muted: var(--text-3);
+  --chart-grid: var(--grid); --chart-axis: var(--axis); --chart-crosshair: var(--text-3);
+  --chart-up: var(--pos); --chart-down: var(--neg); --chart-accent: var(--accent); --chart-bench: var(--bench);
+  --chart-warn: var(--warn); --chart-crit: var(--crit);
+  --chart-series-1: var(--s1); --chart-series-2: var(--s2); --chart-series-3: var(--s3); --chart-series-4: var(--s4); --chart-series-5: var(--s5);
+  --chart-series-6: var(--s6); --chart-series-7: var(--s7); --chart-series-8: var(--s8);   /* nuovi */
+  --chart-font: var(--font-num); --chart-font-size: 11px; --chart-label-font: var(--font-ui);
+  --chart-line-width: 2; --chart-line-width-thin: 1.5; --chart-grid-width: 1;
+  --chart-dash-ref: 4 4; --chart-dash-mark: 2 3; --chart-dash-cross: 3 3;
+  --chart-dash-sim: 7 5; --chart-dash-demo: 1 5;      /* nuovi: il tratto dice la provenienza (pieno = paper/reale) */
+  --chart-dot-radius: 4; --chart-dot-radius-small: 3.5; --chart-dot-ring: 2; --chart-bar-radius: 4; --chart-cell-radius: 6px;
+  --chart-bubble-min: 5; --chart-bubble-max: 20; --chart-candle-body: 0.7; --chart-candle-max: 14; --chart-gutter: 58;
+  --chart-area-opacity: 0.12; --chart-band-opacity: 0.12; --chart-band-opacity-strong: 0.22; --chart-volume-opacity: 0.5;
+  --chart-motion: var(--dur-fast); --chart-ease: var(--ease-out);
+}
+
+@supports (transition-timing-function: linear(0, 1)) {
+  :root {
+    /* molle campionate (oscillatore smorzato): 4% di rimbalzo la prima, meno dell'1% la seconda */
+    --ease-spring: linear(0, 0.294, 0.523, 0.697, 0.823, 0.911, 0.97, 1.007, 1.028, 1.038, 1.041, 1.039, 1.035, 1.029, 1.024, 1.019, 1.014, 1.01, 1.007, 1.005, 1);
+    --ease-spring-soft: linear(0, 0.257, 0.458, 0.614, 0.731, 0.817, 0.88, 0.925, 0.955, 0.976, 0.99, 0.998, 1.003, 1.006, 1.007, 1.007, 1.006, 1.005, 1.005, 1.004, 1);
+  }
+}
+
+/* =====================================================================================================
+   SCURO (base)
+   ===================================================================================================== */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* ---- fondale: una notte calma, tre aloni larghi. Mai rumore, mai forme nette. ---- */
+  --bg: #06080d;
+  --backdrop:
+    radial-gradient(62% 58% at 8% 0%, rgba(48, 78, 172, 0.50) 0%, rgba(48, 78, 172, 0) 72%),
+    radial-gradient(48% 46% at 94% 6%, rgba(98, 62, 160, 0.34) 0%, rgba(98, 62, 160, 0) 70%),
+    radial-gradient(58% 56% at 84% 100%, rgba(18, 104, 118, 0.38) 0%, rgba(18, 104, 118, 0) 72%),
+    radial-gradient(46% 44% at 0% 100%, rgba(34, 54, 122, 0.34) 0%, rgba(34, 54, 122, 0) 70%),
+    linear-gradient(180deg, #0a0d15 0%, #05070b 100%);
+
+  /* ---- vetro: tinta per spessore, e l'equivalente pieno per i ripieghi ---- */
+  --glass-panel-tint: rgba(27, 32, 46, 0.54);    --glass-panel-solid: #131822;
+  --glass-raised-tint: rgba(40, 47, 65, 0.60);   --glass-raised-solid: #1a2030;
+  --glass-chrome-tint: rgba(15, 19, 29, 0.68);   --glass-chrome-solid: #0e121b;
+  --glass-sheet-tint: rgba(30, 36, 52, 0.86);    --glass-sheet-solid: #1c2232;
+  --glass-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.055) 0%, rgba(255, 255, 255, 0) 42%);
+  --glass-rim: linear-gradient(145deg, rgba(255, 255, 255, 0.30) 0%, rgba(255, 255, 255, 0.09) 26%, rgba(255, 255, 255, 0.025) 58%, rgba(255, 255, 255, 0.14) 100%);
+  --glass-specular: rgba(255, 255, 255, 0.13);
+  --glass-inner: rgba(255, 255, 255, 0.055);
+  --glass-hairline: rgba(0, 0, 0, 0.42);
+  --sweep: linear-gradient(105deg, rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, 0.09) 50%, rgba(255, 255, 255, 0) 62%);
+  --shimmer: linear-gradient(100deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.10) 50%, rgba(255, 255, 255, 0) 70%);
+
+  /* ---- profondità: ombre a strati, larghe e basse ---- */
+  --elev-0: 0 0 0 0 rgba(0, 0, 0, 0);
+  --elev-1: 0 1px 2px rgba(0, 0, 0, 0.30), 0 6px 16px -4px rgba(0, 0, 0, 0.30);
+  --elev-2: 0 1px 2px rgba(0, 0, 0, 0.32), 0 10px 26px -6px rgba(0, 0, 0, 0.40), 0 24px 48px -18px rgba(0, 0, 0, 0.40);
+  --elev-3: 0 2px 4px rgba(0, 0, 0, 0.34), 0 16px 36px -8px rgba(0, 0, 0, 0.48), 0 36px 72px -22px rgba(0, 0, 0, 0.50);
+  --elev-4: 0 4px 10px rgba(0, 0, 0, 0.36), 0 26px 52px -12px rgba(0, 0, 0, 0.56), 0 52px 104px -26px rgba(0, 0, 0, 0.60);
+  --shadow: var(--elev-3);
+
+  /* ---- superfici (nomi storici) ---- */
+  --surface: var(--glass-panel-bg);              /* schede: ora è vetro (alfa) */
+  --surface-solid: #151a26;                      /* nuovo: l'equivalente opaco; anelli e stacchi dei grafici, intestazioni appiccicose */
+  --surface-2: rgba(255, 255, 255, 0.055);       /* hover, intestazioni di tabella, campi: velo sopra il vetro */
+  --surface-3: rgba(255, 255, 255, 0.10);        /* tracce delle barre, incavi */
+  --border: rgba(255, 255, 255, 0.085);          /* filetti tra righe */
+  --border-strong: rgba(255, 255, 255, 0.17);    /* bordi quieti, assi */
+  --border-control: rgba(255, 255, 255, 0.44);   /* nuovo: contorno dei campi, 3:1 sul vetro */
+
+  /* ---- inchiostro ---- */
+  --text: #f3f5f9;
+  --text-2: #c1c8d3;
+  --text-3: #99a2b1;                             /* etichette, assi: ≥ 4.5:1 sul vetro più chiaro */
+  --text-disabled: rgba(243, 245, 249, 0.38);    /* nuovo */
+
+  /* ---- accento: uno solo ---- */
+  --accent: #4a93ee;                             /* segni, selezione, serie del fondo */
+  --accent-fill: #1f6bd6;                        /* nuovo: fondo del bottone primario (testo bianco ≥ 4.5:1) */
+  --accent-ink: #84b8ff;                         /* accento usato come testo */
+  --accent-soft: rgba(74, 147, 238, 0.17);
+  --on-accent: #ffffff;
+  --focus: #8cc0ff;                              /* nuovo: anello di fuoco */
+  --focus-gap: #06080d;
+  --focus-ring: 0 0 0 2px var(--focus-gap), 0 0 0 4px var(--focus);
+
+  /* ---- P&L: sempre con segno e freccia ---- */
+  --pos: #5fd3a0;
+  --neg: #ff8078;
+  --pos-soft: rgba(95, 211, 160, 0.14);          /* nuovi: fondo delle pastiglie di variazione */
+  --neg-soft: rgba(255, 128, 120, 0.14);
+  --bench: #8792a3;                              /* serie di confronto, de-enfatizzata */
+
+  /* ---- serie categoriche: ordine fisso, mai ciclato (validato: vedi nota) ---- */
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #0e9a0e; --s7: #9085e9; --s8: #e66767;
+
+  /* ---- stati di rischio: sicuro / attenzione / violazione / arrestato (sempre icona + parola) ---- */
+  --safe: #2fb886;        --safe-ink: #74dfb3;    --safe-soft: rgba(47, 184, 134, 0.15);
+  --warn: #f5b62e;        --warn-ink: #f8c558;    --warn-soft: rgba(245, 182, 46, 0.14);
+  --serious: #ec835a;     --serious-ink: #f7a886; --serious-soft: rgba(236, 131, 90, 0.15);
+  --crit: #d63a36;        --crit-ink: #ff8f86;    --crit-soft: rgba(224, 69, 64, 0.17);
+  --on-warn: #1c1400;     --on-crit: #ffffff;
+  --killed-bg: var(--crit); --killed-ink: var(--on-crit);       /* arrestato = pieno, l'unico stato a fondo pieno */
+  --unknown-ink: var(--text-2); --unknown-border: var(--border-control);   /* dati fermi: né sicuro né altro */
+
+  /* ---- provenienza: il peso cresce con la realtà (punteggiato → tratteggiato → filetto → pieno) ---- */
+  --prov-demo-ink: #c1c8d3;  --prov-demo-bg: rgba(255, 255, 255, 0.05);   --prov-demo-border: rgba(255, 255, 255, 0.44);
+  --prov-sim-ink: #b9b0ff;   --prov-sim-bg: rgba(144, 133, 233, 0.15);    --prov-sim-border: rgba(170, 160, 245, 0.70);
+  --prov-paper-ink: #84b8ff; --prov-paper-bg: rgba(74, 147, 238, 0.15);   --prov-paper-border: rgba(110, 170, 250, 0.60);
+  --prov-real-ink: #0b0e14;  --prov-real-bg: #f3f5f9;                     --prov-real-border: #f3f5f9;
+  --hatch: rgba(255, 255, 255, 0.07);            /* tratteggio diagonale: ESEMPIO e SIMULATO a tutta fascia */
+
+  /* ---- rampe per mappe di calore (testo in cella: il token -ink accanto) ---- */
+  --seq-1: #1d2f47; --seq-1-ink: #ffffff;  --seq-2: #22426b; --seq-2-ink: #ffffff;
+  --seq-3: #295792; --seq-3-ink: #ffffff;  --seq-4: #3270c0; --seq-4-ink: #ffffff;
+  --seq-5: #498de5; --seq-5-ink: #0d1117;  --seq-6: #75adf8; --seq-6-ink: #0d1117;
+  --seq-7: #abcfff; --seq-7-ink: #0d1117;
+  --div-1: #93c1fe; --div-1-ink: #0d1117;  --div-2: #5296ef; --div-2-ink: #0d1117;
+  --div-3: #3972bc; --div-3-ink: #ffffff;  --div-4: #31517b; --div-4-ink: #ffffff;
+  --div-5: #2f3339; --div-5-ink: #ffffff;  --div-6: #734126; --div-6-ink: #ffffff;
+  --div-7: #ad5622; --div-7-ink: #ffffff;  --div-8: #dd7438; --div-8-ink: #0d1117;
+  --div-9: #fda578; --div-9-ink: #0d1117;
+  --pnl-1: #fa8880; --pnl-1-ink: #0d1117;  --pnl-2: #cd605a; --pnl-2-ink: #0d1117;
+  --pnl-3: #85413c; --pnl-3-ink: #ffffff;  --pnl-4: #2f3339; --pnl-4-ink: #ffffff;
+  --pnl-5: #26664a; --pnl-5-ink: #ffffff;  --pnl-6: #31986e; --pnl-6-ink: #0d1117;
+  --pnl-7: #52c794; --pnl-7-ink: #0d1117;
+
+  /* ---- grafici ---- */
+  --grid: rgba(255, 255, 255, 0.07);
+  --axis: rgba(255, 255, 255, 0.20);
+  --scrim: rgba(3, 5, 9, 0.58);
+}
+
+/* =====================================================================================================
+   CHIARO
+   ===================================================================================================== */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  /* ---- fondale: perla, con quattro aloni tenui (cielo, lilla, pesca, menta) ---- */
+  --bg: #eef1f6;
+  --backdrop:
+    radial-gradient(62% 58% at 8% 0%, rgba(176, 204, 255, 0.78) 0%, rgba(176, 204, 255, 0) 72%),
+    radial-gradient(48% 46% at 94% 6%, rgba(214, 200, 255, 0.60) 0%, rgba(214, 200, 255, 0) 70%),
+    radial-gradient(58% 56% at 84% 100%, rgba(255, 220, 198, 0.66) 0%, rgba(255, 220, 198, 0) 72%),
+    radial-gradient(46% 44% at 0% 100%, rgba(190, 236, 222, 0.66) 0%, rgba(190, 236, 222, 0) 70%),
+    linear-gradient(180deg, #f5f7fb 0%, #e9edf4 100%);
+
+  --glass-panel-tint: rgba(255, 255, 255, 0.56);   --glass-panel-solid: #f8f9fc;
+  --glass-raised-tint: rgba(255, 255, 255, 0.72);  --glass-raised-solid: #ffffff;
+  --glass-chrome-tint: rgba(250, 251, 254, 0.68);  --glass-chrome-solid: #f4f6fa;
+  --glass-sheet-tint: rgba(255, 255, 255, 0.88);   --glass-sheet-solid: #ffffff;
+  --glass-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.50) 0%, rgba(255, 255, 255, 0) 42%);
+  --glass-rim: linear-gradient(145deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.55) 26%, rgba(255, 255, 255, 0.18) 58%, rgba(255, 255, 255, 0.75) 100%);
+  --glass-specular: rgba(255, 255, 255, 0.95);
+  --glass-inner: rgba(255, 255, 255, 0.50);
+  --glass-hairline: rgba(15, 23, 42, 0.065);
+  --sweep: linear-gradient(105deg, rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, 0.70) 50%, rgba(255, 255, 255, 0) 62%);
+  --shimmer: linear-gradient(100deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.75) 50%, rgba(255, 255, 255, 0) 70%);
+
+  --elev-0: 0 0 0 0 rgba(16, 24, 40, 0);
+  --elev-1: 0 1px 2px rgba(16, 24, 40, 0.04), 0 6px 16px -4px rgba(16, 24, 40, 0.06);
+  --elev-2: 0 1px 2px rgba(16, 24, 40, 0.04), 0 10px 26px -6px rgba(16, 24, 40, 0.09), 0 24px 48px -18px rgba(16, 24, 40, 0.10);
+  --elev-3: 0 2px 4px rgba(16, 24, 40, 0.05), 0 16px 36px -8px rgba(16, 24, 40, 0.13), 0 36px 72px -22px rgba(16, 24, 40, 0.16);
+  --elev-4: 0 4px 10px rgba(16, 24, 40, 0.06), 0 26px 52px -12px rgba(16, 24, 40, 0.18), 0 52px 104px -26px rgba(16, 24, 40, 0.24);
+  --shadow: var(--elev-3);
+
+  --surface: var(--glass-panel-bg);
+  --surface-solid: #f7f9fc;
+  --surface-2: rgba(15, 23, 42, 0.04);
+  --surface-3: rgba(15, 23, 42, 0.075);
+  --border: rgba(15, 23, 42, 0.08);
+  --border-strong: rgba(15, 23, 42, 0.16);
+  --border-control: rgba(15, 23, 42, 0.50);
+
+  --text: #0d1117;
+  --text-2: #3b434f;
+  --text-3: #596270;
+  --text-disabled: rgba(13, 17, 23, 0.36);
+
+  --accent: #2a78d6;
+  --accent-fill: #1f68c8;
+  --accent-ink: #1757b0;
+  --accent-soft: rgba(42, 120, 214, 0.11);
+  --on-accent: #ffffff;
+  --focus: #1f68c8;
+  --focus-gap: #ffffff;
+  --focus-ring: 0 0 0 2px var(--focus-gap), 0 0 0 4px var(--focus);
+
+  --pos: #0b6e4f;
+  --neg: #bd1f2b;
+  --pos-soft: rgba(11, 110, 79, 0.10);
+  --neg-soft: rgba(189, 31, 43, 0.085);
+  --bench: #7a8392;
+
+  --s1: #2a78d6; --s2: #eb6834; --s3: #13a573; --s4: #c48508; --s5: #d96d96; --s6: #008300; --s7: #6250d6; --s8: #e34948;
+
+  --safe: #17996b;        --safe-ink: #0a6648;    --safe-soft: rgba(23, 153, 107, 0.12);
+  --warn: #f2a80a;        --warn-ink: #7a5000;    --warn-soft: rgba(242, 168, 10, 0.17);
+  --serious: #e8763f;     --serious-ink: #973c10; --serious-soft: rgba(232, 118, 63, 0.14);
+  --crit: #d2332f;        --crit-ink: #ad1d1d;    --crit-soft: rgba(210, 51, 47, 0.09);
+  --on-warn: #1c1400;     --on-crit: #ffffff;
+  --killed-bg: var(--crit); --killed-ink: var(--on-crit);
+  --unknown-ink: var(--text-2); --unknown-border: var(--border-control);
+
+  --prov-demo-ink: #3b434f;  --prov-demo-bg: rgba(15, 23, 42, 0.035);     --prov-demo-border: rgba(15, 23, 42, 0.50);
+  --prov-sim-ink: #4f3cc0;   --prov-sim-bg: rgba(98, 80, 214, 0.09);      --prov-sim-border: rgba(98, 80, 214, 0.62);
+  --prov-paper-ink: #1757b0; --prov-paper-bg: rgba(42, 120, 214, 0.10);   --prov-paper-border: rgba(42, 120, 214, 0.55);
+  --prov-real-ink: #ffffff;  --prov-real-bg: #0d1117;                     --prov-real-border: #0d1117;
+  --hatch: rgba(15, 23, 42, 0.055);
+
+  --seq-1: #e2eeff; --seq-1-ink: #0d1117;  --seq-2: #bbd7fc; --seq-2-ink: #0d1117;
+  --seq-3: #8dbaf7; --seq-3-ink: #0d1117;  --seq-4: #5f9bec; --seq-4-ink: #0d1117;
+  --seq-5: #3980da; --seq-5-ink: #0d1117;  --seq-6: #1b5daf; --seq-6-ink: #ffffff;
+  --seq-7: #054083; --seq-7-ink: #ffffff;
+  --div-1: #094d9a; --div-1-ink: #ffffff;  --div-2: #3074ca; --div-2-ink: #ffffff;
+  --div-3: #6d9edf; --div-3-ink: #0d1117;  --div-4: #abc6eb; --div-4-ink: #0d1117;
+  --div-5: #e5e6e9; --div-5-ink: #0d1117;  --div-6: #e6b9a3; --div-6-ink: #0d1117;
+  --div-7: #d3865d; --div-7-ink: #0d1117;  --div-8: #b85207; --div-8-ink: #ffffff;
+  --div-9: #803805; --div-9-ink: #ffffff;
+  --pnl-1: #b02a2d; --pnl-1-ink: #ffffff;  --pnl-2: #d67069; --pnl-2-ink: #0d1117;
+  --pnl-3: #efb8b2; --pnl-3-ink: #0d1117;  --pnl-4: #e5e6e9; --pnl-4-ink: #0d1117;
+  --pnl-5: #a2d5bb; --pnl-5-ink: #0d1117;  --pnl-6: #49a77d; --pnl-6-ink: #0d1117;
+  --pnl-7: #007650; --pnl-7-ink: #ffffff;
+
+  --grid: rgba(15, 23, 42, 0.07);
+  --axis: rgba(15, 23, 42, 0.22);
+  --scrim: rgba(22, 30, 46, 0.30);
+}
+
+/* =====================================================================================================
+   RIPIEGHI
+   ===================================================================================================== */
+
+/* 1 · Niente sfocatura (browser vecchi) o «riduci trasparenza»: superfici piene, pensate così —
+       stessa gerarchia fatta di tono, filetto e ombra; il fondale resta, più quieto. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root, :root[data-theme] {
+    --glass-on: 0;
+    --glass-panel-bg: var(--glass-panel-solid); --glass-raised-bg: var(--glass-raised-solid);
+    --glass-chrome-bg: var(--glass-chrome-solid); --glass-sheet-bg: var(--glass-sheet-solid);
+    --glass-panel-filter: none; --glass-raised-filter: none; --glass-chrome-filter: none; --glass-sheet-filter: none;
+    --glass-sheen: none;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root, :root[data-theme] {
+    --glass-on: 0;
+    --glass-panel-bg: var(--glass-panel-solid); --glass-raised-bg: var(--glass-raised-solid);
+    --glass-chrome-bg: var(--glass-chrome-solid); --glass-sheet-bg: var(--glass-sheet-solid);
+    --glass-panel-filter: none; --glass-raised-filter: none; --glass-chrome-filter: none; --glass-sheet-filter: none;
+    --glass-sheen: none;
+    --backdrop: linear-gradient(180deg, var(--bg), var(--bg));
+  }
+}
+
+/* 2 · «Aumenta contrasto»: filetti veri, niente testo terziario */
+@media (prefers-contrast: more) {
+  :root, :root[data-theme] {
+    --glass-panel-bg: var(--glass-panel-solid); --glass-raised-bg: var(--glass-raised-solid);
+    --glass-chrome-bg: var(--glass-chrome-solid); --glass-sheet-bg: var(--glass-sheet-solid);
+    --text-3: var(--text-2);
+    --border: var(--border-strong); --border-strong: var(--border-control); --glass-hairline: var(--border-control);
+  }
+}
+
+/* 3 · «Riduci movimento»: restano solo le dissolvenze; niente spostamenti, rotoli, riflessi, caricamenti animati */
+@media (prefers-reduced-motion: reduce) {
+  :root, :root[data-theme] {
+    --motion-on: 0;
+    --dur-instant: 0.01ms; --dur-fast: 0.01ms; --dur-base: 0.01ms; --dur-slow: 0.01ms; --dur-slower: 0.01ms;
+    --dur-shimmer: 0.01ms; --dur-sweep: 0.01ms; --stagger: 0ms;
+    --lift: 0px; --press-scale: 1; --sheet-from-scale: 1; --sheet-from-y: 0px;
+    --ease-spring: linear; --ease-spring-soft: linear;
+  }
+}

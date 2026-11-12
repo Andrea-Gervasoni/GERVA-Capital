@@ -1001,3 +1001,31 @@ body[data-level="esperto"] .only-semplice { display: none !important; }
 .tm__val { font-family: var(--chart-font); white-space: nowrap; overflow: hidden; }
 .tm__leaf.is-tiny > * { display: none; }
 .chart-fallback { max-height: 360px; overflow: auto; }
+.chart--zoom { touch-action: pan-y; }
+.c-line--total { stroke: var(--chart-text-soft); stroke-width: var(--chart-line-width-thin); }
+.c-line--fit { stroke: var(--chart-text-soft); stroke-width: var(--chart-line-width-thin); }
+.c-cat--row { text-anchor: start; } .c-val--row { text-anchor: end; }
+.hm__cell--seq { --hm-color: var(--chart-accent); }
+.hm--grid tbody th { width: 84px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hm--grid thead th.hm__corner { width: 84px; }
+.hm__cell:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.tm__leaf--up { --tm-color: var(--chart-up); } .tm__leaf--down { --tm-color: var(--chart-down); }
+.tm__group .tm__leaf { border-radius: 0; }
+.chart-fallback { margin-top: 8px; font-size: var(--fs-small); }
+.chart-fallback__summary { display: inline-block; padding: 2px 0; color: var(--text-2); cursor: pointer; }
+.chart-fallback__summary:hover { color: var(--text); }
+.chart-fallback__body { margin-top: 6px; border: 1px solid var(--border); border-radius: var(--radius-s); }
+.chart-fallback__note { padding: 6px 12px; color: var(--text-3); }
+@media (max-width: 720px) { .hm--grid tbody th, .hm--grid thead th.hm__corner { width: 62px; } }
+@media (prefers-reduced-motion: reduce) { .c-pt, .tm__leaf { transition: none; } }
+
+/* ---- galleria tecnica dei grafici (grafici.html): non è una pagina del prodotto ---- */
+.gallery { max-width: 1360px; margin: 0 auto; padding: 20px 24px 64px; }
+.gallery__head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-bottom: 16px; }
+.gallery__title { font-size: var(--fs-h1, 20px); font-weight: 600; }
+.gallery__note { flex: 1 1 320px; font-size: var(--fs-small); color: var(--text-2); }
+.gallery .grid { margin-bottom: 16px; }
+.gallery .span-12 { grid-column: span 12; } .gallery .span-6 { grid-column: span 6; }
+.gallery__candle { height: 600px; }
+.gallery__api { margin-top: 10px; font-family: var(--font-num); font-size: var(--fs-micro); color: var(--text-3); overflow-wrap: anywhere; }
+@media (max-width: 900px) { .gallery { padding: 14px 14px 48px; } .gallery .span-6 { grid-column: span 12; } .gallery__candle { height: 520px; } }

@@ -5,10 +5,13 @@
 //   barTable    barre orizzontali lordo/netto con i valori a fianco
 //   bullet      barra di utilizzo di un limite
 //   dumbbell    due valori sulla stessa scala (Sharpe da backtest → reale)
-// I colori arrivano dalle classi CSS (token), quindi il cambio di tema non richiede di ridisegnare.
+// I colori arrivano dalle classi CSS (token --chart-*), quindi il cambio di tema non richiede di ridisegnare;
+// raggi e altre misure che SVG vuole come attributi arrivano da chartTheme() (js/chart-theme.js).
+// Le altre primitive (cascata, dispersione, mappa ad albero, griglia di calore, ventaglio, aree impilate) sono in chart-engine.js.
 
+import { chartTheme } from './chart-theme.js';
 import { h, s } from './dom.js';
-import { DASH, fmtDayMonth, fmtMonth, fmtMonthLong, fmtNum, fmtPct, fmtPctSigned, fmtSigned, list, num } from './format.js';
+import { DASH, fmtDate, fmtDayMonth, fmtMonth, fmtMonthLong, fmtNum, fmtPct, fmtPctSigned, fmtSigned, list, num } from './format.js';
 
 const DAY = 86400000;
 
@@ -79,7 +82,7 @@ const sizeObserver = typeof ResizeObserver === 'function'
   })
   : null;
 
-function onResize(el, cb) {
+export function onResize(el, cb) {
   if (!sizeObserver) return;
   sizeCallbacks.set(el, cb);
   sizeObserver.observe(el);
@@ -93,7 +96,7 @@ function niceStep(raw) {
   return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p;
 }
 
-function linearTicks(lo, hi, count) {
+export function linearTicks(lo, hi, count) {
   if (!(hi > lo)) return [lo];
   const step = niceStep((hi - lo) / Math.max(1, count));
   const out = [];
@@ -103,7 +106,7 @@ function linearTicks(lo, hi, count) {
   return out;
 }
 
-function logTicks(lo, hi, count) {
+export function logTicks(lo, hi, count) {
   let out = [];
   for (let k = Math.floor(Math.log10(lo)); k <= Math.ceil(Math.log10(hi)); k++) {
     for (const m of [1, 2, 5]) {
@@ -117,7 +120,7 @@ function logTicks(lo, hi, count) {
 }
 
 /** Tacche dell'asse del tempo (date in UTC): giorni per intervalli brevi, poi mesi, poi anni. */
-function timeTicks(t0, t1, maxTicks) {
+export function timeTicks(t0, t1, maxTicks) {
   const out = [];
   const span = t1 - t0;
   if (!(span > 0)) return out;
@@ -146,7 +149,7 @@ function timeTicks(t0, t1, maxTicks) {
 }
 
 /** Indice del punto più vicino a t in un array ordinato. */
-function nearest(xs, t) {
+export function nearest(xs, t) {
   let lo = 0;
   let hi = xs.length - 1;
   if (hi < 0) return -1;
@@ -213,7 +216,7 @@ function segmentsOf(px, py, plotWidth) {
   return segments;
 }
 
-const pathOf = (seg) => 'M' + seg.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join('L');
+export const pathOf = (seg) => 'M' + seg.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join('L');
 
 // ---- timeChart -----------------------------------------------------------------------------------------------------------
 
@@ -225,7 +228,9 @@ const pathOf = (seg) => 'M' + seg.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(
  *   panels: [{
  *     height, title,                           altezza in px, etichetta sopra il pannello
  *     scale: 'linear' | 'log',
- *     series: [{ values, cls, area, end }],    cls → .c-line--<cls>; area: riempimento fino alla base; end: pallino finale
+ *     series: [{ values, cls, area, end, dots, step, name }],
+ *                                              cls → .c-line--<cls>; area: riempimento fino alla base; end: pallino finale;
+ *                                              dots: un pallino per punto (fino a 40); step: linea a gradini; name: intestazione in tabella
  *     format: (v, passo) => testo,             etichette dell'asse y (passo = distanza tra due tacche)
  *     top, bottom,                             estremi fissi (es. top: 0 per il drawdown)
  *     refs: [{ value, label }],                linee di riferimento tratteggiate
@@ -235,12 +240,32 @@ const pathOf = (seg) => 'M' + seg.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(
  *   xTicks: [{ t, label }],                    tacche dell'asse x, se non sono date
  *   tip: (i) => ({ title, rows }),             contenuto del tooltip per il punto i
  *   say: (i) => testo,                         stessa cosa in una frase, per i lettori di schermo
+ *   xFormat: (t) => testo,                     etichetta della x nella tabella alternativa (di norma la data)
  * })
+ *
+ * Opzioni: label (nome accessibile); zoom: true abilita rotella = zoom, trascinamento = scorrimento, doppio clic = tutto,
+ * tasti + − 0; table: true aggiunge sotto il grafico la tabella alternativa (chiusa, costruita solo all'apertura).
+ * Oltre a update(): onHover(fn(t|null, i)) / setHoverTime(t) per legare il mirino ad altri grafici (linkCharts),
+ * setWindow(t0, t1) / resetWindow() / onWindow(fn([t0, t1]|null)) per la finestra visibile.
  */
-export function timeChart(host, { label = 'Grafico' } = {}) {
+export function timeChart(host, { label = 'Grafico', zoom = false, table = false } = {}) {
   const svg = s('svg', { class: 'chart', role: 'img', tabindex: '0', 'aria-label': label });
   const live = h('div', { class: 'sr-only', 'aria-live': 'polite' });
   host.append(svg, live);
+
+  let full = null;           // specifica completa
+  let win = null;            // finestra visibile { a, b } (indici nella specifica completa); null = tutto
+  let off = 0;               // indice del primo punto visibile
+  let drag = null;
+  const hoverSubs = new Set();
+  const winSubs = new Set();
+  const fallback = table ? tableFallback({
+    caption: label,
+    head: () => (full ? ['Data', ...full.panels.flatMap((p) => p.series.map((sr) => sr.name || p.title || sr.cls || 'Valore'))] : []),
+    rows: () => (full ? full.x.map((t, i) => [full.xFormat ? full.xFormat(t) : fmtDate(t, true),
+      ...full.panels.flatMap((p) => p.series.map((sr) => (sr.values[i] == null ? null : p.format ? p.format(sr.values[i], null) : fmtNum(sr.values[i], 2))))]) : []),
+  }) : null;
+  if (fallback) host.append(fallback.el);
 
   let spec = null;
   let geo = null;
@@ -257,6 +282,7 @@ export function timeChart(host, { label = 'Grafico' } = {}) {
     overlay = null;
     if (!spec || width < 60) return;
     lastWidth = width;
+    const T = chartTheme();
     const xs = spec.x;
     const n = xs.length;
     const panels = spec.panels.map((p) => ({ ...p, dom: domainOf(p) })).filter((p) => p.dom);
@@ -327,8 +353,9 @@ export function timeChart(host, { label = 'Grafico' } = {}) {
       }
       for (const sr of p.series) {
         const py = sr.values.map((v) => (v == null || (p.scale === 'log' && v <= 0) ? null : p.yOf(v)));
-        const segs = segmentsOf(px, py, plotW);
+        let segs = segmentsOf(px, py, plotW);
         if (!segs.length) continue;
+        if (sr.step) segs = segs.map((seg) => seg.flatMap((pt, i) => (i === 0 ? [pt] : [[pt[0], seg[i - 1][1]], pt])));
         if (sr.area) {
           const base = p.top === 0 ? p.yOf(0) : p.y1;
           const d = segs.map((seg) => `${pathOf(seg)}L${seg[seg.length - 1][0].toFixed(1)},${base.toFixed(1)}L${seg[0][0].toFixed(1)},${base.toFixed(1)}Z`).join('');
@@ -336,12 +363,12 @@ export function timeChart(host, { label = 'Grafico' } = {}) {
         }
         g.append(s('path', { class: `c-line c-line--${sr.cls}`, d: segs.map(pathOf).join('') }));
         if (sr.dots && n <= 40) {
-          for (let i = 0; i < n; i++) if (py[i] != null) g.append(s('circle', { class: `c-dot c-dot--${sr.cls}`, cx: px[i].toFixed(1), cy: py[i].toFixed(1), r: 3.5 }));
+          for (let i = 0; i < n; i++) if (py[i] != null) g.append(s('circle', { class: `c-dot c-dot--${sr.cls}`, cx: px[i].toFixed(1), cy: py[i].toFixed(1), r: T.dotRadiusSmall }));
         }
         if (sr.end) {
           for (let i = n - 1; i >= 0; i--) {
             if (py[i] != null) {
-              g.append(s('circle', { class: `c-dot c-dot--${sr.cls}`, cx: px[i].toFixed(1), cy: py[i].toFixed(1), r: 4 }));
+              g.append(s('circle', { class: `c-dot c-dot--${sr.cls}`, cx: px[i].toFixed(1), cy: py[i].toFixed(1), r: T.dotRadius }));
               break;
             }
           }
@@ -374,7 +401,7 @@ export function timeChart(host, { label = 'Grafico' } = {}) {
       const text = s('text', { class: 'c-ref-label', x: rl.end != null ? rl.end : rl.x, y: rl.y, 'text-anchor': rl.end != null ? 'end' : null }, rl.text);
       svg.append(text);
       const box = typeof text.getBBox === 'function' ? text.getBBox() : null;
-      if (box && box.width > 0) svg.insertBefore(s('rect', { class: 'c-ref-bg', x: box.x - 3, y: box.y - 1, width: box.width + 6, height: box.height + 2, rx: 2 }), text);
+      if (box && box.width > 0) svg.insertBefore(s('rect', { class: 'c-ref-bg', x: box.x - 3, y: box.y - 1, width: box.width + 6, height: box.height + 2, rx: T.barRadius }), text);
     }
 
     overlay = s('g', { class: 'c-overlay' });
@@ -432,7 +459,7 @@ export function timeChart(host, { label = 'Grafico' } = {}) {
     for (const p of geo.panels) {
       for (const sr of p.series) {
         const yv = sr.py ? sr.py[hover] : null;
-        if (yv != null) overlay.append(s('circle', { class: `c-dot c-dot--${sr.cls}`, cx: x.toFixed(1), cy: yv.toFixed(1), r: 4 }));
+        if (yv != null) overlay.append(s('circle', { class: `c-dot c-dot--${sr.cls}`, cx: x.toFixed(1), cy: yv.toFixed(1), r: chartTheme().dotRadius }));
       }
     }
   }
@@ -450,10 +477,53 @@ export function timeChart(host, { label = 'Grafico' } = {}) {
   }
 
   function setHover(i) {
+    const changed = hover !== i;
     hover = i;
     paintHover();
     if (i == null) hideTip();
     else showHoverTip();
+    if (changed) for (const fn of hoverSubs) fn(i == null || !spec ? null : spec.x[i], i == null ? null : i + off);
+  }
+
+  /** La specifica ristretta alla finestra visibile: il resto del disegno non sa che esiste uno zoom. */
+  function windowed() {
+    off = 0;
+    if (!full) return null;
+    if (!win) return full;
+    const { a, b } = win;
+    off = a;
+    const cut = (arr2) => arr2.slice(a, b + 1);
+    return {
+      ...full, x: cut(full.x),
+      panels: full.panels.map((p) => ({
+        ...p, series: p.series.map((sr) => ({ ...sr, values: cut(sr.values) })),
+        bands: (p.bands || []).map((bd) => ({ ...bd, lo: cut(bd.lo), hi: cut(bd.hi) })),
+      })),
+      tip: full.tip ? (i) => full.tip(i + a) : null, say: full.say ? (i) => full.say(i + a) : null,
+    };
+  }
+
+  function setWin(a, b, silent = false) {
+    if (!full) return;
+    const n = full.x.length;
+    const size = Math.max(Math.min(4, n - 1), Math.min(n - 1, Math.round(b - a)));
+    a = Math.round(Math.max(0, Math.min(n - 1 - size, a)));
+    b = a + size;
+    const next = a <= 0 && b >= n - 1 ? null : { a, b };
+    if ((!next && !win) || (next && win && next.a === win.a && next.b === win.b)) return;
+    const keepT = hover != null && spec ? spec.x[hover] : null;
+    win = next;
+    spec = windowed();
+    hover = keepT != null && keepT >= spec.x[0] && keepT <= spec.x[spec.x.length - 1] ? nearest(spec.x, keepT) : null;
+    draw();
+    if (!silent) for (const fn of winSubs) fn(win ? [full.x[win.a], full.x[win.b]] : null);
+  }
+  const bounds = () => win || { a: 0, b: full.x.length - 1 };
+  function zoomBy(factor, anchor) {
+    const { a, b } = bounds();
+    const size = Math.max(8, (b - a) * factor);
+    const frac = (anchor - a) / Math.max(1, b - a);
+    setWin(anchor - frac * size, anchor - frac * size + size);
   }
 
   function indexAt(clientX) {
@@ -466,12 +536,31 @@ export function timeChart(host, { label = 'Grafico' } = {}) {
   const onPointer = (e) => {
     pointer = { x: e.clientX, y: e.clientY };
     keyboard = false;
+    if (zoom && full && geo) {
+      if (e.type === 'pointerdown' && win) drag = { x: e.clientX, a: win.a, b: win.b };
+      else if (drag && e.buttons === 0 && e.pointerType === 'mouse') drag = null;
+      if (drag && e.type === 'pointermove') {
+        const shift = Math.round(((drag.x - e.clientX) / (geo.right - geo.left)) * (drag.b - drag.a));
+        setWin(drag.a + shift, drag.b + shift);
+      }
+    }
     setHover(indexAt(e.clientX));
   };
   const onLeave = () => {
     pointer = null;
+    drag = null;
     if (!keyboard) setHover(null);
   };
+  svg.addEventListener('pointerup', () => { drag = null; });
+  if (zoom) {
+    svg.classList.add('chart--zoom');
+    svg.addEventListener('wheel', (e) => {
+      if (!full || !geo) return;
+      e.preventDefault();
+      zoomBy(e.deltaY > 0 ? 1.25 : 0.8, (indexAt(e.clientX) ?? spec.x.length - 1) + off);
+    }, { passive: false });
+    svg.addEventListener('dblclick', () => { if (full) setWin(0, full.x.length - 1); });
+  }
   svg.addEventListener('pointermove', onPointer);
   svg.addEventListener('pointerdown', onPointer);
   svg.addEventListener('pointerleave', onLeave);
@@ -499,10 +588,22 @@ export function timeChart(host, { label = 'Grafico' } = {}) {
       keyboard = false;
       setHover(null);
       return;
+    } else if (zoom && full && (e.key === '+' || e.key === '=' || e.key === '-' || e.key === '_' || e.key === '0')) {
+      e.preventDefault();
+      if (e.key === '0') setWin(0, full.x.length - 1);
+      else zoomBy(e.key === '+' || e.key === '=' ? 0.7 : 1.4, cur + off);
+      return;
     } else return;
     e.preventDefault();
     keyboard = true;
     pointer = null;
+    if (zoom && win && (next < 0 || next > n - 1)) {                // al bordo della finestra il mirino trascina la finestra
+      const target = Math.max(0, Math.min(full.x.length - 1, next + off));
+      const shift = next < 0 ? target - win.a : target - win.b;
+      setWin(win.a + shift, win.b + shift);
+      setHover(nearest(spec.x, full.x[target]));
+      return;
+    }
     setHover(Math.min(n - 1, Math.max(0, next)));
   });
 
@@ -513,15 +614,61 @@ export function timeChart(host, { label = 'Grafico' } = {}) {
   return {
     update(next) {
       const keepT = hover != null && spec && spec.x[hover] != null ? spec.x[hover] : null;
-      spec = next && Array.isArray(next.x) && next.x.length >= 2 ? next : null;
+      const range = win && full ? [full.x[win.a], full.x[win.b]] : null;
+      full = next && Array.isArray(next.x) && next.x.length >= 2 ? next : null;
+      win = null;
+      if (full && range) {                                          // la finestra resta sulle stesse date
+        const a = nearest(full.x, range[0]);
+        const b = nearest(full.x, range[1]);
+        if (b - a >= 2 && (a > 0 || b < full.x.length - 1)) win = { a, b };
+      }
+      spec = windowed();
       hover = spec && keepT != null && (pointer || keyboard) ? nearest(spec.x, keepT) : null;
       draw();
       if (hover != null) showHoverTip();
+      if (fallback) fallback.refresh();
     },
     get empty() {
       return !spec;
     },
+    /** fn(t | null, indice | null) a ogni spostamento del mirino; restituisce la funzione che toglie l'ascolto. */
+    onHover(fn) { hoverSubs.add(fn); return () => hoverSubs.delete(fn); },
+    /** Mirino comandato da fuori (un altro grafico): nessun tooltip e nessun avviso agli ascoltatori. */
+    setHoverTime(t) {
+      if (!spec || pointer || keyboard) return;
+      hover = t == null || t < spec.x[0] || t > spec.x[spec.x.length - 1] ? null : nearest(spec.x, t);
+      paintHover();
+    },
+    setWindow(t0, t1, { silent = false } = {}) { if (full) setWin(nearest(full.x, t0), nearest(full.x, t1), silent); },
+    resetWindow() { if (full) setWin(0, full.x.length - 1); },
+    onWindow(fn) { winSubs.add(fn); return () => winSubs.delete(fn); },
+    get window() { return full && win ? [full.x[win.a], full.x[win.b]] : null; },
   };
+}
+
+// ---- tabella alternativa a un grafico ------------------------------------------------------------------------------------------
+
+/**
+ * Un <details> chiuso con gli stessi dati del grafico in una vera tabella; le righe si costruiscono solo all'apertura.
+ * head: [testo…] (o funzione), rows: () => [[cella…]] (null diventa «—»); la prima colonna è testo, le altre numeri.
+ */
+export function tableFallback({ summary = 'Mostra i dati in tabella', caption = '', head = [], rows = () => [], max = 400 } = {}) {
+  const body = h('div', { class: 'chart-fallback__body table-wrap' });
+  const el = h('details', { class: 'chart-fallback' }, h('summary', { class: 'chart-fallback__summary', text: summary }), body);
+  function build() {
+    const cols = typeof head === 'function' ? head() : head;
+    const all = list(rows());
+    const shown = all.length > max ? all.slice(all.length - max) : all;
+    body.replaceChildren(
+      h('table', { class: 'table table--dense' },
+        caption ? h('caption', { class: 'sr-only', text: caption }) : null,
+        h('thead', null, h('tr', null, cols.map((c, i) => h('th', { scope: 'col', class: i ? 'is-num' : '', text: c })))),
+        h('tbody', null, shown.map((r) => h('tr', null, r.map((c, i) => h('td', { class: i ? 'is-num' : '', text: c == null || c === '' ? DASH : c })))))),
+      all.length > max ? h('p', { class: 'chart-fallback__note', text: `Mostrate le ultime ${fmtNum(max, 0)} righe su ${fmtNum(all.length, 0)}.` }) : null,
+      !all.length ? h('p', { class: 'chart-fallback__note', text: 'Nessun dato.' }) : null);
+  }
+  el.addEventListener('toggle', () => { if (el.open) build(); else body.replaceChildren(); });
+  return { el, refresh() { if (el.open) build(); } };
 }
 
 // ---- sparkline -------------------------------------------------------------------------------------------------------------
@@ -792,8 +939,10 @@ export function matrix(labels, values, { caption = 'Matrice' } = {}) {
 /**
  * data: { edges: [n+1], counts: [n] }. La curva è la gaussiana con la stessa media e deviazione standard:
  * dove le colonne la superano (centro e code) i rendimenti sono «più appuntiti e con code più grasse» del caso normale.
+ * Opzioni: refs: [{ value, label, cls }] linee verticali di riferimento (media, mediana, VaR…; cls: warn | crit | accent);
+ * normal: false toglie la curva; unit: nome di ciò che si conta; rangeFormat: testo degli estremi nel tooltip; table: true.
  */
-export function histogram(host, data, { log = false, label = 'Distribuzione', xFormat = (v) => fmtPctSigned(v, 0) } = {}) {
+export function histogram(host, data, { log = false, label = 'Distribuzione', xFormat = (v) => fmtPctSigned(v, 0), refs = [], normal: withNormal = true, height = 190, unit = 'Giorni', rangeFormat = (v) => fmtPctSigned(v, 1), table = false } = {}) {
   const edges = list(data && data.edges).map(num);
   const counts = list(data && data.counts).map(num);
   const n = Math.min(counts.length, edges.length - 1);
@@ -805,18 +954,25 @@ export function histogram(host, data, { log = false, label = 'Distribuzione', xF
   const normal = mids.map((m, i) => total * (edges[i + 1] - edges[i]) * Math.exp(-0.5 * ((m - mean) / sd) ** 2) / (sd * Math.sqrt(2 * Math.PI)));
   const svg = s('svg', { class: 'chart chart--static', role: 'img', 'aria-label': label });
   host.replaceChildren(svg);
+  if (table) {
+    host.append(tableFallback({
+      caption: label, head: ['Intervallo', unit, 'Quota'],
+      rows: () => counts.slice(0, n).map((c, i) => [`da ${rangeFormat(edges[i])} a ${rangeFormat(edges[i + 1])}`, fmtNum(c || 0, 0), fmtPct((c || 0) / total, 1)]),
+    }).el);
+  }
   let last = 0;
   function draw(width) {
     const w = Math.floor(width);
     if (w < 80 || w === last) return;
     last = w;
     svg.replaceChildren();
-    const H = 190;
+    const H = height;
+    const T = chartTheme();
     const left = 1;
     const right = w - 44;
     const top = 8;
     const bottom = top + H;
-    const max = Math.max(...counts.map((c) => c || 0), ...normal);
+    const max = Math.max(...counts.map((c) => c || 0), ...(withNormal ? normal : [0]));
     const f = log ? (v) => Math.log10(Math.max(v, 0.5)) : (v) => v;
     const f0 = f(log ? 0.5 : 0);
     const yOf = (v) => bottom - ((f(v) - f0) / (f(max * 1.05) - f0)) * H;
@@ -836,16 +992,28 @@ export function histogram(host, data, { log = false, label = 'Distribuzione', xF
       const x0 = xOf(edges[i]);
       const x1 = xOf(edges[i + 1]);
       const y = yOf(c);
-      const rect = s('rect', { class: `c-col ${mids[i] < 0 ? 'c-col--neg' : 'c-col--pos'}`, x: (x0 + 1).toFixed(1), y: y.toFixed(1), width: Math.max(1, x1 - x0 - 2).toFixed(1), height: Math.max(1, bottom - y).toFixed(1), rx: 1.5, tabindex: '0' });
+      const rect = s('rect', { class: `c-col ${mids[i] < 0 ? 'c-col--neg' : 'c-col--pos'}`, x: (x0 + 1).toFixed(1), y: y.toFixed(1), width: Math.max(1, x1 - x0 - 2).toFixed(1), height: Math.max(1, bottom - y).toFixed(1), rx: Math.min(1.5, T.barRadius), tabindex: '0' });
       bindTip(rect, () => ({
-        title: `da ${fmtPctSigned(edges[i], 1)} a ${fmtPctSigned(edges[i + 1], 1)}`,
-        rows: [{ label: 'Giorni', value: fmtNum(c, 0) }, { label: 'Quota', value: fmtPct(c / total, 1) }, { label: 'Attesi se normale', value: fmtNum(normal[i], 1) }],
+        title: `da ${rangeFormat(edges[i])} a ${rangeFormat(edges[i + 1])}`,
+        rows: [{ label: unit, value: fmtNum(c, 0) }, { label: 'Quota', value: fmtPct(c / total, 1) }, withNormal ? { label: 'Attesi se normale', value: fmtNum(normal[i], 1) } : null].filter(Boolean),
       }));
       svg.append(rect);
     }
     const pts = mids.map((m, i) => [xOf(m), yOf(Math.max(normal[i], log ? 0.5 : 0))]);
-    svg.append(s('path', { class: 'c-line c-line--bench c-line--dash', d: pathOf(pts) }));
+    if (withNormal) svg.append(s('path', { class: 'c-line c-line--bench c-line--dash', d: pathOf(pts) }));
     svg.append(s('line', { class: 'c-axis', x1: left, x2: right, y1: bottom + 0.5, y2: bottom + 0.5 }));
+    list(refs).forEach((ref, k) => {
+      const v = num(ref && ref.value);
+      if (v == null || v < edges[0] || v > edges[n]) return;
+      const x = Math.round(xOf(v)) + 0.5;
+      svg.append(s('line', { class: `c-ref c-ref--v ${ref.cls ? `c-ref--${ref.cls}` : ''}`.trim(), x1: x, x2: x, y1: top, y2: bottom }));
+      if (!ref.label) return;
+      const flip = x > right - 110;
+      const text = s('text', { class: 'c-ref-label', x: flip ? x - 5 : x + 5, y: top + 10 + (k % 4) * 14, 'text-anchor': flip ? 'end' : null }, ref.label);
+      svg.append(text);
+      const box = typeof text.getBBox === 'function' ? text.getBBox() : null;
+      if (box && box.width > 0) svg.insertBefore(s('rect', { class: 'c-ref-bg', x: box.x - 3, y: box.y - 1, width: box.width + 6, height: box.height + 2, rx: T.barRadius }), text);
+    });
     const step = Math.max(1, Math.round(n / Math.max(2, Math.floor((right - left) / 70))));
     for (let i = 0; i <= n; i += step) {
       const x = xOf(edges[i]);
@@ -890,7 +1058,7 @@ export function columns(host, values, { labels = [], height = 96, label = 'Colon
       if (v == null) return;
       const y = yOf(Math.max(v, 0));
       const hgt = Math.max(1, Math.abs(yOf(v) - yOf(0)));
-      const rect = s('rect', { class: `c-col ${v < 0 ? 'c-col--down' : 'c-col--up'}`, x: (i * bw + 1).toFixed(1), y: y.toFixed(1), width: Math.max(1, bw - 2).toFixed(1), height: hgt.toFixed(1), rx: Math.min(2, bw / 4) });
+      const rect = s('rect', { class: `c-col ${v < 0 ? 'c-col--down' : 'c-col--up'}`, x: (i * bw + 1).toFixed(1), y: y.toFixed(1), width: Math.max(1, bw - 2).toFixed(1), height: hgt.toFixed(1), rx: Math.min(chartTheme().barRadius, bw / 4) });
       bindTip(rect, () => ({ title: labels[i] || '', rows: [{ label: 'Rendimento', value: fmt(v), cls: v > 0 ? 'pos' : v < 0 ? 'neg' : '' }] }));
       svg.append(rect);
     });

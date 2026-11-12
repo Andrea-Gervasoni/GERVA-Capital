@@ -1,19 +1,32 @@
 // Grafico a candele su canvas: prezzo con volume, sovrapposizioni attivabili e pannelli sotto (ATR%, RSI, conviction, GQ).
 // Canvas perché deve restare fluido trascinando e zoomando 1.500 barre; un solo disegno per fotogramma.
 // Mouse: rotella = zoom, trascinamento = scorrimento, doppio clic = tutto. Tastiera: ←/→ mirino, Maiusc+←/→ scorre,
-// +/− zoom, Inizio/Fine. I colori vengono dai token CSS e si rileggono al cambio di tema o di livello.
+// +/− zoom, Inizio/Fine, Esc. Nessun colore, spessore o carattere è scritto qui: tutto arriva da chartTheme()
+// (token CSS --chart-*), che si rilegge da solo al cambio di tema o di livello.
+//
+// candleChart(host, { label, panes, overlays, table }) → {
+//   setData(data, { keepView, months }), setOverlays(ids), setPanes(ids), setLog(on), setRange(mesi | null), redraw(), view,
+//   onHover(fn(t | null, i)), setHoverTime(t), setWindow(t0, t1), onWindow(fn([t0, t1])), destroy() }
+// data: { symbol, t: [ms], o, h, l, c, v, conviction, gq, thresholds: { conviction: [a, b], gq: [a, b, c] },
+//         markers: [{ i, price, kind: 'entry' | 'exit' | 'stop' | 'level', label, color: chiave del tema }] }
 
+import { chartTheme, onChartThemeChange } from './chart-theme.js';
+import { tableFallback } from './charts.js';
 import { h } from './dom.js';
 import { fmtDate, fmtNum, fmtPct, fmtPctSigned } from './format.js';
 import { atrPct, bollinger, donchian, ema, rsi, sma, vwapMonth } from './indicators.js';
 
+/** Sovrapposizioni disponibili; color è una chiave dell'oggetto del tema (chartTheme()). */
 export const OVERLAYS = [
-  { id: 'sma20', label: 'SMA 20', color: '--s2' }, { id: 'sma50', label: 'SMA 50', color: '--s3' },
-  { id: 'sma100', label: 'SMA 100', color: '--s4' }, { id: 'sma200', label: 'SMA 200', color: '--s5' },
-  { id: 'ema21', label: 'EMA 21', color: '--text-2' }, { id: 'boll', label: 'Bollinger', color: '--bench' },
-  { id: 'vwap', label: 'VWAP mese', color: '--accent' }, { id: 'donch', label: 'Donchian 20', color: '--text-3' },
+  { id: 'sma20', label: 'SMA 20', color: 's2' }, { id: 'sma50', label: 'SMA 50', color: 's3' },
+  { id: 'sma100', label: 'SMA 100', color: 's4' }, { id: 'sma200', label: 'SMA 200', color: 's5' },
+  { id: 'ema21', label: 'EMA 21', color: 'textSoft' }, { id: 'boll', label: 'Bollinger', color: 'bench' },
+  { id: 'vwap', label: 'VWAP mese', color: 'accent' }, { id: 'donch', label: 'Donchian 20', color: 'textMuted' },
 ];
-const GUTTER = 58;
+/** Pannelli sotto il prezzo (il volume c'è sempre). */
+export const PANES = [
+  { id: 'atr', title: 'ATR% 14' }, { id: 'rsi', title: 'RSI 14' }, { id: 'conv', title: 'CONVICTION' }, { id: 'gq', title: 'GQ · IN OMBRA' },
+];
 const AXIS = 18;
 const DAY = 86400000;
 
@@ -31,12 +44,25 @@ function niceTicks(lo, hi, count) {
   return out;
 }
 
-export function candleChart(host, { label = 'Grafico a candele' } = {}) {
+export function candleChart(host, { label = 'Grafico a candele', panes: paneIds = PANES.map((p) => p.id), overlays: overlayIds = ['sma50', 'sma200'], table = false } = {}) {
   const read = h('div', { class: 'cx__read num', 'aria-hidden': 'true' });
   const canvas = h('canvas', { class: 'cx__canvas', tabindex: '0', role: 'img', 'aria-label': label });
   const live = h('div', { class: 'sr-only', 'aria-live': 'polite' });
   const wrap = h('div', { class: 'cx' }, read, h('div', { class: 'cx__plot' }, canvas), live);
   host.append(wrap);
+  const fallback = table ? tableFallback({
+    caption: label, head: ['Data', 'Apertura', 'Massimo', 'Minimo', 'Chiusura', 'Volume', 'Conviction', 'GQ'],
+    rows: () => {
+      if (!d) return [];
+      const out = [];
+      for (let i = Math.max(0, Math.floor(i0)); i <= Math.min(d.t.length - 1, Math.ceil(i1)); i++) {
+        out.push([fmtDate(d.t[i], true), price(d.o[i]), price(d.h[i]), price(d.l[i]), price(d.c[i]), compact(d.v[i]),
+          d.conviction && d.conviction[i] != null ? fmtNum(d.conviction[i], 2) : null, d.gq && d.gq[i] != null ? fmtNum(d.gq[i], 2) : null]);
+      }
+      return out;
+    },
+  }) : null;
+  if (fallback) wrap.append(fallback.el);
   const plot = canvas.parentElement;
   const ctx = canvas.getContext('2d');
 
@@ -47,19 +73,25 @@ export function candleChart(host, { label = 'Grafico a candele' } = {}) {
   let hover = null;
   let hoverY = null;
   let log = false;
-  let overlays = new Set(['sma50', 'sma200']);
+  let overlays = new Set(overlayIds);
+  let subPanes = new Set(paneIds);
   let theme = null;
+  let lastA = -1;
+  let lastB = -1;
+  let silentWin = false;
+  const hoverSubs = new Set();
+  const winSubs = new Set();
   let W = 0;
   let H = 0;
   let queued = false;
   let drag = null;
   let geo = null;
 
-  const css = (name) => getComputedStyle(host).getPropertyValue(name).trim();
-  function loadTheme() {
-    theme = {};
-    for (const k of ['--surface', '--grid', '--axis', '--text', '--text-2', '--text-3', '--pos', '--neg', '--accent', '--bench', '--crit', '--warn', '--s1', '--s2', '--s3', '--s4', '--s5']) theme[k] = css(k) || '#888';
-    theme.font = `11px ${css('--font-num') || 'monospace'}`;
+  function setHover(i, y = null) {
+    const changed = hover !== i;
+    hover = i;
+    hoverY = y;
+    if (changed) for (const fn of hoverSubs) fn(i == null || !d ? null : d.t[i], i);
   }
 
   function resize() {
@@ -95,9 +127,7 @@ export function candleChart(host, { label = 'Grafico a candele' } = {}) {
   }
 
   function panes() {
-    const subs = [{ id: 'atr', title: 'ATR% 14' }, { id: 'rsi', title: 'RSI 14' }];
-    if (d.conviction) subs.push({ id: 'conv', title: 'CONVICTION' });
-    if (d.gq) subs.push({ id: 'gq', title: 'GQ · IN OMBRA' });
+    const subs = PANES.filter((p) => subPanes.has(p.id) && (p.id !== 'conv' || d.conviction) && (p.id !== 'gq' || d.gq));
     const avail = H - AXIS;
     const subH = Math.max(34, Math.min(62, Math.floor(avail * 0.105)));
     const use = avail < 300 ? subs.slice(0, 0) : avail < 420 ? subs.slice(-Math.min(subs.length, 2)) : subs;
@@ -109,7 +139,8 @@ export function candleChart(host, { label = 'Grafico a candele' } = {}) {
   }
 
   function draw() {
-    if (!theme) loadTheme();
+    theme = chartTheme();
+    const GUTTER = theme.gutter;
     ctx.clearRect(0, 0, W, H);
     geo = null;
     if (!d || d.t.length < 2 || W < 80) return;
@@ -120,9 +151,9 @@ export function candleChart(host, { label = 'Grafico a candele' } = {}) {
     const bw = plotW / Math.max(1, i1 - i0 + 1);
     const xOf = (i) => (i - i0 + 0.5) * bw;
     const ps = panes();
-    ctx.font = theme.font;
+    ctx.font = theme.canvasFont;
     ctx.textBaseline = 'middle';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = theme.gridWidth;
 
     const scale = (p, lo, hi, isLog = false) => {
       const f = isLog ? Math.log : (x) => x;
@@ -133,7 +164,7 @@ export function candleChart(host, { label = 'Grafico a candele' } = {}) {
       p.lo = lo;
       p.hi = hi;
     };
-    const line = (p, arr, color, { dash = null, width = 1.25, step = false } = {}) => {
+    const line = (p, arr, color, { dash = null, width = theme.lineWidthThin * 0.85, step = false } = {}) => {
       ctx.save();
       ctx.beginPath();
       ctx.rect(0, p.y0 - 1, plotW, p.y1 - p.y0 + 2);
@@ -158,19 +189,22 @@ export function candleChart(host, { label = 'Grafico a candele' } = {}) {
       ctx.restore();
     };
     const grid = (p, ticks, fmt) => {
-      ctx.strokeStyle = theme['--grid'];
-      ctx.fillStyle = theme['--text-3'];
+      ctx.strokeStyle = theme.grid;
+      ctx.fillStyle = theme.textMuted;
       ctx.textAlign = 'left';
+      let lastY = null;
       for (const v of ticks) {
         const y = Math.round(p.yOf(v)) + 0.5;
         if (y < p.y0 - 1 || y > p.y1 + 1) continue;
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(plotW, y); ctx.stroke();
+        if (lastY != null && Math.abs(y - lastY) < theme.fontSize + 1) continue;      // etichette troppo vicine: resta la prima
+        lastY = y;
         ctx.fillText(fmt(v), plotW + 6, y);
       }
     };
     const title = (p) => {
       if (!p.title) return;
-      ctx.fillStyle = theme['--text-3'];
+      ctx.fillStyle = theme.textMuted;
       ctx.textAlign = 'left';
       ctx.fillText(p.title, 4, p.y0 + 7);
     };
@@ -208,28 +242,28 @@ export function candleChart(host, { label = 'Grafico a candele' } = {}) {
       for (let i = a; i <= b; i++) { if (ind.boll.up[i] == null) continue; const x = xOf(i); const y = pp.yOf(ind.boll.up[i]); if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y); }
       for (let i = b; i >= a; i--) { if (ind.boll.lo[i] == null) continue; ctx.lineTo(xOf(i), pp.yOf(ind.boll.lo[i])); }
       ctx.closePath();
-      ctx.globalAlpha = 0.1; ctx.fillStyle = theme['--bench']; ctx.fill(); ctx.globalAlpha = 1;
+      ctx.globalAlpha = theme.areaOpacity; ctx.fillStyle = theme.bench; ctx.fill(); ctx.globalAlpha = 1;
       ctx.restore();
-      line(pp, ind.boll.up, theme['--bench']);
-      line(pp, ind.boll.lo, theme['--bench']);
+      line(pp, ind.boll.up, theme.bench);
+      line(pp, ind.boll.lo, theme.bench);
     }
-    if (overlays.has('donch')) { line(pp, ind.donch.up, theme['--text-3'], { step: true, dash: [3, 3] }); line(pp, ind.donch.lo, theme['--text-3'], { step: true, dash: [3, 3] }); }
+    if (overlays.has('donch')) { line(pp, ind.donch.up, theme.textMuted, { step: true, dash: theme.dashCross }); line(pp, ind.donch.lo, theme.textMuted, { step: true, dash: theme.dashCross }); }
 
     // candele
-    const body = Math.max(1, Math.min(14, Math.floor(bw * 0.7)));
+    const body = Math.max(1, Math.min(theme.candleMax, Math.floor(bw * theme.candleBody)));
     for (let i = a; i <= b; i++) {
       const o = d.o[i]; const c = d.c[i]; const hh = d.h[i]; const ll = d.l[i];
       if (o == null || c == null || hh == null || ll == null) continue;
       const x = Math.round(xOf(i));
       const up = c >= o;
-      ctx.fillStyle = up ? theme['--pos'] : theme['--neg'];
+      ctx.fillStyle = up ? theme.up : theme.down;
       ctx.fillRect(x, pp.yOf(hh), 1, Math.max(1, pp.yOf(ll) - pp.yOf(hh)));
       const y0 = pp.yOf(Math.max(o, c));
       ctx.fillRect(x - Math.floor(body / 2), y0, body, Math.max(1, pp.yOf(Math.min(o, c)) - y0));
     }
     for (const ov of OVERLAYS) {
       if (!overlays.has(ov.id) || ov.id === 'boll' || ov.id === 'donch') continue;
-      line(pp, ind[ov.id], theme[ov.color], ov.id === 'vwap' ? { dash: [5, 3], width: 1.5 } : {});
+      line(pp, ind[ov.id], theme[ov.color], ov.id === 'vwap' ? { dash: theme.dashRef, width: theme.lineWidthThin } : {});
     }
 
     // operazioni del fondo su questo strumento
@@ -239,11 +273,11 @@ export function candleChart(host, { label = 'Grafico a candele' } = {}) {
         const y = Math.round(pp.yOf(m.price)) + 0.5;
         if (y < pp.y0 || y > pp.y1) continue;
         const x0 = Math.max(0, xOf(Math.max(idx, a)));
-        ctx.strokeStyle = theme[m.color] || theme['--accent'];
-        ctx.setLineDash([4, 3]);
+        ctx.strokeStyle = theme[m.color] || theme.accent;
+        ctx.setLineDash(theme.dashRef);
         ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(plotW, y); ctx.stroke();
         ctx.setLineDash([]);
-        ctx.fillStyle = theme[m.color] || theme['--accent'];
+        ctx.fillStyle = theme[m.color] || theme.accent;
         ctx.textAlign = 'right';
         ctx.fillText(m.label, plotW - 4, y - 7);
         continue;
@@ -251,15 +285,15 @@ export function candleChart(host, { label = 'Grafico a candele' } = {}) {
       if (idx < a || idx > b || m.price == null) continue;
       const x = xOf(idx);
       const y = pp.yOf(m.price);
-      const s = 5;
-      ctx.fillStyle = m.kind === 'entry' ? theme['--accent'] : m.kind === 'stop' ? theme['--crit'] : theme['--text'];
-      ctx.strokeStyle = theme['--surface'];
-      ctx.lineWidth = 1.5;
+      const s = theme.dotRadius + 1;
+      ctx.fillStyle = m.kind === 'entry' ? theme.accent : m.kind === 'stop' ? theme.crit : theme.text;
+      ctx.strokeStyle = theme.surface;
+      ctx.lineWidth = theme.lineWidthThin;
       ctx.beginPath();
       if (m.kind === 'entry') { ctx.moveTo(x, y + 3); ctx.lineTo(x - s, y + 3 + s * 1.7); ctx.lineTo(x + s, y + 3 + s * 1.7); }
       else { ctx.moveTo(x, y - 3); ctx.lineTo(x - s, y - 3 - s * 1.7); ctx.lineTo(x + s, y - 3 - s * 1.7); }
       ctx.closePath(); ctx.stroke(); ctx.fill();
-      ctx.lineWidth = 1;
+      ctx.lineWidth = theme.gridWidth;
     }
 
     // ---- volume ----
@@ -267,58 +301,58 @@ export function candleChart(host, { label = 'Grafico a candele' } = {}) {
     let vmax = 0;
     for (let i = a; i <= b; i++) if (d.v[i] > vmax) vmax = d.v[i];
     scale(vp, 0, vmax || 1);
-    ctx.globalAlpha = 0.55;
+    ctx.globalAlpha = theme.volumeOpacity;
     for (let i = a; i <= b; i++) {
       if (d.v[i] == null) continue;
-      ctx.fillStyle = d.c[i] >= d.o[i] ? theme['--pos'] : theme['--neg'];
+      ctx.fillStyle = d.c[i] >= d.o[i] ? theme.up : theme.down;
       const y = vp.yOf(d.v[i]);
       ctx.fillRect(Math.round(xOf(i)) - Math.floor(body / 2), y, body, vp.y1 - y);
     }
     ctx.globalAlpha = 1;
     title(vp);
-    ctx.fillStyle = theme['--text-3']; ctx.textAlign = 'left'; ctx.fillText(compact(vmax), plotW + 6, vp.y0 + 6);
+    ctx.fillStyle = theme.textMuted; ctx.textAlign = 'left'; ctx.fillText(compact(vmax), plotW + 6, vp.y0 + 6);
 
     // ---- pannelli sotto ----
     for (const p of ps.slice(2)) {
-      ctx.strokeStyle = theme['--axis'];
+      ctx.strokeStyle = theme.axis;
       ctx.beginPath(); ctx.moveTo(0, p.y0 - 1.5); ctx.lineTo(W, p.y0 - 1.5); ctx.stroke();
       if (p.id === 'atr') {
         let m = 0;
         for (let i = a; i <= b; i++) if (ind.atr[i] > m) m = ind.atr[i];
         scale(p, 0, (m || 0.01) * 1.1);
         grid(p, [p.hi / 2.2], (v) => fmtPct(v, 1));
-        line(p, ind.atr, theme['--text-2']);
+        line(p, ind.atr, theme.textSoft);
       } else if (p.id === 'rsi') {
         scale(p, 0, 100);
-        band(p, 30, 70, theme['--text-3'], 0.07);
+        band(p, 30, 70, theme.textMuted, theme.bandOpacity * 0.55);
         grid(p, [30, 70], (v) => fmtNum(v, 0));
-        line(p, ind.rsi, theme['--s2']);
+        line(p, ind.rsi, theme.s2);
       } else if (p.id === 'conv') {
         const th = (d.thresholds && d.thresholds.conviction) || [0.6, 0.75];
         scale(p, 0, 1);
-        band(p, th[0], th[1], theme['--accent'], 0.12);
-        band(p, th[1], 1, theme['--accent'], 0.26);
+        band(p, th[0], th[1], theme.accent, theme.bandOpacity);
+        band(p, th[1], 1, theme.accent, theme.bandOpacityStrong);
         grid(p, th, (v) => fmtNum(v, 2));
-        line(p, d.conviction, theme['--accent'], { step: true, width: 1.5 });
+        line(p, d.conviction, theme.accent, { step: true, width: theme.lineWidthThin });
       } else if (p.id === 'gq') {
         const th = (d.thresholds && d.thresholds.gq) || [-0.5, 0.53, 1.42];
         let m = 2;
         for (let i = a; i <= b; i++) if (d.gq[i] != null && Math.abs(d.gq[i]) > m) m = Math.abs(d.gq[i]);
         scale(p, -m * 1.05, m * 1.05);
-        band(p, -m * 1.05, th[0], theme['--neg'], 0.1);
-        band(p, th[1], th[2], theme['--accent'], 0.12);
-        band(p, th[2], m * 1.05, theme['--accent'], 0.26);
+        band(p, -m * 1.05, th[0], theme.down, theme.bandOpacity * 0.8);
+        band(p, th[1], th[2], theme.accent, theme.bandOpacity);
+        band(p, th[2], m * 1.05, theme.accent, theme.bandOpacityStrong);
         grid(p, th, (v) => fmtNum(v, 2));
-        line(p, d.gq, theme['--s5'], { width: 1.5 });
+        line(p, d.gq, theme.s5, { width: theme.lineWidthThin });
       }
       title(p);
     }
 
     // ---- asse del tempo ----
     const base = H - AXIS;
-    ctx.strokeStyle = theme['--axis'];
+    ctx.strokeStyle = theme.axis;
     ctx.beginPath(); ctx.moveTo(0, base + 0.5); ctx.lineTo(W, base + 0.5); ctx.moveTo(plotW + 0.5, 0); ctx.lineTo(plotW + 0.5, base); ctx.stroke();
-    ctx.fillStyle = theme['--text-3'];
+    ctx.fillStyle = theme.textMuted;
     ctx.textAlign = 'center';
     const spanDays = (d.t[b] - d.t[a]) / DAY;
     const months = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
@@ -338,10 +372,17 @@ export function candleChart(host, { label = 'Grafico a candele' } = {}) {
 
     // ---- mirino ----
     geo = { a, b, bw, plotW, ps, xOf };
+    if (a !== lastA || b !== lastB) {
+      lastA = a;
+      lastB = b;
+      if (!silentWin) for (const fn of winSubs) fn([d.t[a], d.t[b]]);
+      if (fallback) fallback.refresh();
+    }
+    silentWin = false;
     if (hover != null && hover >= a && hover <= b) {
       const x = Math.round(xOf(hover)) + 0.5;
-      ctx.strokeStyle = theme['--text-3'];
-      ctx.setLineDash([3, 3]);
+      ctx.strokeStyle = theme.crosshair;
+      ctx.setLineDash(theme.dashCross);
       ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, base); ctx.stroke();
       const hp = hoverY == null ? null : ps.find((p) => hoverY >= p.y0 && hoverY <= p.y1);
       if (hp && hp.vOf) {
@@ -350,9 +391,9 @@ export function candleChart(host, { label = 'Grafico a candele' } = {}) {
         ctx.setLineDash([]);
         const v = hp.vOf(hoverY);
         const txt = hp.id === 'price' ? price(v) : hp.id === 'vol' ? compact(v) : hp.id === 'atr' ? fmtPct(v, 1) : fmtNum(v, 2);
-        ctx.fillStyle = theme['--text'];
+        ctx.fillStyle = theme.text;
         ctx.fillRect(plotW + 1, y - 8, GUTTER - 1, 16);
-        ctx.fillStyle = theme['--surface'];
+        ctx.fillStyle = theme.surface;
         ctx.textAlign = 'left';
         ctx.fillText(txt, plotW + 6, y);
       }
@@ -426,14 +467,13 @@ export function candleChart(host, { label = 'Grafico a candele' } = {}) {
       clampView();
     }
     const r = canvas.getBoundingClientRect();
-    hover = indexAt(e.clientX);
-    hoverY = e.clientY - r.top;
+    setHover(indexAt(e.clientX), e.clientY - r.top);
     request();
   });
   const endDrag = () => { drag = null; };
   canvas.addEventListener('pointerup', endDrag);
   canvas.addEventListener('pointercancel', endDrag);
-  canvas.addEventListener('pointerleave', () => { if (!drag) { hover = null; hoverY = null; request(); } });
+  canvas.addEventListener('pointerleave', () => { if (!drag) { setHover(null); request(); } });
   canvas.addEventListener('dblclick', () => { if (d) { i0 = -1; i1 = d.t.length + 2; clampView(); request(); } });
   canvas.addEventListener('keydown', (e) => {
     if (!d) return;
@@ -445,8 +485,7 @@ export function candleChart(host, { label = 'Grafico a candele' } = {}) {
       const dir = e.key === 'ArrowLeft' ? -1 : 1;
       if (e.shiftKey) { i0 += dir * stepBig; i1 += dir * stepBig; clampView(); }
       else {
-        hover = Math.max(0, Math.min(n - 1, cur + dir));
-        hoverY = null;
+        setHover(Math.max(0, Math.min(n - 1, cur + dir)));
         if (hover < i0) { const w = i1 - i0; i0 = hover - 2; i1 = i0 + w; clampView(); }
         if (hover > i1) { const w = i1 - i0; i1 = hover + 2; i0 = i1 - w; clampView(); }
         live.textContent = `${fmtDate(d.t[hover], true)}: apertura ${price(d.o[hover])}, massimo ${price(d.h[hover])}, minimo ${price(d.l[hover])}, chiusura ${price(d.c[hover])}`;
@@ -455,16 +494,14 @@ export function candleChart(host, { label = 'Grafico a candele' } = {}) {
     else if (e.key === '-' || e.key === '_') zoom(1.3, cur);
     else if (e.key === 'Home') { const w = i1 - i0; i0 = -1; i1 = i0 + w; clampView(); }
     else if (e.key === 'End') { const w = i1 - i0; i1 = n + 2; i0 = i1 - w; clampView(); }
-    else if (e.key === 'Escape') { hover = null; }
+    else if (e.key === 'Escape') { setHover(null); }
     else used = false;
     if (used) { e.preventDefault(); request(); }
   });
 
   const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(resize) : null;
   if (ro) ro.observe(plot);
-  const mo = new MutationObserver(() => { theme = null; request(); });
-  mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-  mo.observe(document.body, { attributes: true, attributeFilter: ['data-level'] });
+  const offTheme = onChartThemeChange(request);
 
   function setRange(months) {
     if (!d) return;
@@ -488,7 +525,8 @@ export function candleChart(host, { label = 'Grafico a candele' } = {}) {
       const atEnd = d ? i1 >= d.t.length - 1 : true;
       const grown = d && next ? next.t.length - d.t.length : 0;
       d = next && next.t && next.t.length >= 2 ? next : null;
-      hover = null;
+      setHover(null);
+      lastA = -1;
       if (d) {
         compute();
         if (same) { if (atEnd && grown > 0) { i0 += grown; i1 += grown; } clampView(); request(); }
@@ -497,10 +535,42 @@ export function candleChart(host, { label = 'Grafico a candele' } = {}) {
       paintReadout();
     },
     setOverlays(ids) { overlays = new Set(ids); request(); },
+    setPanes(ids) { subPanes = new Set(ids); request(); },
     setLog(on) { log = !!on; request(); },
     setRange,
     redraw: resize,
     get view() { return d ? { from: Math.max(0, Math.round(i0)), to: Math.min(d.t.length - 1, Math.round(i1)) } : null; },
-    destroy() { if (ro) ro.disconnect(); mo.disconnect(); },
+    /** fn(t | null, indice | null) a ogni spostamento del mirino; restituisce la funzione che toglie l'ascolto. */
+    onHover(fn) { hoverSubs.add(fn); return () => hoverSubs.delete(fn); },
+    /** Mirino comandato da un altro grafico: si posa sulla barra più vicina a t, senza avvisare gli ascoltatori. */
+    setHoverTime(t) {
+      if (!d || drag) return;
+      let i = null;
+      if (t != null && t >= d.t[0] - DAY && t <= d.t[d.t.length - 1] + DAY) {
+        let lo = 0;
+        let hi = d.t.length - 1;
+        while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (d.t[mid] < t) lo = mid; else hi = mid; }
+        i = Math.abs(d.t[lo] - t) <= Math.abs(d.t[hi] - t) ? lo : hi;
+      }
+      hover = i;
+      hoverY = null;
+      request();
+    },
+    /** Finestra visibile per date (ms): usata da linkCharts per tenere allineati più grafici. */
+    setWindow(t0, t1, { silent = false } = {}) {
+      if (!d) return;
+      let a = 0;
+      while (a < d.t.length - 1 && d.t[a] < t0) a++;
+      let b = d.t.length - 1;
+      while (b > a && d.t[b] > t1) b--;
+      i0 = a - 0.5;
+      i1 = b + 0.5;
+      clampView();
+      silentWin = silent;
+      request();
+    },
+    resetWindow() { setRange(null); },
+    onWindow(fn) { winSubs.add(fn); return () => winSubs.delete(fn); },
+    destroy() { if (ro) ro.disconnect(); offTheme(); },
   };
 }
