@@ -21,6 +21,10 @@ esac
 if [ ! -x "$PY" ]; then
   echo "creo l'ambiente Python in .venv ..."; python3 -m venv .venv; "$PY" -m pip install -q --upgrade pip; "$PY" -m pip install -q -r requirements.txt
 fi
+# Certificati di sicurezza: il Python ufficiale per Mac non li ha e rifiuta ogni collegamento (CERTIFICATE_VERIFY_FAILED).
+"$PY" -m pip install -q certifi
+export SSL_CERT_FILE="$("$PY" -c 'import certifi; print(certifi.where())')"
+export REQUESTS_CA_BUNDLE="$SSL_CERT_FILE"
 [ -f "$ROOT/secrets/gerva.env" ] && { set -a; . "$ROOT/secrets/gerva.env"; set +a; }
 echo "controllo del broker (sola lettura) ..."; "$PY" -m gerva check-broker || { echo "il broker non risponde: correggi prima di avviare"; exit 1; }
 stop >/dev/null 2>&1 || true
