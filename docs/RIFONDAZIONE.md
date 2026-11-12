@@ -611,6 +611,43 @@ La certezza in più può venire solo da dati nuovi, cioè dal paper trading.
 
 ---
 
+## 13. Automiglioramento, profilo scelto e avvio del paper
+
+### 13.1 Il ciclo di automiglioramento
+
+```
+memoria dei trade → valutazione → ipotesi → validazione → ombra → approvazione di Andrea → attiva
+        ▲                                                                                    │
+        └──────────────────────────────── nuovi trade ───────────────────────────────────────┘
+```
+
+Codice in [`gerva/learn/`](../gerva/learn/), 10 test; comando `python -m gerva learn`; pagina "Apprendimento" della dashboard.
+
+| Passo | Che cosa fa | Chi lo fa |
+|---|---|---|
+| Memoria | Registra ogni trade chiuso: contesto d'ingresso (conviction, indicatore Gervasoni, volatilità, trend di Bitcoin, funding, giorno), prezzi, costi, escursione massima a favore e contro, motivo di uscita | Codice |
+| Valutazione | Prestazione, rischio, robustezza; cerca le fette di trade che rendono meno delle altre | Codice |
+| Ipotesi | Trasforma una debolezza in una regola: "se la grandezza X supera la soglia Y, salta il trade (o dimezzalo)" | Codice; un agente LLM può aggiungerne, con le stesse regole |
+| Validazione | In campione, fuori campione, anno per anno, soglie vicine, quota dei trade toccati; soglia statistica che sale con il numero di ipotesi provate | Codice, mai chi ha proposto |
+| Ombra | La regola si misura sui trade paper senza agire; servono almeno 20 trade colpiti che rendano meno degli altri | Codice |
+| Attivazione | `python -m gerva learn --approve <id> --confirm` | Solo tu |
+
+Tre garanzie fatte rispettare dal codice: chi propone non approva; una regola può solo saltare o dimezzare un trade, mai aumentare rischio, leva o esposizione; ogni ipotesi provata resta contata per sempre e alza la soglia per le successive.
+
+- **Scelta:** regole dichiarative, non codice generato da un agente.
+- **Motivazione:** una regola è un dato che si legge in una riga e che per costruzione non può alzare il rischio; codice scritto da un LLM e messo in produzione da solo è il modo più rapido per introdurre un errore o un sovradattamento.
+- **Alternative scartate:** agente che riscrive la strategia e la rilancia (come nello schema che mi hai mostrato); riottimizzazione periodica dei parametri (provata nella seconda tornata: peggiora fuori campione).
+
+**Primo giro, sui 652 trade storici (SIMULATO):** due fette sospette, i trade con volatilità oltre il 7,2% del prezzo e quelli aperti di martedì; quattro ipotesi; tutte respinte. In verifica quelle fette rendono più delle altre (+0,42 e +0,50 R contro +0,15 e +0,12): attivarle avrebbe tolto rendimento. È l'esito normale: il ciclo serve soprattutto a non credere ai falsi miglioramenti.
+
+![Pagina Apprendimento (rapporto di esempio)](img/dashboard-v5-apprendimento.png)
+
+### 13.2 Profilo scelto e avvio
+
+Scelta, numeri e istruzioni sono in [`PAPER.md`](PAPER.md). In breve: libro giornaliero a volatilità obiettivo 15% con leva al massimo 2x, trade a margine isolato con rischio 0,5% / 1%, scalini di rischio a −15% / −22% / −30%. Simulato con il motore di rischio dentro: 36,9% l'anno (34,6% dal 2023), Sharpe 1,21, caduta massima −19%.
+
+---
+
 ## Riepilogo di una pagina
 
 Aggiornato dopo la sesta tornata. Tutto SIMULATO.
@@ -626,14 +663,15 @@ Aggiornato dopo la sesta tornata. Tutto SIMULATO.
 - **Sedi:** IBKR, più Kraken o OKX Europe a 10x; Hyperliquid solo come quota a perdere.
 - **Veicolo:** persona fisica; denaro dei familiari solo come donazione o prestito.
 - **Costi fissi:** 60–260 € al mese, cioè dal 7% al 30% l'anno su 10.000 €.
-- **Una decisione aperta:** con gli scalini di rischio di oggi il profilo massimo rende il 25% l'anno. O si allargano gli scalini, o si sceglie il profilo prudente.
+- **Profilo scelto per il paper:** libro giornaliero fino a 2x, trade a 0,5% / 1%, scalini a −15 / −22 / −30%. Simulato con il motore di rischio dentro: 36,9% l'anno, cioè circa 2,6% al mese, caduta massima −19%.
+- **Automiglioramento:** il sistema registra ogni trade, cerca dove perde, propone correzioni che possono solo ridurre il rischio e le fa validare da codice indipendente; le attivi solo tu.
 
 ## I primi cinque passi
 
-1. **Avviare il paper su un server tuo** (`python -m gerva supervise`, più `python -m gerva trades` una volta al giorno) e lo strumento di confronto con il sistema originale.
+1. **Avviare il paper su un server tuo** con `bash deploy/avvia_paper.sh` o con Docker ([`PAPER.md`](PAPER.md)).
 2. **Scrivere l'adattatore per Kraken demo e Hyperliquid testnet**, con lo stop che nasce insieme all'ordine e l'ingresso con ordine limite all'apertura.
 3. **Provare su testnet le due ipotesi di sicurezza**: la chiave del server non può prelevare; il "cancella tutto" non rimuove gli stop.
-4. **Decidere gli scalini di rischio** e quindi il profilo: prudente con quelli di oggi, massimo solo allargandoli.
+4. **Tenere aggiornato il valore del conto originale** in `legacy_nav.csv`, una riga al giorno: senza quel dato il confronto non parte.
 5. **Portare al commercialista e all'avvocato** le domande della sezione 6, prima di depositare un euro.
 
 ## Fonti principali
