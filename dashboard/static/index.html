@@ -2,19 +2,20 @@
 <html lang="it">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark light">
 <meta name="robots" content="noindex, nofollow">
 <title>GERVA Capital · Console</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="preload" href="fonts/general-sans-500.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/glass.css">
 <script src="js/theme-init.js"></script>
 <script type="module" src="js/main.js"></script>
 </head>
-<body data-conn="loading">
+<body data-conn="loading" data-level="semplice">
 <a class="skip-link" href="#main">Salta al contenuto</a>
+<div class="aurora" id="aurora" aria-hidden="true"><i class="a1"></i><i class="a2"></i><i class="a3"></i><i class="a4"></i><i class="a5"></i><i class="a6"></i></div>
 
 <svg xmlns="http://www.w3.org/2000/svg" class="sprite" aria-hidden="true" focusable="false">
   <symbol id="i-overview" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="9" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="5" rx="1.5"/><rect x="13.5" y="11.5" width="7" height="9" rx="1.5"/><rect x="3.5" y="15.5" width="7" height="5" rx="1.5"/></symbol>
@@ -53,61 +54,88 @@
   <symbol id="i-lever" viewBox="0 0 24 24"><path d="M3.500 17.500 20.500 8.500M12 13v6.500M8 19.500h8"/><circle cx="6" cy="12.500" r="2.200"/><circle cx="18" cy="6" r="2.200"/></symbol>
   <symbol id="i-learn" viewBox="0 0 24 24"><path d="M19.500 12a7.500 7.500 0 1 1-2.200-5.300M19.500 4.500v4h-4M12 8.500v4l2.500 1.500"/></symbol>
   <symbol id="i-empty" viewBox="0 0 24 24"><path d="M4 13.5 6.5 5.5h11L20 13.5v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M4 13.5h4.5l1 2h5l1-2H20"/></symbol>
+  <linearGradient id="g-area-fund" x1="0" y1="0" x2="0" y2="1"><stop class="g-stop g-stop--fund-a" offset="0"/><stop class="g-stop g-stop--fund-b" offset="1"/></linearGradient>
+  <linearGradient id="g-area-dd" x1="0" y1="0" x2="0" y2="1"><stop class="g-stop g-stop--dd-b" offset="0"/><stop class="g-stop g-stop--dd-a" offset="1"/></linearGradient>
+  <filter id="gerva-lens" x="-4%" y="-4%" width="108%" height="108%" color-interpolation-filters="sRGB">
+    <feTurbulence type="fractalNoise" baseFrequency="0.016 0.028" numOctaves="1" seed="7" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="22" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+  <symbol id="i-today" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="9" rx="2"/><rect x="13.5" y="3.5" width="7" height="5" rx="2"/><rect x="13.5" y="11.5" width="7" height="9" rx="2"/><rect x="3.5" y="15.5" width="7" height="5" rx="2"/></symbol>
+  <symbol id="i-trade" viewBox="0 0 24 24"><path d="M7 4v4M7 15v5M17 4v3M17 16v4"/><rect x="4.5" y="8" width="5" height="7" rx="1.5"/><rect x="14.5" y="7" width="5" height="9" rx="1.5"/></symbol>
+  <symbol id="i-portfolio" viewBox="0 0 24 24"><path d="M12 3.5a8.500 8.500 0 1 0 8.500 8.500H12z"/><path d="M15 3.900a8.500 8.500 0 0 1 5.100 5.100H15z"/></symbol>
+  <symbol id="i-evidence" viewBox="0 0 24 24"><path d="M12 4v16M6 20h12M5 8h14"/><path d="M5 8l-2.500 6a2.500 2.500 0 0 0 5 0zM19 8l-2.500 6a2.500 2.500 0 0 0 5 0z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.500"/><path d="m16 16 4.500 4.500"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16.500V11a6 6 0 1 1 12 0v5.500l1.500 1.500h-15zM10 20.500h4"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><path d="M5.500 12h.2M12 12h.2M18.500 12h.2" stroke-width="2.600"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.500"/><path d="M9.700 9.600a2.400 2.400 0 1 1 3.500 2.100c-.8.500-1.200 1-1.200 1.900M12 16.600v.2"/></symbol>
+  <symbol id="i-level" viewBox="0 0 24 24"><path d="M4 18.500h16M6.500 18.500v-5M12 18.500v-9M17.500 18.500v-13"/></symbol>
 </svg>
 
-<div class="modebar" id="modebar" data-kind="wait" role="status" aria-label="Natura dei dati">
-  <span class="modebar__tag" id="modebar-tag">In attesa dei dati</span>
-  <span class="modebar__label" id="modebar-label"></span>
-  <span class="modebar__meta" id="modebar-meta"></span>
-</div>
-
-<div class="shell">
-  <aside class="rail">
-    <a class="brand" href="#/panoramica" aria-label="GERVA Capital, vai alla panoramica">
-      <span class="brand__name">GERVA</span><span class="brand__sub">Capital</span>
-    </a>
-    <nav class="nav" id="nav" aria-label="Sezioni"></nav>
-    <div class="rail__foot" id="rail-foot"></div>
-  </aside>
-
-  <header class="topbar">
-    <a class="brand brand--compact" href="#/panoramica" aria-label="GERVA Capital, vai alla panoramica">
-      <span class="brand__name">GERVA</span><span class="brand__sub">Capital</span>
-    </a>
-    <h1 class="topbar__title" id="view-title" tabindex="-1">Panoramica</h1>
-    <div class="topbar__tools">
-      <div id="level-switch"></div>
-      <button class="btn btn--ghost btn--sm" id="glossary-btn" type="button" aria-haspopup="dialog">
-        <svg class="icon" aria-hidden="true"><use href="#i-book"/></svg><span>Glossario</span>
-      </button>
+<div class="app" id="app">
+  <header class="capsule lensed" id="capsule"><i class="bd" aria-hidden="true"></i>
+    <div class="band" id="modebar" data-kind="wait" role="status" aria-label="Natura dei dati">
+      <span class="tag tag--wait" id="modebar-tag">In attesa dei dati</span>
+      <span class="band__label" id="modebar-label"></span>
+      <span class="sr-only" id="modebar-meta"></span>
     </div>
-    <div class="topbar__right">
-      <a class="pill" id="risk-pill" href="#/rischio" data-state="unknown" hidden></a>
-      <div class="conn" id="conn" data-state="loading" role="status" aria-live="polite">
-        <span class="conn__dot" aria-hidden="true"></span>
-        <span class="conn__text" id="conn-text">Connessione…</span>
-        <span class="conn__short" id="conn-short" aria-hidden="true"></span>
-      </div>
-      <button class="icon-btn" id="theme-toggle" type="button" aria-label="Cambia tema">
+    <span class="band__sep" aria-hidden="true"></span>
+    <a class="pill" id="risk-pill" href="#/rischio" data-state="unknown" hidden></a>
+    <span class="band__why" id="risk-why"></span>
+    <div class="live" id="conn" data-state="loading" role="status" aria-live="polite">
+      <span class="live__dot" aria-hidden="true"></span>
+      <span class="live__text" id="conn-text">Connessione…</span>
+      <span class="live__short" id="conn-short" aria-hidden="true"></span>
+    </div>
+    <a class="band__item" id="sys-item" href="#/sistema" hidden></a>
+    <button class="band__item" id="alerts-btn" type="button" aria-haspopup="dialog" hidden><svg class="icon icon--sm" aria-hidden="true"><use href="#i-bell"/></svg><span class="wide-only">Avvisi</span><b id="alerts-n">0</b></button>
+    <div class="capsule__right">
+      <div id="level-switch"></div>
+      <button class="icon-btn icon-btn--sm" id="theme-toggle" type="button" aria-label="Cambia tema">
         <svg class="icon" aria-hidden="true"><use id="theme-toggle-icon" href="#i-sun"/></svg>
+      </button>
+      <button class="btn btn--kill btn--sm" id="kill-open" type="button" aria-haspopup="dialog" data-ready="wait" aria-label="Arresto di emergenza: apre la conferma, non invia">
+        <svg class="icon icon--sm" aria-hidden="true"><use href="#i-power"/></svg><span>KILL</span><small id="kill-state">…</small>
       </button>
     </div>
   </header>
-
-  <div class="connbar" id="connbar" role="alert" hidden>
-    <svg class="icon" aria-hidden="true"><use id="connbar-icon" href="#i-warn"/></svg>
-    <strong class="connbar__title" id="connbar-title"></strong>
-    <span class="connbar__text" id="connbar-text"></span>
-  </div>
-
-  <main class="main" id="main" tabindex="-1">
-    <div class="pagehead">
-      <p class="summary only-semplice" id="summary" hidden></p>
-      <p class="sources" id="sources"></p>
+  <aside class="rail lensed" id="rail" aria-label="Navigazione"><i class="bd" aria-hidden="true"></i>
+    <a class="brand" href="#/oggi" aria-label="GERVA Capital, vai a Oggi">
+      <span class="brand__name">GERVA</span><span class="brand__sub">Capital</span>
+    </a>
+    <nav class="nav" id="nav" aria-label="Spazi"></nav>
+    <div class="rail__tools">
+      <button class="nav__link" id="search-btn" type="button" aria-haspopup="dialog"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg><span class="nav__label">Cerca</span><span class="nav__key" aria-hidden="true">/</span></button>
+      <button class="nav__link" id="glossary-btn" type="button" aria-haspopup="dialog"><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg><span class="nav__label">Glossario e guida</span><span class="nav__key" aria-hidden="true">?</span></button>
     </div>
-    <div class="view" id="view"></div>
-  </main>
+    <div class="rail__foot" id="rail-foot" aria-label="Da dove vengono i numeri"></div>
+  </aside>
+
+  <div class="page">
+
+    <div class="connbar" id="connbar" role="alert" hidden>
+      <svg class="icon" aria-hidden="true"><use id="connbar-icon" href="#i-warn"/></svg>
+      <strong class="connbar__title" id="connbar-title"></strong>
+      <span class="connbar__text" id="connbar-text"></span>
+      <button class="btn btn--sm btn--ghost" id="connbar-ack" type="button" hidden>Prendi in carico</button>
+    </div>
+
+    <main class="main" id="main" tabindex="-1">
+      <div class="pagehead">
+        <div class="pagehead__row">
+          <h1 class="pagehead__title" id="view-title" tabindex="-1">Oggi</h1>
+          <span class="pagehead__date num" id="view-date"></span>
+          <button class="chip chip--accent not-semplice" id="summary-btn" type="button" aria-expanded="false" aria-controls="summary" hidden>In una frase</button>
+          <div class="pagehead__tabs" id="tabs"></div>
+        </div>
+        <p class="summary" id="summary" hidden></p>
+        <p class="sources only-esperto" id="sources"></p>
+      </div>
+      <div class="view" id="view"></div>
+    </main>
+  </div>
 </div>
+
+<nav class="dock lensed" id="dock" aria-label="Spazi"><i class="bd" aria-hidden="true"></i></nav>
 
 <dialog class="dialog" id="kill-dialog" aria-labelledby="kill-title">
   <form class="dialog__form" id="kill-form" method="dialog" novalidate autocomplete="off">
@@ -116,6 +144,7 @@
       <h2 class="dialog__title" id="kill-title">Arresto di emergenza (KILL)</h2>
     </div>
     <p class="dialog__text">Stai per creare il file KILL sul server. Al ciclo successivo il motore chiude tutte le posizioni e si ferma.</p>
+    <ul class="dialog__preview" id="kill-preview" aria-label="Che cosa succede"></ul>
     <p class="dialog__text dialog__text--strong">Da questa pagina non si può annullare: per ripartire va tolto il file a mano sul server e dato il comando di ripristino.</p>
     <label class="field">
       <span class="field__label">Token di sicurezza</span>
@@ -145,6 +174,29 @@
   </div>
   <p class="drawer__intro">Le parole tecniche usate nella console, spiegate in breve. Nel testo sono sottolineate a puntini: toccale per arrivare qui.</p>
   <div class="drawer__body" id="glossary-body"></div>
+</dialog>
+
+<dialog class="sheet" id="cmdk" aria-label="Cerca e vai">
+  <div class="cmdk__top"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
+    <input class="cmdk__input" id="cmdk-input" type="text" autocomplete="off" spellcheck="false" placeholder="Strumento, spazio, termine o azione…" aria-label="Cerca" aria-controls="cmdk-list">
+    <kbd>Esc</kbd></div>
+  <div class="cmdk__list" id="cmdk-list" role="listbox" aria-label="Risultati"></div>
+  <div class="cmdk__foot"><span><kbd>↑</kbd> <kbd>↓</kbd> scegli</span><span><kbd>Invio</kbd> apri</span><span><kbd>Tab</kbd> gruppo successivo</span><span>Nessuna voce scrive: solo navigazione.</span></div>
+</dialog>
+
+<dialog class="sheet" id="alerts-sheet" aria-labelledby="alerts-title">
+  <div class="sheet__head"><h2 class="sheet__title" id="alerts-title">Avvisi</h2><button class="icon-btn icon-btn--sm" type="button" data-close aria-label="Chiudi"><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+  <div class="sheet__body"><div class="alerts" id="alerts-list"></div></div>
+</dialog>
+
+<dialog class="sheet" id="keys-sheet" aria-labelledby="keys-title">
+  <div class="sheet__head"><h2 class="sheet__title" id="keys-title">Scorciatoie da tastiera</h2><button class="icon-btn icon-btn--sm" type="button" data-close aria-label="Chiudi"><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+  <div class="sheet__body"><dl class="keys" id="keys-list"></dl></div>
+</dialog>
+
+<dialog class="sheet" id="more-sheet" aria-labelledby="more-title">
+  <div class="sheet__head"><h2 class="sheet__title" id="more-title">Altro</h2><button class="icon-btn icon-btn--sm" type="button" data-close aria-label="Chiudi"><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+  <div class="sheet__body"><div class="more" id="more-body"></div></div>
 </dialog>
 
 <div class="tooltip" id="tooltip" role="presentation" hidden></div>

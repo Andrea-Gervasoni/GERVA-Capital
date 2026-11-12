@@ -23,7 +23,54 @@ python -c "from gerva.live import snapshot as s; s.write('var/gerva/snapshot.jso
 
 Test: `python -m pytest tests/test_dashboard.py -q`
 
-## Due livelli di lettura
+## Spazi, livelli e sistema visivo (v7)
+
+Il progetto di riferimento è in `design/` (`design_1_sistema_visivo.md`, `design_2_grafici.md`, `design_3_architettura_interazione.md`).
+
+**Sette spazi in due gruppi.** Ogni giorno: **Oggi**, **Mercati**, **Portafoglio**, **Rischio**. Quando serve: **Evidenza**,
+**Apprendimento**, **Sistema**. Indirizzi `#/spazio/scheda?s=BTC`. Oggi, Rischio e Mercati sono nuovi; gli altri spazi ospitano
+per ora le pagine precedenti come schede, e i vecchi indirizzi (`#/panoramica`, `#/ordini`, …) continuano a funzionare.
+
+| Spazio | Che cosa c'è |
+|---|---|
+| Oggi | Patrimonio (cifra che rotola, σ della giornata, i due libri), quanto manca ai freni, cascata «da dove viene il risultato», che cosa è cambiato in 24 ore, trade a leva aperti con il righello, atteso contro reale (cono del profilo del paper), confronto con l'originale, strada verso il denaro reale. |
+| Rischio | Stato e scala dei freni (una sola, orizzontale: caduta, 24 ore, 7 giorni, peggior caso di oggi), tabella delle distanze, il peggio di oggi, tetti di esposizione, leva e volatilità, stress sulle quattro giornate storiche applicate alle posizioni di oggi, dati e ordini, avvisi, rimando al KILL, statistiche. |
+| Mercati | Elenco degli strumenti, grafico a candele (vuota su, piena giù) con volume, medie, VWAP, conviction, GQ in ombra, ATR, RSI e il righello del trade (lastra 1 R, livelli con cartellino), libro dei trade (Aperti, Chiusi, Decisioni). Selezione collegata tra i riquadri. |
+
+**Tre livelli di lettura**, nella capsula in alto (sul telefono nel foglio «Altro»): Semplice (frasi, «Come si legge»), Esperto
+(colonne, note, tabelle), Terminale (binario a icone, riquadri più vicini, nessuna sequenza d'ingresso; sotto gli 860 px ricade su
+Esperto e lo dice). Il livello è una preferenza del browser (`l` lo cambia).
+
+**Fascia di stato** nella capsula che galleggia: provenienza e modalità (ESEMPIO / SIMULATO / PAPER / REALE, distinte anche dalla
+forma del bordo), stato del rischio con scala e motivo, età dei dati (il punto respira solo se sono freschi), sistema se non è
+tutto a posto, avvisi con contatore, livello, tema, **KILL**. Con dati fermi o offline lo stato diventa **Sconosciuto** e riporta
+l'ultimo visto: mai l'ultimo «sicuro». Stati critici aggiungono una riga con «Prendi in carico» (resta nel browser).
+
+**KILL.** Il pulsante nella capsula dice se è pronto, spento o già attivo e apre soltanto la finestra: anteprima degli effetti
+(posizioni, controvalore, trade a leva aperti), token, motivo, parola KILL. Il fuoco parte da «Annulla», Invio nel campo del token
+non invia, Esc chiude e svuota. È l'unica scrittura della dashboard.
+
+**Tastiera.** `/` o `Ctrl K` tavolozza (strumenti, spazi, glossario, azioni: nessuna voce scrive) · `g` poi `o m p r e a s` spazi ·
+`g t` libro dei trade · `g b` ordini · `l` livello · `i` «In una frase» · `a` avvisi · `?` scorciatoie · `Maiusc K` finestra del KILL ·
+in Mercati `j k` strumento, `1…5` intervalli, `[ ]` trade · sui grafici frecce, `+ − 0`, Inizio/Fine. Ordine del fuoco: fascia di
+stato → binario → contenuto.
+
+**Sistema visivo.** `css/tokens.css` contiene per intero `design/tokens.glass.css` (stessi nomi di prima: scuro predefinito, chiaro
+solo a scelta dell'utente) più i ruoli `--chart-*` del linguaggio dei grafici. `css/glass.css` applica materiali (pannello,
+rialzato, cromatura con smusso, foglio), fondale a sei luci che derivano a passi, comandi lucidi, segmentati con cursore che cambia
+posto e larghezza, ingressi da sfocato a nitido. I valori dinamici (cursore, indice d'ingresso, parallasse, rotolo delle cifre)
+sono proprietà personalizzate impostate via CSSOM: la CSP resta senza stili in linea.
+
+**Ripieghi.** `prefers-reduced-motion`: restano solo le dissolvenze. `prefers-reduced-transparency` e browser senza
+`backdrop-filter`: superfici piene. **Vetro leggero**: all'avvio la pagina misura il costo di un fotogramma; oltre 34 ms i pannelli
+diventano pieni (capsula e binario restano di vetro). Si sceglie anche a mano dalla tavolozza («Vetro pieno o leggero»); la scelta
+resta nel browser (`gerva.dash.glass`).
+
+**Grafici.** Il tratto dice la provenienza: puntinato ESEMPIO, tratteggiato SIMULATO, pieno PAPER e REALE; soglie e mirino sono
+pieni. Le mappe di calore usano la rampa blu ↔ arancio a nove passi con il numero in ogni cella; verde e rosso solo con segno e forma.
+Soglie e tetti arrivano sempre dalla fotografia (`risk.dd_ladder`, `risk.limits`): se mancano si legge «soglia non letta».
+
+## Due livelli di lettura (pagine precedenti)
 
 In alto c'è un interruttore **Semplice / Esperto** (ricordato nel browser, parte da Semplice).
 
@@ -187,7 +234,10 @@ static/js/market.js       letture di prezzi, libro dei trade, storico, confronto
 static/grafici.html       galleria tecnica: ogni primitiva con i dati di esempio (non è una pagina del prodotto)
 static/js/glossary.js     definizioni e termini cliccabili
 static/js/flow.js         diagramma di flusso cliccabile (Come funziona, Apprendimento)
-static/js/views/          una sezione per file (dodici)
+static/js/views/          oggi.js, rischio2.js, mercati.js (spazi nuovi) e le dodici pagine precedenti
+static/js/panels.js       riquadri degli spazi nuovi: scheda, provenienza, scala dei freni, righello del trade, rotolo, tetti
+static/js/cmd.js          tavolozza e scorciatoie
+static/css/glass.css      guscio «vetro liquido»: fondale, materiali, cromature, comandi, coreografia, ripieghi
 static/sample_snapshot.json   esempio DEMO, coerente al centesimo (lo verifica il test)
 ```
 

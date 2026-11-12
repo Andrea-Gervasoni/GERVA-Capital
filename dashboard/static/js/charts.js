@@ -699,6 +699,14 @@ export function sparkline(values, { width = 132, height = 36, label = 'Andamento
 
 const MONTHS = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
 
+/** Passo della rampa divergente blu ↔ arancio (1…9, 5 = neutro) per un valore in −1…+1: positivo = blu. */
+export function divStep(t) {
+  const a = Math.abs(t);
+  if (!(a >= 0.08)) return 5;
+  const st = a < 0.3 ? 1 : a < 0.55 ? 2 : a < 0.8 ? 3 : 4;
+  return t > 0 ? 5 - st : 5 + st;
+}
+
 /**
  * grid: risultato di monthlyGrid(). Verde/rosso sono il segno del rendimento, e ogni cella porta comunque
  * il numero con il suo segno: il colore non è mai l'unico canale. Su schermi stretti la tabella si traspone
@@ -710,12 +718,7 @@ export function heatmap(host, grid) {
   function cell(year, month) {
     const r = grid.cell.get(`${year}-${month}`);
     if (r == null) return h('td', { class: 'hm__cell hm__cell--empty' });
-    const k = Math.min(1, Math.abs(r) / grid.scale);
-    const td = h('td', {
-      class: `hm__cell num ${r > 0 ? 'hm__cell--pos' : r < 0 ? 'hm__cell--neg' : ''}`.trim(),
-      style: { '--k': k.toFixed(3) },
-      text: fmtSigned(r * 100, 1),
-    });
+    const td = h('td', { class: 'hm__cell num', dataset: { step: divStep(r / grid.scale) }, text: fmtSigned(r * 100, 1) });
     const when = Date.UTC(year, month - 1, 1);
     bindTip(td, () => ({ title: fmtMonthLong(when, true), rows: [{ label: 'Rendimento', value: fmtPctSigned(r, 2), cls: r > 0 ? 'pos' : r < 0 ? 'neg' : '' }] }));
     return td;
@@ -759,9 +762,9 @@ export function heatmap(host, grid) {
     const steps = [-1, -0.5, 0, 0.5, 1];
     const legend = h('div', { class: 'hm-legend', 'aria-hidden': 'true' },
       h('span', { class: 'num', text: fmtPctSigned(-grid.scale, 0) }),
-      steps.map((k) => h('span', { class: `hm-legend__swatch ${k > 0 ? 'hm__cell--pos' : k < 0 ? 'hm__cell--neg' : ''}`.trim(), style: { '--k': Math.abs(k) } })),
+      steps.map((k) => h('span', { class: 'hm-legend__swatch', dataset: { step: divStep(k * 0.99) } })),
       h('span', { class: 'num', text: fmtPctSigned(grid.scale, 0) }),
-      h('span', { class: 'hm-legend__note', text: 'intensità del colore = ampiezza del rendimento' }));
+      h('span', { class: 'hm-legend__note', text: 'arancio = perdita, blu = guadagno; intensità = ampiezza' }));
     host.replaceChildren(wrap, legend);
     if (isNarrow) wrap.scrollLeft = wrap.scrollWidth;           // parte dagli anni più recenti
   }
@@ -925,10 +928,7 @@ export function matrix(labels, values, { caption = 'Matrice' } = {}) {
       labels.map((m, j) => {
         const v = num((values[i] || [])[j]);
         if (v == null) return h('td', { class: 'hm__cell hm__cell--empty' });
-        const td = h('td', {
-          class: `hm__cell num ${i === j ? 'hm__cell--diag' : v > 0 ? 'hm__cell--cool' : v < 0 ? 'hm__cell--warm' : ''}`.trim(),
-          style: { '--k': (i === j ? 0 : Math.min(1, Math.abs(v))).toFixed(3) }, text: fmtSigned(v, 2),
-        });
+        const td = h('td', { class: `hm__cell num ${i === j ? 'hm__cell--diag' : ''}`.trim(), dataset: i === j ? {} : { step: divStep(v / 0.9) }, text: fmtSigned(v, 2) });
         bindTip(td, () => ({ title: `${l} · ${m}`, rows: [{ label: 'Correlazione', value: fmtSigned(v, 3) }] }));
         return td;
       }))))));

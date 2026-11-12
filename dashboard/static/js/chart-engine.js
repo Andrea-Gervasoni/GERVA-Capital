@@ -11,7 +11,7 @@
 // carattere o tempo è scritto qui. Arrivano dalle classi CSS (token --chart-*) e da chartTheme().
 
 import { chartTheme } from './chart-theme.js';
-import { bindTip, hideTip, linearTicks, logTicks, onResize, showTip, tableFallback, timeChart } from './charts.js';
+import { bindTip, divStep, hideTip, linearTicks, logTicks, onResize, showTip, tableFallback, timeChart } from './charts.js';
 import { h, s } from './dom.js';
 import { DASH, fmtDate, fmtNum, fmtPct, fmtPctSigned, fmtSigned, list, num } from './format.js';
 
@@ -683,7 +683,9 @@ export function heatGrid(host, data, { caption = 'Griglia di calore', corner = '
             const v = num(list(values[i])[j]);
             if (v == null) return h('td', { class: 'hm__cell hm__cell--empty' });
             const n = num(list(counts[i])[j]);
-            const td = h('td', { class: `hm__cell num ${v > 0 ? tones[0] : v < 0 ? tones[1] : ''}`.trim(), style: { '--k': Math.min(1, Math.abs(v) / top).toFixed(3) }, text: format(v), tabindex: '0' });
+            const td = palette === 'seq'
+              ? h('td', { class: `hm__cell num ${tones[0]}`, style: { '--k': Math.min(1, Math.abs(v) / top).toFixed(3) }, text: format(v), tabindex: '0' })
+              : h('td', { class: 'hm__cell num', dataset: { step: divStep(v / top) }, text: format(v), tabindex: '0' });
             bindTip(td, () => (tip ? tip(i, j, v, n) : { title: `${r} · ${c}`, rows: [{ label: 'Valore', value: format(v), cls: palette === 'pnl' ? signCls(v) : '' }, ...(n != null ? [{ label: 'Casi', value: fmtNum(n, 0) }] : [])] }));
             return td;
           })))))));

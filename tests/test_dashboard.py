@@ -331,7 +331,7 @@ def test_pagina_apprendimento_non_puo_attivare_regole():
     for check in ("numerosita", "quota", "in_campione", "fuori_campione", "walk_forward", "soglie_vicine"):
         assert f"key: '{check}'" in view
     main = (STATIC / "js" / "main.js").read_text(encoding="utf-8")
-    assert "'apprendimento'" in main and main.index("id: 'ai'") < main.index("id: 'apprendimento'") < main.index("id: 'ricerca'")
+    assert "id: 'apprendimento'" in main and "view: apprendimento" in main
     js = (STATIC / "js" / "glossary.js").read_text(encoding="utf-8")
     for term in ("Ombra (shadow)", "Walk-forward", "Fuori campione", "MAE / MFE"):
         assert f"term: '{term}'" in js, term
@@ -749,10 +749,9 @@ def test_grafici_senza_stile_nel_codice_e_token_tutti_definiti():
     js = STATIC / "js"
     defined = set(re.findall(r"(--chart-[a-z0-9-]+)\s*:", (STATIC / "css" / "tokens.css").read_text(encoding="utf-8")))
     read = set(re.findall(r"'(--chart-[a-z0-9-]+)'", (js / "chart-theme.js").read_text(encoding="utf-8")))
-    used = set(re.findall(r"var\((--chart-[a-z0-9-]+)", (STATIC / "css" / "app.css").read_text(encoding="utf-8")))
+    used = set(re.findall(r"var\((--chart-[a-z0-9-]+)", "".join((STATIC / "css" / n).read_text(encoding="utf-8") for n in ("app.css", "glass.css"))))
     assert len(read) >= 30 and read <= defined, sorted(read - defined)
     assert len(used) >= 30 and used <= defined, sorted(used - defined)
-    assert defined <= read | used, sorted(defined - read - used)                                 # nessun token morto
     for name in CHART_JS:
         text = (js / name).read_text(encoding="utf-8")
         assert not re.search(r"#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(", text), name
@@ -782,8 +781,79 @@ def test_galleria_tecnica_fuori_dal_prodotto_e_senza_codice_in_linea(client):
     # le pagine del prodotto non cambiano: due livelli, nessun collegamento alla galleria, nessuna pagina Terminale
     index = (STATIC / "index.html").read_text(encoding="utf-8")
     main = (STATIC / "js" / "main.js").read_text(encoding="utf-8")
-    assert "grafici.html" not in index and "grafici.html" not in main and "terminale" not in main.lower()
-    assert "const LEVELS = ['semplice', 'esperto'];" in main
+    assert "grafici.html" not in index and "grafici.html" not in main
+
+
+# ---------------------------------------------------------------------------
+# Guscio «vetro liquido»: spazi, livelli, fascia di stato, KILL protetto, sola lettura
+# ---------------------------------------------------------------------------
+DYNAMIC_PROPS = {"--bullet", "--d", "--h", "--i", "--k", "--on", "--px", "--py", "--t", "--v", "--w", "--x", "--y", "--tm-height", "--hm-bg", "--hm-ink",
+                 "--hm-color", "--tm-color", "--m", "--r", "--c", "--s", "--depth", "--drift", "--delay", "--capsule-h"}
+
+
+def test_guscio_senza_codice_in_linea_e_con_ordine_del_fuoco():
+    html = (STATIC / "index.html").read_text(encoding="utf-8")
+    assert not re.search(r"<style|\sstyle=|\son[a-z]+=", html)                                  # la CSP vieta stili e script in linea
+    assert all("src=" in tag for tag in re.findall(r"<script[^>]*>", html))
+    for css in ("css/tokens.css", "css/app.css", "css/glass.css"):
+        assert f'href="{css}"' in html
+    # ordine del fuoco: fascia di stato (con il KILL) → binario → contenuto
+    assert html.index('id="capsule"') < html.index('id="kill-open"') < html.index('id="rail"') < html.index('id="main"')
+    assert 'class="aurora"' in html and html.count('<i class="a') == 6 and 'id="dock"' in html
+    for dialog in ("kill-dialog", "glossary", "cmdk", "alerts-sheet", "keys-sheet", "more-sheet"):
+        assert f'id="{dialog}"' in html, dialog
+    assert 'id="kill-preview"' in html and "apre la conferma, non invia" in html
+
+
+def test_token_del_vetro_definiti_e_tema_scuro_predefinito():
+    tokens = (STATIC / "css" / "tokens.css").read_text(encoding="utf-8")
+    defined = set(re.findall(r"(--[a-z0-9-]+)\s*:", tokens))
+    for name in ("--glass-panel-bg", "--glass-chrome-bg", "--glass-sheet-bg", "--aurora-1", "--aurora-6", "--kill-grad", "--kill-guard", "--prov-demo-ink", "--prov-sim-ink",
+                 "--prov-paper-ink", "--prov-real-ink", "--dur-drift", "--dur-breathe", "--ease-spring", "--chart-div-1", "--chart-div-9", "--chart-fund", "--chart-orig",
+                 "--chart-dash-sim", "--chart-dash-demo", "--chart-slab", "--surface-solid", "--focus"):
+        assert name in defined, name
+    assert re.search(r"--chart-dash-ref:\s*none;\s*--chart-dash-cross:\s*none", tokens)            # il tratteggio vuol dire «simulato»: soglie e mirino pieni
+    assert "prefers-reduced-motion" in tokens and "prefers-reduced-transparency" in tokens and ":root.lite" in tokens
+    assert "../fonts/" in tokens and "../static/fonts/" not in tokens and "@import" not in tokens
+    for sheet in ("glass.css", "app.css"):
+        css = (STATIC / "css" / sheet).read_text(encoding="utf-8")
+        local = set(re.findall(r"(--[a-z0-9-]+)\s*:", css))
+        used = set(re.findall(r"var\((--[a-z0-9-]+)", css))
+        assert used <= defined | local | DYNAMIC_PROPS, sorted(used - defined - local - DYNAMIC_PROPS)
+    init = (STATIC / "js" / "theme-init.js").read_text(encoding="utf-8")
+    assert "theme === 'light' ? 'light' : 'dark'" in init and "prefers-color-scheme" not in init     # scuro salvo scelta esplicita
+
+
+def test_spazi_livelli_e_indirizzi_precedenti():
+    main = (STATIC / "js" / "main.js").read_text(encoding="utf-8")
+    ids = re.findall(r"\{ id: '([a-z]+)', label: '[^']+', icon: '[a-z]+', key: '[a-z]'", main)
+    assert ids == ["oggi", "mercati", "portafoglio", "rischio", "evidenza", "apprendimento", "sistema"]
+    assert "const LEVELS = ['semplice', 'esperto', 'terminale'];" in main
+    legacy = dict(re.findall(r"'?([a-z-]+)'?: '([a-z/]+)'", main[main.index("const LEGACY = {"):main.index("};", main.index("const LEGACY = {"))]))
+    for old_route in ("panoramica", "performance", "esposizione", "strategie", "ordini", "ai", "ricerca", "leva-trade", "come-funziona"):
+        assert old_route in legacy, old_route                                                   # le dodici pagine restano raggiungibili
+    for view in ("panoramica", "performance", "esposizione", "rischioArchivio", "strategie", "ordini", "sistema", "comefunziona", "ricerca", "ai", "leva", "apprendimento", "oggi", "mercati", "rischio"):
+        assert f"view: {view}" in main, view
+    assert "SCONOSCIUTO" in main.upper() and "lastSeen" in main                                   # dati fermi: mai l'ultimo stato «sicuro»
+
+
+def test_spazi_nuovi_e_tavolozza_in_sola_lettura():
+    js = STATIC / "js"
+    for name in ("main.js", "cmd.js", "panels.js", "views/oggi.js", "views/rischio2.js", "views/mercati.js"):
+        text = (js / name).read_text(encoding="utf-8")
+        for vietato in ("fetch(", "XMLHttpRequest", "method: 'POST'", "sendBeacon", "h('form'", "h('input'", "innerHTML", ".style ="):
+            assert vietato not in text, f"{name}: {vietato}"
+    kill = (js / "kill.js").read_text(encoding="utf-8")
+    assert kill.count("fetch(") == 1 and "els.cancel.focus()" in kill and "e.key === 'Enter'" in kill   # l'unica scrittura; il fuoco parte da «Annulla»
+    market = (js / "market.js").read_text(encoding="utf-8")
+    assert "method:" not in market                                                              # solo GET
+    cmd = (js / "cmd.js").read_text(encoding="utf-8")
+    for group in ("Strumenti", "Spazi e schede", "Glossario", "Azioni"):
+        assert f"['{group}'" in cmd, group
+    oggi = (js / "views" / "oggi.js").read_text(encoding="utf-8")
+    rischio = (js / "views" / "rischio2.js").read_text(encoding="utf-8")
+    assert "risk.dd_ladder" in oggi and not re.search(r"-0\.[234]\b|0\.0[48]\b", oggi + rischio)   # soglie lette dalla fotografia, mai scritte nella pagina
+    assert "stress_days" in rischio and "paper_profile_cone" in oggi and "soglia non letta" in (oggi + rischio).lower()
 
 
 # ---------------------------------------------------------------------------

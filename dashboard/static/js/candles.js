@@ -257,43 +257,83 @@ export function candleChart(host, { label = 'Grafico a candele', panes: paneIds 
       const x = Math.round(xOf(i));
       const up = c >= o;
       ctx.fillStyle = up ? theme.up : theme.down;
-      ctx.fillRect(x, pp.yOf(hh), 1, Math.max(1, pp.yOf(ll) - pp.yOf(hh)));
       const y0 = pp.yOf(Math.max(o, c));
-      ctx.fillRect(x - Math.floor(body / 2), y0, body, Math.max(1, pp.yOf(Math.min(o, c)) - y0));
+      const bh = Math.max(1, pp.yOf(Math.min(o, c)) - y0);
+      if (up && theme.candleHollow && body >= 4 && bh >= 3) {       // vuota su, piena giù: la direzione non è affidata al solo colore
+        ctx.fillRect(x, pp.yOf(hh), 1, Math.max(0, y0 - pp.yOf(hh)));
+        ctx.fillRect(x, y0 + bh, 1, Math.max(0, pp.yOf(ll) - y0 - bh));
+        ctx.strokeStyle = theme.up;
+        ctx.strokeRect(x - Math.floor(body / 2) + 0.5, Math.round(y0) + 0.5, body - 1, Math.round(bh) - 1);
+      } else {
+        ctx.fillRect(x, pp.yOf(hh), 1, Math.max(1, pp.yOf(ll) - pp.yOf(hh)));
+        ctx.fillRect(x - Math.floor(body / 2), y0, body, bh);
+      }
     }
     for (const ov of OVERLAYS) {
       if (!overlays.has(ov.id) || ov.id === 'boll' || ov.id === 'donch') continue;
       line(pp, ind[ov.id], theme[ov.color], ov.id === 'vwap' ? { dash: theme.dashRef, width: theme.lineWidthThin } : {});
     }
 
-    // operazioni del fondo su questo strumento
+    // righello del trade: zona entrata–stop (lastra «1 R»), livelli pieni con cartellino sul righello di destra,
+    // stop iniziale puntinato (non più attivo), trade passati come anello → rombo con R. Il tratteggio resta al simulato.
+    const tags = [];
     for (const m of d.markers || []) {
       const idx = m.i;
+      if (m.kind === 'zone') {
+        const ya = pp.yOf(Math.max(m.from, m.to));
+        const yb = pp.yOf(Math.min(m.from, m.to));
+        const x0 = Math.max(0, xOf(Math.max(idx, a)) - bw / 2);
+        if (yb < pp.y0 || ya > pp.y1 || x0 >= plotW) continue;
+        const top = Math.max(pp.y0, ya);
+        ctx.fillStyle = theme.slab;
+        ctx.fillRect(x0, top, plotW - x0, Math.min(pp.y1, yb) - top);
+        ctx.strokeStyle = theme.slabEdge;
+        ctx.beginPath(); ctx.moveTo(x0, Math.round(top) + 0.5); ctx.lineTo(plotW, Math.round(top) + 0.5); ctx.stroke();
+        if (m.label) { ctx.fillStyle = theme.textMuted; ctx.textAlign = 'left'; ctx.fillText(m.label, x0 + 6, top + 9); }
+        continue;
+      }
       if (m.kind === 'level') {
         const y = Math.round(pp.yOf(m.price)) + 0.5;
         if (y < pp.y0 || y > pp.y1) continue;
         const x0 = Math.max(0, xOf(Math.max(idx, a)));
-        ctx.strokeStyle = theme[m.color] || theme.accent;
-        ctx.setLineDash(theme.dashRef);
+        const color = theme[m.color] || theme.text;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = theme.lineWidthThin * 0.85;
+        ctx.setLineDash(m.past ? theme.dashPast : []);
         ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(plotW, y); ctx.stroke();
         ctx.setLineDash([]);
-        ctx.fillStyle = theme[m.color] || theme.accent;
-        ctx.textAlign = 'right';
-        ctx.fillText(m.label, plotW - 4, y - 7);
+        ctx.lineWidth = theme.gridWidth;
+        tags.push({ y, color, text: `${m.label} ${price(m.price)}`, past: !!m.past });
         continue;
       }
       if (idx < a || idx > b || m.price == null) continue;
       const x = xOf(idx);
       const y = pp.yOf(m.price);
-      const s = theme.dotRadius + 1;
-      ctx.fillStyle = m.kind === 'entry' ? theme.accent : m.kind === 'stop' ? theme.crit : theme.text;
-      ctx.strokeStyle = theme.surface;
+      const r = theme.dotRadius + 0.5;
       ctx.lineWidth = theme.lineWidthThin;
-      ctx.beginPath();
-      if (m.kind === 'entry') { ctx.moveTo(x, y + 3); ctx.lineTo(x - s, y + 3 + s * 1.7); ctx.lineTo(x + s, y + 3 + s * 1.7); }
-      else { ctx.moveTo(x, y - 3); ctx.lineTo(x - s, y - 3 - s * 1.7); ctx.lineTo(x + s, y - 3 - s * 1.7); }
-      ctx.closePath(); ctx.stroke(); ctx.fill();
+      if (m.kind === 'entry') {                                   // anello: dove il trade è entrato
+        ctx.fillStyle = theme.halo; ctx.strokeStyle = theme.text;
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      } else {                                                    // rombo: dove è uscito, colorato dal segno di R
+        ctx.fillStyle = m.color ? theme[m.color] || theme.text : theme.text; ctx.strokeStyle = theme.halo;
+        ctx.beginPath(); ctx.moveTo(x, y - r - 1.5); ctx.lineTo(x + r + 1.5, y); ctx.lineTo(x, y + r + 1.5); ctx.lineTo(x - r - 1.5, y); ctx.closePath(); ctx.fill(); ctx.stroke();
+        if (m.label) { ctx.fillStyle = theme.text; ctx.textAlign = 'center'; ctx.fillText(m.label, x, y - r - 10); }
+      }
       ctx.lineWidth = theme.gridWidth;
+    }
+    // cartellini dei livelli sul righello di destra: mai sovrapposti
+    tags.sort((u, v) => u.y - v.y);
+    let lastTag = -99;
+    for (const tg of tags) {
+      const y = Math.max(lastTag + 15, tg.y);
+      lastTag = y;
+      const tw = Math.max(GUTTER - 1, ctx.measureText(tg.text).width + 10);      // il cartellino può sporgere nel grafico: nome e prezzo si leggono interi
+      ctx.fillStyle = tg.past ? theme.halo : tg.color;
+      ctx.fillRect(W - tw, y - 7.5, tw, 15);
+      if (tg.past) { ctx.strokeStyle = tg.color; ctx.strokeRect(W - tw + 0.5, y - 7, tw - 1, 14); }
+      ctx.fillStyle = tg.past ? tg.color : theme.onFill;
+      ctx.textAlign = 'left';
+      ctx.fillText(tg.text, W - tw + 5, y);
     }
 
     // ---- volume ----
@@ -343,7 +383,7 @@ export function candleChart(host, { label = 'Grafico a candele', panes: paneIds 
         band(p, th[1], th[2], theme.accent, theme.bandOpacity);
         band(p, th[2], m * 1.05, theme.accent, theme.bandOpacityStrong);
         grid(p, th, (v) => fmtNum(v, 2));
-        line(p, d.gq, theme.s5, { width: theme.lineWidthThin });
+        line(p, d.gq, theme.neutral, { width: theme.lineWidthThin });                 // neutro: l'indicatore è in ombra
       }
       title(p);
     }
@@ -381,7 +421,7 @@ export function candleChart(host, { label = 'Grafico a candele', panes: paneIds 
     silentWin = false;
     if (hover != null && hover >= a && hover <= b) {
       const x = Math.round(xOf(hover)) + 0.5;
-      ctx.strokeStyle = theme.crosshair;
+      ctx.strokeStyle = theme.crossLine;
       ctx.setLineDash(theme.dashCross);
       ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, base); ctx.stroke();
       const hp = hoverY == null ? null : ps.find((p) => hoverY >= p.y0 && hoverY <= p.y1);

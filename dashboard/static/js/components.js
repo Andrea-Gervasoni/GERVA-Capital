@@ -91,13 +91,24 @@ export function more(href, text) {
 }
 
 /** Gruppo di pulsanti a scelta singola (intervallo, filtro). onChange riceve il valore scelto. */
-export function segmented({ label, options, value, onChange }) {
+export function segmented({ label, options, value, onChange, cls = '' }) {
   let current = value;
   const buttons = new Map();
-  const root = h('div', { class: 'seg', role: 'group', 'aria-label': label });
+  const thumb = h('span', { class: 'seg__thumb', 'aria-hidden': 'true' });
+  const root = h('div', { class: `seg ${cls}`.trim(), role: 'group', 'aria-label': label }, thumb);
+  // il cursore di vetro prende posto e larghezza della voce scelta: i valori passano da proprietà CSS impostate via CSSOM
+  const place = () => {
+    const b = buttons.get(current);
+    if (!b || !b.offsetWidth) return;
+    thumb.style.setProperty('--x', `${b.offsetLeft}px`);
+    thumb.style.setProperty('--w', `${b.offsetWidth}px`);
+    if (!root.classList.contains('is-ready')) requestAnimationFrame(() => root.classList.add('is-ready'));
+  };
   const sync = () => {
     for (const [v, b] of buttons) b.setAttribute('aria-pressed', v === current ? 'true' : 'false');
+    place();
   };
+  if (typeof ResizeObserver === 'function') new ResizeObserver(place).observe(root);
   for (const opt of options) {
     const count = h('span', { class: 'seg__count num' });
     count.hidden = true;

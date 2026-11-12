@@ -81,6 +81,14 @@ export function initKill({ done }) {
   els.confirm.addEventListener('input', validate);
   els.cancel.addEventListener('click', () => els.dialog.close());
   els.dialog.addEventListener('close', wipe);
+  // Invio dentro il campo del token non invia: si passa alla parola di conferma
+  els.token.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); els.confirm.focus(); } });
+}
+
+/** Anteprima degli effetti (quante posizioni, quale controvalore, che cosa non fa): la scrive chi conosce i dati. */
+export function setKillPreview(nodes) {
+  const box = document.getElementById('kill-preview');
+  if (box) box.replaceChildren(...nodes);
 }
 
 export function openKill() {
@@ -88,5 +96,5 @@ export function openKill() {
   wipe();
   if (typeof els.dialog.showModal === 'function') els.dialog.showModal();
   else els.dialog.setAttribute('open', '');
-  els.token.focus();
+  els.cancel.focus();                         // il fuoco parte da «Annulla»: un Invio distratto non fa nulla
 }
