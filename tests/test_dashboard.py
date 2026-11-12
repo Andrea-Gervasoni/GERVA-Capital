@@ -539,7 +539,7 @@ def test_esempi_v6_marcati_e_coerenti():
     trades = json.loads(server.SAMPLE_TRADES.read_text(encoding="utf-8"))
     assert "ESEMPIO" in trades["label"] and len(trades["rows"]) == trades["n_sim"] and {r["source"] for r in trades["rows"]} == {"sim"}
     cmp_ = json.loads(server.SAMPLE_COMPARE.read_text(encoding="utf-8"))
-    assert "ESEMPIO" in cmp_["label"] and len(cmp_["rows"]) >= 60 and {"data", "nuovo_totale", "legacy_nav", "spy"} <= set(cmp_["rows"][0])
+    assert "ESEMPIO" in cmp_["label"] and len(cmp_["rows"]) >= 3 and {"data", "nuovo_totale", "legacy_nav", "spy"} <= set(cmp_["rows"][0])
 
 
 def test_esempio_ha_il_blocco_ai():
@@ -987,7 +987,7 @@ def test_esempi_un_solo_insieme_coerente():
     assert tb["start_equity"] == pytest.approx(cmp_["rows"][0]["nuovo_libro"])                     # il libro lavora sullo stesso capitale
     # trade costruiti sulle barre: R × rischio = P&L, prezzi dentro la candela del giorno, durata entro il massimo, livelli coerenti con il rischio
     dates = {s: {d: i for i, d in enumerate(bars[s]["t"])} for s in ("BTC", "ETH", "SOL")}
-    assert len(tb["closed"]) >= 10 and tb["open"]
+    assert len(tb["closed"]) >= 1 and tb["open"]
     for t in tb["closed"]:
         b, i, j = bars[t["symbol"]], dates[t["symbol"]][t["opened"]], dates[t["symbol"]][t["closed"]]
         assert t["pnl"] == pytest.approx(t["R"] * t["risk"], abs=0.02) and t["entry"] == pytest.approx(b["c"][i]) and b["l"][j] - 1e-6 <= t["exit"] <= b["h"][j] + 1e-6
@@ -1001,7 +1001,10 @@ def test_esempi_un_solo_insieme_coerente():
     # cancelli: nomi e soglie del motore (90 giorni), giorni di paper = lunghezza della storia della fotografia
     from gerva.live import gates as G
     gates = {g["name"]: g for g in snap["gates"]}
-    assert gates["Giorni di paper trading"]["target"] == G.MIN_DAYS == 90 and gates["Giorni di paper trading"]["value"] == snap["performance"]["days"]
+    paper_days = gates["Giorni di paper trading"]["value"]
+    assert gates["Giorni di paper trading"]["target"] == G.MIN_DAYS == 90 and 1 <= paper_days <= 90 and gates["Giorni di paper trading"]["ok"] is False
+    assert len(cmp_["rows"]) == paper_days < snap["performance"]["days"]                            # il paper è l'ultimo tratto; prima la curva è simulata
+    assert gates["PSR (Sharpe vero > 0)"]["value"] is None and gates["PSR (Sharpe vero > 0)"]["ok"] is False   # troppo presto: «in corso», mai una spunta
     assert "Sharpe in paper (minimo)" not in gates and gates["PSR (Sharpe vero > 0)"]["target"] == G.MIN_PSR
     # livelli scritti con i nomi del motore
     for row in tb["shadow"]:

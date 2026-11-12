@@ -530,13 +530,13 @@
    {"t": "2026-11-04T06:12:40Z", "level": "critical", "msg": "IBKR Gateway non raggiungibile per 7 minuti: riconnesso automaticamente"}
  ],
  "gates": [
-   {"name": "Giorni di paper trading", "value": 954, "target": 90, "unit": "giorni", "ok": true},
+   {"name": "Giorni di paper trading", "value": 12, "target": 90, "unit": "giorni", "ok": false},
    {"name": "Disponibilita' del ciclo", "value": 0.996, "target": 0.99, "unit": "%", "ok": true},
    {"name": "Ordini non riconciliati", "value": 0, "target": 0, "unit": "ordini", "ok": true},
    {"name": "KILL scattati", "value": 0, "target": 0, "unit": "eventi", "ok": true},
-   {"name": "Caduta massima in paper", "value": -0.073208, "target": -0.2, "unit": "%", "ok": true},
-   {"name": "PSR (Sharpe vero > 0)", "value": 0.94, "target": 0.6, "unit": "", "ok": true},
-   {"name": "Scostamento dal backtest", "value": 0.021, "target": 0.03, "unit": "%", "ok": true},
+   {"name": "Caduta massima in paper", "value": -0.002624, "target": -0.2, "unit": "%", "ok": true},
+   {"name": "PSR (Sharpe vero > 0)", "value": null, "target": 0.6, "unit": "", "ok": false},
+   {"name": "Scostamento dal backtest", "value": null, "target": 0.03, "unit": "%", "ok": false},
    {"name": "Costi reali / costi ipotizzati", "value": null, "target": 1.5, "unit": "x", "ok": false}
  ],
  "ai": {

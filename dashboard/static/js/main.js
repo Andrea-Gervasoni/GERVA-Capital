@@ -9,8 +9,9 @@ import { glossaryList } from './glossary.js';
 import { hideTip } from './charts.js';
 import { initKill, lastKill, openKill, setKillEnabled, setKillPreview } from './kill.js';
 import { initPalette, SHORTCUTS } from './cmd.js';
+import { freshness } from './derive.js';
 import { getTradebook } from './market.js';
-import { arr, fmtAgo, fmtDate, fmtDateTime, fmtDayTime, fmtDuration, fmtMoney, fmtNum, num, obj, parseTs, str } from './format.js';
+import { arr, fmtAgo, fmtDate, fmtDateTime, fmtDayMonth, fmtDayTime, fmtDuration, fmtMoney, fmtNum, num, obj, parseTs, str } from './format.js';
 import { alertLevel, componentStatus, isBacktest, modeKind, riskState } from './model.js';
 import * as oggi from './views/oggi.js';
 import * as mercati from './views/mercati.js';
@@ -225,7 +226,7 @@ function syncChrome() {
     el.modeTag.className = `tag tag--${demo ? 'demo' : kind === 'sim' ? 'sim' : kind === 'paper' ? 'paper' : kind === 'live' ? 'real' : 'unknown'}`;
     setText(el.modeTag, demo ? 'Esempio' : kind === 'sim' ? 'Simulato' : kind === 'paper' ? 'Paper' : kind === 'live' ? 'Reale' : 'Non dichiarato');
     const g = gateDays(snap);
-    const day = g && num(g.value) != null && num(g.target) != null ? ` · giorno ${fmtNum(g.value, 0)} di ${fmtNum(g.target, 0)}` : '';
+    const day = g && num(g.value) != null && num(g.target) != null ? (g.value > g.target ? ` · giorno ${fmtNum(g.value, 0)} (minimo di ${fmtNum(g.target, 0)} superato)` : ` · giorno ${fmtNum(g.value, 0)} di ${fmtNum(g.target, 0)}`) : '';
     const mode = str(meta.mode).trim();
     fill(el.modeLabel, h('span', { class: 'band__text', text: label || 'Etichetta dei dati assente' }), h('span', { class: 'band__day', text: `${mode ? ` · ${mode}` : ' · modalità non dichiarata'}${day}` }));
     el.modeLabel.title = `${label || 'Etichetta dei dati assente'} · modalità ${mode || 'non dichiarata'}${day}`;
@@ -261,8 +262,14 @@ function syncChrome() {
   if (st.status === 'ok') connText = isBacktest(meta) ? `backtest · generato ${fmtAgo(age)}` : `dati di ${fmtAgo(age)}`;
   else if (st.status === 'stale') connText = age == null ? 'Dati senza orario' : `Dati fermi da ${fmtDuration(age)}`;
   else if (st.status === 'offline') connText = 'Offline';
+  // la fascia mostra la fonte più vecchia: un libro dei trade fermo non può stare dietro a «dati di adesso»
+  const tbAge = tradebook ? freshness(parseTs(str(tradebook.asof)), store.serverNow(), 'crypto', obj(obj(st.health).rules)) : null;
+  if (st.status === 'ok' && tbAge && tbAge.stale) {
+    connText = `fonte più vecchia: libro dei trade del ${fmtDayMonth(tbAge.day, true)}`;
+    el.conn.dataset.state = 'stale';
+  }
   setText(el.connText, connText);
-  setText(el.connShort, st.status === 'ok' ? fmtAgo(age) : st.status === 'stale' ? 'Fermi' : st.status === 'offline' ? 'Offline' : '…');
+  setText(el.connShort, st.status === 'ok' && tbAge && tbAge.stale ? `libro del ${fmtDayMonth(tbAge.day, true)}` : st.status === 'ok' ? fmtAgo(age) : st.status === 'stale' ? 'Fermi' : st.status === 'offline' ? 'Offline' : '…');
 
   // (4) sistema, solo se non tutto ok · (5) avvisi con contatore
   const comps = arr(obj(snap && snap.system).components);
@@ -329,7 +336,9 @@ function syncFoot(snap) {
   const kind = modeKind(meta);
   const g = gateDays(snap);
   const perfDays = num(obj(snap.performance).days);
-  const simDays = num(obj(obj(store.state.quant).meta).days) ?? (isBacktest(meta) ? perfDays : null);       // un esempio non è un backtest: «n.d.»
+  const paperDays = g && num(g.value) != null ? g.value : null;
+  // la storia prima dell'avvio del paper è simulata: giorni della curva meno giorni di paper
+  const simDays = isBacktest(meta) ? perfDays : paperDays != null && perfDays != null && perfDays > paperDays ? perfDays - paperDays : num(obj(obj(store.state.quant).meta).days);
   const rows = [['Giorni simulati', simDays == null ? 'n.d.' : fmtNum(simDays, 0)], ['Giorni paper', g && num(g.value) != null ? fmtNum(g.value, 0) : kind === 'paper' && perfDays != null ? fmtNum(perfDays, 0) : '0'],
     ['Giorni reali', kind === 'live' && perfDays != null ? fmtNum(perfDays, 0) : '0']];
   const key = rows.map((r) => r[1]).join('|');
@@ -706,6 +715,7 @@ syncChrome();
 syncView();
 
 store.subscribe((state, dataChanged) => {
+  if (dataChanged) getTradebook().then((tb) => { tradebook = tb || null; });       // età del libro dei trade per la fascia (cache di 30 s)
   syncChrome();
   syncView({ force: dataChanged });
 });

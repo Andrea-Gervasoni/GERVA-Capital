@@ -28,7 +28,7 @@ PPY = 365.0
 MAX_HOLD, RISK_CONFIRMED, RISK_EXCEPTIONAL, SCORE_CONFIRMED, SCORE_EXCEPTIONAL, MAX_TRADE_LEV, STOP_TO_LIQ = 7, 0.005, 0.010, 0.60, 0.75, 15.0, 0.6
 CONV_TIERS = {"crypto": (0.30, 0.60), "etf": (0.55, 0.82)}       # gerva/ensemble.py THRESHOLDS
 GQ_T = dict(eccezionale=1.4205535120908974, alta=0.5317842685566442, bassa=-0.5033858160836456)   # gerva/gervasoni.py
-BOOK_DAYS = 120
+BOOK_DAYS = 12           # la storia dell'esempio: il paper è partito 12 giorni fa; prima, la curva è il backtest (simulato)
 
 
 def conv_tier(score, kind="crypto"):
@@ -384,15 +384,17 @@ alerts.sort(key=lambda a: a["t"], reverse=True)
 
 from gerva.live import gates as G          # nomi e soglie dei cancelli: quelli del motore, mai riscritti qui
 
-PAPER_DAYS = S["n"]
+PAPER_DAYS = BOOK_DAYS
+_paper = eq[-PAPER_DAYS - 1:]
+PAPER_DD = min(v / max(_paper[:i + 1]) - 1 for i, v in enumerate(_paper))
 gates = [
     dict(name="Giorni di paper trading", value=PAPER_DAYS, target=G.MIN_DAYS, unit="giorni", ok=PAPER_DAYS >= G.MIN_DAYS),
     dict(name="Disponibilita' del ciclo", value=0.996, target=G.MIN_UPTIME, unit="%", ok=True),
     dict(name="Ordini non riconciliati", value=0, target=0, unit="ordini", ok=True),
     dict(name="KILL scattati", value=0, target=0, unit="eventi", ok=True),
-    dict(name="Caduta massima in paper", value=r6(S["mdd"]), target=-G.MAX_DD, unit="%", ok=S["mdd"] >= -G.MAX_DD),
-    dict(name="PSR (Sharpe vero > 0)", value=round(S["psr"], 3), target=G.MIN_PSR, unit="", ok=S["psr"] >= G.MIN_PSR),
-    dict(name="Scostamento dal backtest", value=0.021, target=G.MAX_TRACKING, unit="%", ok=True),
+    dict(name="Caduta massima in paper", value=r6(PAPER_DD), target=-G.MAX_DD, unit="%", ok=PAPER_DD >= -G.MAX_DD),
+    dict(name="PSR (Sharpe vero > 0)", value=None, target=G.MIN_PSR, unit="", ok=False),             # 12 giorni non bastano: in corso
+    dict(name="Scostamento dal backtest", value=None, target=G.MAX_TRACKING, unit="%", ok=False),
     dict(name="Costi reali / costi ipotizzati", value=None, target=G.MAX_COST_RATIO, unit="x", ok=False),
 ]
 
