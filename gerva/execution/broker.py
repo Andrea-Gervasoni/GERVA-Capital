@@ -71,10 +71,13 @@ class PaperBroker:
     name = "paper"
 
     def __init__(self, journal, price_fn: Callable[[list[str]], dict[str, float]], start_cash: float = 12_000.0,
-                 fee: dict | None = None, slippage: dict | None = None, venue_of: Callable[[str], str] | None = None):
+                 fee: dict | None = None, slippage: dict | None = None, venue_of: Callable[[str], str] | None = None,
+                 min_fee: dict | None = None):
         self.j, self.price_fn = journal, price_fn
         self.fee = fee or {"crypto": 0.0025, "ibkr": 0.0005}
         self.slip = slippage or {"crypto": 0.0005, "ibkr": 0.0002}
+        # commissione minima per ordine (in valuta del conto): su un conto piccolo pesa piu' della percentuale
+        self.min_fee = min_fee or {}
         self.venue_of = venue_of or (lambda s: "ibkr")
         if self.j.get("paper.cash") is None:
             self.j.set("paper.cash", float(start_cash))
@@ -115,7 +118,7 @@ class PaperBroker:
         venue = self.venue_of(symbol)
         fill_px = px * (1 + self.slip.get(venue, 0.0005) * (1 if qty > 0 else -1))
         notional = abs(qty) * fill_px
-        fee = notional * self.fee.get(venue, 0.001)
+        fee = max(notional * self.fee.get(venue, 0.001), float(self.min_fee.get(venue, 0.0)))
         pos = self._pos()
         cash = float(self.j.get("paper.cash"))
         acct = self.account()

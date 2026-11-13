@@ -69,7 +69,10 @@ def eq_mr(high: pd.DataFrame, low: pd.DataFrame, close: pd.DataFrame) -> pd.Data
 def ma_trend(adj: pd.DataFrame) -> pd.DataFrame:
     c = adj[TREND_UNIVERSE].loc["2003":]
     R = c.pct_change(fill_method=None)
-    return SD.hold(SD.vol_target(SD.trend(c, lookbacks=(63, 126, 252), long_only=True), R, 0.10, max_leverage=1.0), 5)
+    # ribilanciamento MENSILE (21 sedute), non settimanale: la rotazione scende da 13,7 a 5,9 volte l'anno e lo Sharpe sale in
+    # entrambi i periodi, a 10 pb (0,14 -> 0,32; verifica -0,18 -> 0,24) e a 50 pb (-0,52 -> 0,02) per ordine (13/11/2026,
+    # revisione del sistema research/v5/v5/a10_sistema e verifica diretta). E' una scelta di costo: due valori provati, nessuna ottimizzazione.
+    return SD.hold(SD.vol_target(SD.trend(c, lookbacks=(63, 126, 252), long_only=True), R, 0.10, max_leverage=1.0), 21)
 
 
 # ---- rendimenti simulati (stesse ipotesi di costo della ricerca) -----------

@@ -452,3 +452,15 @@ def test_park_cash_rules():
     red = park_cash({"BTC": 0.1, "SPY": 0.15}, "IB01.L", 0.05, True, "REDUCED")                 # rischio ridotto: piu' cassa
     assert abs(red["IB01.L"] - 0.70) < 1e-12
     assert park_cash({"BTC": 0.2, "IB01.L": 0.9}, "IB01.L", 0.05, True, "NORMAL")["IB01.L"] == 0.75  # il peso vecchio si ricalcola
+
+
+def test_paper_minimum_commission(tmp_path):
+    from gerva.execution.broker import PaperBroker
+    from gerva.ops.journal import Journal
+    px = {"SPY": 500.0}
+    b = PaperBroker(Journal(str(tmp_path / "m.sqlite")), lambda s: {k: px[k] for k in s if k in px}, 12_000.0,
+                    fee={"ibkr": 0.0005}, slippage={"ibkr": 0.0}, min_fee={"ibkr": 1.0})
+    small = b.submit("t1", "SPY", 0.2, 500.0)                  # 100 $: 0,05% sarebbe 5 centesimi, il minimo e' 1 $
+    assert small.status == "filled" and small.fee == 1.0
+    big = b.submit("t2", "SPY", 10.0, 500.0)                   # 5.000 $: 2,50 $ supera il minimo
+    assert abs(big.fee - 2.5) < 1e-9

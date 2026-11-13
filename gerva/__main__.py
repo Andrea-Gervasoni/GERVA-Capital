@@ -39,7 +39,7 @@ def _runner():
         broker = AlpacaPaper()
     else:
         p = cfg.get("paper") or {}
-        broker = PaperBroker(j, market.last_prices, s.start_cash, p.get("fee"), p.get("slippage"), market.venue_of)
+        broker = PaperBroker(j, market.last_prices, s.start_cash, p.get("fee"), p.get("slippage"), market.venue_of, p.get("min_fee"))
     return Runner(s, limits, broker, market, j)
 
 

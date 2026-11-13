@@ -40,6 +40,7 @@ cash:                       # liquidita' ferma in un ETF monetario (in media il 
 paper:
   fee: {crypto: 0.0025, ibkr: 0.0005}        # commissione per lato simulata
   slippage: {crypto: 0.0005, ibkr: 0.0002}
+  min_fee: {ibkr: 1.0}        # minimo per ordine su azioni ed ETF (IBKR, tariffa fissa USA: 1 $). Su un conto da 12.000 conta piu' della percentuale
 
 ai:                         # livello AI (gerva/ai): puo' solo RIDURRE l'esposizione; il motore di rischio decide per ultimo
   regime_scaling: false     # il regime si mostra ma non scala: nel backtest ridurre in "teso"/"crisi" peggiora lo Sharpe (1,18 -> 1,10)
