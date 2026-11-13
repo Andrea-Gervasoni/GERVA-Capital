@@ -201,9 +201,9 @@ a.pill:hover { border-color: var(--text-3); }
 .table th:first-child, .table td:first-child { padding-left: 16px; }
 .table th:last-child, .table td:last-child { padding-right: 16px; }
 .table thead th { font-size: var(--fs-small); font-weight: 500; color: var(--text-3); border-bottom: 1px solid var(--border); }
-.table tbody td { border-top: 1px solid var(--border); }
-.table tbody tr:first-child td { border-top: 0; }
-.table tbody tr:hover td { background: var(--surface-2); }
+.table tbody td, .table tbody th { border-top: 1px solid var(--border); }
+.table tbody tr:first-child td, .table tbody tr:first-child th { border-top: 0; }
+.table tbody tr:hover td, .table tbody tr:hover th { background: var(--surface-2); }
 .table th.is-num, .table td.is-num { text-align: right; }
 .table td.is-wrap { white-space: normal; min-width: 200px; max-width: 420px; color: var(--text-2); }
 .table tfoot td { border-top: 1px solid var(--border-strong); font-weight: 600; }

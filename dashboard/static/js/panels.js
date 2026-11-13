@@ -34,7 +34,7 @@ export function panel({ title, eyebrow = '', ask = '', what = '', span = 4, cls 
   const head = h('header', { class: 'panel__head' },
     h('div', { class: 'panel__titles' },
       eyebrow ? h('div', { class: 'card__eyebrow not-terminale', text: eyebrow }) : null,
-      h('div', { class: 'card__title-row' }, h('h2', { class: 'card__title', text: title }), prov, q),
+      h('div', { class: 'card__title-row' }, h('h2', { class: 'card__title', text: title }), h('span', { class: 'card__title-aux' }, prov, q)),
       askEl),
     tools ? h('div', { class: 'card__actions' }, tools) : null);
   const body = h('div', { class: 'panel__body' });

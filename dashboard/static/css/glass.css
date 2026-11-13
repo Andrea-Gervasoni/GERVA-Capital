@@ -392,6 +392,8 @@ body[data-level="semplice"] .not-semplice { display: none !important; }
 .panel__titles { flex: 1 1 200px; min-width: 0; display: grid; gap: 4px; }
 .panel .card__title-row { display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap; }
 .panel__prov { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.card__title-aux { display: inline-flex; align-items: center; gap: 8px 10px; flex-wrap: nowrap; min-width: 0; }   /* etichetta e «?» restano insieme: il «?» non va a capo da solo */
+.card__title-aux:empty { display: none; }
 .panel__ask { font: var(--type-caption); color: var(--text-2); max-width: 62ch; }
 .panel__ask b { color: var(--text); font-weight: 600; }
 .panel__body { flex: 1; min-width: 0; display: grid; gap: 12px; align-content: start; }
