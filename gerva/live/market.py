@@ -27,6 +27,15 @@ class Market:
         self.P = None
         self.errors: dict[str, str] = {}
 
+    def _save(self, key: str, df: pd.DataFrame, source: str) -> None:
+        """Writes the refreshed daily bars back to the cache, so the terminal's charts and its data-age band see the same
+        prices the engine uses (before this the cache kept the bars of the first download). Never fatal."""
+        try:
+            if df is not None and len(df) and (not self.st.has(key) or len(df) >= len(self.st.get(key))):
+                self.st.put(key, df, source)
+        except Exception as e:
+            log.info("cache not updated for %s: %s", key, str(e)[:80])
+
     # ---- crypto -------------------------------------------------------------
     def _coin(self, c: str):
         key = f"bn_spot_1d_{c}USDT"
@@ -37,6 +46,7 @@ class Market:
         try:
             rec = binance_recent(c + "USDT", "1d", 400)
             hist = pd.concat([hist[hist.index < rec.index[0]], rec])
+            self._save(key, hist, "binance.vision + recent")
         except DataError as e:
             if c in ("BTC", "ETH"):
                 raise
@@ -62,6 +72,9 @@ class Market:
             out = dict(ex.map(one, self.eq_symbols))
         fields = ("open", "high", "low", "close", "adj", "volume")
         P = {f: pd.DataFrame({s: d[f] for s, d in out.items()}).sort_index() for f in fields}
+        if not keep_open_bar:                      # closed bars only: they become the cache the terminal's charts read
+            for sym, d in out.items():
+                self._save(f"yahoo_1d_{sym}", d, "yahoo")
         keep = P["adj"]["SPY"].notna()
         self.P = {k: v[keep] for k, v in P.items()}
         if self.cash_symbol:                       # ETF monetario: se il dato manca si prosegue senza parcheggiare la cassa
