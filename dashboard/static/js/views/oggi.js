@@ -10,7 +10,7 @@ import { h, icon } from '../dom.js';
 import { arr, fmtDate, fmtDayMonth, fmtMoney, fmtNum, fmtPct, fmtPctSigned, fmtSigned, num, obj, parseTs, str } from '../format.js';
 import { getCompare, getOhlc, getTradebook } from '../market.js';
 import { alertLevel, curveOf, riskState, utilization } from '../model.js';
-import { brakes, freshness, sigmaDay, totalNav, tradeAge, tradeR } from '../derive.js';
+import { brakes, freshness, nextEquityWindow, sigmaDay, totalNav, tradeAge, tradeLog, tradeR } from '../derive.js';
 import { brakeLadder, emptyState, freshLine, meterRow, panel, provOf, provTag, rollNumber, tradeRuler } from '../panels.js';
 
 const DAY = 86400000;
@@ -59,13 +59,14 @@ export function mount(root, api) {
   const delta = h('span', { class: 'delta delta--flat' });
   const ctxLine = h('p', { class: 'hero__ctx' });
   const books = h('p', { class: 'hero__books' });
+  const posLine = h('p', { class: 'hero__books hero__flat' });
   const side = h('dl', { class: 'hero__side' });
   const provLine = h('p', { class: 'hero__prov' });
   const chartHost = h('div', { class: 'chart-host' });
   const chartNote = h('span');
   const rangeSeg = segmented({ label: 'Intervallo del grafico', options: [{ value: '1M', label: '1M' }, { value: '3M', label: '3M' }, { value: '1A', label: '1A' }, { value: 'ALL', label: 'Avvio' }], value: range, onChange: (v) => { range = v; rangeMoved = true; paintNav(); } });
   pNav.body.append(h('div', { class: 'hero' },
-    h('div', { class: 'hero__main' }, h('div', { class: 'hero__num num' }, heroNum, heroDec, heroCur), delta, ctxLine, books, side, provLine),
+    h('div', { class: 'hero__main' }, h('div', { class: 'hero__num num' }, heroNum, heroDec, heroCur), delta, ctxLine, books, posLine, side, provLine),
     h('div', { class: 'hero__chart' }, h('div', { class: 'hero__chart-head' }, chartNote, rangeSeg.el), chartHost)));
   const navChart = timeChart(chartHost, { label: 'Patrimonio e, sotto, caduta dal massimo' });
 
@@ -83,7 +84,7 @@ export function mount(root, api) {
   const periodSeg = segmented({ label: 'Periodo', options: [{ value: 'day', label: 'Oggi' }, { value: 'mtd', label: 'Mese' }, { value: 'total', label: 'Dall\'avvio' }], value: period, onChange: (v) => { period = v; paintAttr(); } });
   const pAttr = panel({ title: 'Da dove viene il risultato', span: 4, tools: periodSeg.el, what: 'Il guadagno o la perdita del periodo, diviso tra le strategie. Ogni barra parte da dove finisce la precedente: l\'ultima è il totale. «Non attribuito» è la parte che la somma delle strategie non spiega: se supera un punto base viene segnalata.' });
   const attrHost = h('div', { class: 'chart-host' });
-  const attrNote = h('p', { class: 'panel__ask' });
+  const attrNote = h('div', { class: 'panel__ask' });
   pAttr.body.append(attrHost, attrNote);
   const attrChart = waterfall(attrHost, [], { label: 'Contributo delle strategie al risultato', orient: 'h', format: (v) => fmtMoney(v, 'EUR', { digits: 2, signed: true }), levelFormat: (v) => fmtMoney(v, 'EUR', { digits: 0 }), totalFormat: (v) => fmtMoney(v, 'EUR', { digits: 2, signed: true }), valueHead: 'Contributo', levelHead: 'Somma' });
 
@@ -106,11 +107,11 @@ export function mount(root, api) {
   const cone = fanChart(coneHost, { label: 'Ventaglio atteso del profilo del paper e percorso del conto' });
 
   // ---- 7. confronto con l'originale ---------------------------------------------------------------------------------------
-  const pCmp = panel({ title: 'Confronto con il sistema originale', span: 4, what: 'Il nuovo sistema e quello originale del proprietario, partiti da 100 nel primo giorno in comune. Pochi giorni non bastano a dire chi è meglio: la differenza va letta insieme al numero di giorni osservati. Il test statistico completo (imbuto del caso) è nello spazio Evidenza.' });
+  const pCmp = panel({ title: 'Il fondo contro i mercati', span: 4, what: 'Il fondo, l\'S&P 500 e il Bitcoin negli stessi giorni, partiti da 100 nel primo giorno del confronto; se il motore ha le righe del sistema originale del proprietario, c\'è anche lui. Pochi giorni non bastano a dire chi è meglio: la differenza va letta insieme al numero di giorni osservati. Il test statistico completo (imbuto del caso) è nello spazio Evidenza.' });
   const cmpBig = h('div', { class: 'bignum' });
   const cmpHost = h('div', { class: 'chart-host' });
   pCmp.body.append(cmpBig, cmpHost);
-  const cmpChart = timeChart(cmpHost, { label: 'Nuovo sistema e sistema originale a base 100' });
+  const cmpChart = timeChart(cmpHost, { label: 'Fondo, S&P 500, Bitcoin e sistema originale a base 100' });
 
   // ---- 8. verso il denaro reale -----------------------------------------------------------------------------------------------
   const pGates = panel({ title: 'Verso il denaro reale', span: 4, what: 'I cancelli che il paper deve superare prima di poter usare denaro vero: giorni di prova, ordini eseguiti, errori, scostamento dal backtest. Finché non sono tutti verdi la modalità reale non esiste.' });
@@ -146,6 +147,17 @@ export function mount(root, api) {
     books.textContent = tb === undefined ? 'Libro dei trade: in lettura…'
       : !tn.complete ? `Libro giornaliero ${fmtMoney(tn.daily, ccy)} · contributo dei trade n.d. (libro non disponibile): il totale è solo il libro giornaliero`
         : `Libro giornaliero ${fmtMoney(tn.daily, ccy)} · contributo dei trade ${fmtMoney(tn.tradeGain, ccy, { signed: true })}${tbDay == null ? '' : ` (libro del ${fmtDayMonth(tbDay, true)})`}${tb.example ? ' · esempio' : ''}`;
+    // nessuna posizione: lo si dice, con il momento in cui il libro giornaliero può entrare (finestra delle azioni, regola del motore)
+    const flat = Array.isArray(snap.positions) && !snap.positions.length;
+    posLine.hidden = !flat;
+    if (flat) {
+      const win = nextEquityWindow(ctxNow.now, obj(obj(ctxNow.health).rules).equity_window);
+      const rome = (t, o) => new Intl.DateTimeFormat('it-IT', { timeZone: 'Europe/Rome', ...o }).format(new Date(t));
+      const sameDay = win && rome(win.start, { dateStyle: 'short' }) === rome(ctxNow.now, { dateStyle: 'short' });
+      posLine.replaceChildren(h('b', { text: 'Nessuna posizione aperta. ' }), win
+        ? `Azioni ed ETF entrano solo nella finestra ${rome(win.start, { hour: '2-digit', minute: '2-digit' })}–${rome(win.end, { hour: '2-digit', minute: '2-digit' })} ora italiana (${win.open ? 'aperta adesso' : sameDay ? 'prossima: oggi' : `prossima: ${rome(win.start, { weekday: 'short', day: 'numeric', month: 'short' })}`}); le crypto a ogni ciclo, se i segnali lo chiedono.`
+        : 'Finestra delle azioni n.d. (regola del motore non letta); le crypto entrano a ogni ciclo, se i segnali lo chiedono.');
+    }
     const start = num(nav.start_equity);
     const curve = curveOf(snap);
     const n = curve.t.length;
@@ -247,7 +259,10 @@ export function mount(root, api) {
     }
     if (!rows.length || total == null) {
       attrHost.hidden = true;
-      attrNote.replaceChildren('Nessun contributo da mostrare per questo periodo: la fotografia non riporta il P&L per strategia.');
+      const flat = Array.isArray(snap.positions) && !snap.positions.length;
+      attrNote.replaceChildren(flat && (total == null || Math.abs(total) < 0.005)
+        ? emptyState('Niente da attribuire', 'Nessuna posizione aperta e nessun guadagno o perdita nel periodo: la cascata per strategia compare con le prime posizioni.')
+        : 'Nessun contributo da mostrare per questo periodo: la fotografia non riporta il P&L per strategia.');
       return;
     }
     attrHost.hidden = false;
@@ -275,7 +290,7 @@ export function mount(root, api) {
     const filled = orders.filter((o) => str(o.status).toLowerCase() === 'filled');
     if (filled.length) list.push({ t: Math.max(...filled.map((o) => o.ts)), kind: '', k: 'Ordini', text: `${fmtNum(filled.length, 0)} ${filled.length === 1 ? 'ordine eseguito' : 'ordini eseguiti'}, ${fmtMoney(filled.reduce((a, o) => a + Math.abs((num(o.qty) || 0) * (num(o.price) || 0)), 0), ccy, { digits: 0 })} di controvalore.` });
     for (const o of orders.filter((x) => str(x.status).toLowerCase() === 'rejected')) list.push({ t: o.ts, kind: 'warn', k: 'Rifiuto', text: `${str(o.symbol)}: ${str(o.reason) || 'ordine rifiutato dal controllo di rischio'}` });
-    for (const e of arr(obj(tb).log).slice(-3)) { const t = parseTs(e.day); if (t != null && t >= since - DAY) list.push({ t, kind: '', k: 'Trade', text: str(e.msg || e.event), dayOnly: true }); }
+    for (const e of tradeLog(tb).filter((x) => !x.empty).slice(-3)) { if (e.t != null && e.t >= since - DAY) list.push({ t: e.t, kind: '', k: 'Trade', text: e.text, dayOnly: true }); }
     const ov = obj(obj(snap.ai).overlay);
     for (const st of arr(ov.strategie)) if (num(st.mult) != null && st.mult < 1) list.push({ t: now, kind: 'ai', k: 'Freno AI', text: `${str(st.id)} al ${fmtPct(st.mult, 0)}: ${str(st.motivo) || 'motivo non dichiarato'}`, nowish: true });
     list.sort((a, b) => b.t - a.t);
@@ -385,37 +400,56 @@ export function mount(root, api) {
   const arr0 = (v) => (Array.isArray(v) ? v : []);
 
   function paintCmp() {
-    const { snap } = ctxNow;
     if (cmp === undefined) { cmpHost.hidden = true; cmpBig.replaceChildren('…'); return; }
-    const rows = arr(obj(cmp).rows).map((r) => ({ t: parseTs(str(r.data)), a: num(r.nuovo_totale), b: num(r.legacy_nav), f: num(r.legacy_flusso) || 0 })).filter((r) => r.t != null && r.a != null && r.b != null);
-    if (rows.length < 3) {
+    // Il fondo contro S&P 500 e Bitcoin negli stessi giorni (colonne spy / btc del confronto) e, se c'è, contro il sistema originale.
+    const rows = arr(obj(cmp).rows).map((r) => ({ t: parseTs(str(r.data)), a: num(r.nuovo_totale), b: num(r.legacy_nav), f: num(r.legacy_flusso) || 0, spy: num(r.spy), btc: num(r.btc) }))
+      .filter((r) => r.t != null && r.a).sort((p, c) => p.t - c.t);
+    const n = rows.length;
+    if (n < 2) {
       cmpHost.hidden = true;
-      cmpBig.replaceChildren('n.d.');
-      pCmp.setAsk(cmp ? 'Servono almeno 3 giorni in comune tra i due conti.' : 'Il confronto giornaliero con il conto originale non è ancora stato scritto dal motore.');
-      pCmp.setProv();
+      cmpBig.replaceChildren(n ? '1 giorno' : 'n.d.', h('small', { class: 'bignum__sub', text: n ? 'il confronto parte dal secondo giorno' : 'nessuna riga ancora' }));
+      pCmp.setAsk(cmp ? 'Il confronto con S&P 500 e Bitcoin si riempie da solo: il motore scrive una riga al giorno con il patrimonio del fondo e le chiusure dei due mercati.' : 'Il confronto giornaliero non è ancora stato scritto dal motore: arriverà con il primo «python -m gerva daily».');
+      pCmp.setProv(cmp && cmp.example ? provTag('demo') : null);
+      pCmp.setFoot();
       return;
     }
     cmpHost.hidden = false;
     const x = rows.map((r) => r.t);
     const a = rows.map((r) => (r.a / rows[0].a) * 100);
+    const rebase = (key) => { const i0 = rows.findIndex((r) => r[key]); return i0 < 0 ? null : rows.map((r, i) => (i < i0 || !r[key] ? null : (r[key] / rows[i0][key]) * 100)); };
+    const spy = rebase('spy');
+    const btc = rebase('btc');
+    const hasOrig = rows.filter((r) => r.b).length >= 2;
     let acc = 100;
-    const b = rows.map((r, i) => { if (i > 0 && rows[i - 1].b) acc *= (r.b - r.f) / rows[i - 1].b; return acc; });      // i versamenti non sono rendimento
-    const n = rows.length;
-    const diff = a[n - 1] - b[n - 1];
+    const b = hasOrig ? rows.map((r, i) => { if (!r.b) return null; if (i > 0 && rows[i - 1].b) acc *= (r.b - r.f) / rows[i - 1].b; return acc; }) : null;      // i versamenti non sono rendimento
+    const last = (v) => (v ? [...v].reverse().find((y) => y != null) : null);
+    const ret = (v) => { const y = last(v); return y == null ? null : y / 100 - 1; };
+    const days = Math.round((x[n - 1] - x[0]) / 86400000);
     pCmp.setProv(provTag(cmp.example ? 'demo' : 'paper'));
-    cmpBig.replaceChildren('In corso', h('small', { class: 'bignum__sub', text: `${fmtNum(n, 0)} giorni comuni · distacco ${fmtSigned(diff, 1)} punti` }));
-    pCmp.setAsk('Per ora nessuno dei due batte l\'altro: servono ancora molti giorni per saperlo.');
+    const fund = ret(a);
+    cmpBig.replaceChildren(fmtPctSigned(fund, 1), h('small', { class: 'bignum__sub', text: `il fondo in ${fmtNum(days, 0)} ${days === 1 ? 'giorno' : 'giorni'} · S&P 500 ${ret(spy) == null ? 'n.d.' : fmtPctSigned(ret(spy), 1)} · Bitcoin ${ret(btc) == null ? 'n.d.' : fmtPctSigned(ret(btc), 1)}${hasOrig ? ` · originale ${fmtPctSigned(ret(b), 1)}` : ''}` }));
+    pCmp.setAsk(days < 30
+      ? `Solo ${fmtNum(days, 0)} ${days === 1 ? 'giorno' : 'giorni'}: troppo pochi per dire chi va meglio. In poche settimane un mercato può salire o scendere del 10% per caso; il confronto conta dopo mesi.`
+      : 'Stessi giorni, base 100 al primo giorno comune. Il fondo non cerca di battere un mercato in ogni periodo: conta il rendimento per il rischio preso, nello spazio Evidenza.');
+    const series = [
+      spy ? { values: spy, cls: 'bench', end: true, name: 'S&P 500' } : null,
+      btc ? { values: btc, cls: 'c3', end: true, name: 'Bitcoin' } : null,
+      b ? { values: b, cls: 'orig', end: true, name: 'Originale' } : null,
+      { values: a, cls: 'fund', end: true, name: 'Fondo' }].filter(Boolean);
+    const val = (v, i) => (v && v[i] != null ? fmtNum(v[i], 1) : '—');
     cmpChart.update({
       x,
-      panels: [{ height: 116, series: [{ values: b, cls: 'orig', end: true, name: 'Originale' }, { values: a, cls: 'fund', end: true, name: 'Nuovo' }], format: (v) => fmtNum(v, 0), refs: [{ value: 100, label: 'base 100' }] }],
-      tip: (i) => ({ title: fmtDate(x[i], true), rows: [{ key: 'fund', label: 'Nuovo sistema', value: fmtNum(a[i], 1) }, { key: 'orig', label: 'Sistema originale', value: fmtNum(b[i], 1) }, { label: 'Distacco', value: `${fmtSigned(a[i] - b[i], 1)} punti` }] }),
+      panels: [{ height: 116, series, format: (v) => fmtNum(v, 0), refs: [{ value: 100, label: 'base 100' }] }],
+      tip: (i) => ({ title: fmtDate(x[i], true), rows: [{ key: 'fund', label: 'Fondo', value: val(a, i) }, spy ? { key: 'bench', label: 'S&P 500', value: val(spy, i) } : null, btc ? { key: 'c3', label: 'Bitcoin', value: val(btc, i) } : null, b ? { key: 'orig', label: 'Sistema originale', value: val(b, i) } : null].filter(Boolean) }),
     });
     // freschezza: il confronto è una fonte a sé, scritta una volta al giorno; oltre l'età massima lo si dichiara
     const fr = freshness(x[n - 1], ctxNow.now, 'ibkr', obj(obj(ctxNow.health).rules));
     cmpHost.classList.toggle('is-stale', fr.stale === true);
     if (fr.stale) cmpBig.replaceChildren('Fermo', h('small', { class: 'bignum__sub', text: `ultima riga del ${fmtDayMonth(x[n - 1], true)}: il confronto non è aggiornato` }));
+    const key = (cls, text) => h('span', { class: 'legend__item' }, h('span', { class: `key key--${cls}`, 'aria-hidden': 'true' }), ` ${text}`);
     pCmp.setFoot(freshLine([{ name: 'confronto', text: `ultima riga del ${fmtDayMonth(x[n - 1], true)}`, stale: fr.stale === true }]),
-      h('span', { class: 'legend__item' }, h('span', { class: 'key key--fund', 'aria-hidden': 'true' }), ' nuovo'), h('span', { class: 'legend__item' }, h('span', { class: 'key key--orig', 'aria-hidden': 'true' }), ' originale'), ' · base 100 al primo giorno comune · il test completo è in Evidenza');
+      key('fund', 'fondo'), spy ? key('bench', 'S&P 500') : null, btc ? key('c3', 'Bitcoin') : null, b ? key('orig', 'originale') : null,
+      hasOrig ? ' · base 100 al primo giorno comune · il test contro l\'originale è in Evidenza' : ' · base 100 al primo giorno · il sistema originale non ha ancora righe');
   }
 
   function paintGates() {

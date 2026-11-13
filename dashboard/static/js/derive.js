@@ -448,6 +448,9 @@ export function watchedSymbols(snap, tb) {
     const sym = str(p.symbol).toUpperCase();
     if (sym && !out.has(sym)) out.set(sym, /ibkr/i.test(str(p.venue)) ? 'ibkr' : 'crypto');
   }
+  // le monete del registro in ombra del libro dei trade: il motore ne legge le barre ogni giorno, anche senza posizioni
+  const shadow = arr(obj(tb).shadow);
+  for (const sym of Object.keys(obj(shadow.length ? shadow[shadow.length - 1].coins : null))) if (!out.has(sym.toUpperCase())) out.set(sym.toUpperCase(), 'crypto');
   return [...out].map(([symbol, kind]) => ({ symbol, kind }));
 }
 
@@ -465,4 +468,65 @@ export function oldestSource(sources, now, rules) {
     if (!worst || f.hours - f.maxHours > worst.hours - worst.maxHours) worst = { name: str(sc.name), day: f.day, hours: f.hours, maxHours: f.maxHours };
   }
   return worst ? { ...worst, count } : null;
+}
+
+/**
+ * Prossima finestra delle azioni (regola del motore `equity_window`, ora di New York, solo lun–ven) → { start, end, open } in ms.
+ * Le ore vengono dalla regola letta da /api/v1/health; senza regola: null (la pagina dice «n.d.», nessun orario predefinito).
+ */
+export function nextEquityWindow(now, rule) {
+  const r = obj(rule);
+  const re = /^(\d\d):(\d\d)$/;
+  const a = re.exec(str(r.start));
+  const b = re.exec(str(r.end));
+  if (!a || !b || now == null) return null;
+  const tz = str(r.tz) || 'America/New_York';
+  let fmt;
+  try { fmt = new Intl.DateTimeFormat('en-US', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', weekday: 'short' }); } catch (e) { return null; }
+  const parts = (t) => Object.fromEntries(fmt.formatToParts(new Date(t)).map((p) => [p.type, p.value]));
+  // istante UTC in cui l'orologio di `tz` segna y-m-d hh:mm (due passi bastano anche al cambio d'ora)
+  const at = (y, m, d, hh, mm) => {
+    let t = Date.UTC(y, m - 1, d, hh, mm);
+    for (let k = 0; k < 2; k++) { const p = parts(t); t += Date.UTC(y, m - 1, d, hh, mm) - Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour % 24, +p.minute); }
+    return t;
+  };
+  const p0 = parts(now);
+  for (let k = 0; k < 8; k++) {
+    const day = new Date(Date.UTC(+p0.year, +p0.month - 1, +p0.day + k));
+    const wd = day.getUTCDay();
+    if (wd === 0 || wd === 6) continue;
+    const start = at(day.getUTCFullYear(), day.getUTCMonth() + 1, day.getUTCDate(), +a[1], +a[2]);
+    const end = at(day.getUTCFullYear(), day.getUTCMonth() + 1, day.getUTCDate(), +b[1], +b[2]);
+    if (now < end) return { start, end, open: now >= start };
+  }
+  return null;
+}
+
+/**
+ * Registro del libro dei trade in righe: il motore scrive { day, events: [testo…] } (gerva/live/tradecycle.py), l'esempio { day, msg }.
+ * → [{ day, t, text, empty }]; un giorno senza eventi diventa una riga `empty` (il ciclo ha girato e non ha aperto né chiuso nulla).
+ */
+export function tradeLog(tb) {
+  const out = [];
+  for (const e of arr(obj(tb).log)) {
+    const day = str(e.day);
+    const t = parseTs(day);
+    const evs = Array.isArray(e.events) ? e.events.map((x) => str(x).trim()).filter(Boolean) : [str(e.msg || e.event).trim()].filter(Boolean);
+    if (!evs.length) out.push({ day, t, text: 'nessun trade aperto o chiuso', empty: true });
+    for (const text of evs) out.push({ day, t, text, empty: false });
+  }
+  return out;
+}
+
+/**
+ * Esposizione per strategia dal conto: somma di |peso| delle posizioni della strategia. Il motore scrive in `strategies[].exposure`
+ * l'esposizione voluta dal modello, che prima della finestra delle azioni può non esserci ancora nel conto: quando la fotografia ha la
+ * lista delle posizioni (anche vuota) vale il conto; senza lista resta il numero del motore.
+ */
+export function strategyExposure(snap, id) {
+  const pos = obj(snap).positions;
+  if (!Array.isArray(pos)) return num(arr(obj(snap).strategies).find((s) => str(s.id) === id)?.exposure);
+  const mine = pos.filter((p) => str(p.strategy) === id);
+  if (mine.some((p) => num(p.weight) == null)) return num(arr(obj(snap).strategies).find((s) => str(s.id) === id)?.exposure);
+  return mine.reduce((a, p) => a + Math.abs(p.weight), 0);
 }

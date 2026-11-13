@@ -123,6 +123,20 @@ def test_css_degli_spazi_usa_solo_token_definiti():
     assert "prefers-reduced-motion" in css
 
 
+def test_taglie_della_griglia_tornano_a_una_colonna_al_telefono():
+    """Ogni foglio che dichiara `.ws > .span-N` ha, nello stesso foglio, il ritorno a una colonna sotto gli 860 px: nessun foglio
+    caricato dopo può riallargare una scheda al telefono (era successo a Rischio a 390 px)."""
+    for name in ("glass.css", "spaces.css"):
+        css = (STATIC / "css" / name).read_text(encoding="utf-8")
+        if not re.search(r"\.ws > \.span-\d+\s*\{", css):
+            continue
+        resets = re.findall(r"@media \(max-width: 860px\) \{[^@]*?\.ws > \[class\*=\"span-\"\] \{ grid-column: auto; \}", css)
+        assert resets, name
+        assert css.rfind(".ws > [class*=\"span-\"] { grid-column: auto; }") > max(m.start() for m in re.finditer(r"\.ws > \.span-\d+", css)), name
+    glass = (STATIC / "css" / "glass.css").read_text(encoding="utf-8")
+    assert "#view .ws >" not in glass                                                          # niente toppe di specificità
+
+
 # ---------------------------------------------------------------------------
 # Una sola verità: le funzioni di derive.js usate dai quattro spazi
 # ---------------------------------------------------------------------------
@@ -277,3 +291,43 @@ def test_fonti_degli_spazi_in_demo(client):
     snap = client.get("/api/v1/snapshot").json()
     assert any(g["value"] is None for g in snap["gates"]) and {"regime", "conviction", "overlay"} <= set(snap["ai"])
     assert client.get("/css/spaces.css").status_code == 200 and client.get("/js/views/evidenza.js").status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# Conto appena partito (paper senza posizioni, libro dei trade vuoto, nessun confronto)
+# ---------------------------------------------------------------------------
+def test_finestra_delle_azioni_in_ora_italiana(tmp_path):
+    """15:45–16:00 a New York = 21:45–22:00 in Italia quasi tutto l'anno, 20:45 nelle settimane in cui solo gli USA hanno l'ora legale;
+    nel fine settimana la finestra è il lunedì; senza regola nessun orario predefinito."""
+    rule = {"start": "15:45", "end": "16:00", "tz": "America/New_York"}
+    out = _node("[I.now.map((t) => D.nextEquityWindow(Date.parse(t), I.rule)), D.nextEquityWindow(Date.parse(I.now[0]), null)]",
+                dict(rule=rule, now=["2026-11-13T05:18:00Z", "2026-11-13T20:50:00Z", "2026-11-14T10:00:00Z", "2026-03-10T12:00:00Z"]), tmp_path)
+    wins, none = out
+    from datetime import datetime, timezone
+    iso = lambda ms: datetime.fromtimestamp(ms / 1000, timezone.utc).strftime("%Y-%m-%dT%H:%M")
+    assert [iso(w["start"]) for w in wins] == ["2026-11-13T20:45", "2026-11-13T20:45", "2026-11-16T20:45", "2026-03-10T19:45"]
+    assert [iso(w["end"]) for w in wins][0] == "2026-11-13T21:00" and [w["open"] for w in wins] == [False, True, False, False]
+    assert none is None
+
+
+def test_registro_del_libro_nei_due_formati_e_esposizione_dal_conto(tmp_path):
+    tb = {"log": [{"day": "2026-11-12", "events": []}, {"day": "2026-11-13", "events": ["aperto BTC (confermato): leva 15,0x"]}, {"day": "2026-11-05", "msg": "chiuso SOL (stop): -1,00 R"}],
+          "shadow": [{"day": "2026-11-12", "coins": {"BTC": {}, "ETH": {}}}]}
+    snap_flat = {"positions": [], "strategies": [{"id": "MA-TREND", "exposure": 0.684}]}
+    snap_pos = {"positions": [{"symbol": "SPY", "strategy": "MA-TREND", "weight": 0.2}, {"symbol": "GLD", "strategy": "MA-TREND", "weight": -0.1}], "strategies": [{"id": "MA-TREND", "exposure": 0.684}]}
+    out = _node("[D.tradeLog(I.tb), D.strategyExposure(I.flat, 'MA-TREND'), D.strategyExposure(I.pos, 'MA-TREND'), D.strategyExposure({ strategies: I.flat.strategies }, 'MA-TREND'), D.watchedSymbols(I.flat, I.tb)]",
+                dict(tb=tb, flat=snap_flat, pos=snap_pos), tmp_path)
+    log, flat, pos, nolist, watched = out
+    assert [(r["day"], r["text"], r["empty"]) for r in log] == [("2026-11-12", "nessun trade aperto o chiuso", True), ("2026-11-13", "aperto BTC (confermato): leva 15,0x", False), ("2026-11-05", "chiuso SOL (stop): -1,00 R", False)]
+    assert flat == 0 and pos == pytest.approx(0.3) and nolist == pytest.approx(0.684)                # il conto vince sul modello quando c'è la lista
+    assert [w["symbol"] for w in watched] == ["BTC", "ETH"]
+
+
+def test_viste_senza_posizioni_lo_dicono():
+    oggi, rischio, port = _view("oggi.js"), _view("rischio2.js"), _view("portafoglio.js")
+    assert "Nessuna posizione aperta." in oggi and "nextEquityWindow(" in oggi and "ora italiana" in oggi and "Europe/Rome" in oggi
+    assert "spy" in oggi and "btc" in oggi and "S&P 500" in oggi and "Bitcoin" in oggi and "troppo pochi" in oggi
+    assert "Nessuna posizione da mettere sotto stress" in rischio and "mai «−0,00»" in rischio
+    assert "provTag('sim', 'Modello')" in port and "strategyExposure(" in port
+    rules = server._engine_rules()
+    assert rules.get("equity_window") == {"start": "15:45", "end": "16:00", "tz": "America/New_York"}

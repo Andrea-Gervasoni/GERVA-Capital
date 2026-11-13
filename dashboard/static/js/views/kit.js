@@ -62,7 +62,7 @@ export function errBars(host, { label = 'Media per fetta' } = {}) {
     const minN = d.minN ?? 30;
     const rowH = 30;
     const top = 26;
-    const labelW = Math.min(Math.round(w * 0.36), Math.max(64, ...rows.map((r) => String(r.label).length * 6.6 + 10)));
+    const labelW = Math.min(Math.round(w * (w < 480 ? 0.46 : 0.36)), Math.max(64, ...rows.map((r) => String(r.label).length * 6.6 + 10)));
     const nW = 46;
     const left = labelW;
     const right = w - nW;
@@ -97,7 +97,11 @@ export function errBars(host, { label = 'Media per fetta' } = {}) {
       prevGroup = r.group || prevGroup;
       const x0 = xOf(0);
       const x1 = xOf(r.mean);
-      g.append(s('text', { class: 'sp-eb__label', x: 0, y: cy + 4 }, String(r.label)));
+      const full = String(r.label);
+      const fit = Math.floor((labelW - 10) / 6.6);
+      const lab = s('text', { class: 'sp-eb__label', x: 0, y: cy + 4 }, full.length > fit ? `${full.slice(0, Math.max(3, fit - 1)).trimEnd()}…` : full);
+      if (full.length > fit) lab.append(s('title', {}, full));
+      g.append(lab);
       g.append(s('rect', { class: `sp-bar sp-bar--${r.mean >= 0 ? 'up' : 'down'} ${d.solid ? 'sp-bar--solid' : ''}`.trim(), x: Math.min(x0, x1).toFixed(1), y: cy - 6, width: Math.max(1, Math.abs(x1 - x0)).toFixed(1), height: 12, rx: 3 }));
       if (num(r.lo) != null && num(r.hi) != null) {
         const a = xOf(r.lo).toFixed(1);
@@ -218,11 +222,15 @@ export function colHist(host, { label = 'Distribuzione' } = {}) {
       svg.append(s('line', { class: 'c-axis', x1: Math.round(x) + 0.5, x2: Math.round(x) + 0.5, y1: bottom, y2: bottom + 4 }), s('text', { class: 'c-tick c-tick--x', x: x.toFixed(1), y: bottom + 17, 'text-anchor': edge }, xFormat(v)));
     }
     if (d.xTitle) svg.append(s('text', { class: 'c-tick', x: right, y: H - 6, 'text-anchor': 'end' }, d.xTitle));
+    const yRow = (l) => 6 + (lines - 1 - l.row) * rowHt + 10;
+    for (const l of labels) {                                   // prima tutte le righe, poi tutte le etichette: nessuna riga attraversa un testo
+      const x = Math.round(l.x) + 0.5;
+      svg.append(s('line', { class: `sp-rule ${l.r.cls ? `sp-rule--${l.r.cls}` : ''}`.trim(), x1: x, x2: x, y1: yRow(l) - 9, y2: bottom }));
+    }
     for (const l of labels) {
       const x = Math.round(l.x) + 0.5;
-      const y = 6 + (lines - 1 - l.row) * rowHt + 10;
-      svg.append(s('line', { class: `sp-rule ${l.r.cls ? `sp-rule--${l.r.cls}` : ''}`.trim(), x1: x, x2: x, y1: y - 9, y2: bottom }),
-        s('text', { class: 'c-ref-label sp-ref-label', x: l.flip ? x - 6 : x + 6, y, 'text-anchor': l.flip ? 'end' : null }, l.text),
+      const y = yRow(l);
+      svg.append(s('text', { class: 'c-ref-label sp-ref-label', x: l.flip ? x - 6 : x + 6, y, 'text-anchor': l.flip ? 'end' : null }, l.text),
         l.r.sub ? s('text', { class: 'c-tick sp-ref-sub', x: l.flip ? x - 6 : x + 6, y: y + 13, 'text-anchor': l.flip ? 'end' : null }, l.r.sub) : null);
     }
     if (!svg.dataset.drawn) { svg.dataset.drawn = '1'; svg.classList.add('is-new'); svg.addEventListener('animationend', () => svg.classList.remove('is-new'), { once: true }); }
@@ -273,7 +281,7 @@ export function luckChart(host, { label = 'Quanto può essere fortuna' } = {}) {
       if (Number.isInteger(v) && x > left + 12 && x < right - 70) svg.append(s('text', { class: 'c-tick c-tick--x', x: x.toFixed(1), y: bottom + 17 }, fmtNum(v, 0)));
     }
     svg.append(s('text', { class: 'c-tick', x: right, y: bottom + 17, 'text-anchor': 'end' }, 'Sharpe →'));
-    svg.append(s('text', { class: 'c-tick', x: xOf(0), y: bottom - ph * 0.36, 'text-anchor': 'middle' }, 'una prova'), s('text', { class: 'c-tick', x: xOf(0), y: bottom - ph * 0.36 + 13, 'text-anchor': 'middle' }, 'senza abilità'));
+    svg.append(s('text', { class: 'c-tick sp-onfill', x: xOf(0), y: bottom - ph * 0.36, 'text-anchor': 'middle' }, 'una prova'), s('text', { class: 'c-tick sp-onfill', x: xOf(0), y: bottom - ph * 0.36 + 13, 'text-anchor': 'middle' }, 'senza abilità'));
     const xm = Math.round(xOf(d.expectedMax)) + 0.5;
     svg.append(s('line', { class: 'sp-rule sp-rule--strong', x1: xm, x2: xm, y1: 14, y2: bottom }),
       s('text', { class: 'c-ref-label sp-ref-label', x: xm - 6, y: 12, 'text-anchor': 'end' }, `il migliore di ${fmtNum(d.trials, 0)} a caso: ${fmtNum(d.expectedMax, 2)}`));

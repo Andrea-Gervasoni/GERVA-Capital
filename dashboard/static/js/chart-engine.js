@@ -504,8 +504,17 @@ export function scatter(host, points, opts = {}) {
     if (showLabels && vis.length <= 40) {
       vis.forEach((p, i) => {
         if (!p.label) return;
-        const flip = px[i] > right - 90;
-        svg.append(s('text', { class: 'c-pt-label', x: (px[i] + (flip ? -1 : 1) * (pr[i] + 4)).toFixed(1), y: (py[i] + 3.5).toFixed(1), 'text-anchor': flip ? 'end' : null }, p.label));
+        // Larghezza stimata (≈6,2 px per carattere a 11 px): l'etichetta va dove c'è posto; se non sta da nessuna parte si accorcia con «…».
+        const roomR = w - 2 - (px[i] + pr[i] + 4);
+        const roomL = px[i] - pr[i] - 4 - left;
+        const est = (t) => t.length * 6.2;
+        const flip = est(p.label) > roomR && roomL > roomR;
+        const room = flip ? roomL : roomR;
+        let text = p.label;
+        if (est(text) > room) text = `${text.slice(0, Math.max(3, Math.floor(room / 6.2) - 1)).trimEnd()}…`;
+        const node = s('text', { class: 'c-pt-label', x: (px[i] + (flip ? -1 : 1) * (pr[i] + 4)).toFixed(1), y: (py[i] + 3.5).toFixed(1), 'text-anchor': flip ? 'end' : null }, text);
+        if (text !== p.label) node.append(s('title', {}, p.label));
+        svg.append(node);
       });
     }
     for (const rl of labels) {

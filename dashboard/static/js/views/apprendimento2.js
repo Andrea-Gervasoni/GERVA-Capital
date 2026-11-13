@@ -376,9 +376,10 @@ export function mount(root) {
 
   function paintReg() {
     const list = arr(L().registry);
+    pReg.setProv(...(list.length ? learnTags() : []));
     regBox.replaceChildren(list.length ? simpleTable('Registro di tutte le ipotesi provate', [
       { label: 'Regola', cell: (r) => plainRule(r.rule) }, { label: 'Stato', cell: (r) => stateOf(r.state) }, { label: 'Verdetto di', cell: (r) => str(r.by) }, { label: 'Proposta da', cell: (r) => str(r.origin) }, { label: 'ID', cell: (r) => h('code', { class: 'sp-code', text: str(r.id) }) },
-    ], list) : emptyState('Registro vuoto'));
+    ], list) : emptyState('Registro vuoto', 'Ogni ipotesi che il ciclo prova finisce qui, con lo stato e chi l\'ha giudicata; la prima arriva con il primo «python -m gerva learn».'));
   }
 
   function paintLearn() {

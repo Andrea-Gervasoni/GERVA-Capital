@@ -9,7 +9,7 @@ import { segmented } from '../components.js';
 import { h, icon } from '../dom.js';
 import { arr, fmtDate, fmtDayMonth, fmtMoney, fmtNum, fmtPct, fmtPctSigned, fmtSigned, num, obj, parseTs, str } from '../format.js';
 import { getOhlc, getSymbols, getTradebook } from '../market.js';
-import { convLevel, freshness, gqLevel, tradeAge, tradeR } from '../derive.js';
+import { convLevel, freshness, gqLevel, tradeAge, tradeLog, tradeR } from '../derive.js';
 import { emptyState, panel, provOf, provTag, tradeMarkers } from '../panels.js';
 
 const DAY = 86400000;
@@ -238,11 +238,11 @@ export function mount(root, api) {
       const rs = closed.map((t) => num(t.R)).filter((v) => v != null);
       pBook.setFoot(`${fmtNum(closed.length, 0)} chiusi · vinti ${fmtNum(rs.filter((v) => v > 0).length, 0)} · R medio ${rs.length ? fmtSigned(rs.reduce((a, b) => a + b, 0) / rs.length, 2) : 'n.d.'}${rs.length < 30 ? ` · n = ${fmtNum(rs.length, 0)}: troppo pochi per una statistica` : ''}`);
     } else {
-      const log = arr(tb.log).slice(-6).reverse();
+      const log = tradeLog(tb).slice(-6).reverse();
       const shadow = arr(tb.shadow);
       const lastShadow = shadow.length ? shadow[shadow.length - 1] : null;
       const coins = Object.entries(obj(lastShadow && lastShadow.coins));
-      bookBox.replaceChildren(h('div', { class: 'events' }, log.length ? log.map((e) => { const t = parseTs(str(e.day)); return h('div', { class: 'event' }, h('span', { class: 'event__t', text: t == null ? str(e.day) : fmtDayMonth(t, true) }), h('span', { class: 'event__k', text: 'Ciclo' }), h('span', { text: str(e.msg || e.event) || 'n.d.' })); }) : emptyState('Nessuna decisione registrata')),
+      bookBox.replaceChildren(h('div', { class: 'events' }, log.length ? log.map((e) => h('div', { class: `event ${e.empty ? 'event--quiet' : ''}`.trim() }, h('span', { class: 'event__t', text: e.t == null ? e.day : fmtDayMonth(e.t, true) }), h('span', { class: 'event__k', text: 'Ciclo' }), h('span', { text: e.text }))) : emptyState('Nessuna decisione registrata')),
         coins.length ? table(`Segnali del ${str(lastShadow.day)}`, [{ t: 'Strumento' }, { t: 'Conviction', num: 1 }, { t: 'Livello' }, { t: 'GQ (in ombra)', num: 1 }, { t: 'Livello GQ' }],
           coins.map(([sym, c]) => ({ sym, cells: [h('b', { text: sym }), num(c.conviction) == null ? 'n.d.' : fmtNum(c.conviction, 2), str(c.conviction_tier) || 'n.d.', num(c.gq) == null ? 'n.d.' : fmtSigned(c.gq, 2), str(c.gq_tier) || 'n.d.'] })), (r) => select(r.sym)) : null);
       pBook.setFoot(lastShadow ? `Segnali del ${str(lastShadow.day)} · l'indicatore GQ è in ombra: si registra, non decide.` : 'Nessun registro in ombra.');

@@ -394,7 +394,8 @@ export function mount(root, api) {
     const { snap } = ctxNow;
     const ov = new Map(arr(obj(obj(snap.ai).overlay).strategie).map((st) => [str(st.id), num(st.mult)]));
     const ps = paperStart(snap);
-    pStrat.meta.textContent = ps.days != null && ps.days < 60 ? `Sharpe paper: — · ${fmtNum(ps.days, 0)} giorni su 60` : '';
+    const model = provOf(snap.meta) !== 'demo' && provOf(snap.meta) !== 'sim' && ps.days != null && ps.days < 30;     // oggi / mese / 30 g del modello, non del conto
+    pStrat.meta.textContent = model ? `oggi, mese, 30 g: modello (SIMULATO) · paper ${fmtNum(ps.days, 0)} giorni` : ps.days != null && ps.days < 60 ? `Sharpe paper: — · ${fmtNum(ps.days, 0)} giorni su 60` : '';
     stratList.set(arr(snap.strategies).map((st) => {
       const mult = ov.get(str(st.id));
       return { key: str(st.id), sym: '', cells: [h('span', { title: str(st.name) }, h('b', { text: str(st.id) }), mult != null && mult < 1 ? h('span', { class: 'tchip tchip--ai', title: `Freno dell'AI in vigore: quota × ${fmtNum(mult, 2)}`, text: `×${fmtNum(mult, 2, 0)}` }) : null),
@@ -479,7 +480,7 @@ export function mount(root, api) {
     paintEquity();
     if (!sel && symbols) {
       const want = str(ctxNow.params.s).toUpperCase();
-      const first = [want, ...openTrades().map((t) => str(t.symbol)), ...arr(ctxNow.snap.positions).map((p) => str(p.symbol).toUpperCase())].find((s) => s && symbols.has(s)) || [...symbols.keys()][0] || '';
+      const first = [want, ...openTrades().map((t) => str(t.symbol)), ...arr(ctxNow.snap.positions).map((p) => str(p.symbol).toUpperCase()), 'BTC', 'SPY'].find((s) => s && symbols.has(s)) || [...symbols.keys()][0] || '';   // senza posizioni: BTC, il mercato che il fondo segue di più
       if (first) pick(first);
     }
   }

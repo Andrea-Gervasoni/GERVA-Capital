@@ -425,6 +425,9 @@ def _engine_rules() -> dict:
         out["trade_risk"] = {k: float(v) for k, v in tr.items() if isinstance(v, (int, float))}
         if isinstance(cfg.get("interval_s"), (int, float)):
             out["interval_s"] = float(cfg["interval_s"])
+        ew = cfg.get("equity_window")
+        if isinstance(ew, (list, tuple)) and len(ew) == 2 and all(isinstance(v, str) and re.fullmatch(r"\d\d:\d\d", v) for v in ew):
+            out["equity_window"] = {"start": ew[0], "end": ew[1], "tz": "America/New_York"}     # la finestra delle azioni, in ora di New York
     except Exception:
         pass
     _rules_cache.update(t=time.time(), v=out)

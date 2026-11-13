@@ -124,17 +124,20 @@ export function mount(root, api) {
     if (!w) { worstKv.replaceChildren(emptyState('Patrimonio non disponibile')); worstVerdict.hidden = true; return; }
     const row = (k, v, cls = '') => h('div', null, h('span', { class: 'k', text: k }), h('span', { class: `v ${cls}`.trim(), text: v }));
     const least = w.atLeast ? 'almeno ' : '';
+    const loss = (v) => fmtMoney(v ? -v : 0, ccy);             // mai «−0,00»
+    const flat = Array.isArray(snap.positions) && !snap.positions.length && !Object.keys(obj(obj(tb).open)).length;
     worstKv.replaceChildren(...[
       row('Patrimonio di oggi (libro giornaliero)', fmtMoney(w.equity, ccy, { digits: 0 })),
-      row('Perdite agli stop', tb === undefined ? '…' : w.stops == null ? 'n.d. (libro dei trade assente)' : fmtMoney(-w.stops, ccy), 'neg'),
-      row('Oltre lo stop, fino ai margini', tb === undefined ? '…' : w.beyond == null ? 'n.d.' : fmtMoney(-w.beyond, ccy), 'neg'),
-      row(w.worstDay ? `Libro giornaliero: ${str(w.worstDay.day.name)}` : 'Gap del libro giornaliero', w.gap == null ? (quant4Status === 'loading' ? '…' : 'n.d. (manca la tabella degli shock)') : `${least}${fmtMoney(-w.gap, ccy)}`, 'neg'),
+      row('Perdite agli stop', tb === undefined ? '…' : w.stops == null ? 'n.d. (libro dei trade assente)' : loss(w.stops), w.stops ? 'neg' : ''),
+      row('Oltre lo stop, fino ai margini', tb === undefined ? '…' : w.beyond == null ? 'n.d.' : loss(w.beyond), w.beyond ? 'neg' : ''),
+      row(w.worstDay ? `Libro giornaliero: ${str(w.worstDay.day.name)}` : 'Gap del libro giornaliero', w.gap == null ? (quant4Status === 'loading' ? '…' : 'n.d. (manca la tabella degli shock)') : `${least}${loss(w.gap)}`, w.gap ? 'neg' : ''),
       w.coverage != null ? row('Copertura degli shock', `${fmtPct(w.coverage, 0)} dell'esposizione${w.worstDay.missing.length ? ` · non coperti: ${w.worstDay.missing.join(', ')}` : ''}`) : null,
       row('Patrimonio finale', `${w.atLeast ? 'al più ' : ''}${fmtMoney(w.final, ccy, { digits: 0 })}`)].filter(Boolean));
     worstVerdict.hidden = false;
     const kill = w.stepHit && /kill|chiud/i.test(str(w.stepHit.action));
     worstVerdict.className = `verdict ${!fresh ? '' : kill ? 'verdict--crit' : !w.stepHit && !w.dayHit && !w.atLeast ? 'verdict--ok' : ''}`.trim();
-    worstVerdict.replaceChildren(h('b', { text: `${least}${fmtPctSigned(-w.loss, 1)} in un giorno` }), w.ddAfter == null ? '' : ` · caduta dal massimo ${least}${fmtPctSigned(w.ddAfter, 1)}. `,
+    if (flat && fresh) { worstVerdict.className = 'verdict verdict--ok'; worstVerdict.replaceChildren(h('b', { text: 'Nessuna posizione aperta né trade a leva.' }), 'Oggi il conto è tutto liquidità: il peggior caso è zero.'); }
+    else worstVerdict.replaceChildren(h('b', { text: `${least}${fmtPctSigned(-w.loss, 1)} in un giorno` }), w.ddAfter == null ? '' : ` · caduta dal massimo ${least}${fmtPctSigned(w.ddAfter, 1)}. `,
       w.stepHit ? `Scatterebbe lo scalino ${fmtPct(w.stepHit.level, 0)}: ${str(w.stepHit.action)}.` : w.dayHit ? `Scatterebbe il freno delle 24 ore (${fmtPct(w.dayLimit, 0)}).` : w.atLeast ? '' : 'Nessun freno scatterebbe.',
       w.atLeast && !kill ? ' La stima è un minimo: parte dell\'esposizione non ha uno shock o manca il libro dei trade, quindi non si può escludere uno scalino più profondo.' : '',
       fresh ? '' : ' Calcolato sull\'ultima fotografia ricevuta: i dati sono fermi.');
@@ -189,6 +192,11 @@ export function mount(root, api) {
     pStress.setProv(provTag('sim'), provOf(snap.meta) === 'demo' ? provTag('demo', 'Posizioni di esempio') : null);
     if (!days.length) {
       stressBox.replaceChildren(emptyState(quant4Status === 'loading' ? 'Ricerca in lettura…' : 'Non ancora calcolabile', 'Manca la tabella degli shock per strumento (research/v5/quant_v4.json, stress_days). Qui compariranno 12 mar 2020, 19 mag 2021, 5 ago 2024, 10 ott 2025 applicati al libro di oggi.'));
+      pStress.setFoot();
+      return;
+    }
+    if (Array.isArray(snap.positions) && !snap.positions.length && !Object.keys(obj(obj(tb).open)).length) {
+      stressBox.replaceChildren(emptyState('Nessuna posizione da mettere sotto stress', 'Con il conto tutto in liquidità le quattro giornate storiche (12 mar 2020, 19 mag 2021, 5 ago 2024, 10 ott 2025) non toccano nulla. Compariranno con le prime posizioni.'));
       pStress.setFoot();
       return;
     }
@@ -295,7 +303,7 @@ export function mount(root, api) {
       const first = bk.next;
       const d = { dd: first ? bk.dd : null };
       const lims = arr(obj(ctx.snap.risk).limits).map((l) => ({ l, u: utilization(l.value, l.limit) })).filter((x) => x.u != null).sort((a, b) => b.u - a.u);
-      return `Lo stato è ${rs.label}${first && d.dd != null ? `: mancano ${fmtNum((d.dd - first.level) * 100, 1)} punti al ${bk.hit ? 'prossimo' : 'primo'} freno (${fmtPct(first.level, 0)})` : ''}. ${lims.length ? `Il limite più vicino è «${str(lims[0].l.name)}», al ${fmtPct(lims[0].u, 0)} del tetto.` : ''}`;
+      return `Lo stato è ${rs.label}${first && d.dd != null ? `: mancano ${fmtNum((d.dd - first.level) * 100, 1)} punti al ${bk.hit ? 'prossimo' : 'primo'} freno (${fmtPct(first.level, 0)})` : ''}. ${Array.isArray(ctx.snap.positions) && !ctx.snap.positions.length ? 'Nessuna posizione aperta: tutti i tetti sono a zero.' : lims.length ? `Il limite più vicino è «${str(lims[0].l.name)}», usato al ${fmtPct(lims[0].u, 0)} del tetto.` : ''}`;
     },
   };
 }

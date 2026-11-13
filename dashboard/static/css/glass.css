@@ -99,7 +99,10 @@ body.is-still .aurora i, body.is-dragging .aurora i { animation-play-state: paus
 
 .capsule { position: sticky; top: 14px; z-index: var(--z-chrome); display: flex; align-items: center; gap: 14px; min-height: var(--topbar-h); padding: 0 10px 0 22px; }
 .band { display: inline-flex; align-items: center; gap: 8px; min-width: 0; flex: 0 1 auto; white-space: nowrap; }
-.band__label { display: inline-flex; min-width: 0; font: var(--type-caption); color: var(--text-2); }
+.band__label { display: inline-flex; min-width: 0; overflow: hidden; font: var(--type-caption); color: var(--text-2); }
+.band > .tag { flex: none; }   /* l'etichetta di provenienza non si comprime mai: si accorcia la frase accanto (sovrapposizione a 1024 px) */
+.capsule > .band { min-width: 76px; overflow: hidden; padding-block: 2px; }
+@media (min-width: 861px) and (max-width: 1180px) { .capsule > .band .band__label { display: none; } .capsule > .band { min-width: auto; } }
 .band__text { overflow: hidden; text-overflow: ellipsis; min-width: 6ch; }
 .band__day { flex: none; }
 .band__why { flex: 1 1 0; min-width: 0; font: var(--type-caption); color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -121,11 +124,11 @@ body.is-still .aurora i, body.is-dragging .aurora i { animation-play-state: paus
 .capsule > .pill, .capsule > .live, .capsule > .band__item { flex: none; }
 
 .main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap-grid); padding: var(--sp-5) 0 0; outline: none; }
-.pagehead { display: grid; gap: 8px; padding: 4px 8px 2px; }
-.pagehead__row { display: flex; align-items: center; gap: 10px 16px; flex-wrap: wrap; min-height: var(--control-h); }
+.pagehead { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 4px 8px 2px; }
+.pagehead__row { display: flex; align-items: center; gap: 10px 16px; flex-wrap: wrap; min-height: var(--control-h); min-width: 0; }
 .pagehead__title { font: var(--type-page); letter-spacing: var(--tr-title); outline: none; }
 .pagehead__date { font: var(--type-body); color: var(--text-2); }
-.pagehead__tabs { margin-left: auto; max-width: 100%; }
+.pagehead__tabs { margin-left: auto; max-width: 100%; min-width: 0; }
 .summary { padding: 0; border: 0; border-radius: 0; background: none; font: var(--type-body); font-size: var(--fs-lead); line-height: 1.5; color: var(--text); max-width: 110ch; }
 .summary__tag { margin-right: 10px; font: var(--type-micro); letter-spacing: var(--tr-micro); text-transform: uppercase; color: var(--accent-ink); }
 .sources { font: var(--type-caption); color: var(--text-3); }
@@ -331,7 +334,7 @@ body[data-level="terminale"] .main { padding-top: 14px; }
   .dock a, .dock button { display: grid; place-items: center; align-content: center; gap: 4px; border: 0; background: none; border-radius: var(--radius-pill); font: 500 10px/1 var(--font-ui); color: var(--text-2); min-width: 0; }
   .dock [aria-current="page"] { background: var(--thumb-bg); box-shadow: var(--thumb-fx); color: var(--text); font-weight: 600; }
   .dock [aria-current="page"] .icon { color: var(--accent-ink); }
-  .pagehead { padding: 0 4px; } .pagehead__tabs { margin-left: 0; overflow-x: auto; scrollbar-width: none; }
+  .pagehead { padding: 0 4px; } .pagehead__tabs { margin-left: 0; overflow-x: auto; scrollbar-width: none; } .pagehead__tabs .seg { flex-wrap: nowrap; max-width: none; } .pagehead__tabs .seg__btn { white-space: nowrap; flex: none; }
   .sheet { margin: auto 12px calc(12px + env(safe-area-inset-bottom)); width: auto; max-width: none; max-height: 82vh; }
   .keys { grid-template-columns: minmax(0, 1fr); }
   .gallery .span-6 { grid-column: span 12; } .gallery__candle { height: 520px; }
@@ -386,7 +389,7 @@ body[data-level="semplice"] .not-semplice { display: none !important; }
 
 /* ============ riquadri degli spazi nuovi (Oggi, Rischio, Mercati) ============ */
 .ws { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--gap-grid); align-items: stretch; }
-.ws > .span-3 { grid-column: span 3; } .ws > .span-9 { grid-column: span 9; }
+.ws > .span-3 { grid-column: span 3; } .ws > .span-9 { grid-column: span 9; } .ws > .span-4 { grid-column: span 4; } .ws > .span-8 { grid-column: span 8; } .ws > .span-12 { grid-column: span 12; }
 .panel { display: flex; flex-direction: column; min-width: 0; padding: var(--pad-card); gap: 12px; }
 .panel__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px 12px; flex-wrap: wrap; }
 .panel__titles { flex: 1 1 200px; min-width: 0; display: grid; gap: 4px; }
@@ -527,6 +530,7 @@ body[data-level="terminale"] .panel { gap: 8px; } body[data-level="terminale"] .
 .wl__row:hover { background: var(--surface-2); }
 .wl__row[aria-selected="true"] { background: var(--thumb-bg); box-shadow: var(--thumb-fx); }
 .wl__sym { display: flex; align-items: center; gap: 8px; min-width: 0; } .wl__sym b { font: 600 var(--fs-lead)/1.2 var(--font-num); } .wl__sym small { color: var(--text-3); font-size: var(--fs-small); }
+.wl__sym b { flex: none; } .wl__sym small { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }   /* il tipo si accorcia, non tocca il prezzo */
 .wl__px { text-align: right; font-weight: 600; white-space: nowrap; } .wl__px small { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; font-weight: 500; font-size: var(--fs-small); } .wl__px small .icon { width: 7px; height: 7px; }
 .wl__sig { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 22px; } .wl__sig small { color: var(--text-3); font-size: var(--fs-small); }
 .mk-chart { height: clamp(420px, 56vh, 640px); min-width: 0; }
@@ -714,9 +718,6 @@ body[data-level="terminale"] .hero__prov { display: none; }
 .more__nav .nav__link[aria-current="page"] { box-shadow: var(--gloss-edge), 0 0 0 1.5px var(--accent); }
 .sheet .more .micro { margin-bottom: 8px; }
 .sheet .more a, .sheet .more button { text-decoration: none; }
-/* la griglia torna a una colonna al telefono e a due / una a 1024 anche quando un foglio caricato dopo ridichiara le taglie */
-@media (max-width: 1180px) { #view .ws > .span-4, #view .ws > .span-3 { grid-column: span 6; } #view .ws > .span-8, #view .ws > .span-9 { grid-column: span 12; } }
-@media (max-width: 860px) { #view .ws > [class*="span-"] { grid-column: auto; } }
 
 /* ---------- Terminale: la schermata d'apertura a dieci riquadri (views/terminale.js) ---------- */
 /* Stessi materiali degli altri livelli: vetro del pannello, fondale visibile tra i riquadri (14 px), nessun riquadro che ne tocca un altro. */
@@ -745,7 +746,7 @@ body[data-level="terminale"] .hero__prov { display: none; }
 .tp__big { display: flex; align-items: baseline; gap: 8px; flex-wrap: nowrap; white-space: nowrap; overflow: hidden; font: 600 20px/1.1 var(--font-display); letter-spacing: var(--tr-title); font-variant-numeric: var(--num-variant); }
 .tp__big small { font: 500 11.5px/1.3 var(--font-num); letter-spacing: 0; color: var(--text-2); }
 .tp__line { flex: none; margin-top: auto; padding-top: 4px; border-top: 1px solid var(--border); font: var(--type-caption); font-size: 11.5px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tp__line .k { color: var(--text-3); } .tp__line .tag { height: 16px; font-size: 9px; padding: 0 5px; vertical-align: 1px; }
+.tp__line .k { color: var(--text-2); } .tp__line .tag { height: 16px; font-size: 9px; padding: 0 5px; vertical-align: 1px; }
 .tp .lanes .meterrow { padding: 2px 0; font-size: 11.5px; line-height: 1.3; grid-template-columns: 64px minmax(40px, 1fr) auto; gap: 8px; } .tp .lanes .meterrow__val { font-size: 11.5px; }
 .tp .panel__empty { min-height: 0; padding: 10px; border: 0; font-size: 12px; }
 /* fascia dei numeri */
@@ -808,6 +809,8 @@ body[data-term] .summary { margin: 0; padding: 0 6px; font-size: var(--fs-small)
   body[data-term] .tgrid { height: 100%; grid-template-rows: auto minmax(0, 1.06fr) minmax(0, 1.06fr) minmax(0, 1fr) auto; gap: 12px var(--gap-grid); }
   body[data-term] .tgrid__hint { margin-top: -4px; }
 }
+/* 1181–1439 px: la striscia tiene le otto cifre in colonne che si stringono; le fonti (anche in Sistema) lasciano il posto */
+@media (min-width: 1181px) and (max-width: 1439px) { .kpis { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.15fr) minmax(0, 1.8fr) repeat(5, minmax(0, 1fr)); gap: 0 10px; } .kpi--src { display: none; } .kpi > * { min-width: 0; overflow: hidden; text-overflow: ellipsis; } }
 /* finestre basse o strette: i riquadri si impilano nell'ordine di lettura, ognuno con la sua altezza; la pagina scorre */
 @media (max-width: 1180px), (max-height: 719px) {
   .tgrid > .tp { grid-column: span 6; height: 300px; } .tgrid > .tp--strip { height: auto; grid-column: 1 / -1; } .tgrid > .tp--chart { grid-column: 1 / -1; grid-row: auto; height: 460px; }
@@ -833,5 +836,28 @@ body[data-term] .summary { margin: 0; padding: 0 6px; font-size: var(--fs-small)
 .tlist .trow[aria-selected="true"].is-linked { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 60%, transparent), inset 3px 0 0 var(--accent); }
 .tchip--ai { color: var(--text); } .tp__n { color: var(--text-2); } .tgrid__hint { color: var(--text-2); } .tgrid__more { color: var(--text); text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 3px; }
 :root[data-theme="light"] #summary-btn { color: #0b4f9e; } :root[data-theme="light"] #alerts-n { background: #b3261e; color: #ffffff; }
-.tgrid__hint { background: color-mix(in srgb, var(--bg) 62%, transparent); border-radius: var(--radius-pill); padding: 2px 12px; }
+.tgrid__hint { background: color-mix(in srgb, var(--bg) 78%, transparent); border-radius: var(--radius-pill); padding: 2px 12px; }
+.tgrid__more { background: color-mix(in srgb, var(--bg) 78%, transparent); border-radius: var(--radius-pill); padding: 1px 6px; }   /* i collegamenti della riga dei tasti hanno il loro velo: AA anche sopra l'aurora */
 :root[data-theme="light"] #summary-btn { color: #083b7a; } :root[data-theme="light"] #alerts-btn b, :root[data-theme="light"] #alerts-btn .num { background: #b3261e; color: #ffffff; }
+
+/* ---------- Rischio al livello Terminale: compatto (freni, peggio di oggi, tetti, leva e stress nel primo schermo) ---------- */
+/* Le note di metodo restano nel «?» di ogni riquadro e al livello Esperto; qui solo cifre e segni. */
+body[data-level="terminale"][data-route="rischio"] #view .panel:not(#kill) .panel__foot,
+body[data-level="terminale"][data-route="rischio"] #freni .bl-legend,
+body[data-level="terminale"][data-route="rischio"] #freni .table-wrap,
+body[data-level="terminale"][data-route="rischio"] #kill .panel__ask { display: none; }
+body[data-level="terminale"][data-route="rischio"] #view .ws { gap: 12px; }
+body[data-level="terminale"][data-route="rischio"] #view .panel { gap: 6px; }
+body[data-level="terminale"][data-route="rischio"] #view .panel__body { padding-bottom: 12px; }
+body[data-level="terminale"][data-route="rischio"] #freni .statusline .pill--lg { height: 28px; font-size: 13px; }
+body[data-level="terminale"][data-route="rischio"] #peggio .verdict { padding: 10px 12px; font-size: var(--fs-small); }
+body[data-level="terminale"][data-route="rischio"] .stressrow { padding: 5px 0; }
+body[data-level="terminale"][data-route="rischio"] .stressrow small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body[data-level="terminale"][data-route="rischio"] .alerts { gap: 4px; }
+body[data-level="terminale"][data-route="rischio"] .alert { padding: 6px 12px; }
+@media (min-width: 1181px) {
+  body[data-level="terminale"][data-route="rischio"] #avvisi { grid-column: span 8; }
+  body[data-level="terminale"][data-route="rischio"] #kill { grid-column: span 4; }
+}
+.hero__flat { color: var(--text-2); } .hero__flat b { color: var(--text); font-weight: 600; }
+.event--quiet > :last-child { color: var(--text-2); }

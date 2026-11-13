@@ -60,11 +60,11 @@ export function mount(root, api) {
   const ordTable = dataTable({
     caption: 'Ordini decisi dal motore', sort: { key: 't', dir: -1 }, emptyTitle: 'Nessun ordine', emptyHint: 'Il motore non ha deciso ordini nel periodo coperto dalla fotografia.', cls: 'table--dense sp-table sp-ordtable',
     rowClass: (r) => (['rejected', 'error'].includes(str(r.status).toLowerCase()) ? 'is-rejected' : null),
-    detail: (r) => (str(r.reason).trim() ? h('div', { class: 'sp-reason' }, h('b', { text: 'Motivo del rifiuto. ' }), str(r.reason)) : null),
+    detail: (r) => (str(r.reason).trim() ? h('div', { class: 'sp-reason' }, h('b', { text: ['rejected', 'error'].includes(str(r.status).toLowerCase()) ? 'Motivo del rifiuto. ' : ['cancelled', 'canceled'].includes(str(r.status).toLowerCase()) ? 'Motivo dell\'annullamento. ' : 'Motivo. ' }), str(r.reason)) : null),
     columns: [
       { key: 't', label: 'Ora', sort: (r) => parseTs(r.t), cell: (r) => (parseTs(r.t) == null ? null : fmtDayTime(parseTs(r.t))) },
       { key: 'symbol', label: 'Strumento', sort: (r) => str(r.symbol), cell: (r) => h('b', { text: str(r.symbol) || '—' }) },
-      { key: 'side', label: 'Lato', sort: (r) => str(r.side), cell: (r) => { const sd = orderSide(r.side); return h('span', { class: 'sp-side' }, sd.dir ? icon(sd.dir > 0 ? 'up' : 'down', 'icon--solid sp-arrow') : null, sd.label); } },
+      { key: 'side', label: 'Lato', sort: (r) => str(r.side), cell: (r) => { const sd = orderSide(r.side); return h('span', { class: 'sp-side' }, sd.dir ? icon(sd.dir > 0 ? 'up' : 'down', 'icon--solid sp-arrow') : null, h('span', { class: 'sp-side__label', text: sd.label })); } },
       { key: 'qty', label: 'Quantità', num: true, hide: 'sm', sort: (r) => num(r.qty), cell: (r) => (num(r.qty) == null ? null : fmtQty(r.qty)) },
       { key: 'price', label: 'Prezzo', num: true, hide: 'sm', sort: (r) => num(r.price), cell: (r) => (num(r.price) == null ? null : fmtPrice(r.price)) },
       { key: 'value', label: 'Controvalore', num: true, cls: 'not-semplice', hide: 'md', sort: (r) => (num(r.qty) == null || num(r.price) == null ? null : Math.abs(r.qty * r.price)), cell: (r) => (num(r.qty) == null || num(r.price) == null ? null : fmtMoney(Math.abs(r.qty * r.price), ctxNow.ccy, { digits: 0 })) },
@@ -168,7 +168,7 @@ export function mount(root, api) {
         bar, h('div', { class: 'sp-age__foot' }, h('span', { text: r.detail }), h('span', { class: 'num', text: r.maxS == null ? 'limite non letto' : `limite ${fmtDuration(r.maxS)}` })));
     };
     agesBox.replaceChildren(...[...out.map(ageRow),
-    bars === null ? h('p', { class: 'panel__ask', text: 'Barre di mercato: in lettura…' }) : !bars.length ? h('p', { class: 'panel__ask', text: 'Barre di mercato: nessuno strumento seguito è nella cache dei prezzi.' }) : null].filter(Boolean));
+    bars === null ? h('p', { class: 'panel__ask', text: 'Barre di mercato: in lettura…' }) : !bars.length ? h('p', { class: 'panel__ask', text: watchedSymbols(ctxNow.snap, tb).length ? 'Barre di mercato: nessuno strumento seguito è nella cache dei prezzi.' : 'Barre di mercato: nessuna posizione né trade aperto, quindi nessuno strumento da controllare qui.' }) : null].filter(Boolean));
     const stale = out.filter((r) => r.state === 'stale');
     pAges.setAsk(!fresh ? 'La fotografia stessa è ferma: le età qui sotto sono calcolate sull\'ultima ricevuta.' : stale.length ? `Attenzione: ${stale.map((r) => r.name.toLowerCase()).join(', ')} oltre l'età massima. I numeri che ne dipendono valgono a quella data.` : 'Ogni barra è l\'età di una fonte; la tacca bianca è l\'età massima che il motore tollera. Per ora tutte le fonti sono dentro il limite.');
     pAges.setFoot(h('span', { class: 'not-semplice', text: 'Una barra del giorno G chiude alla mezzanotte UTC di G+1: l\'età si conta da lì. Limiti: meta.stale_after_s, rules.max_data_age_h, due cicli per il battito.' }));

@@ -2,9 +2,11 @@
    Stesse regole: nessun colore fuori dai token, vetro solo sul fondale (dentro un riquadro: pozzetti e veli), tratteggio = provenienza. */
 
 /* ---- griglia ---- */
-.ws > .span-7 { grid-column: span 7; } .ws > .span-5 { grid-column: span 5; } .ws > .span-6 { grid-column: span 6; } .ws > .span-8 { grid-column: span 8; } .ws > .span-4 { grid-column: span 4; }
+/* Solo le taglie che glass.css non dichiara (7, 5, 6); 3, 4, 8, 9 e 12 sono in glass.css con i loro ritorni a 1180 e 860 px.
+   Ogni taglia dichiarata qui ha il suo ritorno a una colonna sotto gli 860 px. */
+.ws > .span-7 { grid-column: span 7; } .ws > .span-5 { grid-column: span 5; } .ws > .span-6 { grid-column: span 6; }
 @media (max-width: 1180px) { .ws > .span-7, .ws > .span-5, .ws > .span-6 { grid-column: span 12; } }
-@media (max-width: 860px) { .ws > .span-7, .ws > .span-5, .ws > .span-6 { grid-column: auto; } }
+@media (max-width: 860px) { .ws > [class*="span-"] { grid-column: auto; } }
 .sp-ws .panel__ask { max-width: 78ch; }
 
 /* ---- mattoni ---- */
@@ -191,7 +193,7 @@ body[data-level="terminale"] .sp-verdict__title { font-size: 26px; margin-bottom
 .sp-strat__row > :last-child { display: inline-flex; align-items: center; white-space: nowrap; }
 .sp-strat__row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: var(--fs-small); font-weight: 600; font-variant-numeric: var(--num-variant); margin-top: 4px; }
 .sp-strat__row .pos { color: var(--pos); } .sp-strat__row .neg { color: var(--neg); }
-.sp-strat__tag { display: inline-flex; align-items: center; gap: 7px; font: var(--type-micro); letter-spacing: var(--tr-micro); text-transform: uppercase; color: var(--text-3); }
+.sp-strat__tag { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; font: var(--type-micro); letter-spacing: var(--tr-micro); text-transform: uppercase; color: var(--text-3); }
 .sp-strat .kv > div { padding: 6px 0; } .sp-strat .kv .pos { color: var(--pos); } .sp-strat .kv .neg { color: var(--neg); }
 .sp-strat__foot { display: flex; flex-wrap: wrap; gap: 4px 10px; font: var(--type-caption); color: var(--text-2); }
 .sp-strat__foot b { color: var(--text); font-family: var(--font-num); font-variant-numeric: var(--num-variant); }
@@ -217,7 +219,7 @@ body[data-level="terminale"] .sp-verdict__title { font-size: 26px; margin-bottom
 .sp-postable td .pos { color: var(--pos); } .sp-postable td .neg { color: var(--neg); }
 .sp-postable td { color: var(--text-2); } .sp-postable td:first-child { white-space: nowrap; }
 @media (max-width: 520px) { .sp-wbar { width: 44px; } }
-.tm__leaf--c1, .tm__leaf--c2, .tm__leaf--c3, .tm__leaf--c4 { background: linear-gradient(170deg, color-mix(in srgb, var(--tm-color) 66%, var(--chart-surface)) 0%, color-mix(in srgb, var(--tm-color) 30%, var(--chart-surface)) 100%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55); }
+.tm__leaf--c1, .tm__leaf--c2, .tm__leaf--c3, .tm__leaf--c4 { background: linear-gradient(170deg, color-mix(in srgb, var(--tm-color) 58%, var(--chart-surface)) 0%, color-mix(in srgb, var(--tm-color) 30%, var(--chart-surface)) 100%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55); }
 @media (max-width: 520px) { .sp-wbar { display: none; } }
 
 /* ---- Sistema ---- */
@@ -240,6 +242,11 @@ body[data-level="semplice"] .sp-comp { grid-template-columns: 148px minmax(0, 1f
 .sp-comp[data-state="warn"] .sp-comp__num, .sp-comp[data-state="crit"] .sp-comp__num { color: var(--text); }
 .sp-reason { padding: 2px 0 6px; font-size: var(--fs-small); color: var(--text-2); white-space: normal; } .sp-reason b { color: var(--warn-ink); font-weight: 600; }
 .sp-side { display: inline-flex; align-items: center; }
+@media (max-width: 520px) {   /* telefono: il lato resta come freccia (il testo per i lettori di schermo), il motivo si legge senza scorrere */
+  .sp-side__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .sp-ordtable th, .sp-ordtable td { padding-left: 4px; padding-right: 4px; } .sp-ordtable { font-size: 13px; }
+  .sp-ordtable th:first-child, .sp-ordtable td:first-child { padding-left: 12px; } .sp-ordtable .chip .icon { display: none; }
+}
 .sp-ordtable tr.is-rejected td { background: color-mix(in srgb, var(--warn) 7%, transparent); }
 .sp-ordtable td { color: var(--text-2); } .sp-ordtable td b { color: var(--text); }
 .sp-alertgroups { display: grid; gap: 16px; }
@@ -336,3 +343,4 @@ body[data-level="semplice"] .sp-comp { grid-template-columns: 148px minmax(0, 1f
 .sp-plot .sp-ptag { top: var(--tag-top, 10px); }
 .sp-plot--tagr .sp-ptag { left: auto; right: 52px; }
 .sp-slicecol { display: grid; gap: 22px; align-content: start; min-width: 0; }
+.sp-onfill { fill: var(--text-2); paint-order: stroke; stroke: var(--chart-halo); stroke-width: 3px; stroke-linejoin: round; }   /* testo sopra un'area colorata del grafico: alone e tono più forte (AA) */

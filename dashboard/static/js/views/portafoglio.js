@@ -11,7 +11,7 @@ import { h, icon } from '../dom.js';
 import { arr, fmtDate, fmtMoney, fmtNum, fmtPct, fmtPctSigned, fmtPrice, fmtQty, fmtSigned, list, num, obj, parseTs, str } from '../format.js';
 import { getTradebook } from '../market.js';
 import { monthlyGrid, strategyStatus, utilization } from '../model.js';
-import { SPLIT_T, attribution, provenanceDays, rollingSharpe } from '../derive.js';
+import { SPLIT_T, attribution, provenanceDays, rollingSharpe, strategyExposure } from '../derive.js';
 import { emptyState, meterRow, panel, provOf, provTag } from '../panels.js';
 import { factRow, legendRow, nd, plot, sparkArea, stateChip } from './kit.js';
 
@@ -35,7 +35,7 @@ export function mount(root) {
   const attrHost = h('div', { class: 'chart-host' });
   const attrNote = h('p', { class: 'panel__ask' });
   pAttr.body.append(attrBig, attrHost, attrNote);
-  const attrChart = waterfall(attrHost, [], { label: 'Contributo di strategie e libro dei trade al risultato', orient: 'h', format: (v) => fmtMoney(v, 'EUR', { digits: 2, signed: true }), levelFormat: (v) => fmtMoney(v, 'EUR', { digits: 0 }), valueHead: 'Contributo', levelHead: 'Somma', table: true });
+  const attrChart = waterfall(attrHost, [], { label: 'Contributo di strategie e libro dei trade al risultato', orient: 'h', format: (v) => fmtMoney(v, 'EUR', { digits: 2, signed: true }), levelFormat: (v) => fmtMoney(v, 'EUR', { digits: 0 }), totalFormat: (v) => fmtMoney(v, 'EUR', { digits: 2, signed: true }), valueHead: 'Contributo', levelHead: 'Somma', table: true });
 
   // ---- 2. dove sono i soldi ----
   const pTree = panel({ title: 'Dove sono i soldi, adesso?', eyebrow: 'Sede → strumento · colore = strategia', span: 6, id: 'mappa',
@@ -127,8 +127,10 @@ export function mount(root) {
     const a = attribution(snap, tb, period);
     const name = { day: 'oggi', mtd: 'nel mese', total: 'dall\'avvio' }[period];
     if (!a.rows.length) {
-      attrHost.hidden = true; attrBig.replaceChildren('n.d.');
-      attrNote.replaceChildren('Nessun contributo da mostrare per questo periodo: la fotografia non riporta il P&L per strategia.');
+      attrHost.hidden = true;
+      const flat = Array.isArray(snap.positions) && !snap.positions.length && !num(obj(snap.nav)[{ day: 'pnl_day', mtd: 'pnl_mtd_pct', total: 'pnl_total_pct' }[period]]);
+      attrBig.replaceChildren(flat ? signed(0, fmtMoney(0, ccy)) : 'n.d.');
+      attrNote.replaceChildren(flat ? 'Nessuna posizione e nessun guadagno o perdita nel periodo: niente da attribuire. La cascata per strategia compare con le prime posizioni.' : 'Nessun contributo da mostrare per questo periodo: la fotografia non riporta il P&L per strategia.');
       return;
     }
     attrHost.hidden = false;
@@ -197,15 +199,17 @@ export function mount(root) {
       c.sub.replaceChildren(...[h('span', { class: 'sp-strat__name', title: str(st.name), text: str(st.name) }), h('span', { class: 'sp-strat__quota' }, `quota ${fmtPct(st.allocation, 0)}`, brake ? h('span', { title: str(brake.motivo) }, stateChip('accent', `Freno AI ${fmtPct(brake.mult, 0)}`, { iconName: 'ai' })) : null)]);
       const spark = list(st.spark).map(num).filter((v) => v != null);
       const chg = spark.length > 1 ? spark[spark.length - 1] / spark[0] - 1 : null;
-      c.sparkRow.replaceChildren(h('span', { class: 'sp-strat__tag' }, provTag(prov === 'sim' ? 'sim' : prov), '30 giorni'), chg == null ? nd() : signed(chg, fmtPctSigned(chg, 2)));
-      c.spark.update({ values: spark, prov });
+      // meno di 30 giorni di paper: oggi, mese e i 30 giorni sono il modello della strategia sui prezzi reali, non il conto
+      const model = prov !== 'demo' && prov !== 'sim' && liveDays < 30;
+      c.sparkRow.replaceChildren(h('span', { class: 'sp-strat__tag' }, model ? provTag('sim', 'Modello') : provTag(prov === 'sim' ? 'sim' : prov), '30 giorni'), chg == null ? nd() : signed(chg, fmtPctSigned(chg, 2)));
+      c.spark.update({ values: spark, prov: model ? 'sim' : prov });
       const sl = sleeves.find((x) => str(x.id) === id) || {};
       const cell = (k, v, sub = '') => h('div', null, h('span', { class: 'k', text: k }), h('span', { class: 'v' }, v), sub ? h('small', { text: sub }) : null);
       const pct = (v, d = 2) => (num(v) == null ? nd() : h('span', { class: v > 0 ? 'pos' : v < 0 ? 'neg' : '', text: fmtPctSigned(v, d) }));
       const liveOk = liveDays >= MIN_LIVE_DAYS && num(st.sharpe_live) != null;
       c.kv.replaceChildren(
-        cell('Oggi', pct(st.pnl_day_pct)), cell('Mese', pct(st.pnl_mtd_pct)), cell('Avvio', pct(st.pnl_total_pct, 1)),
-        cell('Esposizione', num(st.exposure) == null ? nd() : fmtPct(st.exposure, 1), 'del patrimonio'),
+        cell('Oggi', pct(st.pnl_day_pct), model ? 'modello' : ''), cell('Mese', pct(st.pnl_mtd_pct), model ? 'modello' : ''), cell('Avvio', pct(st.pnl_total_pct, 1)),
+        cell('Esposizione', strategyExposure(snap, id) == null ? nd() : fmtPct(strategyExposure(snap, id), 1), 'del patrimonio'),
         cell('Sharpe del conto', liveOk ? fmtNum(st.sharpe_live, 2) : '—', liveOk ? `± ${fmtNum(Math.sqrt((1 + st.sharpe_live ** 2 / 2) / (liveDays / 365)), 1)}` : `${fmtNum(liveDays, 0)} giorni su ${MIN_LIVE_DAYS}`),
         cell('Sharpe simulato', num(st.sharpe_backtest) == null ? nd() : fmtNum(st.sharpe_backtest, 2), 'storia 2018–2026'),
         cell('Caduta massima', num(st.max_dd) == null ? nd() : fmtPctSigned(st.max_dd, 0), 'dal picco'));
@@ -226,7 +230,8 @@ export function mount(root) {
       nodes.push(c.el);
     }
     if (stratGrid.childElementCount !== nodes.length || nodes.some((n, i) => stratGrid.children[i] !== n)) stratGrid.replaceChildren(...nodes);
-    pStrat.setFoot(`Sharpe del conto: nascosto prima di ${MIN_LIVE_DAYS} giorni di paper (oggi ${fmtNum(liveDays, 0)}), poi con il suo errore standard. Sharpe mobile: rendimenti settimanali simulati, annualizzati con √52, fascia ±1,96 errori standard, stessa scala in tutte le schede; riga verticale = 1° gennaio 2023 (scelta | verifica). Fonte: research/v5/quant.json (sleeve_curves, sleeves).`);
+    const modelNote = prov !== 'demo' && prov !== 'sim' && liveDays < 30 ? `Oggi, mese e 30 giorni: rendimento del modello di ogni strategia sui prezzi reali (SIMULATO), finché il paper non ha 30 giorni (oggi ${fmtNum(liveDays, 0)}); l'esposizione è quella del conto. ` : '';
+    pStrat.setFoot(`${modelNote}Sharpe del conto: nascosto prima di ${MIN_LIVE_DAYS} giorni di paper (oggi ${fmtNum(liveDays, 0)}), poi con il suo errore standard. Sharpe mobile: rendimenti settimanali simulati, annualizzati con √52, fascia ±1,96 errori standard, stessa scala in tutte le schede; riga verticale = 1° gennaio 2023 (scelta | verifica). Fonte: research/v5/quant.json (sleeve_curves, sleeves).`);
   }
 
   function paintExpo() {
@@ -261,9 +266,10 @@ export function mount(root) {
     if (num(ex.gross) != null) rows.push(meterRow({ name: 'Esposizione lorda', sub: 'tutto il libro giornaliero', value: ex.gross, cap: lev ? num(lev.limit) : num(ex.max_leverage), state: stateOf(ex.gross, lev ? lev.limit : ex.max_leverage),
       text: `${fmtPct(ex.gross, 0)}${(lev ? num(lev.limit) : num(ex.max_leverage)) == null ? ' · tetto non letto' : ` su ${fmtPct(lev ? lev.limit : ex.max_leverage, 0)}`}` }));
     if (expoBy === 'strategy') {
-      const top = Math.max(0.01, ...strategies.map((s) => Math.max(num(s.exposure) || 0, num(s.allocation) || 0))) * 1.2;
-      for (const st of strategies) rows.push(meterRow({ name: h('span', { class: 'sp-name' }, h('span', { class: `key sp-key sp-key--${clsOf(st.id)}`, 'aria-hidden': 'true' }), str(st.id)), sub: str(st.name), value: num(st.exposure) || 0, cap: num(st.allocation), scale: top, state: 'none',
-        text: `${num(st.exposure) == null ? 'n.d.' : fmtPct(st.exposure, 1)} · quota ${fmtPct(st.allocation, 0)}` }));
+      const exOf = (st) => strategyExposure(snap, str(st.id));
+      const top = Math.max(0.01, ...strategies.map((s) => Math.max(exOf(s) || 0, num(s.allocation) || 0))) * 1.2;
+      for (const st of strategies) rows.push(meterRow({ name: h('span', { class: 'sp-name' }, h('span', { class: `key sp-key sp-key--${clsOf(st.id)}`, 'aria-hidden': 'true' }), str(st.id)), sub: str(st.name), value: exOf(st) || 0, cap: num(st.allocation), scale: top, state: 'none',
+        text: `${exOf(st) == null ? 'n.d.' : fmtPct(exOf(st), 1)} · quota ${fmtPct(st.allocation, 0)}` }));
     } else {
       const venues = arr(ex.by_venue);
       const top = Math.max(0.01, ...venues.map((v) => num(v.gross) || 0), ...limits.filter((l) => /sede/i.test(str(l.name))).map((l) => num(l.limit) || 0)) * 1.15;
