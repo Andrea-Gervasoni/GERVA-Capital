@@ -4,7 +4,7 @@
 
 **Un fondo sistematico personale: sei regole di trading, un motore di rischio che decide per ultimo, e un terminale per vedere tutto.**
 
-[![versione](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2FAndrea-Gervasoni%2FGERVA-Capital%2FHEAD%2FVERSION&search=%5E.%2B%24&label=versione&color=0A84FF)](VERSION)
+[![versione](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2FAndrea-Gervasoni%2FGERVA-Capital%2FHEAD%2FVERSION&search=%5Cd%2B%5C.%5Cd%2B%5C.%5Cd%2B&label=versione&color=0A84FF)](VERSION)
 [![test](https://github.com/Andrea-Gervasoni/GERVA-Capital/actions/workflows/test.yml/badge.svg)](https://github.com/Andrea-Gervasoni/GERVA-Capital/actions/workflows/test.yml)
 ![python](https://img.shields.io/badge/python-3.12%20%7C%203.13-3776AB)
 ![stato](https://img.shields.io/badge/stato-solo%20paper-F5A524)
