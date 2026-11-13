@@ -264,3 +264,16 @@ def test_shadow_candidate_residual_momentum_has_no_lookahead():
         assert np.allclose(full.iloc[t], book.cr_resid(many.iloc[:t + 1], dv.iloc[:t + 1], r.iloc[:t + 1]).iloc[-1])
     assert (full.sum(axis=1) <= 1.0 + 1e-9).all() and (full >= 0).all().all()
     assert "CR-RESID" not in book.SLEEVES                      # in ombra: non riceve capitale
+
+
+def test_version_has_one_source():
+    """La versione sta solo nel file VERSION: la leggono il motore, il terminale e il distintivo del README."""
+    import os
+    import re
+    import gerva
+    root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    v = open(os.path.join(root, "VERSION")).read().strip()
+    assert re.fullmatch(r"\d+\.\d+\.\d+", v) and gerva.__version__ == v
+    readme = open(os.path.join(root, "README.md")).read()
+    assert "VERSION" in readme and "actions/workflows/test.yml/badge.svg" in readme
+    assert "simulati" in readme.lower() and "paper" in readme.lower()          # il README non presenta mai i numeri come reali

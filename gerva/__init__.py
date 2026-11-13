@@ -14,4 +14,14 @@ GERVA core: il motore deterministico di trading (nessun LLM nel percorso degli o
 
 Tutto cio' che esce da gerva.backtest e gerva.validation e' SIMULATO su dati storici.
 """
-__version__ = "5.0.0"
+def _read_version() -> str:
+    """La versione sta in un posto solo: il file VERSION alla radice del repository (lo legge anche il distintivo del README)."""
+    import os
+    try:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "VERSION")) as f:
+            return f.read().strip() or "0.0.0"
+    except OSError:
+        return "0.0.0"
+
+
+__version__ = _read_version()
