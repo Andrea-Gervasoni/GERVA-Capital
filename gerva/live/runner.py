@@ -248,6 +248,12 @@ class Runner:
             if sym not in px:
                 self.j.event("warn", "trade", f"{sym}: nessun prezzo, ordine saltato")
                 continue
+            cap = self.l.max_order_frac * equity
+            if not reducing and abs(delta) > cap:
+                # one order never moves more than max_order_frac of equity (fat-finger guard): the order is cut to the cap
+                # and the rest follows on the next decision days, instead of rejecting the whole position every day
+                self.j.event("info", "trade", f"{sym}: order of {abs(delta):,.0f} cut to {cap:,.0f} ({self.l.max_order_frac:.0%} of equity)")
+                delta = cap if delta > 0 else -cap
             plan.append((delta, sym, venue, cur, px[sym]))
         plan.sort(key=lambda x: x[0])                       # prima le vendite: liberano cassa per gli acquisti
         done = rej = 0
