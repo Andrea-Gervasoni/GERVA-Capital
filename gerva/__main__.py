@@ -254,6 +254,8 @@ def main(argv=None) -> int:
         run.j.event("info", "runner", "avvio del ciclo")
         return run.run_forever()
     if a.cmd == "check-broker":
+        if run.broker.name == "paper" and getattr(run.broker, "_pos", lambda: {})():
+            run.market.refresh()           # the paper account values its positions at market prices: load them first
         acct = run.broker.account()
         print(f"{run.broker.name}: patrimonio {acct.equity:,.2f}, cassa {acct.cash:,.2f}, posizioni {len(run.broker.positions())}")
         return 0
