@@ -304,5 +304,16 @@ class Runner:
                             f"giro fallito ({streak} di fila): {type(e).__name__}: {str(e)[:200]}", key="cycle-fail")
                 self._beat()
             if max_cycles is None or n < max_cycles:
-                sleep(self.s.interval)
+                self._idle(sleep)
         return 0
+
+    def _idle(self, sleep, step: float = 60.0) -> None:
+        """Waits for the next pass in steps of at most a minute, beating at each step. Without this the heartbeat aged by
+        a full interval (900 s) between passes and the supervisor, whose stall limit is also 900 s, restarted a healthy
+        loop every 15 minutes."""
+        left = float(self.s.interval)
+        while left > 0:
+            dt = min(step, left)
+            sleep(dt)
+            left -= dt
+            self._beat()

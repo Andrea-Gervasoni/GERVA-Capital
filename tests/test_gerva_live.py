@@ -464,3 +464,10 @@ def test_paper_minimum_commission(tmp_path):
     assert small.status == "filled" and small.fee == 1.0
     big = b.submit("t2", "SPY", 10.0, 500.0)                   # 5.000 $: 2,50 $ supera il minimo
     assert abs(big.fee - 2.5) < 1e-9
+
+
+def test_idle_beats_while_waiting_so_the_supervisor_does_not_restart_a_healthy_loop(rig):
+    beats, slept = [], []
+    rig._beat = lambda: beats.append(1)
+    rig._idle(lambda s: slept.append(s))
+    assert sum(slept) == rig.s.interval and max(slept) <= 60 and len(beats) == len(slept)
