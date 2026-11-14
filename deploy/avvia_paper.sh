@@ -13,6 +13,15 @@ PY="$ROOT/.venv/bin/python"
 stop() { for f in "$PIDS"/*.pid; do [ -f "$f" ] || continue; kill "$(cat "$f")" 2>/dev/null || true; rm -f "$f"; done; echo "fermato"; }
 stato() { for n in runner daily dashboard; do f="$PIDS/$n.pid"; if [ -f "$f" ] && kill -0 "$(cat "$f")" 2>/dev/null; then echo "$n: attivo (pid $(cat "$f"))"; else echo "$n: fermo"; fi; done
           [ -f "$GERVA_HOME/heartbeat" ] && echo "ultimo battito: $(date -r "$GERVA_HOME/heartbeat" 2>/dev/null || stat -c %y "$GERVA_HOME/heartbeat")" || echo "nessun battito ancora"; }
+AUTO="$HOME/Library/LaunchAgents/com.gerva.$(basename "$ROOT" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9\n' '-').runner.plist"
+if [ -f "$AUTO" ]; then   # avvio automatico installato (deploy/install_autostart.sh): fa tutto launchd, i file pid non servono
+  case "${1:-avvia}" in
+    stop) echo "l'avvio automatico e' installato: per fermare tutto  bash deploy/install_autostart.sh remove"; exit 0 ;;
+    stato|status) launchctl list | grep -F "com.gerva.$(basename "$AUTO" .runner.plist | sed 's/^com.gerva.//')." || echo "avvio automatico installato ma nessun servizio caricato";
+                  [ -f "$GERVA_HOME/heartbeat" ] && echo "ultimo battito: $(date -r "$GERVA_HOME/heartbeat")"; exit 0 ;;
+    *) echo "l'avvio automatico e' installato: parte gia' tutto da solo (per riavviare: bash deploy/install_autostart.sh)"; exit 0 ;;
+  esac
+fi
 case "${1:-avvia}" in
   stop) stop; exit 0 ;;
   stato) stato; exit 0 ;;
