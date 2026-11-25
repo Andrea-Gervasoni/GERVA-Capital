@@ -16,7 +16,27 @@ PORT="${GERVA_DASH_PORT:-8787}"
 
 [ "$(uname)" = "Darwin" ] || { echo "macOS only (on Linux use deploy/gerva.service or Docker)"; exit 1; }
 
-remove() { for s in runner daily dashboard; do p="$AGENTS/${PREFIX}$s.plist"; launchctl bootout "gui/$UID_" "$p" 2>/dev/null || true; rm -f "$p"; done; }
+remove() {
+  for s in runner daily dashboard; do
+    p="$AGENTS/${PREFIX}$s.plist"
+    launchctl bootout "gui/$UID_/${PREFIX}$s" 2>/dev/null || launchctl bootout "gui/$UID_" "$p" 2>/dev/null || launchctl unload "$p" 2>/dev/null || true
+    rm -f "$p"
+  done
+  # a bootout does not always reach the child processes (17/11/2026: the engine kept running the old code for a week):
+  # whatever still runs from THIS folder is stopped, gently first
+  pkill -f "cd '$ROOT' && " 2>/dev/null || true
+  pkill -f "$ROOT/.venv/bin/python -m (gerva|dashboard)" 2>/dev/null || true
+  # the python.org Python on a Mac runs the real interpreter as a child ("Python.app ... -m gerva run") whose command
+  # line does not name this folder: those are recognised by their working directory
+  for pid in $(pgrep -f -- "-m (gerva|dashboard)" 2>/dev/null); do
+    [ "$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p')" = "$ROOT" ] && kill "$pid" 2>/dev/null || true
+  done
+  sleep 3
+  pkill -9 -f "$ROOT/.venv/bin/python -m (gerva|dashboard)" 2>/dev/null || true
+  for pid in $(pgrep -f -- "-m (gerva|dashboard)" 2>/dev/null); do
+    [ "$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p')" = "$ROOT" ] && kill -9 "$pid" 2>/dev/null || true
+  done
+}
 case "${1:-install}" in
   remove|uninstall) remove; echo "autostart removed: start by hand with the start script"; exit 0 ;;
   status) launchctl list | grep -F "$PREFIX" || echo "no autostart service for $ROOT"; exit 0 ;;
@@ -53,7 +73,10 @@ PLIST
 }
 remove
 write runner "$RUNNER"; write daily "$DAILY"; write dashboard "$DASH"
-for s in runner daily dashboard; do launchctl bootstrap "gui/$UID_" "$AGENTS/${PREFIX}$s.plist"; done
+for s in runner daily dashboard; do
+  launchctl bootstrap "gui/$UID_" "$AGENTS/${PREFIX}$s.plist" 2>/dev/null || launchctl kickstart -k "gui/$UID_/${PREFIX}$s"
+done
 sleep 3; launchctl list | grep -F "$PREFIX" || true
+echo "now running the code of $(git -C "$ROOT" log -1 --format='%h %cd' --date=short 2>/dev/null)   (the first column above must show NEW process numbers)"
 echo "autostart installed: it starts at every login and restarts within 10 s if a part stops"
 echo "terminal: http://127.0.0.1:$PORT   |   logs: $LOG   |   remove: bash deploy/install_autostart.sh remove"
